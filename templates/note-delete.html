@@ -1,0 +1,13 @@
+{% extends 'admin/layout.html' %}
+{% block content %}
+
+  <main class="container admin" id="content">
+    <form action="{{ doc_root }}admin/note-delete/{{ note.id }}" method="POST" class="narrow">
+      <h1>Delete Note</h1>
+      <p>Click confirm to delete the note: <em>{{note.from_name}} {{note.request}} {{ note.to_name }} {{note.request_date}}</em></p>
+      <input type="submit" name="delete" value="confirm" class="btn btn-primary" />
+      <a href="{{ doc_root }}admin/menus/" class="btn btn-danger">cancel</a>
+    </form>
+  </main>
+
+{% endblock %}

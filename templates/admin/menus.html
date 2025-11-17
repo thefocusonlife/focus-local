@@ -1,0 +1,42 @@
+{% extends 'admin/layout.html' %}
+{% block content %}
+
+<main> <!-- class="container" id="content">
+  <section class="header">
+    <h1>Menus</h1>
+    {% if success %}<div class="alert alert-success">{{ success }}</div>{% endif %}
+    {% if failure %}<div class="alert alert-danger">{{ failure }}</div>{% endif %}
+    <p><a href="{{ doc_root }}admin/menu" class="btn btn-primary">Add new menu</a></p>
+  </section>
+--> 
+  <table class="menus">
+    <tr>
+      <th>Name</th><th><th></th></th><th><th></th><th></th><th></th><th></th> </th><th></th><th>Family Id</th>
+      <th> </th><th></th><th></th>
+      <th class="edit">Edit Family</th><th> </th> 
+      <th class="edit">Edit Menu </th>
+      <th> </th>
+      <th class="del">Delete Menu</th>
+    </tr>
+    {% for menu in menus %}
+
+
+    {% if (session.id == 1  or session.id == menu.account_id or session.account_id == menu.account_id) %}
+    <tr>
+      <td><strong>{{ menu.name }}({{ menu.position }})</strong></td>
+      <td> </td><td> </td><td></td><td></td><td></td><td></td><td></td><td></td>
+      <td>{{menu.account_id}}</td><td> </td><td></td>
+      <td><a href="{{ doc_root }}admin/menu-family/{{ menu.id }}"
+             class ="btn btn-primary">edit</a></td><td> </td>
+      <td><a href="{{ doc_root }}admin/menu/{{ menu.id }}"
+             class="btn btn-primary">edit</a></td>
+      <td>       </td>       
+      <td><a href="{{ doc_root }}admin/menu-delete/{{ menu.id }}"
+             class="btn btn-danger">delete</a></td>
+    </tr>
+    {% endif %}
+    {% endfor %}
+  </table>
+</main>
+
+{% endblock %}

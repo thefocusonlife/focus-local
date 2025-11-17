@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en-US">
+ <head>
+     
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+     
+    <title>{% block title %}Register{% endblock %}</title>
+    <meta name="description" content="{% block description %}HHT Consulting{% endblock %}">
+    <link rel="stylesheet" type="text/css" href="{{ doc_root }}css/styles.css">
+    <link rel="preconnect" href="https://fonts.gstatic.com"> 
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap">
+    <link rel="shortcut icon" type="image/png" href="{{ doc_root }}uploads/logo3.png">
+<!--    <script type="text/javascript" src="engine1/jquery.js"></script> -->
+    <script src="https://js.chargebee.com/v2/chargebee.js" data-cb-site="thefocusonlife-test" ></script>
+  </head>
+  <body oncontextmenu="return true;">
+    <header>
+     
+      <a class="skip-link" href="#content">Skip to content</a>
+      <nav class="member-menu">
+        <div class="container">
+          {% if session.id == 0 %}
+
+            <a href="{{ doc_root }}login" class="nav-item nav-link">Log in</a> /
+    <!--        <a href="{{ doc_root }}register" class="nav-item nav-link">Register</a> /
+    -->
+            <span class="icon-user"></span><a href="{{ doc_root }}plans/" class="nav-item nav-link">Register</a> /
+            <a href = "javascript:history.back()" class="nav-item nav-link">Back</a>
+          
+          {% else %}
+       
+            <a href="{{ doc_root }}member/{{ session.id }}">{{ session.forename }}</a> /
+            {% if session.role == 'admin' %}
+              <a href="{{ doc_root }}admin/index">Admin</a> /
+              
+            {% endif %}
+            
+            
+            
+              <a href="{{ doc_root }}logout">Logout</a> /
+              <a href = "javascript:history.back()" class="nav-item nav-link">Back</a>
+
+            {% endif %}
+        </div>
+         
+      </nav>
+        <div class="container">
+          
+        </div>
+        <div class="logo">
+          <a href="{{ doc_root }}"><img src="{{ doc_root }}uploads/logo3.png" alt="Tree"></a>
+        </div>
+        <nav>
+          <button id="toggle-navigation" aria-expanded="false">
+            <span class="icon-menu"></span><span class="hidden">Menu</span>
+          </button>
+          <ul id="menu">
+            {% for link in navigation %}
+              {% if (link.navigation == 1) %}
+                {% if(link.account_id != 1 and link.account_id == session.account_id) %}
+                    <li><a href="{{ doc_root }}menu/{{ link.id }}/{{ link.seo_name }}"
+                    {% if (section == link.id) %} class="on"{% endif %}>
+                    {{ link.name }}</a></li>
+                 
+                {% endif %}  
+              {% endif %}
+            {% endfor %}
+            <li><a href="{{ doc_root }}search">
+              <span class="icon-search"></span><span class="search-text">Search</span>
+            </a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+{% block content %}
+ 
+<section class="header">
+  <h1>Available Plans</h1>
+  <h3>Click on Plan to select<h3>
+   
+</section>  
+
+<story class="summary">
+ 
+<a href="javascript:void(0)" data-cb-type="checkout" data-cb-item-0="Basic-USD-Monthly" data-cb-item-0-quantity="1" ><img src="{{ doc_root }}img/basic1.png" alt="basic2"> </a>
+<a href="javascript:void(0)" data-cb-type="checkout" data-cb-item-0="Basic-USD-Yearly" data-cb-item-0-quantity="1" ><img src="{{ doc_root }}img/basic2.png" alt="basic2"></a>
+<a href="javascript:void(0)" data-cb-type="checkout" data-cb-item-0="Premium-USD-Monthly" data-cb-item-0-quantity="1" ><img src="{{ doc_root }}img/premium1.png" alt="premium1"></a>
+<a href="javascript:void(0)" data-cb-type="checkout" data-cb-item-0="Premium-USD-Yearly" data-cb-item-0-quantity="1" ><img src="{{ doc_root }}img/premium2.png" alt="premium2"> </a>
+<a href="javascript:void(0)" data-cb-type="checkout" data-cb-item-0="Platinum-USD-Monthly" data-cb-item-0-quantity="1" ><img src="{{ doc_root }}img/platinum1.png" alt="Platinum1"></a>
+<a href="javascript:void(0)" data-cb-type="checkout" data-cb-item-0="Platinum-USD-Yearly" data-cb-item-0-quantity="1" ><img src="{{ doc_root }}img/platinum2.png" alt="platinum2"></a>
+<a href="javascript:void(0)" data-cb-type="checkout" data-cb-item-0="Family-Follow-USD" ><img src="{{ doc_root }}img/follow.png" alt="follow"></a>
+<a href="javascript:void(0)" data-cb-type="checkout" data-cb-item-0="Trial-USD-Monthly" data-cb-item-0-quantity="1" ><img src="{{ doc_root }}img/freetrial.png" alt="freetrial"></a>
+<span><a href="javascript:void(0)" data-cb-type="portal" ><img src="{{ doc_root }}img/portal.png" alt="portal"></a></span>
+
+ 
+
+      
+
+<h3>Subscription plans and plan payments are managed by a secure PCI compliant third-party website.  No credit card information is maintained on theFocusOnLife website.  Please allow 1 to 2 business days for your plan to be activated.<h3>      
+
+
+
+
+
+
+{% endblock %}
+</body>

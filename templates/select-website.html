@@ -1,0 +1,38 @@
+{% extends 'layout.html' %}
+{% block title %}Websites{% endblock %}
+{% block description %}Websites for theFocusOnLife{% endblock %}
+
+{% block content %}
+  <main>  <!-- class="container" id="content"> -->
+
+  <section class="header">
+    <h1>Websites</h1>
+  </section>
+  <section class = "form-membership">
+    <form method="post" action="{{ doc_root }}select-website" class="form-membership">
+    {% if errors %}<div class="alert alert-danger">Please correct errors</div>{% endif %}
+
+    
+   
+    <div class="form-group">
+            <label for="website">Select Website: </label>
+            <select name="website" id="website">
+              {% for website in websites %}
+              <option value="{{ website.id }}"
+              {% if website.id == 1 %} selected{% endif %}>
+              
+              {{ website.id}} {{website.name}} {{website.non_members}} 
+              
+              
+            </option>
+              {% endfor %}
+           </select>
+            <span class="errors">{{ errors.plan }}</span>
+          </div>
+          <form method="post" action="{{ doc_root }}index/{{website.id}}" class="form-membership">
+    <input type="submit" class="btn btn-primary" value="Submit">
+  </form>
+  </section>
+
+</main>
+{% endblock %}

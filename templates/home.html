@@ -1,0 +1,8 @@
+{% extends 'layout1.html' %}
+{% block content %}
+<main class="container1" id="content">
+  {% if failure %}<div class="alert alert-danger">{{ failure }}</div>{% endif %}
+  
+ {{ include('screen0.html') }}
+</main>
+{% endblock %}

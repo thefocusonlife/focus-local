@@ -1,0 +1,13 @@
+{% extends 'admin/layout.html' %}
+{% block content %}
+<main class="container" id="content">
+  <section class="header"><h1>get image</h1></section>
+  {{ dump(server) }}
+  
+  <form method="POST" action = "{{doc_root}}/admin/resize.html/" enctype="multipart/form-data">
+    <label for="image"><b>Upload file:</b></label>
+    <input type="file" name="image" accept="image/*" id="image"><br>
+    <input type="submit" value="upload">
+  </form>
+</main>
+{% endblock %}

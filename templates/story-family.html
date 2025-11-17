@@ -1,0 +1,37 @@
+{% extends 'admin/layout.html' %}
+{% block content %}
+  <main class="container" id="content">
+
+
+    <form action="{{ doc_root }}story-family/{{ story.id }}" method="POST" class="narrow">
+      <h1>Edit Story Family</h1>
+      <p>Title/ID: <strong>{{ story.title  }} / {{ story.id }}</strong></p>
+      <p>Author: {{ story.author }}</p> 
+      
+     
+      <!-- input account_id dropdown here --> 
+       
+
+
+  <div class="form-group">
+            <label for="account_id">Story Family: </label>
+
+           <select name="member_id" id="family_id">
+              {% for family in families %}
+
+              <option value = "{{ family.id }}"
+              {% if family.id == story.family_id %} selected{% endif %}>
+              {{family.id}} {{ family.forename }} {{ family.surname }}</option>
+              {% endfor %}
+            </select>
+            <span class="errors">{{ errors.family }}</span>
+          </div>
+        
+         <input type="submit" value="Update story" class="btn 
+    btn-primary" /> 
+
+
+  
+    </form>
+  </main>
+{% endblock %}

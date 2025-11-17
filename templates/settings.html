@@ -1,0 +1,40 @@
+{% extends 'layout.html' %}
+{% block content %}
+  <main>  <!-- class="container" id="content"> -->
+   
+    <form action="{{ doc_root }}settings/" method="POST" class="narrow">
+      <h1>Edit Settings</h1>
+      <p>Member name: {{ member.forename }} {{ member.surname }}</p>
+     
+   <div class="form-group">
+      <label for="pagelimit">Max Stories Displayed: </label>
+      <select name="pagelimit" id="pagelimit">
+        {% for limit in pagelimit %}
+        <option value="{{ limit.amount }}"
+        {% if limit.amount == member.pagelimit %} selected{% endif %}>
+        {{limit.amount}} </option>
+        {% endfor %}
+      </select>
+      <span class="errors">{{ errors.pagelimit }}</span>
+    </div>
+   
+    <div class="form-group">
+      <label for="sorttype">Sort Type: </label>
+      <select name="sorttype" id="sorttype">
+        {% for sort in sorttype %}
+        <option value="{{ sort.id }}"
+        {% if sort.id == member.sorttype %} selected{% endif %}>
+        {{sort.id}} {{sort.name}} {{sort.sorttype}} </option>
+        {% endfor %}
+      </select>
+      <span class="errors">{{ errors.sorttype }}</span>
+    </div>
+      
+      <input type="submit" value="Update Settings" class="btn btn-primary" />
+    </p>
+                                
+    
+  
+    </form>
+  </main>
+{% endblock %}

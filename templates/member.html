@@ -1,0 +1,54 @@
+{% extends 'layout.html' %}
+{% block content %}
+<main class="container grid" id="content">
+  {% if failure %}<div class="alert alert-danger">{{ failure }}</div>{% endif %}
+ 
+  {% if member.id ==0 %}
+  <a href = "javascript:history.back()" class="btn btn-primary">Invalid Page</a>
+  {% else %}
+  <section class="header">
+   
+    <form action="{{ doc_root }}admin/member/{{ member.id }}" method="POST" class="form-member"></form>
+    <h1>{{ member.forename }} {{ member.surname }}</h1>
+    
+       {% if (session.id != member.id  and session.id != 1) %}
+          <p></p>
+      {% endif %}
+    <p class="member"><b>Member since:</b> {{ member.joined|date('F d, Y') }}</p>
+    <p class="member"><b>Family ID:</b> {{ member.account_id}}</p>
+    <p class="member">Sort: {{ sorttype.name}} {{sorttype.sorttype}}</p> 
+    {% if member.picture %}
+      <img src="{{ doc_root }}uploads/{{ member.picture }}" alt="{{ member.forename }}"><br>
+    {% else %}
+      <img src="{{ doc_root }}uploads/person.png"  alt="" class="profile"><br>
+    {% endif %}
+ 
+  {% if (session.id != member.id  and session.id != 1 and session.id != 2) %}
+    <p></p>
+    <a href="{{ doc_root }}newnote/{{ member.id }}" class="btn btn-primary"> FOLLOW REQUEST </a>      
+  {% endif %}
+    
+  {% if success %}<div class="alert alert-success">{{ success }}</div>{% endif %}
+   {% if session.id == member.id or session.id == 0 %}
+   
+      <nav class="member-options">
+       
+        {% if member.role != "family" %}
+         {% if session.id ==1 or session.id> 2%}
+         {% if member.id == session.id %} 
+          <a href="{{ doc_root }}work/" class="btn  btn-primary">Add work</a>
+          <a href="{{ doc_root }}member-edit-profile/{{ member.id }}" class="btn btn-primary">Edit profile </a>
+          <a href="{{ doc_root }}member-edit-picture/" class="btn btn-primary">Profile picture</a>
+          <a href="{{ doc_root }}admin/edit-family/{{member.id}}" class="btn btn-primary">Follow</a>
+          <a href="{{ doc_root }}member/{{ member.id}}/1" class="btn btn-primary">Show All</a>
+        
+       {% endif %}
+       {% endif %}
+       {% endif %}
+      </nav>
+    {% endif %}
+      {% endif %}
+</section>
+  {{ include('story-summaries.html') }}
+</main>
+{% endblock %}

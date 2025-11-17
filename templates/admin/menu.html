@@ -1,0 +1,67 @@
+{% extends 'layout.html' %}
+{% block content %}
+
+  <main>  <!-- Class="container" id="content"> -->
+      <form action="{{ doc_root }}admin/menu/{{ menu.id }}" method="post" class="narrow">
+      <h1>Edit Menu</h1>
+      {% if errors.warning %}<div class="alert alert-danger">{{ errors.warning }}</div>{% endif %}
+      {% if menu.id >  0 %}
+      <div class="form-group">
+        <label for="id">  </label>
+        <input type="hidden" name="id" id="id" class="form-control"
+            value="{{ menu.id }}">
+        <span class="errors">{{ errors.id }}</span>
+      </div>
+      {% endif %}
+        <div class="form-group">
+        <label for="name">Name: </label>
+        <input type="text" name="name" id="name" class="form-control"
+            value="{{ menu.name }}">
+        <span class="errors">{{ errors.name }}</span>
+      </div>
+     
+      <div class="form-group">
+        <label for="description">Description: </label><br>
+        <textarea id="description" name="description" class="form-control">{{ menu.description }}</textarea>
+        <span class="errors">{{ errors.description}}</span><br>
+      </div>
+      
+    
+      <div class="form-group">
+        <label for="account_id">  </label>
+        <input type="hidden" name="account_id" id="account_id" class="form-control"
+            value="{{ menu.account_id }}">
+        <span class="errors">{{ errors.account_id }}</span>
+      </div>
+      
+      <div class="form-group">
+        <label for="position">Position</label>
+        <input type="number" name="position" id="position" class="form-control" 
+            value={{menu.position }}
+            >
+        <span class="errors">{{ errors.position }}</span>
+      </div>
+
+      
+      <div class="form-group">
+        <label for="account_id">Family ID</label>
+        <input type="number" name="account_id" id="account_id" class="form-control" 
+            value={{menu.account_id }}
+            >
+        <span class="errors">{{ errors.account_id }}</span>
+      </div>
+      
+      
+      
+        <div class="form-checkbox">
+        <input type="checkbox" name="navigation" id="navigation" class="form-check-input"
+         value="1" {% if menu.navigation %} checked {% endif %} >
+        <label for="navigation" class="form-check-label" for="navigation">Navigation</label>
+      </div>
+
+      
+      <input type="submit" name="create" value="save" class="btn btn-primary">
+  
+    </form>
+  </main>
+{% endblock %}

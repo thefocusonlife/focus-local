@@ -1,0 +1,225 @@
+{% extends 'layout.html' %}
+{% block title %}Edit story{% endblock %}
+{% block content %}
+     
+  <form action="{{ doc_root }}work/{{ story.id }}" method="POST"  enctype="multipart/form-data">
+
+
+    <main class="container" id="content">
+      {% if not story.image_file %}
+      <h1>Create Your Work:</h1>
+      {% else %}
+      <h1>Edit Your Work:</h1>
+      {% endif %}
+      {% if errors.message %}<div class="alert alert-danger">{{ errors.message }}</div>{% endif %}
+
+      <div class="admin-story">
+        <section class="image">
+          {% if not story.image_file and photocount>= member.photo_limit %}
+           
+            <div>
+            <p></p><p></p>
+            <text>"   Your have reached the <i><b>Story Limit</b></i> for your membership level.  Please view the <b>HELP</b> page for membership level options."</text>
+            <p></p><p></p>
+            <p><a href="{{ doc_root }}/index">Click here to go back to the home page</a>.</p>
+            {% endif %}
+      
+               {% if not story.image_file and photocount<= (member.photo_limit ) %}
+     
+            <label for="image">Upload image</label>
+            <div class="form-group image-placeholder">
+              <input type="file" name="image" class="form-control-file" id="image"><br>
+              <span class="errors">{{ errors.image_file }}</span>
+            </div>
+            <div class="form-group">
+              <label for="image_alt">Alt text: </label>
+              <input type="text" name="image_alt" id="image_alt" value=""  class="form-control">
+              <span class="errors">{{ errors.image_alt }}</span>
+            </div>
+             <div class="form-checkbox">
+            <input type="checkbox" name="landscape" value="1" 
+            class="form-check-input" id="landscape"
+            {% if story.landscape %} checked {% endif %}>
+            <label for="landscape" 
+            class="form-check-label">Landscape</label>
+          </div>
+          {% endif %}
+            {% if story.image_file %}
+            
+            <label>Image:</label>
+            <img src="{{ doc_root }}uploads/{{story.image_file}}" alt="{{ story.image_alt }}">
+            <p class="alt"><strong>Alt text:</strong> {{ story.image_alt }}</p>
+             <div class="form-checkbox">
+            <input type="checkbox" name="landscape" value="1" 
+          class="form-check-input" id="landscape"
+            {% if story.landscape %} checked {% endif %}>
+            <label for="landscape" 
+          class="form-check-label">Landscape</label>
+          </div>
+         {% endif %}
+        </section>
+         {% if (story.image_file )
+           or (not story.image_file and photocount <= member.photo_limit) %}
+        <section class="text">
+          <div class="form-group">
+            <label for="title">Title: </label>
+            <input type="text" name="title" id="title" value="{{ story.title }}" class="form-control">
+            <span class="errors">{{ errors.title }}</span>
+          </div>
+
+          <div class="form-group">
+            <label for="summary">Summary: </label>
+            <textarea name="summary" id="summary" class="form-control">{{ story.summary }}</textarea>
+            <span class="errors">{{ errors.summary }}</span>
+          </div>
+
+          <div class="form-group">
+            <label for="story-content">Content: </label>
+            <textarea name="content" id="story-content" class="form-control">{{ story.content }}</textarea>
+            <span class="errors">{{ errors.content }}</span>
+          </div>
+          
+           <div class="form-group">
+            <label for="member_id">  Author:</label>
+            <select name="member_id" id="member_id">
+              {% for author in authors %}
+              {% if story.image_file %}
+              <option value="{{author.id }}"
+              {% if story.member_id == author.id %} selected{% endif %}>
+              {{ author.forename }} {{ author.surname }}</option>
+              {% else %}
+              <option value="{{author.id }}"
+              {% if session.id == author.id %} selected{% endif %}>
+              {{ author.forename }} {{ author.surname }}</option>
+              {% endif %}
+              {% endfor %}
+            </select>
+            <span class="errors">{{ errors.author }}</span>
+      
+     
+          </div>
+           <div class="form-group">
+            <label for="family_id">Family ID:   </label>
+            <select name="family_id" id="family_id">
+              {% for family in families %}
+
+
+              {% if story.image_file %}
+
+              <option value={{ family.id }}
+              {% if story.family_id == family.id %} selected{% endif %}>
+              {{ family.forename }} {{ family.surname }}</option>
+              {% else %}
+
+              <option value={{ family.id }}
+              {% if member.account_id == family.id %} selected{% endif %}>
+              {{ family.forename }} {{ family.surname }}</option>
+              {% endif %}
+              {% endfor %}
+            </select>
+            <span class="errors">{{ errors.family }}</span>
+          </div>
+
+          <div class="form-group">
+            <label for="menu">Menu: </label>
+            <select name="menu_id" id="menu">
+              {% for menu in menus %}
+              {% if member.account_id == menu.account_id %}
+                {% if story.image_file %}
+
+                <option value="{{ menu.id }}"
+                  {% if story.menu_id == menu.id %} selected{% endif %}>
+                  {{ menu.name }}</option>
+                {% else %}
+                  <option value="{{ menu.id }}"
+                  {% if member.account_id == menu.id %} selected{% endif %}>
+                  {{ menu.name }}</option>
+                {% endif %}
+                {% endif %}      
+              {% endfor %}
+              </select>
+            <span class="errors">{{ errors.menu }}</span>
+            <div class="form-group">
+            <label for="keyword">Keyword: </label>
+            <input type="text" name="keyword" id="keyword" value="{{ story.keyword }}" class="form-control">
+            <span class="errors">{{ errors.keyword }}</span>
+          </div>
+          <div class="form-group">
+             <label for="storyorder">Order:</label>
+              <input type="number" name="storyorder" id="storyorder" class="form-control"
+            value="{{ story.storyorder }}">
+            <span class="errors">{{ errors.storyorder }}</span>
+          </div>
+
+           <div class="form-checkbox">
+            <input type="checkbox" name="published" value="1" class="form-check-input" id="published"
+            {% if story.published %} checked {% endif %}>
+            <label for="published" class="form-check-label">Public</label>
+          </div>
+          
+
+     
+
+          <input type="submit" name="update" value="save" class="btn btn-primary">
+          {% if story.id %}
+            <a href="{{ doc_root }}work-delete/{{ story.id }}"  class="btn btn-danger">delete</a>
+          {% endif %}
+      
+     
+        </section>
+
+        {% endif %}
+
+      </div><!-- /.admin-story -->
+     
+    </main>
+        
+  </form>
+
+
+
+ 
+
+ <script src="https://cdn.tiny.cloud/1/7tkofysu0j4zom5h6jzs7crranermxfznweam4rf1irmolqf/6/tinymce.min.js" referrerpolicy="origin"></script>
+   <script>
+  
+  
+   if (document.getElementById('story-content')){
+      tinymce.init({
+        menubar: false,
+        selector: '#story-content',
+        toolbar: 'bold italic  link  alignleft aligncenter alignright ',
+         
+        target_list: false,
+        link_title: false
+
+      });
+    }
+  </script>
+
+<!--  <script>
+  
+  
+   if (document.getElementById('story-content')){
+      tinymce.init({
+        menubar: false,
+        selector: '#story-content',
+        toolbar: 'bold italic  link  alignleft aligncenter alignright ',
+         color_map: [
+          '000000', 'Black',
+          '808080', 'Gray',
+          'FFFFFF', 'White',
+          'FF0000', 'Red',
+          'FFFF00', 'Yellow',
+          '008000', 'Green',
+          '0000FF', 'Blue'
+           ],
+        plugins: 'link print',
+        target_list: false,
+        link_title: false
+
+      });
+    }
+  </script>
+-->
+{% endblock %}

@@ -1,0 +1,87 @@
+{% extends 'layout.html' %}
+
+{% block title %}"NOTES"{% endblock %}
+{% block description %}{{ member.forename|e('html_attr') }} {{ member.surname|e('html_attr') }} on theFocusOnLife{% endblock %}
+
+{% block content %}
+
+
+<main class="container" id="content">
+  <form action="{{ doc_root }}admin/note/{{ member2.id }}" method="POST" class="form-member">
+  <!--<form method="post" action="{{ doc_root }}admin/note/{{ note.from_id }}" class="form-narrow"> -->
+    
+  {% if session.id != 1 and member.id == 1 %}
+  <a href = "javascript:history.back()" class="btn btn-primary">Invalid Page</a>
+  {% else %}
+  <section class="header">
+    
+
+    <h1>notifications</h1>
+   
+    
+    <p class="member"><b>Member since:</b> {{ member.joined|date('F d, Y') }}</p>
+    <p class="member"><b>Family ID:</b> {{ member.account_id }}</p>
+   
+    {% if member.picture %}
+      <img src="{{ doc_root }}uploads/{{ member.picture }}" alt="{{ member.forename }}"><br>
+    {% else %}
+      <img src="{{ doc_root }}uploads/person.png"  alt="" class="profile"><br>
+    {% endif %}
+    {% if success %}<div class="alert alert-success">{{ success }}</div>{% endif %}
+  
+    <table class="table table-striped">     
+      <th>Profile picture</th><th>From ID</th><th>From</th><th>Family_id</th><th>To</th><th>Family Id</th><th>Type</th><th>Request Date</th><th>Reply Date</th></th>
+  
+    {% for note in notes %}
+    {% if note.to_id == session.id %}
+        
+    <tr>
+        <td>
+          {% for member2 in members %}
+              
+        {% if member2.id == note.from_id %}
+     
+      
+      <img src="{{ doc_root }}uploads/{{ member2.picture }}" alt= <img src="{{ doc_root }}uploads/person.png"  class="profile" /> 
+        {% else %}
+        <!-- <img src="{{ doc_root }}uploads/person.png" alt="" class="profile" /> -->
+        {% endif %}
+        {% endfor %} 
+      </td>
+      <td>{{ note.from_name }}</td>
+      <td>{{ note.to_family_id }}</td>
+      <td>{{ note.to_name }}</td>
+      <td>{{ note.family_id }}</td>
+      <td>REQUEST TO FOLLOW</td>
+      <td>{{ note.request_date }}</td>
+      <td>{{ note.reply_date }}</td>
+      <td>{{ note.reply }}</td>
+      {% if member1.account_id != member.account_id %}
+      {% if note.allow == 1 %}
+        
+      {% if member.account_id == note.family_id %}
+      <div class="form-group">
+      <input type="hidden" name="note.id" id="note.id" class="form-control"
+      value="{{ note.id }}" readonly>
+      <span class="errors">{{ errors.to_member }}</span>
+    </div>
+      
+      <td><a href = "{{ doc_root }}admin/note/{{ note.id }}/" class=btn btn-secondary">REVERT</a></td>
+      {% else %}
+      <td><a href = "{{ doc_root }}admin/note/{{note.to_id }}/" class="btn btn-primary">FOLLOW</a></td>
+      {% endif %}
+      
+      {% else %}
+      <td><a href = "javascript:history.back()" class="btn btn-danger">REQUEST</a></td>
+      {% endif %}
+      
+      <td><a href = "javascript:history.back()" class="btn btn-primary">EXIT</a</td>  
+      {% endif %}
+      {% endif %}
+    {% endfor %}
+  </table>
+  
+  {% endif %}
+
+</main>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends 'admin/layout.html' %}
+{% block content %}
+  <main> <!-- class="container admin" id="content"> -->
+    <form action="{{ doc_root }}admin/image-delete/{{ story.id }}" method="POST" class="narrow">
+      <h1>Delete Image</h1>
+      <p>Click confirm to delete the image:</p>
+      {{story.image_file}}
+      <p><img src="{{ doc_root }}uploads/{{ story.image_file }}" alt="{{ story.image_alt }}"></p>
+      <input type="submit" name="delete" value="confirm" class="btn btn-primary" />
+      <a href="{{ doc_root }}work/{{ story.id }}" class="btn btn-danger">cancel</a>
+    </form>
+  </main>
+{% endblock %}

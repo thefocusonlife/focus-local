@@ -1,0 +1,186 @@
+<?php
+namespace PhpBook\CMS;                                   // Declare namespace
+
+//use PhpBook\CMS\Website;
+//use PhpBook\CMS\Quickguide;
+
+class CMS
+{
+    protected $db         = null;                         // Stores reference to Database object
+    protected $story      = null;                         // Stores reference to Story object
+    protected $menu       = null;                         // Stores reference to Menu object
+    protected $member     = null;                         // Stores reference to Member object
+    protected $family     = null;                         // Stores reference to Family object
+    protected $session    = null;                         // Stores reference to Session object
+    protected $token      = null;                         // Stores reference to Token object
+    protected $like       = null;                         // Stores reference to Like object
+    protected $comment    = null;                         // Stores reference to Comment object
+   // protected $storyorder = null;                         // Stores reference to Story Order object
+    protected $pagelimit  = null;                         // Stores reference to Pagelimit objec
+    protected $sorttype   = null;                         // Stores reference to Sorttype objec
+    protected $follow     = null;                         // Stores reference to Follow objec
+    protected $note       = null;                         // Stores reference to Note object
+    protected $notes      = null;
+    protected $newnote    = null;                         // Stores reference to Newnote object
+    protected $notetype   = null;
+    protected $website    = null;
+    protected $quickguide = null;
+    
+    
+
+    public function __construct($dsn, $username, $password)
+    {
+        $this->db = new Database($dsn, $username, $password); // Create Database object
+    }
+
+    public function getStory()
+    {
+     
+        if ($this->story === null) {                   // If $story property null
+            $this->story = new Story($this->db);     // Create Story object
+        }
+    
+        return $this->story;                           // Return Story object
+    }
+    
+    
+
+    public function getMenu()
+    {
+        if ($this->menu === null) {                  // If $menu property null
+            $this->menu = new Menu($this->db);       // Create Menu object
+        }
+        return $this->menu;                          // Return Menu object
+    }
+
+    public function getMember()
+    {
+        if ($this->member === null) {                    // If $member property null
+            $this->member = new Member($this->db);       // Create Member object
+        }
+        return $this->member;                            // Return Member object
+    }
+
+    public function getFamily()
+    {
+        if ($this->family === null) {                    // If $family property null
+            $this->family = new family($this->db);       // Create Family object
+        }
+        return $this->family;                            // Return Member object
+    }
+
+
+    public function getSession()
+    {
+        if ($this->session === null) {                   // If $session property null
+            $this->session = new Session();              // Create Session object
+        }
+        return $this->session;                           // Return Session object
+    }
+
+    public function getToken()
+    {
+        if ($this->token === null) {                     // If $token property null
+            $this->token = new Token($this->db);         // Create Token object
+        }
+        return $this->token;                             // Return Token object
+    }
+
+    public function getLike()
+    {
+        if ($this->like === null) {                      // If $like property null
+            $this->like = new Like($this->db);           // Create Like object
+        }
+        return $this->like;                              // Return Like object
+    }
+
+    public function getComment()
+    {
+        if ($this->comment === null) {                   // If $comment property null
+            $this->comment = new Comment($this->db);     // Create Comment object
+        }
+        return $this->comment;                           // Return Comment object
+    }
+/*     public function getStoryorder()
+    {
+        if ($this->storyorder === null) {                      // If $position property null
+            $this->storyorder = new Storyorder($this->db);     // Create Position object
+        }
+        return $this->storyorder;                              // Return Position object
+    }
+  */
+    public function getQuickguide()
+    {
+        if ($this->quickguide === null) {                     // If $quickguide property null
+            $this->quickguide = new Quickguide($this->db);     // Create Quickguide object        
+        }
+        return $this->quickguide;                             // Return Quickguide object
+    }
+
+    public function getPagelimit()
+    {
+        if ($this->pagelimit === null) {                     // If $pagelimit property null
+            $this->pagelimit = new Pagelimit($this->db);     // Create Pagelimit object        
+        }
+        return $this->pagelimit;                             // Return Pagelimit object
+    }
+
+    public function getSorttype()
+{
+    if ($this->sorttype === null) {                    // If $sorttype property null
+        $this->sorttype = new Sorttype($this->db);     // Create Sorttype object
+    }
+    return $this->sorttype;                            // Return Sorttype object
+}
+public function getFollow()
+{
+ 
+    if ($this->follow === null) {                    // If $follow property null
+        $this->follow = new follow($this->db);       // Create follow object
+    }
+    return $this->follow;                           // Return follow object
+}
+public function getNote()
+{
+
+    if ($this->note === null) {                   // If $notification property null
+        $this->note = new Note($this->db);        // Create notification object
+    }
+      return $this->note;                         // Return notification object
+}
+public function getNotes()
+{
+
+    if ($this->notes === null) {                   // If $notification property null
+        $this->notes = new Notes($this->db);       // Create notification object
+    }
+      return $this->notes;                         // Return notification object
+}
+
+public function getNewNote()
+{
+
+    if ($this->newnote === null) {                   // If $notification property null
+        $this->newnote = new Newnote($this->db);     // Create notification object
+    }
+    return $this->newnote;                           // Return notification object
+}
+public function getNotetype()
+{
+
+    if ($this->notetype === null) {                   // If $notetype property null
+        $this->notetype = new notetype($this->db);    // Create notetype object
+    }
+    return $this->notetype;                           // Return notetype object   
+}
+public function getWebsite()
+{
+
+    if ($this->website === null) {                   // If $website property null
+        $this->website = new Website($this->db);    // Create website object
+    }
+    return $this->website;                           // Return website object   
+}                 // Return website object   
+
+}
+?>

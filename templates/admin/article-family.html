@@ -1,0 +1,30 @@
+{% extends 'admin/layout.html' %}
+{% block content %}
+  <main class="container" id="content">
+    <form action="{{ doc_root }}admin/article-family/{{ article.id }}" method="POST" class="narrow">
+      <h1>Edit Family</h1>
+      <p>Member name: {{ member.forename }} {{ member.surname }}
+      </p>Current Family Id: {{member.account_id}} 
+      
+      <!-- input account_id dropdown here --> 
+
+  <div class="form-group">
+            <label for="account_id">Family: </label>
+
+            <select name="member_id" id="member_id">
+              {% for family in families %}
+              <option value="{{ family.id }}"
+              {% if family.id == member.account_id %} selected{% endif %}>
+              {{family.id}} {{ family.forename }} {{ family.surname }}</option>
+              {% endfor %}
+            </select>
+            <span class="errors">{{ errors.family }}</span>
+          </div>
+          <input type="submit" value="Update family" class="btn 
+    btn-primary" /> 
+ 
+    </form>
+  
+    </form>
+  </main>
+{% endblock %}

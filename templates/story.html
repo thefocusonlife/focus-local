@@ -1,0 +1,88 @@
+{% extends 'layout.html' %}
+{% block title %}{{ story.title }}{% endblock %}
+{% block description %}{{ story.summary|e('html_attr') }}{% endblock %}
+{% block content %}
+<body oncontextmenu="return true;">
+  
+  {% if story.blog ==3 %}
+      <main class="blog container">
+  {% endif %}      
+  {% if story.blog == 2 %}      
+    <main class="blog1"> 
+  {% endif %}
+  {% if story.blog ==1  %}
+       <main class="story container" id="content">
+  {% endif %}
+ 
+  <section class="image">
+    {% if story.image_file %}
+      <img src="{{ doc_root }}uploads/{{ story.image_file }}" alt="{{ story.image_alt }}">
+    {% else %}
+      <img src="{{ doc_root }}uploads/blank.png" alt="">
+    {% endif %}
+  </section>
+  <section class="text">
+    <h2>{{ story.title }}</h2>
+    <div class="social">
+      <div class="like-count">
+        {% if session.id == 0 %}
+          <a href="{{ doc_root }}login/"><span class="icon-heart-empty"></span></a>
+        {% else %}
+          <a href="{{ doc_root }}like/{{ story.id }}">
+          {% if liked %}
+            <span class="icon-heart"></span></a>
+          {% else %}
+            <span class="icon-heart-empty"></span>
+          {% endif %}
+          </a>
+        {% endif %}
+        {{ story.likes }}
+      </div>
+      <div class="comment-count">
+        <span class="icon-comment"></span> {{ story.comments }}
+      </div>
+    </div>
+    <div class="date">{{ story.created|date('F d, Y') }}</div>
+    <div class="content">{{ story.content|raw}}</div>
+    <p class="credit">
+      Posted in <a href="{{ doc_root }}menu/{{ story.menu_id }}/{{ story.seo_menu }}">{{ story.seo_menu }}</a>
+      by <a href="{{ doc_root }}member/{{ story.member_id }}">{{ story.author }}</a>
+    </p>
+    
+  </section>
+  <section>
+    <a></a>
+  </section>
+  <section class="comments">
+
+    <h2>Comments</h2>
+    {% for comment in comments %}
+    <div class="comment">
+      <img src="{{ doc_root }}uploads/{{ comment.picture }}" alt="{{ comment.author }}" />
+      <b>{{ comment.author }}</b><br>
+      {{ comment.posted|date('H:i a - F d, Y') }}<br>
+      <p>{{ comment.comment|raw }}</p>
+    </div>
+    {% endfor %}
+    {% if session.id < 2 %}
+    <p>You must <a href="{{ doc_root }}login">log in to make a comment</a>.</p>
+    {% else %}
+    
+    {% if story.allow_comment == true  %}
+    <form action="" method="post">
+     
+      <textarea id="myTextarea1" class="normal"  name="comment" id="comment"></textarea>
+      {% if error == true %}<div class="error">{{ error }}</div>{% endif %}
+      <br><input type="submit" value="Save comment" class="btn btn-primary">
+    </form>
+    {% else %}
+    {% if story.allow_comment == false %}
+    <h4 style="color:rgb(205, 198, 197);">Comments have been blocked</h4>
+    {% endif %}
+    {% endif %}
+    {% endif %}
+  </section>
+  
+</main>
+</body>
+{% endblock %}

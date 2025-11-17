@@ -1,0 +1,33 @@
+# === Focus-Local Git Ignore Rules ===
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Database dumps (local backups)
+*.sql
+
+# Symfony / PHP cache & logs (if used)
+var/cache/
+var/log/
+
+# Uploaded content – huge and always changing
+public/uploads/
+public/save_img/
+public/save_uploads/
+
+# Local-only images that should not be in source control
+public/img/Untitled-1.psd
+
+# IDE / editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Local config variants (never commit secrets)
+config/config_local.php
+config/config-a2.php
+
+# Composer dependencies (reinstallable)
+vendor/

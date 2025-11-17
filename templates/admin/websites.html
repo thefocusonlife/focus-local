@@ -1,0 +1,33 @@
+{% extends 'admin/layout.html' %}
+{% block content %}
+
+<main> <!-- class="container" id="content"> -->
+  <section class="header">
+    <h1>Websites</h1>
+    {% if success %}<div class="alert alert-success">{{ success }}</div>{% endif %}
+    {% if failure %}<div class="alert alert-danger">{{ failure }}</div>{% endif %}
+    <p><a href="{{ doc_root }}admin/website" class="btn btn-primary">Add new website</a></p>
+      
+  </section>
+
+  <table class="table-striped">     
+    <tr>
+      <th>Name</th><th></th><th></th><th>Website Id</th>
+      <th>Image File</th><th></th>
+      <th class="edit">Edit Website</th>
+      <th class="del">Delete Website</th>
+    </tr> 
+ 
+        {% for website in websites %}
+    <tr>
+      <td><strong>{{ website.name }}</strong></td><td></td><td></td><td>{{ website.id }}</td><td>{{ website.image_file }}</td><td></td>
+      <td><a href="{{ doc_root }}admin/website/{{ website.id }}"
+        class ="btn btn-primary">edit</a></td>       
+      <td><a href="{{ doc_root }}admin/website-delete/{{ website.id }}"
+        class="btn btn-danger">delete</a></td>
+      </tr>
+    {% endfor %}
+  </table>
+</main>
+
+{% endblock %}
