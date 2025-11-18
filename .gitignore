@@ -32,3 +32,4 @@ config/config-a2.php
 # Composer dependencies (reinstallable)
 vendor/
 .env
+.env
