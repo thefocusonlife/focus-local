@@ -11,7 +11,16 @@ class Email {
         $this->phpmailer->isSMTP();                                  // Use SMTP
         $this->phpmailer->SMTPAuth   = true;                         // Authentication on
         $this->phpmailer->Host       = $email_config['server'];      // Server address
-        $this->phpmailer->SMTPSecure = $email_config['security'];    // Type of security
+        // Set encryption based on config: 'SSL' (port 465) or 'TLS' (port 587)
+        $security = strtoupper($email_config['security'] ?? '');
+        if ($security === 'SSL') {
+            $this->phpmailer->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_SMTPS;
+        } elseif ($security === 'TLS') {
+            $this->phpmailer->SMTPSecure = \PHPMailer\PHPMailer\PHPMailer::ENCRYPTION_STARTTLS;
+        } else {
+            $this->phpmailer->SMTPSecure = ''; // no encryption
+        }
+
         $this->phpmailer->Port       = $email_config['port'];        // Port
         $this->phpmailer->Username   = $email_config['username'];    // Username
         $this->phpmailer->Password   = $email_config['password'];    // Password

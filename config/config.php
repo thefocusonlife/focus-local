@@ -35,26 +35,11 @@ $email_config = [
     'password'    => getenv('SMTP_PASSWORD') ?: '',
     'security'    => getenv('SMTP_SECURITY') ?: 'TLS',
     'admin_email' => 'contact@thefocusonlife.org',
-    'debug'       => (DEV) ? 0 : 2,
+ //   'debug'       => (DEV) ? 0 : 2,
+    'debug'       => 0,
 ];
 
 /// Database settings
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 $type     = 'mysql';                 // Type of database
 $server   = 'localhost';             // Server the database is on
 $db       = 'focus_local';           // Name of the database
