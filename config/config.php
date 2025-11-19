@@ -11,7 +11,50 @@ $parent_folder = dirname($this_folder);
 //define("DOC_ROOT", $parent_folder . DIRECTORY_SEPARATOR . ROOT_FOLDER . DIRECTORY_SEPARATOR);
 define("DOC_ROOT", "/focus-local/public/");   // LINUX
 
+// Simple .env loader (safe to commit; .env itself is not)
+$envFile = __DIR__ . '/../.env';
+if (file_exists($envFile)) {
+    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        $line = trim($line);
+        if ($line === '' || str_starts_with($line, '#')) {
+            continue;
+        }
+        [$name, $value] = array_map('trim', explode('=', $line, 2));
+        if (!getenv($name)) {
+            putenv("$name=$value");
+        }
+    }
+}
+
+// SMTP server settings
+$email_config = [
+    'server'      => getenv('SMTP_SERVER')   ?: 'mail.thefocusonlife.org',
+    'port'        => getenv('SMTP_PORT')     ?: '587',
+    'username'    => getenv('SMTP_USERNAME') ?: 'contact@thefocusonlife.org',
+    'password'    => getenv('SMTP_PASSWORD') ?: '',
+    'security'    => getenv('SMTP_SECURITY') ?: 'TLS',
+    'admin_email' => 'contact@thefocusonlife.org',
+    'debug'       => (DEV) ? 0 : 2,
+];
+
 /// Database settings
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 $type     = 'mysql';                 // Type of database
 $server   = 'localhost';             // Server the database is on
 $db       = 'focus_local';           // Name of the database
@@ -24,18 +67,6 @@ $password = 'Gfocus2025!local';          // Enter YOUR password here
 // DO NOT CHANGE NEXT LINE
 $dsn = "$type:host=$server;dbname=$db;port=$port;charset=$charset"; // Create DSN
 
-// SMTP server settings
-$email_config = [
-    'server'      => 'smtp.gmail.com',
-    'port'        => '587',
-    'username'    => 'geoff@thefocusonlife.com',
-
-    'password'    => 'qvazffrszrbklahv',
-    'security'    => 'TLS/STARTTLS',
-    'admin_email' => 'contact@thefocusonlife.com',
-   // 'debug'       => (DEV) ? 2 : 0,
-    'debug'       => (DEV) ? 0 : 2,  
-];
 
 
 // File upload settings
