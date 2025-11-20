@@ -26,9 +26,8 @@ public/img/Untitled-1.psd
 *.swo
 
 # Local config variants (never commit secrets)
-config/config_local.php
-config/config-a2.php
-
+config/config.a2.php
+config/config.local.php
 # Composer dependencies (reinstallable)
 vendor/
 .env
