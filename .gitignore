@@ -31,3 +31,8 @@ config/config.local.php
 # Composer dependencies (reinstallable)
 vendor/
 .env
+
+# Debug logs
+temp/
+*.log
+

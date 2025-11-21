@@ -562,6 +562,12 @@ return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return data
     {
     
         try {                                            // Try to insert data
+            file_put_contents(
+                '/opt/lampp/htdocs/focus-local/temp/story-debug.log',
+                    date('c') . " published=" . var_export($data['published'] ?? null, true) . "\n",
+    FILE_APPEND
+);
+
             $this->db->beginTransaction();               // Start 
             if ($destination) {   
                            // If image uploaded

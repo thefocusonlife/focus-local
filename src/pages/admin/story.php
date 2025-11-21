@@ -35,7 +35,7 @@ $story = [
     'menu_id'     => 0,
     'image_id'    => null,
     'imagesize'   => 0,
-    'published'   => false,
+    'published'   => 0,
     'image_file'  => '',
     'image_alt'   => '.',
     'storyorder'  => 0,
@@ -150,7 +150,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {              // If form submitted
     $story['member_id']   = intval($_POST['member_id']);            // Get member_id
     $story['family_id']   = intval( $_POST['family_id']);
     $story['menu_id']     = intval($_POST['menu_id']);              // Get menu_id
-    $story['published']   = (isset($_POST['published'])) ? 1 : 0;   // Get navigation
+    $story['published']   = !empty($_POST['published']) ? 1 : 0;  // SET published
     $story['seo_title']   = create_seo_name($story['title']);       // SEO friendly title
     $story['storyorder']  = intval($_POST['storyorder']);           // Get storyorder  
     $story['landscape']   = isset($_POST['landscape']);

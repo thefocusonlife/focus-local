@@ -30,7 +30,7 @@ $story = [
     'menu_id'     => 0,
     'image_id'    => null,
     'imagesize'   => 0,
-    'published'   => false,
+    'published'   => 0,
     'image_file'  => '',
     'image_alt'   => '.',
     'storyorder'  => 0,
@@ -176,7 +176,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {              // Form submitted
     $story['member_id']   = intval($_POST['member_id']);       // Get member_id
     $story['family_id']   = intval($_POST['member_id']);
     $story['menu_id']     = intval($_POST['menu_id']);     // Get menu_id
-    $story['published']   = isset($_POST['published']);                         // Set published
+    $story['published']   = !empty($_POST['published']) ? 1 : 0;   // Set published
     $story['seo_title']   = create_seo_name($story['title']); 
     $story['storyorder']  = intval($_POST['storyorder']);
     $story['landscape']   = intval($_POST['landscape']);
@@ -215,9 +215,17 @@ $story['content']     = $purifier->purify($story['content']); // Purify content
     } else {  
                                                         // Otherwise
         $arguments = $story; 
-                                        // Save data as $arguments
 
-        if ($arguments['id']) { 
+         // 🔥 DEBUG: log what we're actually passing into create()
+        file_put_contents(
+            '/opt/lampp/htdocs/focus-local/temp/story-debug.log',
+            date('c') . " work.php BEFORE create:\n" .
+            print_r($arguments, true) . "\n\n",
+            FILE_APPEND
+        );                              
+        
+        // Save data as $arguments
+        if (!empty($arguments['id'])) { 
             $saved = $cms->getStory()->update($arguments, $temp, $destination); // Update story
         } else {  
             // No id create
