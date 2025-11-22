@@ -218,7 +218,7 @@ $story['content']     = $purifier->purify($story['content']); // Purify content
 
          // 🔥 DEBUG: log what we're actually passing into create()
         file_put_contents(
-            '/opt/lampp/htdocs/focus-local/temp/story-debug.log',
+            '/tmp/story-debug.log',
             date('c') . " work.php BEFORE create:\n" .
             print_r($arguments, true) . "\n\n",
             FILE_APPEND

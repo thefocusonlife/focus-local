@@ -561,9 +561,10 @@ return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return data
     
     {
     
-        try {                                            // Try to insert data
+        try {                       // Try to insert data
+            // 🔥 DEBUG: log the story.published field contents (i.e. 1,0 or null)                                            
             file_put_contents(
-                '/opt/lampp/htdocs/focus-local/temp/story-debug.log',
+                '/tmp/story-debug.log',
                     date('c') . " published=" . var_export($data['published'] ?? null, true) . "\n",
     FILE_APPEND
 );
