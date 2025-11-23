@@ -10,7 +10,11 @@
     <h1>Log in</h1>
   </section>
   
-  <form method="post" action="{{ doc_root }}login/1" class="form-membership">
+ <form method="post"
+      action="{{ doc_root }}login/1"
+      class="form-membership form-login"
+      data-recaptcha-action="login">
+
     {% if success %}<div class="alert alert-success">{{ success }}</div>{% endif %}
     {% if errors %}<div class="alert alert-danger">{{ errors.message }}</div>{% endif %}
 
@@ -30,7 +34,9 @@
       <div class="errors">{{ errors.password|raw }}</div>
     </div>
 
-     
+    {# ⭐ Hidden reCAPTCHA v3 token #}
+    <input type="hidden" name="g-recaptcha-response"> 
+
     <input type="submit" class="btn btn-primary" value="Log in"><br>
     <p><a href="{{ doc_root }}password-lost/">Lost password?</a></p>
   </form>

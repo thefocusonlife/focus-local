@@ -1,6 +1,8 @@
 <?php
-;
-define('DEV', true);                       // In development or live? Development = true | Live = false
+declare(strict_types = 1);
+
+// In development or live? Development = true | Live = false
+define('DEV', true);
 define('DOMAIN', 'http://localhost');       // Domain (used to create links in emails)
 define('ROOT_FOLDER', 'public');           // Name of document root folder (e.g. public, content, htdocs)
 
@@ -77,11 +79,15 @@ $password = $db_pass;                // DB password
 // DO NOT CHANGE NEXT LINE
 $dsn = "$type:host=$server;dbname=$db;port=$port;charset=$charset"; // Create DSN
 
-
-
 // File upload settings
 define('MEDIA_TYPES', ['image/jpeg', 'image/png', 'image/gif','image/tmp',]); // Allowed file types
 define('FILE_EXTENSIONS', ['jpeg', 'jpg', 'png', 'gif','tmp']);       // Allowed file extensions
 define('MAX_SIZE', '5242880');                                    // Max file size
 // DO NOT EDIT:
-define('UPLOADS', dirname(__DIR__, 1) . DIRECTORY_SEPARATOR . ROOT_FOLDER . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR); // Image upload folder0
+define(
+    'UPLOADS',
+    dirname(__DIR__, 1)
+    . DIRECTORY_SEPARATOR . ROOT_FOLDER
+    . DIRECTORY_SEPARATOR . 'uploads'
+    . DIRECTORY_SEPARATOR
+);
