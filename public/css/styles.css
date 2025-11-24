@@ -929,3 +929,14 @@ nav.toc > ul > li {
 nav.toc ul > li > ul {
   margin-top: 0.5rem !important;
 }
+
+/* Reposition Google reCAPTCHA v3 badge */
+.grecaptcha-badge {
+    position: fixed !important;
+    left: 20px !important;
+    right: auto !important;
+    bottom: 20px !important;
+    z-index: 9999 !important;
+}
+
+

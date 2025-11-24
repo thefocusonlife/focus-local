@@ -140,8 +140,8 @@
    <!--   <div class="container">  -->
         <a href="{{ doc_root }}contact/1">Contact us</a>
         <a class="credit">&copy; 
-         {{ 'now'|date('Y') }} Geoff Stevens</a><br>ver 1.00 beta
-         <a href="{{ doc_root }}terms-privac00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000y">Terms & Privacy</a>
+         {{ 'now'|date('Y') }} Geoff Stevens</a><br>
+         Ver 1.0.0      <a href="{{ doc_root }}terms-privacy">Terms & Privacy</a><br>
 
      <!-- </div> -->
     </footer>
@@ -150,41 +150,145 @@
     {# Load reCAPTCHA v3 library #}
     <script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}"></script>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const forms = document.querySelectorAll('form[data-recaptcha-action]');
+   <script>
+document.addEventListener('DOMContentLoaded', function () {
+  var forms = document.querySelectorAll('form[data-recaptcha-action]');
+  console.log('reCAPTCHA: found forms =', forms.length);
 
-            forms.forEach(function (form) {
-                form.addEventListener('submit', function (event) {
-                    // If token already present, don't run again
-                    const tokenField = form.querySelector('input[name="g-recaptcha-response"]');
-                    if (tokenField && tokenField.value) {
-                        return;
-                    }
+  if (!forms.length) {
+    console.warn('reCAPTCHA: No forms with data-recaptcha-action found.');
+    return;
+  }
 
-                    event.preventDefault(); // pause normal submit
+  forms.forEach(function (form) {
+    var action = form.getAttribute('data-recaptcha-action') || '';
+    console.log('reCAPTCHA: wiring form with action =', action);
 
-                    const action = form.dataset.recaptchaAction || 'submit';
+    form.addEventListener('submit', function (e) {
+      console.log('reCAPTCHA: intercept submit for action =', action);
+      e.preventDefault(); // pause normal submit
 
-                    grecaptcha.ready(function () {
-                        grecaptcha.execute('{{ recaptcha_site_key }}', { action: action })
-                            .then(function (token) {
-                                if (tokenField) {
-                                    tokenField.value = token;
-                                }
-                                form.submit(); // resume submit
-                            })
-                            .catch(function (err) {
-                                console.error('reCAPTCHA error:', err);
-                                // Optional: show a friendly message or just fall back
-                                form.submit();
-                            });
-                    });
-                });
-            });
-        });
-    </script>
+      if (typeof grecaptcha === 'undefined') {
+        console.error('reCAPTCHA: grecaptcha is undefined!');
+        // Fall back to normal submit so the form isn't "dead"
+        form.submit();
+        return;
+      }
+
+      grecaptcha.ready(function () {
+        console.log('reCAPTCHA: grecaptcha.ready for action =', action);
+
+        grecaptcha.execute('{{ recaptcha_site_key }}', { action: action })
+          .then(function (token) {
+            console.log('reCAPTCHA: got token prefix =', token ? token.substring(0, 15) + '...' : '(empty)');
+
+            var field = form.querySelector('input[name="g-recaptcha-response"]');
+            if (!field) {
+              console.warn('reCAPTCHA: hidden field not found, creating one.');
+              field = document.createElement('input');
+              field.type = 'hidden';
+              field.name = 'g-recaptcha-response';
+              form.appendChild(field);
+            }
+
+            field.value = token || '';
+            form.submit(); // now submit for real
+          })
+          .catch(function (err) {
+            console.error('reCAPTCHA execute error:', err);
+            // Optional: submit anyway, or show a user-friendly error
+            form.submit();
+          });
+      });
+    });
+  });
+});
+</script>
+
+
 {% endif %}
  
+{# Load reCAPTCHA v3 with your site key (Twig global) #}
+<script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  // Find all forms that declare a reCAPTCHA action
+  var forms = document.querySelectorAll('form[data-recaptcha-action]');
+  if (!forms.length) return;
+
+  forms.forEach(function (form) {
+    var action = form.getAttribute('data-recaptcha-action') || '';
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault(); // pause normal submit
+
+      grecaptcha.ready(function () {
+        grecaptcha.execute('{{ recaptcha_site_key }}', { action: action })
+          .then(function (token) {
+            // Ensure the hidden field exists
+            var field = form.querySelector('input[name="g-recaptcha-response"]');
+            if (!field) {
+              field = document.createElement('input');
+              field.type = 'hidden';
+              field.name = 'g-recaptcha-response';
+              form.appendChild(field);
+            }
+
+            field.value = token || '';
+            form.submit(); // now submit for real
+          })
+          .catch(function (err) {
+            console.error('reCAPTCHA error:', err);
+            // If Google fails hard, you can choose to submit anyway or show a message.
+            form.submit();
+          });
+      });
+    });
+  });
+});
+</script>
+
+{# Load reCAPTCHA v3 with your site key (Twig global) #}
+<script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  // Find all forms that declare a reCAPTCHA action
+  var forms = document.querySelectorAll('form[data-recaptcha-action]');
+  if (!forms.length) return;
+
+  forms.forEach(function (form) {
+    var action = form.getAttribute('data-recaptcha-action') || '';
+
+    form.addEventListener('submit', function (e) {
+      e.preventDefault(); // pause normal submit
+
+      grecaptcha.ready(function () {
+        grecaptcha.execute('{{ recaptcha_site_key }}', { action: action })
+          .then(function (token) {
+            // Ensure the hidden field exists
+            var field = form.querySelector('input[name="g-recaptcha-response"]');
+            if (!field) {
+              field = document.createElement('input');
+              field.type = 'hidden';
+              field.name = 'g-recaptcha-response';
+              form.appendChild(field);
+            }
+
+            field.value = token || '';
+            form.submit(); // now submit for real
+          })
+          .catch(function (err) {
+            console.error('reCAPTCHA error:', err);
+            // If Google fails hard, you can choose to submit anyway or show a message.
+            form.submit();
+          });
+      });
+    });
+  });
+});
+</script>
+
   </body>
 </html>

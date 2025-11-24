@@ -2,10 +2,6 @@
 declare(strict_types = 1);                               // Use strict types
 use PhpBook\Validate\Validate;                           // Import Validate class
 
-require_once __DIR__ . '/../../config/recaptcha.php';
-
-
-
 // include APP_ROOT . '/src/pages/menu-path.php';        // get path for website and menus
 
 // If user is already logged in, redirect them to their member page
@@ -51,12 +47,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {              // If form submitted
         // -----------------------------
         // reCAPTCHA v3 verification
         // -----------------------------
-                    $recaptchaToken = $_POST['g-recaptcha-response'] ?? '';
-                    error_log('LOGIN recaptcha token: ' . substr($recaptchaToken, 0, 40));
+        $recaptchaToken = $_POST['g-recaptcha-response'] ?? '';
 
         if (empty($recaptchaToken)) {
             // Front-end didn't provide a token at all
-            $errors['warning'] = 'Security check token missing. Please refresh the page and try again.';
+            $errors['message'] = 'Security check token missing. Please refresh the page and try again.';
         } else {
             $secretKey = $config['recaptcha_secret_key'] ?? '';
 
@@ -96,14 +91,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {              // If form submitted
                     $cms->getSession()->create($member, $website['id']); // Create session
                     redirect('member/' . $member['id']);                 // Redirect to their page
 
-                } else {                                                 // Otherwise
-                    $errors['message'] = 'Please try again.';            // Store error message
+                } else {                                                // Otherwise
+                    $errors['message'] = 'Please try again.';           // Store error message
                 }
             } // end verify_recaptcha_v3()
         } // end empty token check
     } // end $invalid branch
 } // end POST: if ($_SERVER['REQUEST_METHOD'] == 'POST')
-
 
 // Session/website context for navigation, same as before
 if ($_SESSION['id'] == 2) {
@@ -124,7 +118,6 @@ $data['navigation'] = $cms->getMenu()->getAll2($_SESSION['website'], $mem); // G
 $data['success']    = $success;                         // Success message
 $data['email']      = $email;                           // Email address if validation failed
 $data['errors']     = $errors;                          // Errors array
-$data['recaptcha_site_key'] = $config['recaptcha_site_key'] ?? '';
 
 if (!isset($website)) {
     $website = $cms->getWebsite()->getById(1);
@@ -133,4 +126,3 @@ if (!isset($website)) {
 $data['website'] = $website;
 
 echo $twig->render('login.html', $data);                // Render Twig template
-

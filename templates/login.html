@@ -2,6 +2,7 @@
 {% block title %}Log In{% endblock %}
 {% block description %}Log in to your  account{% endblock %}
 {% block content %}
+
 <main> <!-- class="container" id="content">  -->
   <section class = "form-membership">
     
@@ -9,14 +10,21 @@
   <section class="header">
     <h1>Log in</h1>
   </section>
-  
+ 
  <form method="post"
       action="{{ doc_root }}login/1"
       class="form-membership form-login"
       data-recaptcha-action="login">
 
     {% if success %}<div class="alert alert-success">{{ success }}</div>{% endif %}
-    {% if errors %}<div class="alert alert-danger">{{ errors.message }}</div>{% endif %}
+    {% if errors.warning %}
+      <div class="alert alert-danger">{{ errors.warning|raw }}</div>
+    {% endif %}
+
+    {% if errors.message %}
+      <div class="alert alert-danger">{{ errors.message|raw }}</div>
+    {% endif %}
+
 
      <div class="form-group">
        <label for="email">Email </label>
@@ -35,11 +43,15 @@
     </div>
 
     {# ⭐ Hidden reCAPTCHA v3 token #}
-    <input type="hidden" name="g-recaptcha-response"> 
+    <input type="hidden" name="g-recaptcha-response">
 
     <input type="submit" class="btn btn-primary" value="Log in"><br>
     <p><a href="{{ doc_root }}password-lost/">Lost password?</a></p>
   </form>
+</main>
+  {# existing closing tags #}
+  </form>
 
 </main>
+
 {% endblock %}

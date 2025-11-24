@@ -593,7 +593,6 @@ textarea#content {
 }
 
 .form-search .btn {
-  -webkit-appearance: none;
   border-radius: 0 4px 4px 0;
   font-size: 1rem;
 }
@@ -846,3 +845,14 @@ input[type=file]::file-selector-button {
     clear: both;
     margin: 2rem 0 1rem 0;
 }
+
+/* Reposition Google reCAPTCHA v3 badge */
+.grecaptcha-badge {
+    position: fixed !important;
+    left: 20px !important;
+    right: auto !important;
+    bottom: 20px !important;
+    z-index: 9999 !important;
+}
+
+
