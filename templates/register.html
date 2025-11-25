@@ -1,22 +1,31 @@
 {% extends 'layout.html' %}
 
 {% block content %}
-<main> <!-- class="container" id="content"> -->
-  
+<main>
 
   <section class="header">
-  {% if success %}<div class="alert alert-success">{{ success }}</div>{% endif %}
-  {% if failure %}<div class="alert alert-danger">{{ failure }}</div>{% endif %}
+    {% if success %}<div class="alert alert-success">{{ success }}</div>{% endif %}
+    {% if failure %}<div class="alert alert-danger">{{ failure }}</div>{% endif %}
     <h1>Register</h1>
   </section>
 
-  <section class = "form-membership">
-  <form method="post" action="{{ doc_root }}register" class="form-membership">
-    {% if errors %}<div class="alert alert-danger">{{ errors.master }}</div>{% endif %}
-   
-    <div class="form-group">
-      <label for="forename">Forename: </label><input type="text" name="forename" value="{{ member.forename }}" id="forename" class="form-control">
-      <div class="errors">{{ errors.forename }}</div>
+  <section class="form-membership">
+
+    <form method="post"
+          action="{{ doc_root }}register"
+          class="form-membership js-recaptcha-form"
+          data-recaptcha-action="register">
+          
+        <!-- hidden recaptcha score  -->
+          <input type="hidden" name="g-recaptcha-response" value="">
+
+      {% if errors %}<div class="alert alert-danger">{{ errors.master }}</div>{% endif %}
+
+      <div class="form-group">
+        <label for="forename">Forename: </label>
+        <input type="text" name="forename" value="{{ member.forename }}" id="forename" class="form-control">
+        <div class="errors">{{ errors.forename }}</div>
+      </div>
       
     </div>
     <div class="form-group">

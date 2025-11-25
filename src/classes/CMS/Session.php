@@ -51,15 +51,15 @@ class Session
        // var_dump_pre($_SESSION);
        // echo "Session -52";
        // exit;
-        $_SESSION['id']         = $member['id'];           // Add member id to session
-        $_SESSION['forename']   = $member['forename'];     // Add forename to session
-        $_SESSION['role']       = $member['role'];         // Add role to session
-        $_SESSION['account_id'] = $member['account_id'];  // Add account_id to session
-        $_SESSION['landscape']  = true;
-        $_SESSION['follow_id']  = $member['account_id'];  // Add account_id to session
-        $_SESSION['pagelimit']  = $member['pagelimit'];   // Add pagelimit to session
-        $_SESSION['sorttype']   = $member['sorttype'];    // Add sottype to session
-        $_SESSION['website']    = $member['website'];     // Add member's website o session
+        $_SESSION['id']         = $member['id']             ?? null;         // Add member id to session
+        $_SESSION['forename']   = $member['forename']       ?? null;         // Add forename to session
+        $_SESSION['role']       = $member['role']           ?? null;         // Add role to session
+        $_SESSION['account_id'] = $member['account_id']     ?? null;         // Add account_id to session
+        $_SESSION['landscape']  = true                      ?? null;
+        $_SESSION['follow_id']  = $member['account_id']     ?? null;         // Add account_id to session
+        $_SESSION['pagelimit']  = $member['pagelimit']      ?? null;         // Add pagelimit to session
+        $_SESSION['sorttype']   = $member['sorttype']       ?? null;         // Add sottype to session
+        $_SESSION['website']    = $member['website']        ?? null;     // Add member's website o session
         } else {
             $_SESSION['id']         = 2;                  // Add member id to session
             $_SESSION['forename']   = 'Guest';                 // Add forename to session

@@ -4,8 +4,6 @@ use PhpBook\Validate\Validate;                           // Import Validate clas
 
 require_once __DIR__ . '/../../config/recaptcha.php';
 
-
-
 // include APP_ROOT . '/src/pages/menu-path.php';        // get path for website and menus
 
 // If user is already logged in, redirect them to their member page
@@ -30,6 +28,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {              // If form submitted
     $email      = $_POST['email'];                       // Get email address
     $password   = $_POST['password'];                    // Get password
     $website_id = intval($_POST['website']);
+        // -----------------------------
+        // reCAPTCHA v3 verification
+        // -----------------------------
+                    $recaptchaToken = $_POST['g-recaptcha-response'] ?? '';
+                    error_log('LOGIN recaptcha token: ' . substr($recaptchaToken, 0, 40));
+
+        if (empty($recaptchaToken)) {
+            // Front-end didn't provide a token at all
+            $errors['warning'] = 'Security check token missing. Please refresh the page and try again.';
+        } else {
+            $secretKey = $config['recaptcha_secret_key'] ?? '';
+
+            // Use a slightly lower threshold for login to reduce false negatives
+            if (!verify_recaptcha_v3($recaptchaToken, 'login', $secretKey, 0.1)) {
+                // reCAPTCHA failed – do NOT attempt login
+                $errors['message'] = 'Login failed security check. Please try again.';
+            
+           } // end verify_recaptcha_v3()
+        } // end empty token check
 
     // Validate email and password
     $errors['email'] = Validate::isEmail($email)
@@ -47,28 +64,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {              // If form submitted
     if ($invalid) {                                      // If data is not valid
         $errors['message'] = 'Please try again.';        // Store error message
     } else {
-
-        // -----------------------------
-        // reCAPTCHA v3 verification
-        // -----------------------------
-                    $recaptchaToken = $_POST['g-recaptcha-response'] ?? '';
-                    error_log('LOGIN recaptcha token: ' . substr($recaptchaToken, 0, 40));
-
-        if (empty($recaptchaToken)) {
-            // Front-end didn't provide a token at all
-            $errors['warning'] = 'Security check token missing. Please refresh the page and try again.';
-        } else {
-            $secretKey = $config['recaptcha_secret_key'] ?? '';
-
-            // Use a slightly lower threshold for login to reduce false negatives
-            if (!verify_recaptcha_v3($recaptchaToken, 'login', $secretKey, 0.1)) {
-                // reCAPTCHA failed – do NOT attempt login
-                $errors['message'] = 'Login failed security check. Please try again.';
-            } else {
-
-                // -----------------------------
-                // If reCAPTCHA passed, proceed to login
-                // -----------------------------
                 $member = $cms->getMember()->login2($email, $password); // Get member details
 
                 if (empty($member)) {
@@ -98,9 +93,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {              // If form submitted
 
                 } else {                                                 // Otherwise
                     $errors['message'] = 'Please try again.';            // Store error message
-                }
-            } // end verify_recaptcha_v3()
-        } // end empty token check
+                }       
     } // end $invalid branch
 } // end POST: if ($_SERVER['REQUEST_METHOD'] == 'POST')
 

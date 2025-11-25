@@ -1,6 +1,9 @@
 <?php
 declare(strict_types = 1);                               // Use strict types
 use PhpBook\Validate\Validate;                           // Import Validate class
+
+require_once __DIR__ . '/../../config/recaptcha.php';
+
 $member = [];                                            // Initialize member array
 $errors = [];
 $agegroups = [];
@@ -56,6 +59,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {              // If form was posted
         $errors['master'] = '';
     }
     }
+    // -----------------------------
+        // reCAPTCHA v3 verification
+        // -----------------------------
+                    $recaptchaToken = $_POST['g-recaptcha-response'] ?? '';
+                    error_log('REGISTER recaptcha token: ' . substr($recaptchaToken, 0, 40));
+
+        if (empty($recaptchaToken)) {
+            // Front-end didn't provide a token at all
+            $errors['warning'] = 'Security check token missing. Please refresh the page and try again.';
+        } else {
+            $secretKey = $config['recaptcha_secret_key'] ?? '';
+
+            // Use a slightly lower threshold for login to reduce false negatives
+            if (!verify_recaptcha_v3($recaptchaToken, 'register', $secretKey, 0.1)) {
+                // reCAPTCHA failed – do NOT attempt login
+                $errors['message'] = 'register failed security check. Please try again.';
+            
+           } // end verify_recaptcha_v3()
+        } // end empty token check
     // Validate form data
     $errors['forename'] = Validate::isText($member['forename'], 1, 254)
         ? '' : 'Forename must be 1-254 characters';

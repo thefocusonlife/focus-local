@@ -53,8 +53,8 @@
         {% if session.id == 2 %}
         <a href="{{ doc_root }}member/{{ session.id }}">{{ session.forename }}</a> /
             <span class="icon-user"></span><a href="{{ doc_root }}login/{{website.id}}" class="nav-item nav-link">Log in</a> /
-          <!--  <span class="icon-user"></span><a href="{{ doc_root }}register/{{website.id}}" class="nav-item nav-link">Register</a> / ** Remove Register link -->
-<!--      <span class="icon-user"></span><a href="{{ doc_root }}plans/" class="nav-item nav-link">Register</a> / -->            
+            <span class="icon-user"></span><a href="{{ doc_root }}register/{{website.id}}" class="nav-item nav-link">Register</a> /
+        <!--    <span class="icon-user"></span><a href="{{ doc_root }}plans/" class="nav-item nav-link">Register</a> / /> ** Remove Plans link  -->           
             <span class="icon-user"></span><a href="{{ doc_root }}sort/{{website.id}}" class="nav-item nav-link">Sort</a> /
            
         <!--    <span class="icon-user"></span><a href="{{ doc_root }}index/{{website.id}}" class="nav-item nav-link">Refresh</a> /
@@ -149,146 +149,57 @@
   {% if recaptcha_site_key %}
     {# Load reCAPTCHA v3 library #}
     <script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}"></script>
+  {% endif %}  
+  
+{# Only load reCAPTCHA if we have a site key configured #}
+{% if recaptcha_site_key is defined and recaptcha_site_key %}
+    <script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}"></script>
 
-   <script>
-document.addEventListener('DOMContentLoaded', function () {
-  var forms = document.querySelectorAll('form[data-recaptcha-action]');
-  console.log('reCAPTCHA: found forms =', forms.length);
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Look for all forms that declare a reCAPTCHA action
+        const forms = document.querySelectorAll('form[data-recaptcha-action]');
+        if (!forms.length) return;
 
-  if (!forms.length) {
-    console.warn('reCAPTCHA: No forms with data-recaptcha-action found.');
-    return;
-  }
+        forms.forEach(function (form) {
+            const action = form.getAttribute('data-recaptcha-action') || '';
 
-  forms.forEach(function (form) {
-    var action = form.getAttribute('data-recaptcha-action') || '';
-    console.log('reCAPTCHA: wiring form with action =', action);
+            form.addEventListener('submit', function (e) {
+                e.preventDefault();
 
-    form.addEventListener('submit', function (e) {
-      console.log('reCAPTCHA: intercept submit for action =', action);
-      e.preventDefault(); // pause normal submit
+                if (typeof grecaptcha === 'undefined') {
+                    console.error('reCAPTCHA not loaded. Submitting normally.');
+                    form.submit();
+                    return;
+                }
 
-      if (typeof grecaptcha === 'undefined') {
-        console.error('reCAPTCHA: grecaptcha is undefined!');
-        // Fall back to normal submit so the form isn't "dead"
-        form.submit();
-        return;
-      }
+                grecaptcha.ready(function () {
+                    grecaptcha.execute('{{ recaptcha_site_key }}', { action: action })
+                        .then(function (token) {
+                            let field = form.querySelector('input[name="g-recaptcha-response"]');
+                            if (!field) {
+                                field = document.createElement('input');
+                                field.type = 'hidden';
+                                field.name = 'g-recaptcha-response';
+                                form.appendChild(field);
+                            }
 
-      grecaptcha.ready(function () {
-        console.log('reCAPTCHA: grecaptcha.ready for action =', action);
-
-        grecaptcha.execute('{{ recaptcha_site_key }}', { action: action })
-          .then(function (token) {
-            console.log('reCAPTCHA: got token prefix =', token ? token.substring(0, 15) + '...' : '(empty)');
-
-            var field = form.querySelector('input[name="g-recaptcha-response"]');
-            if (!field) {
-              console.warn('reCAPTCHA: hidden field not found, creating one.');
-              field = document.createElement('input');
-              field.type = 'hidden';
-              field.name = 'g-recaptcha-response';
-              form.appendChild(field);
-            }
-
-            field.value = token || '';
-            form.submit(); // now submit for real
-          })
-          .catch(function (err) {
-            console.error('reCAPTCHA execute error:', err);
-            // Optional: submit anyway, or show a user-friendly error
-            form.submit();
-          });
-      });
+                            field.value = token || '';
+                            form.submit();
+                        })
+                        .catch(function (err) {
+                            console.error('reCAPTCHA execute error:', err);
+                            form.submit();
+                        });
+                });
+            });
+        });
     });
-  });
-});
-</script>
-
-
+    </script>
 {% endif %}
- 
-{# Load reCAPTCHA v3 with your site key (Twig global) #}
-<script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}"></script>
 
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  // Find all forms that declare a reCAPTCHA action
-  var forms = document.querySelectorAll('form[data-recaptcha-action]');
-  if (!forms.length) return;
-
-  forms.forEach(function (form) {
-    var action = form.getAttribute('data-recaptcha-action') || '';
-
-    form.addEventListener('submit', function (e) {
-      e.preventDefault(); // pause normal submit
-
-      grecaptcha.ready(function () {
-        grecaptcha.execute('{{ recaptcha_site_key }}', { action: action })
-          .then(function (token) {
-            // Ensure the hidden field exists
-            var field = form.querySelector('input[name="g-recaptcha-response"]');
-            if (!field) {
-              field = document.createElement('input');
-              field.type = 'hidden';
-              field.name = 'g-recaptcha-response';
-              form.appendChild(field);
-            }
-
-            field.value = token || '';
-            form.submit(); // now submit for real
-          })
-          .catch(function (err) {
-            console.error('reCAPTCHA error:', err);
-            // If Google fails hard, you can choose to submit anyway or show a message.
-            form.submit();
-          });
-      });
-    });
-  });
-});
-</script>
-
-{# Load reCAPTCHA v3 with your site key (Twig global) #}
-<script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}"></script>
-
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-  // Find all forms that declare a reCAPTCHA action
-  var forms = document.querySelectorAll('form[data-recaptcha-action]');
-  if (!forms.length) return;
-
-  forms.forEach(function (form) {
-    var action = form.getAttribute('data-recaptcha-action') || '';
-
-    form.addEventListener('submit', function (e) {
-      e.preventDefault(); // pause normal submit
-
-      grecaptcha.ready(function () {
-        grecaptcha.execute('{{ recaptcha_site_key }}', { action: action })
-          .then(function (token) {
-            // Ensure the hidden field exists
-            var field = form.querySelector('input[name="g-recaptcha-response"]');
-            if (!field) {
-              field = document.createElement('input');
-              field.type = 'hidden';
-              field.name = 'g-recaptcha-response';
-              form.appendChild(field);
-            }
-
-            field.value = token || '';
-            form.submit(); // now submit for real
-          })
-          .catch(function (err) {
-            console.error('reCAPTCHA error:', err);
-            // If Google fails hard, you can choose to submit anyway or show a message.
-            form.submit();
-          });
-      });
-    });
-  });
-});
-</script>
+</body>
+</html>
 
   </body>
 </html>
