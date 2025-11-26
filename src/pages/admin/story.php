@@ -139,7 +139,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {              // If form submitted
             ? '' : 'Alt text can be 1-1000 characters.';                 // Alt text
 
         if ($errors['image_file'] === '' and $errors['image_alt'] === '') {                  // If valid
-            $story['image_file'] = create_filename($_FILES['image']['name'], UPLOADS);      // Path  S3 changes needed ?
+            // Generate local uploads filename
+            $story['image_file'] = create_filename($_FILES['image']['name'], UPLOADS);      
             $destination = UPLOADS . $story['image_file'];                                  // Destination
         }
     }

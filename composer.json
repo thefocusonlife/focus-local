@@ -2,8 +2,7 @@
     "require": {
         "ezyang/htmlpurifier": "^4.12",
         "twig/twig": "^3.0",
-        "phpmailer/phpmailer": "^6.1",
-        "aws/aws-sdk-php": "^3.269"
+        "phpmailer/phpmailer": "^6.1"
     },
     "autoload": {
         "psr-4": {
