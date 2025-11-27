@@ -100,16 +100,7 @@
     </header>
     {% block content %}{% endblock %}
    
-      <footer>
-        <!--   <div class="container">  -->
-             <a href="{{ doc_root }}contact/1">Contact us</a>
-             <a class="credit">&copy; 
-              {{ 'now'|date('Y') }}</a><br>ver 1.01 beta
-          <!-- </div> -->
-         </footer>
-   
-
-
+      
  <script src="https://cdn.tiny.cloud/1/7tkofysu0j4zom5h6jzs7crranermxfznweam4rf1irmolqf/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
 
  <script>
@@ -129,5 +120,8 @@
     
      </script>
     <script src="{{ doc_root }}js/site.js"></script>
+
+    {% include 'partials/footer.html' %}
+    
   </body>
 </html>
