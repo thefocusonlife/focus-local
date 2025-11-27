@@ -32,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {              // If form submitted
         // reCAPTCHA v3 verification
         // -----------------------------
                     $recaptchaToken = $_POST['g-recaptcha-response'] ?? '';
-                    error_log('LOGIN recaptcha token: ' . substr($recaptchaToken, 0, 40));
+                   // error_log('LOGIN recaptcha token: ' . substr($recaptchaToken, 0, 40));
 
         if (empty($recaptchaToken)) {
             // Front-end didn't provide a token at all
@@ -86,6 +86,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {              // If form submitted
                 }
 
                 elseif ($member) {
+                    // Get website for this member (or fallback to 1)
+                    $websiteId = isset($member['website'])
+                        ? (int) $member['website']
+                        : (int) ($_SESSION['website'] ?? 1);
+
+                    $website = $cms->getWebsite()->getById($websiteId);
+
+    // Create session
 
                     // Otherwise for members
                     $cms->getSession()->create($member, $website['id']); // Create session

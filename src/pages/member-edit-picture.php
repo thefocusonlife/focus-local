@@ -43,11 +43,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {              // Form submitted
     }
 }
 if (! $id) {
-    $website = $cms->getWebsite()->(intval($_SESSION['website']));
+    // No member id in session – fall back to website id from session
+    $website = $cms->getWebsite()->getById((int) ($_SESSION['website'] ?? 0));
 } else {     
-    $website = $cms->getWebsite()->getById(intval($member['website']));
-    
+    // Logged-in member – use member's website id
+    $website = $cms->getWebsite()->getById((int) $member['website']);
 }
+
 if (empty($_SESSION['id'])) {
     //$member = 0; 
     $mem = intval($website['id']);

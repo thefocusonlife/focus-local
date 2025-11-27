@@ -63,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {              // If form was posted
         // reCAPTCHA v3 verification
         // -----------------------------
                     $recaptchaToken = $_POST['g-recaptcha-response'] ?? '';
-                    error_log('REGISTER recaptcha token: ' . substr($recaptchaToken, 0, 40));
+                    // error_log('REGISTER recaptcha token: ' . substr($recaptchaToken, 0, 40));
 
         if (empty($recaptchaToken)) {
             // Front-end didn't provide a token at all
