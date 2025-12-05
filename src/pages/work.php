@@ -169,27 +169,46 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {              // Form submitted
   
     }
 
-    $story['website']     = intval($_POST['website']);         // get website id
-    $story['title']       = $_POST['title'];           // Get title
-    $story['summary']     = $_POST['summary'];         // Get summary
-    $story['content']     = $_POST['content'];         // Get content
-    $story['member_id']   = intval($_POST['member_id']);       // Get member_id
-    $story['family_id']   = intval($_POST['member_id']);
-    $story['menu_id']     = intval($_POST['menu_id']);     // Get menu_id
-    $story['published']   = !empty($_POST['published']) ? 1 : 0;   // Set published
-    $story['seo_title']   = create_seo_name($story['title']); 
-    $story['storyorder']  = intval($_POST['storyorder']);
-    $story['landscape']   = intval($_POST['landscape']);
-    $story['allow_comment']  = intval($_POST['block']);
-    $story['keyword']     = $_POST['keyword'];
-    $story['blog']        = intval($_POST['blog']);
-    
-    $purifier               = new HTMLPurifier();                     // Create Purifier
-    $purifier->config->set('HTML.Allowed', 'p,br,strong,em,b,i,a[href],img[src|alt]'); // Permitted tags$purifier->config->set('HTML.Allowed', 'p,br,strong,em,b,i,a[href],img[src|alt]'); // Permitted tags
-/*
-disabling purify during development only to create guides and documentation
-$story['content']     = $purifier->purify($story['content']); // Purify content
-*/
+     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
+
+    $story['title']      = $_POST['title']   ?? '';
+    $story['summary']    = $_POST['summary'] ?? '';
+    $story['content']    = $_POST['content'] ?? '';
+
+    $story['member_id']  = isset($_POST['member_id']) ? (int)$_POST['member_id'] : ($story['member_id'] ?? 0);
+    $story['family_id']  = isset($_POST['family_id']) ? (int)$_POST['family_id'] : ($story['family_id'] ?? 0);
+    $story['menu_id']    = isset($_POST['menu_id'])   ? (int)$_POST['menu_id']   : ($story['menu_id'] ?? 0);
+
+    $story['published']  = !empty($_POST['published']) ? 1 : 0;
+
+    $story['seo_title']  = create_seo_name($story['title']);
+
+    $story['storyorder'] = isset($_POST['storyorder'])
+        ? (int)$_POST['storyorder']
+        : ($story['storyorder'] ?? 0);
+
+    // Checkboxes / toggles
+    $story['landscape']     = !empty($_POST['landscape']) ? 1 : 0;
+    $story['allow_comment'] = empty($_POST['block']) ? 1 : 0; // or adjust logic to your intent
+
+    $story['keyword']   = $_POST['keyword'] ?? '';
+
+    $story['website']   = (int)($_SESSION['website'] ?? 0);
+
+    $story['blog']      = isset($_POST['blog'])
+        ? (int)$_POST['blog']
+        : ($story['blog'] ?? 0);
+
+    $memberId = $story['member_id'];
+    $authors  = $cms->getMember()->get($memberId);
+
+    // Optional HTMLPurifier
+    /*
+    $purifier = new HTMLPurifier();
+    $purifier->config->set('HTML.Allowed', 'p,br,strong,em,b,i,a[href],img[src|alt]');
+    $story['content'] = $purifier->purify($story['content']);
+    */
+     }
 
     // Check if all data was valid and create error messages if it is invalid
     $errors['title']    = Validate::isText($story['title'], 1, 80)

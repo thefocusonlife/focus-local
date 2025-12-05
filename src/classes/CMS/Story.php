@@ -886,29 +886,40 @@ return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return data
         return true;                                     // Return true
     }
 
-    // Delete image from story
-    public function imageDelete(int $image_id, string $path, int $story_id): bool
-    {
-        $sql = "UPDATE story SET image_id = null 
-                 WHERE id = :story_id;";               // SQL statement
-        $this->db->runSQL($sql, [$story_id]);             // Delete image from story
-        $sql = "DELETE FROM image 
-                 WHERE id = :id;";                       // SQL statement
-        $this->db->runSQL($sql, [$image_id]);            // Delete image from image
-        if (file_exists($path)) {                        // If image file exists
-            unlink($path);                               // Delete image file
-        }
-        return true;                                     // Return true
+   // Delete image from story
+public function imageDelete(int $image_id, string $path, int $story_id): bool
+{
+    // 1. Clear the image_id on the story record
+    $sql = "UPDATE story
+               SET image_id = NULL
+             WHERE id = :story_id";
+    $this->db->runSQL($sql, ['story_id' => $story_id]);
+
+    // 2. Delete the image row itself
+    $sql = "DELETE FROM image
+             WHERE id = :id";
+    $this->db->runSQL($sql, ['id' => $image_id]);
+
+    // 3. Delete the physical file
+    if ($path && file_exists($path)) {
+        unlink($path);
     }
 
-  // Update alt text for story image
-    public function altUpdate(int $image_id, string $alt): bool
-    {
-        
-        $sql = "UPDATE image SET  alt = :alt) 
-                 WHERE id = :image_id;";               // SQL statement
-        $this->db->runSQL($sql,[$alt, $image_id]);      // Delete image from story
-        return true;                                     // Return true
-    }
+    return true;
+}
+
+// Update alt text for story image
+public function altUpdate(int $image_id, string $alt): bool
+{
+    $sql = "UPDATE image
+               SET alt = :alt
+             WHERE id = :image_id";
+    $this->db->runSQL($sql, [
+        'alt'      => $alt,
+        'image_id' => $image_id,
+    ]);
+
+    return true;
+}
 
 }

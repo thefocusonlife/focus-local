@@ -16,11 +16,15 @@ if (!$story) {                                            // If no image
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {  
-                   // If form was submitted
-    
     $path = APP_ROOT . '/public/uploads/' . $story['image_file']; // Path to file
     $cms->getStory()->imageDelete($story['image_id'], $path, $id); // Delete image
-    redirect('admin/story/' . $id);                       // Redirect
+
+    // OLD:
+    // redirect('admin/story/' . $id);
+
+    // NEW: go back to the admin stories list
+    redirect('admin/stories/');   // adjust if your router expects a trailing slash or not
+    exit;
 }
 
 $data['story'] = $story;
