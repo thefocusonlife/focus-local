@@ -19,7 +19,6 @@ class Story
     public $allow_comment;
     public $keyword;                                     // Store story keyword  
     public $geomitry_info; 
-    public $imagesize;
     
     protected $db;                                       // Holds ref to Database object
 
@@ -32,7 +31,7 @@ class Story
     // Get individual story
     public function get(int $id, bool $published) {
 
-        $sql = "SELECT a.id, a.website, a.title, a.summary, a.content, a.created, a.menu_id, a.member_id, a.family_id, a.imagesize, a.published, a.seo_title,
+        $sql = "SELECT a.id, a.website, a.title, a.summary, a.content, a.created, a.menu_id, a.member_id, a.family_id, a.published, a.seo_title,
                      a.storyorder, a.landscape, a.allow_comment, a.keyword, a.blog,
                        c.name AS menu,
                        c.seo_name AS seo_menu,
@@ -547,15 +546,19 @@ return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return data
         return $this->db->runSQL($sql)->fetchColumn();   // Return count from result set
     }
  
-    // Get total storage used by member
+    // Get total story count used by member
  
-    public function used(int $id): int
- {
-   // $sql = "SELECT SUM(imagesize) from story 
-   $sql = "SELECT count(image_id) from story
+  public function used(int $id): int
+{
+    // NOTE: Previously this calculated total disk usage by summing `imagesize`.
+    // That field has been removed, and the quota system now uses story count instead.
+    $sql = "SELECT COUNT(image_id) 
+            FROM story
             WHERE member_id = $id;";
-    return $this->db->runSQL($sql)->fetchColumn();   // Return count from result set
- }
+
+    return $this->db->runSQL($sql)->fetchColumn();
+}
+
  // Save new story
     public function create(array $story, string $temporary, string $destination): bool
     
@@ -698,14 +701,12 @@ return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return data
                 $story['image_id'] = $this->db->lastInsertId();  // Return image id
             }
          
-         $story['imagesize'] = filesize($destination);
-            //$story['imagesize'] = $imagesize;
         
             unset ($story['id'], $story['image_file'], $story['image_alt']);
             $sql = "INSERT INTO story (website, title, summary, content, menu_id, member_id, family_id,
-                       image_id, imagesize, published, seo_title, storyorder, landscape, allow_comment, keyword, blog)
+                       image_id, published, seo_title, storyorder, landscape, allow_comment, keyword, blog)
                     VALUES (:website, :title, :summary, :content, :menu_id, :member_id, :family_id, :image_id,
-                     :imagesize, :published, :seo_title, :storyorder, :landscape, :allow_comment, :keyword, :blog);"; // SQL to add story      
+                     :published, :seo_title, :storyorder, :landscape, :allow_comment, :keyword, :blog);"; // SQL to add story      
 
             $this->db->runSQL($sql, $story);           // Add story
             $this->db->commit();                         // Commit transaction
@@ -854,15 +855,40 @@ return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return data
              $this->db->runSQL($sql, [$story['image_file'], $story['image_alt']]); // Add image to image table
     $story['image_id'] = $this->db->lastInsertId(); // Add image id to $story    
         }    // Remove unwanted elements from $story
-            unset($story['menu'], $story['seo_menu'], $story['created'], $story['forename'], $story['surname'], $story['author'], $story['image_file'], $story['image_alt'], $story['likes'], $story['comments']);
-            $sql = "UPDATE story 
-                       SET website = :website, title = :title, summary = :summary, content = :content, menu_id = :menu_id, member_id = :member_id, family_id = :family_id,
-                           image_id = :image_id, imagesize = :imagesize, published = :published, seo_title = :seo_title, storyorder = :storyorder, landscape = :landscape,
-                           allow_comment = :allow_comment, keyword = :keyword, blog = :blog 
-                     WHERE id = :id;";                   // SQL statement
-                
-            $this->db->runSQL($sql, $story)->rowCount(); // Update story
-            $this->db->commit();                         // Commit transaction
+            unset(
+    $story['menu'], 
+    $story['seo_menu'], 
+    $story['created'], 
+    $story['forename'], 
+    $story['surname'], 
+    $story['author'], 
+    $story['image_file'], 
+    $story['image_alt'], 
+    $story['likes'], 
+    $story['comments']
+);
+
+$sql = "UPDATE story 
+           SET website = :website, 
+               title = :title, 
+               summary = :summary, 
+               content = :content, 
+               menu_id = :menu_id, 
+               member_id = :member_id, 
+               family_id = :family_id,
+               image_id = :image_id,
+               published = :published, 
+               seo_title = :seo_title, 
+               storyorder = :storyorder, 
+               landscape = :landscape,
+               allow_comment = :allow_comment, 
+               keyword = :keyword, 
+               blog = :blog 
+         WHERE id = :id;";
+
+$this->db->runSQL($sql, $story)->rowCount();
+$this->db->commit();
+
             return true;                                 // Update worked
         } catch (\PDOException $e) {                     // If PDOException was raised
             $this->db->rollBack();                       // Rollback transaction

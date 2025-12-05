@@ -29,7 +29,6 @@ $story = [
     'family_id'   => 0,
     'menu_id'     => 0,
     'image_id'    => null,
-    'imagesize'   => 0,
     'published'   => 0,
     'image_file'  => '',
     'image_alt'   => '.',
