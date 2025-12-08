@@ -33,9 +33,9 @@ $story = [
     'image_file'  => '',
     'image_alt'   => '.',
     'storyorder'  => 0,
-    'landscape'   => "yes",
+    'landscape'   => "1",
     'blog'        => 1,
-    'allow_comment' => "yes",
+    'allow_comment' => "0",
     'keyword'     => 'none',
 ];                                                       // Story data
 
