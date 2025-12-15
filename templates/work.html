@@ -73,7 +73,7 @@
 									<div class="form-group">
 										<label for="landscape">Orientation (1 = Landscape, 0 = Portrait):
 										</label>
-										<input type="number" min="0" max="1" name="landscape" id="landscape" value="{{ story.landscape|default(1) }}" class="input-digit">
+										<input type="number" name="landscape" id="landscape" value="{{ story.landscape|default(1) }}" class="input-digit" min="0" max="2" step="1">
 										<span class="errors">{{ errors.landscape }}</span>
 									</div>
 								</div>
@@ -81,14 +81,14 @@
 								<div class="form-group">
 									<label for="blog">Image Size (1 = Large, 2 = Medium, 3 = Blog):
 									</label>
-									<input type="number" min="1" max="3" name="blog" id="blog" value="{{ story.blog|default(1) }}" class="input-digit">
+									<input type="number" name="blog" id="blog" value="{{ story.blog|default(1) }}" class="input-digit" min="1" max="3" step="1">
 									<span class="errors">{{ errors.blog }}</span>
 								</div>
 
 								<div class="form-group">
 									<label for="allow_comment">Allow Comments (1 = True, 0 = False):
 									</label>
-									<input type="number" min="0" max="1" name="allow_comment" id="allow_comment" value="{{ story.allow_comment|default(1) }}" class="input-digit">
+									<input type="number" name="allow_comment" id="allow_comment" value="{{ story.allow_comment|default(1) }}" class="input-digit" min="0" max="1" step="1">
 									<span class="errors">{{ errors.allow_comment }}</span>
 								</div>
 
@@ -108,7 +108,7 @@
 									<div class="form-group">
 										<label for="landscape">Orientation (1 = Landscape, 0 = Portrait):
 										</label>
-										<input type="number" min="0" max="1" name="landscape" id="landscape" value="{{ story.landscape|default(1) }}" class="input-digit">
+										<input type="number" name="landscape" id="landscape" value="{{ story.landscape|default(1) }}" class="input-digit" min="0" max="1" step="1">
 										<span class="errors">{{ errors.landscape }}</span>
 									</div>
 								</div>
@@ -116,14 +116,14 @@
 								<div class="form-group">
 									<label for="blog">Image Size (1 = Large, 2 = Medium, 3 = Blog):
 									</label>
-									<input type="number" min="1" max="3" name="blog" id="blog" value="{{ story.blog|default(1) }}" class="input-digit">
+									<input type="number" name="blog" id="blog" value="{{ story.blog|default(1) }}" class="input-digit" min="1" max="3" step="1">
 									<span class="errors">{{ errors.blog }}</span>
 								</div>
 
 								<div class="form-group">
 									<label for="allow_comment">Allow Comments (1 = True, 0 = False):
 									</label>
-									<input type="number" min="0" max="1" name="allow_comment" id="allow_comment" value="{{ story.allow_comment|default(1) }}" class="input-digit">
+									<input type="number" name="allow_comment" id="allow_comment" value="{{ story.allow_comment|default(1) }}" class="input-digit" min="0" max="1" step="1">
 									<span class="errors">{{ errors.allow_comment }}</span>
 								</div>
 
@@ -226,7 +226,8 @@
 
 							<div class="form-group">
 								<label for="storyorder">Order:</label>
-								<input type="number" name="storyorder" id="storyorder" value="{{ story.storyorder|default(1) }}" class="input-digit">
+								<input type="number" name="storyorder" id="storyorder" value="{{ story.storyorder|default(1) }}" class="input-digit" min="1" max="999" step="1">
+
 								<span class="errors">{{ errors.storyorder }}</span>
 							</div>
 

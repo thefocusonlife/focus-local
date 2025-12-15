@@ -558,7 +558,9 @@ input[type="submit"]:hover {
 }
 
 .form-control.input-digit {
-  width: 4rem !important;
+  width: calc(3ch + 5rem;
+  min-width: calc(3ch + 5rem);
+  max-width: calc(3ch + 5rem);
   display: inline-block;
   padding: 0.25rem 0.5rem; /* optional: tighten padding */
 }
@@ -657,7 +659,9 @@ textarea#content {
 
 .input-digit {
   display: inline-block;
-  width: 3.5rem; /* small, about 1–2 digits wide */
+  width: calc(3ch + 5rem);
+  min-width: calc(3ch + 5rem);
+  max-width: calc(3ch + 5rem);
   padding: 0.25rem 0.5rem;
   font-size: 1rem;
   line-height: 1.5;
@@ -966,11 +970,11 @@ nav.toc ul > li > ul {
   z-index: 9999 !important;
 }
 
-.form-group input.input-digit {
-  width: 3.5rem !important;
-  max-width: 3.5rem !important;
-  min-width: 3.5rem !important;
-  display: inline-block;
-  box-sizing: border-box;
+/* 3 digits + room for spinner + padding */
+.form-group input[type="number"].input-digit {
+  width: calc(3ch + 5rem);
+  min-width: calc(3ch + 5rem);
+  max-width: calc(3ch + 5rem);
   padding: 0.25rem 0.5rem;
+  box-sizing: border-box;
 }
