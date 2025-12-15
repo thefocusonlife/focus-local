@@ -7,12 +7,12 @@
 		<body oncontextmenu="return false;">
 			<main>
 				<!-- class="container admin" id="content">
-								      {% if story.image_file %}
-								      <h1>Edit Story</h1>
-								      {% else %}
-								      <h1>Create Story</h1>
-								      {% endif %}
-								    -->
+												      {% if story.image_file %}
+												      <h1>Edit Story</h1>
+												      {% else %}
+												      <h1>Create Story</h1>
+												      {% endif %}
+												    -->
 				{% if errors.warning %}
 					<div class="alert alert-danger">{{ errors.warning }}</div>
 				{% endif %}
@@ -117,7 +117,7 @@
 
 							<div class="form-group">
 								<label for="storyorder">Order:</label>
-								<input type="number" name="storyorder" id="storyorder" value="{{ story.storyorder|default(1) }}" class="input-digit">
+								<input type="number" name="storyorder" id="storyorder" value="{{ story.storyorder|default(1) }}" class="input-digit" min="1" max="999" step="1">
 								<span class="errors">{{ errors.storyorder }}</span>
 							</div>
 
