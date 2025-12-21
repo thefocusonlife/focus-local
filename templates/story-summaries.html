@@ -1,42 +1,48 @@
 <body oncontextmenu="return true;">
-{% for story in stories %}
-<story> 
- 
-  <a href="{{ doc_root }}story/{{ story.id }}/{{ story.seo_title }}">
-    {% if story.image_file %}
-      <img src="{{ doc_root }}uploads/{{ story.image_file }}" alt="{{ story.image_alt }}">
-    {% else %}
-      <img src="{{ doc_root }}img/blank.png" alt="">
-    }
-    {% endif %}
+	{% for story in stories %}
+		<story>
 
-  <div class="social">
-    
-      <div class="like-count"><span class="icon-heart-empty"></span> {{ story.likes }}</div>
-      <div class="comment-count"><span class="icon-comment"></span> {{ story.comments }}</div>
-    </div>
-    
-    <h2>{{ story.title }}</h2>
-    <p>{{ story.summary }}</p>
-  </a>
-  <p class="credit">
-    Posted in <a href="{{ doc_root }}menu/{{ story.menu_id }}/{{ story.seo_menu }}">{{ story.menu }}</a>
-    by <a href="{{ doc_root }}member/{{ story.member_id }}">{{ story.author }}</a>
-    Family {{story.family_id}} Story {{story.id}}
-  </p>
-  
-  {% if session.role != "family" %}
-  {% if (session.id == story.member_id or session.id == 1) %}
-
- <a href="{{ doc_root }}work/{{ story.id }}" class="btn btn-primary">Edit Story</a>
-
-  <!--<a href="{{ doc_root }}story-family/{{ story.id }}" class="btn btn-primary">Edit Family</a> -->
-  {% endif %}
-  {% endif %}
-  
+			<a href="{{ doc_root }}story/{{ story.id }}/{{ story.seo_title }}">
+				{% if story.image_file %}
+					<img src="{{ doc_root }}uploads/{{ story.image_file }}" alt="{{ story.image_alt|e('html_attr') }}" class="story-thumb {{ story.landscape ? 'thumb-landscape' : 'thumb-portrait' }}">
+				{% else %}
+					<img src="{{ doc_root }}img/blank.png" alt="" class="story-thumb thumb-placeholder">
+				{% endif %}
 
 
+				<div class="social">
 
-</story>
-{% endfor %}
+					<div class="like-count">
+						<span class="icon-heart-empty"></span>
+						{{ story.likes }}</div>
+					<div class="comment-count">
+						<span class="icon-comment"></span>
+						{{ story.comments }}</div>
+				</div>
+				<h2>{{ story.title }}</h2>
+				<p>{{ story.summary }}</p>
+			</a>
+			<p class="credit">
+				Posted in
+				<a href="{{ doc_root }}menu/{{ story.menu_id }}/{{ story.seo_menu }}">{{ story.menu }}</a>
+				by
+				<a href="{{ doc_root }}member/{{ story.member_id }}">{{ story.author }}</a>
+				Family
+				{{story.family_id}}
+				Story
+				{{story.id}}
+			</p>
+
+			{% if session.role != "family" %}
+				{% if (session.id == story.member_id or session.id == 1) %}
+
+					<a href="{{ doc_root }}work/{{ story.id }}" class="btn btn-primary">Edit Story</a>
+
+					<!--<a href="{{ doc_root }}story-family/{{ story.id }}" class="btn btn-primary">Edit Family</a> -->
+				{% endif %}
+			{% endif %}
+
+
+		</story>
+	{% endfor %}
 </body>

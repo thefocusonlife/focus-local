@@ -345,13 +345,28 @@ footer {
 
 .grid {
   display: grid;
-  grid-gap: 2em;
+  gap: 2em;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
 }
 
 .grid {
   display: grid;
   margin: 5em auto 1em auto;
   grid-template-columns: 250px 250px 250px 250px;
+}
+
+/* --- Uniform story grid thumbnails --- */
+.grid story img.story-thumb {
+  width: 100%;
+  height: 180px; /* adjust: 160–210 for taste */
+  object-fit: cover; /* crop edges to fill the box */
+  object-position: center center;
+  display: block;
+}
+
+/* Reduce “cropped heads” on portrait thumbs */
+.grid story img.story-thumb.thumb-portrait {
+  object-position: top center;
 }
 
 @media (min-width: 860px) {
@@ -977,4 +992,15 @@ nav.toc ul > li > ul {
   max-width: calc(3ch + 5rem);
   padding: 0.25rem 0.5rem;
   box-sizing: border-box;
+}
+main.grid img.story-thumb {
+  width: 100% !important;
+  height: 180px !important;
+  object-fit: cover !important;
+  object-position: 50% 50% !important;
+  display: block !important;
+}
+
+main.grid img.story-thumb.thumb-portrait {
+  object-position: 50% 10% !important;
 }

@@ -1,12 +1,15 @@
 <?php
 namespace PhpBook\CMS;                                   // Declare namespace
 
+
+use PhpBook\CMS\ImageService;
 //use PhpBook\CMS\Website;
 //use PhpBook\CMS\Quickguide;
 
 class CMS
 {
     protected $db         = null;                         // Stores reference to Database object
+    protected ImageService $imageService;                 // Stores reference to ImageService object
     protected $story      = null;                         // Stores reference to Story object
     protected $menu       = null;                         // Stores reference to Menu object
     protected $member     = null;                         // Stores reference to Member object
@@ -25,25 +28,35 @@ class CMS
     protected $notetype   = null;
     protected $website    = null;
     protected $quickguide = null;
-    
-    
+
+
 
     public function __construct($dsn, $username, $password)
     {
         $this->db = new Database($dsn, $username, $password); // Create Database object
+        $this->imageService = new ImageService(UPLOADS);
     }
+
+    public function getDb(): Database
+{
+    return $this->db;
+}
+
 
     public function getStory()
     {
-     
+
         if ($this->story === null) {                   // If $story property null
             $this->story = new Story($this->db);     // Create Story object
         }
-    
+
         return $this->story;                           // Return Story object
     }
-    
-    
+
+    public function getImageService(): ImageService
+    {
+      return $this->imageService;
+    }
 
     public function getMenu()
     {
@@ -112,7 +125,7 @@ class CMS
     public function getQuickguide()
     {
         if ($this->quickguide === null) {                     // If $quickguide property null
-            $this->quickguide = new Quickguide($this->db);     // Create Quickguide object        
+            $this->quickguide = new Quickguide($this->db);     // Create Quickguide object
         }
         return $this->quickguide;                             // Return Quickguide object
     }
@@ -120,7 +133,7 @@ class CMS
     public function getPagelimit()
     {
         if ($this->pagelimit === null) {                     // If $pagelimit property null
-            $this->pagelimit = new Pagelimit($this->db);     // Create Pagelimit object        
+            $this->pagelimit = new Pagelimit($this->db);     // Create Pagelimit object
         }
         return $this->pagelimit;                             // Return Pagelimit object
     }
@@ -134,7 +147,7 @@ class CMS
 }
 public function getFollow()
 {
- 
+
     if ($this->follow === null) {                    // If $follow property null
         $this->follow = new follow($this->db);       // Create follow object
     }
@@ -171,7 +184,7 @@ public function getNotetype()
     if ($this->notetype === null) {                   // If $notetype property null
         $this->notetype = new notetype($this->db);    // Create notetype object
     }
-    return $this->notetype;                           // Return notetype object   
+    return $this->notetype;                           // Return notetype object
 }
 public function getWebsite()
 {
@@ -179,8 +192,8 @@ public function getWebsite()
     if ($this->website === null) {                   // If $website property null
         $this->website = new Website($this->db);    // Create website object
     }
-    return $this->website;                           // Return website object   
-}                 // Return website object   
+    return $this->website;                           // Return website object
+}                 // Return website object
 
 }
 ?>

@@ -41,7 +41,7 @@ $story = [
     'landscape'   => 1,
     'allow_comment' => 1,
     'keyword'     => 'none',
-    
+
 ];                                                       // Story data
 
 $errors  = [
@@ -55,7 +55,7 @@ $errors  = [
     'image_alt'   => '',
 ];
 
-if (!empty($parts[2])) {              
+if (!empty($parts[2])) {
     $id = intval($parts[2]);                                                 // If valid id
     $story = $cms->getStory()->get($id, false);                              // Get story data
     if (!$story) {                                                          // If story empty
@@ -64,10 +64,10 @@ if (!empty($parts[2])) {
 }
 
 //user's id from session
-if ($id === 0) {                      
+if ($id === 0) {
 //logged in
 //exit;
-    redirect('login/');               
+    redirect('login/');
 //not found
 }
 $saved_image = $story['image_file'] ? true : false;          // Has an image been uploaded
@@ -99,35 +99,35 @@ if ($story['storyorder']<1) {
     if ($storyorder<1) {
     $storyorder = intval($story['storyorder']);
     }
- }      
+ }
 $website     = $cms->getwebsite()->getById($_SESSION['website']) ?? 1;
 
 
 if (empty($storyorder)) {
     $story['storyorder'] = 1;
  } else {
-    if ($story['storyorder']<1 ) { 
-    $story['storyorder'] = intval($storyorder['storyorder']);  
+    if ($story['storyorder']<1 ) {
+    $story['storyorder'] = intval($storyorder['storyorder']);
     }
   }
-                 
+
 // Part B: Get and validate form data
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {              // If form submitted
-    if (!empty($_FILES)) {      
+    if (!empty($_FILES)) {
         // If file bigger than limit in php.ini or .htaccess store error message
         $errors['image_file'] = ($_FILES['image']['error'] === 1) ? 'File too big-Resize using Paint ' : '';
         }// If file bigger than limit in php.ini or .htaccess store error message
-      
+
     // If image was uploaded, get image data and validate
-    //if ($temp and $_FILES['image']['error'] == 0) {      // Check file  
+    //if ($temp and $_FILES['image']['error'] == 0) {      // Check file
         if ($temp ) {      // Check file if errors not being generated -- need to determine why TOO BIG images not erroring out
         $story['image_alt']  = $_FILES['image']['name'];                    // Get alt text
 
         // Validate image data
         $errors['image_file']  = in_array(mime_content_type($temp), MEDIA_TYPES)
             ? '' : 'Wrong file type. ';                                  // Validate file type
-           
+
         $extension = strtolower(pathinfo($_FILES['image']['name'], PATHINFO_EXTENSION)); // File extension in lowercase
 
         $errors['image_file'] .= in_array($extension, FILE_EXTENSIONS)
@@ -139,7 +139,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {              // If form submitted
 
         if ($errors['image_file'] === '' and $errors['image_alt'] === '') {                  // If valid
             // Generate local uploads filename
-            $story['image_file'] = create_filename($_FILES['image']['name'], UPLOADS);      
+            $story['image_file'] = create_filename($_FILES['image']['name'], UPLOADS);
             $destination = UPLOADS . $story['image_file'];                                  // Destination
         }
     }
@@ -164,7 +164,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {              // If form submitted
 
     // Checkboxes / toggles
     $story['landscape']     = !empty($_POST['landscape']) ? 1 : 0;
-    $story['allow_comment'] = empty($_POST['block']) ? 1 : 0; // or adjust logic to your intent
+    $story['allow_comment'] = empty($_POST['allow_comment']) ? 1 : 0; // or adjust logic to your intent
 
     $story['keyword']   = $_POST['keyword'] ?? '';
 
@@ -207,22 +207,42 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {              // If form submitted
 
     // Part C: Check if data is valid, if so update database
     $arguments = $story;
-    if ($invalid) { 
+    if ($invalid) {
         ($story);                                                  // If invalid data
         $errors['warning'] =  $invalid;                            // Store error
-    } else {  
-        if ($arguments['id']) { 
-         // If id exists update   
-            $saved = $cms->getStory()->update($arguments, $temp, $destination); // Update story
-        } else {  
+    } else {
+
+      // ---------- Image upload via ImageService (UPDATE only) ----------
+if (
+    !empty($arguments['id']) &&
+    isset($_FILES['image']) &&
+    $_FILES['image']['error'] === UPLOAD_ERR_OK &&
+    !empty($_FILES['image']['tmp_name'])
+) {
+    $arguments['image_alt'] = $arguments['image_alt'] ?? $_FILES['image']['name'];
+
+$result = $cms->getImageService()->saveUploadedStoryImage(
+    $_FILES['image'],
+    (int)$arguments['id'],
+    $arguments['title'] ?? ''
+);
+
+
+    $arguments['image_id'] = (int)$imageId;
+}
+
+        if ($arguments['id']) {
+         // If id exists update
+            $saved = $cms->getStory()->update($arguments); // Update story
+        } else {
          // No id create
             unset($arguments['id']);
             $saved = $cms->getStory()->create($arguments, $temp, $destination); // Create story
         }
-        if ($saved == true) {   
+        if ($saved == true) {
         // If updated
           redirect('admin/stories/', ['success' => 'Story saved']); // Redirect
-        } else { 
+        } else {
             // Otherwise
             $errors['warning'] = 'Story title already in use';         // Store message
         }

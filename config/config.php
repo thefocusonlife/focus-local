@@ -79,10 +79,34 @@ $password = $db_pass;                // DB password
 // DO NOT CHANGE NEXT LINE
 $dsn = "$type:host=$server;dbname=$db;port=$port;charset=$charset"; // Create DSN
 
-// File upload settings
-define('MEDIA_TYPES', ['image/jpeg', 'image/png', 'image/gif','image/tmp',]); // Allowed file types
-define('FILE_EXTENSIONS', ['jpeg', 'jpg', 'png', 'gif','tmp']);       // Allowed file extensions
-define('MAX_SIZE', '5242880');                                    // Max file size
+// File upload settings (smartphone-friendly)
+
+// Prefer validating by MIME detected server-side (finfo), not by extension.
+define('MEDIA_TYPES', [
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'image/webp',
+    // iOS HEIC / HEIF (you may or may not be able to convert depending on server libs)
+    'image/heic',
+    'image/heif',
+]);
+
+define('FILE_EXTENSIONS', [
+    'jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'heif'
+]);
+
+// Max upload size in bytes
+// 5MB is often too small for modern phones. 20MB is a practical starting point.
+define('MAX_SIZE', 20 * 1024 * 1024); // 20 MB
+
+// Image processing targets (new)
+define('IMAGE_MAX_WIDTH', 2000);     // adjust to taste (e.g., 1600–2400)
+define('IMAGE_MAX_HEIGHT', 2000);
+define('IMAGE_JPEG_QUALITY', 82);    // 75–85 usually looks great
+define('IMAGE_WEBP_QUALITY', 80);
+define('IMAGE_OUTPUT_FORMAT', 'jpg'); // normalize all uploads to jpg (recommended)
+
 // DO NOT EDIT:
 define(
     'UPLOADS',
@@ -91,3 +115,5 @@ define(
     . DIRECTORY_SEPARATOR . 'uploads'
     . DIRECTORY_SEPARATOR
 );
+
+

@@ -1,4 +1,6 @@
 <?php
+use PhpBook\CMS\CMS;
+
 define('APP_ROOT', dirname(__FILE__, 2));                // Application root
 
 require APP_ROOT . '/src/functions.php';                 // Functions
@@ -11,8 +13,9 @@ if (DEV === false) {                                     // If not in developmen
     register_shutdown_function('handle_shutdown');       // Set shutdown handler
 }
 
-$cms = new \PhpBook\CMS\CMS($dsn, $username, $password); // Create CMS object
+$cms = new CMS($dsn, $username, $password);              // Create CMS object
 unset($dsn, $username, $password);                       // Remove database config data
+
 
 $twig_options['cache'] = APP_ROOT . '/var/cache';        // Path to Twig cache folder
 $twig_options['debug'] = DEV;                            // If dev mode, turn debug on
