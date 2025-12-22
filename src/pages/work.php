@@ -161,12 +161,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {              // Form submitted
         $story['image_alt'] = $_FILES['image']['name'];
         $errors['image_alt']  = Validate::isText($story['image_alt'], 1, 254)
             ? '' : 'Alt text can be 1-1000 characters.';                  // Alt text
-        if ($errors['image_file'] == '' and $errors['image_alt'] == '') { // If valid
-            $story['image_file'] = create_filename($_FILES['image']['name'], 'uploads/'); // Filename
-            $destination = UPLOADS . $story['image_file'];              // destination
-        }
+        if ($errors['image_file'] == '' && $errors['image_alt'] == '') {
+    // Image validated — actual saving handled by ImageService later
+}
 
-    }
+
+
 
      if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
 
@@ -242,21 +242,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {              // Form submitted
             FILE_APPEND
         );
 
-        // ---------- Image upload via ImageService (UPDATE only) ----------
-if (
-    !empty($arguments['id']) &&
-    isset($_FILES['image']) &&
-    $_FILES['image']['error'] === UPLOAD_ERR_OK &&
-    !empty($_FILES['image']['tmp_name'])
-) {
-    $arguments['image_alt'] = $arguments['image_alt'] ?? $_FILES['image']['name'];
-
-    $result = $cms->getImageService()->saveUploadedStoryImage(
-    $_FILES['image'],
-    (int)$arguments['id'],
-    $arguments['title'] ?? ''
-);
-
 
     $arguments['image_id'] = (int)$imageId;
 }
@@ -278,7 +263,8 @@ $arguments['image_id'] = !empty($arguments['image_id'])
     : null;
 
 // Only run ImageService if a file was uploaded
-if (!empty($destination) && isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
+if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK && !empty($_FILES['image']['tmp_name'])) {
+
 
     // Reuse existing image_id if present, otherwise create image row
     $imageId = (int)($arguments['image_id'] ?? 0);
@@ -325,7 +311,8 @@ if (!empty($destination) && isset($_FILES['image']) && $_FILES['image']['error']
         } else {
             // No id create
             unset($arguments['id']);
-            $saved = $cms->getStory()->create($arguments, $temp, $destination); // Create story
+            $saved = $cms->getStory()->create($arguments); // Create story
+
         }
         if ($saved == true) {
         // If updated

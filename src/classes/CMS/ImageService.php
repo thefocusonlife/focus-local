@@ -123,10 +123,7 @@ class ImageService
         $filename = $this->buildFilename($imageId, $storyTitle, 'jpg');
         $destPath = $this->uploadsDir . $filename;
 
-        // Ensure directory exists
-        if (!is_dir($this->uploadsDir)) {
-            @mkdir($this->uploadsDir, 0755, true);
-        }
+        $this->normalizeUploadsDir($this->uploadsDir);
 
         if (!imagejpeg($final, $destPath, defined('IMAGE_JPEG_QUALITY') ? (int) IMAGE_JPEG_QUALITY : 82)) {
             imagedestroy($src);
@@ -134,6 +131,16 @@ class ImageService
             imagedestroy($final);
             throw new RuntimeException('Failed to write image to uploads.');
         }
+if (!imagejpeg($final, $destPath, defined('IMAGE_JPEG_QUALITY') ? (int) IMAGE_JPEG_QUALITY : 82)) {
+    imagedestroy($src);
+    imagedestroy($resized);
+    imagedestroy($final);
+    throw new RuntimeException('Failed to write image to uploads.');
+}
+
+// ✅ normalize perms AFTER final write succeeds
+$this->normalizeUploadsDir($this->uploadsDir);   // optional here; better once earlier (see note below)
+$this->normalizeUploadFile($destPath);
 
         // Cleanup
         imagedestroy($src);
@@ -251,25 +258,53 @@ class ImageService
     // Optional: keep member pics organized
     $subdir = 'members' . DIRECTORY_SEPARATOR;
     $destDir = $this->uploadsDir . $subdir;
-    if (!is_dir($destDir)) {
-        @mkdir($destDir, 0755, true);
-    }
+
+    $this->normalizeUploadsDir($this->uploadsDir);
+    $this->normalizeUploadsDir($destDir);
+
 
     $destPath = $destDir . $filename;
 
-    if (!imagejpeg($final, $destPath, defined('IMAGE_JPEG_QUALITY') ? (int) IMAGE_JPEG_QUALITY : 82)) {
-        imagedestroy($src);
-        imagedestroy($resized);
-        imagedestroy($final);
-        throw new \RuntimeException('Failed to write member image.');
-    }
-
+if (!imagejpeg($final, $destPath, defined('IMAGE_JPEG_QUALITY') ? (int) IMAGE_JPEG_QUALITY : 82)) {
     imagedestroy($src);
     imagedestroy($resized);
     imagedestroy($final);
+    throw new \RuntimeException('Failed to write member image to uploads.');
+}
+
+// ✅ normalize AFTER final write
+$this->normalizeUploadFile($destPath);
+
 
     // Store path relative to uploads so templates can build URL easily
     return ['filename' => 'members/' . $filename];
+}
+
+
+private function normalizeUploadsDir(string $dir): void
+{
+    if (!is_dir($dir)) {
+        @mkdir($dir, 0775, true);
+    }
+
+    // directory should be rwx for owner/group; and setgid so new files inherit group
+    @chmod($dir, 02775);
+
+    // best-effort: keep group consistent (won't always work, but harmless to try)
+    @chgrp($dir, 'geoff');
+}
+
+private function normalizeUploadFile(string $path): void
+{
+    if (!is_file($path)) {
+        return;
+    }
+
+    // Most important: make it group-writable so you can edit without sudo
+    @chmod($path, 0664);
+
+    // best-effort group fix
+    @chgrp($path, 'geoff');
 }
 
 

@@ -137,11 +137,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {              // If form submitted
         $errors['image_alt']   = Validate::isText($story['image_alt'], 1, 254)
             ? '' : 'Alt text can be 1-1000 characters.';                 // Alt text
 
-        if ($errors['image_file'] === '' and $errors['image_alt'] === '') {                  // If valid
-            // Generate local uploads filename
-            $story['image_file'] = create_filename($_FILES['image']['name'], UPLOADS);
-            $destination = UPLOADS . $story['image_file'];                                  // Destination
-        }
+        if ($errors['image_file'] == '' && $errors['image_alt'] == '') {
+    // Image validated — actual saving handled by ImageService later
+}
+
     }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
