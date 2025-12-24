@@ -23,6 +23,7 @@ class ImageService
      */
     public function saveUploadedStoryImage(array $file, int $imageId, string $storyTitle): array
     {
+
         // ---- Validate upload payload ----
         if (!isset($file['error']) || is_array($file['error'])) {
             throw new RuntimeException('Invalid upload payload.');
@@ -131,12 +132,6 @@ class ImageService
             imagedestroy($final);
             throw new RuntimeException('Failed to write image to uploads.');
         }
-if (!imagejpeg($final, $destPath, defined('IMAGE_JPEG_QUALITY') ? (int) IMAGE_JPEG_QUALITY : 82)) {
-    imagedestroy($src);
-    imagedestroy($resized);
-    imagedestroy($final);
-    throw new RuntimeException('Failed to write image to uploads.');
-}
 
 // ✅ normalize perms AFTER final write succeeds
 $this->normalizeUploadsDir($this->uploadsDir);   // optional here; better once earlier (see note below)
