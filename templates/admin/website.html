@@ -1,50 +1,56 @@
 {% extends 'admin/layout.html' %}
-{% block title %}Edit/create website{% endblock %}
+{% block title %}Edit/create website
+{% endblock %}
 {% block content %}
 
-<form action="{{ doc_root }}admin/website/{{ website.id }}" method="POST"  enctype="multipart/form-data">
-    <main class="container admin" id="content">
-      {% if website.image_file %}
-      <h1>Edit Website</h1>
-      {% else %}
-      <h1>Create Website</h1>
-      {% endif %}
+	<form action="{{ doc_root }}admin/website/{{ website.id }}" method="POST" enctype="multipart/form-data">
+		<main class="container admin" id="content">
+			{% if website.image_file %}
+				<h1>Edit Website</h1>
+			{% else %}
+				<h1>Create Website</h1>
+			{% endif %}
 
-      {% if errors.warning %}<div class="alert alert-danger">{{ errors.warning }}</div>{% endif %}
-     <section>
-      <main class="story container" id="content"> 
-        <section class="image">
-        {% if not website.image_file %}
-           <label for="image_file">Upload image</label>
-            <div class="form-group image-placeholder">
-              <input type="file" name="image_file" class="form-control-file" id="image-file"><br>
-              <span class="errors">{{ errors.image_file }}</span>
-            </div>
-     
-            <div class="form-group">
-              <label for="alt">Alt text: </label>
-              <input type="text" name="alt" id="alt" value="."  class="form-control">
-              <span class="errors">{{ errors.image_alt }}</span>
-            </div>
-            
-         {% endif %}  
-        </section> 
-         
-      
-       <section class="text">
-        <div class="form-group">
-          <label for="name">Website Name: </label>
-          <input type="text" name="name" id="name" value="{{ website.name }}" class="form-control">
-          <span class="errors">{{ errors.name }}</span>
-        </div>
-      
-       
-        <input type="submit" name="update" value="save" class="btn btn-primary">
-        </section>
-    
-    
-      </div><!-- /.admin-website -->
-       
-    </main>
-  </form>
-{% endblock %}
+			{% if errors.warning %}
+				<div class="alert alert-danger">{{ errors.warning }}</div>
+			{% endif %}
+			<section>
+				<main class="story container" id="content">
+					<section class="image">
+						{% if not website.image_file %}
+							<label for="image_file">Upload image</label>
+							<div class="form-group image-placeholder">
+								<input type="file" name="image_file" class="form-control-file" id="image-file"><br>
+								<span class="errors">{{ errors.image_file }}</span>
+							</div>
+
+							<div class="form-group">
+								<label for="alt">Alt text:
+								</label>
+								<input type="text" name="alt" id="alt" value="" class="form-control">
+								<span class="errors">{{ errors.image_alt }}</span>
+							</div>
+
+						{% endif %}
+					</section>
+
+
+					<section class="text">
+						<div class="form-group">
+							<label for="name">Website Name:
+							</label>
+							<input type="text" name="name" id="name" value="{{ website.name }}" class="form-control">
+							<span class="errors">{{ errors.name }}</span>
+						</div>
+
+
+						<input type="submit" name="update" value="save" class="btn btn-primary">
+					</section>
+
+
+				</div>
+				<!-- /.admin-website -->
+
+			</main>
+		</form>
+	{% endblock %}

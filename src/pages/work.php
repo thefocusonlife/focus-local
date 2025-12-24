@@ -1,7 +1,9 @@
 <?php
+
+
 declare(strict_types = 1);                               // Use strict types
 use PhpBook\Validate\Validate;                           // Use Validate class
-                           // Use Validate class
+
 
 $member=[];
 $temp        = $_FILES['image']['tmp_name'] ?? '';       // Temporary image
@@ -31,7 +33,7 @@ $story = [
     'image_id'    => null,
     'published'   => 0,
     'image_file'  => '',
-    'image_alt'   => '.',
+    'image_alt'   => '',
     'storyorder'  => 0,
     'landscape'   => "1",
     'blog'        => 1,
@@ -84,7 +86,6 @@ if ($id === 0) {
 //not found
 }
 
-$saved_image = $story['image_file'] ? true : false;          // Has an image been uploaded
 if($story['id'] == false) {
     $authors = $cms->getMember()->get($_SESSION['id']);
 
@@ -135,196 +136,167 @@ if (empty($storyorder)) {
   }
 
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {              // Form submitted
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {              // Form submitted
 
-       if($_POST['landscape'] <0 or $_POST['landscape']>1) {
-        redirect('work/'. $_POST['id'], ['failure' => 'Landscape must be 0 (portrait) or 1 (landscape)']); // Redirect with message
-       }
-       if($_POST['blog'] <1 or $_POST['blog']>3) {
-        redirect('work/'. $_POST['id'], ['failure' => 'Image Size: (1=Large), (2-Medium), (3=Blog)']); // Redirect with message
-       }
-       if($_POST['allow_comment'] <0 or $_POST['allow_comment']>1) {
-       redirect('work/'. $_POST['id'], ['failure' => 'Allow Comments 0 (False) or 1 (True)']); // Redirect with message
-       }
-    if (!empty($_FILES)) {
-    // If file bigger than limit in php.ini or .htaccess store error message
-    $errors['image_file'] = ($_FILES['image']['error'] === 1) ? 'File too big-Resize using Paint ' : '';
-    }
-    // If image was uploaded, get image data and validate
-    if ($temp and $_FILES['image']['error'] == 0) {      // Check file
-        $errors['image_file']  = in_array(mime_content_type($temp), MEDIA_TYPES)
-            ? '' : 'Wrong file type. ';                                   // File type
-        $errors['image_file'] .= ($_FILES['image']['size'] <= MAX_SIZE)
-            ? '' : 'File too big. Resize with Paint or other image utility. Max Size = ' . (MAX_SIZE/1000000). 'mb.';                                      // File size
-                               // Get alt text
+    // Only handle save when the Save button was used
+    if (isset($_POST['update'])) {
 
-        $story['image_alt'] = $_FILES['image']['name'];
-        $errors['image_alt']  = Validate::isText($story['image_alt'], 1, 254)
-            ? '' : 'Alt text can be 1-1000 characters.';                  // Alt text
-        if ($errors['image_file'] == '' && $errors['image_alt'] == '') {
-    // Image validated — actual saving handled by ImageService later
-}
+                // -----------------------------
+        // A) Build $story from POST
+        // -----------------------------
+        $story['id'] = isset($_POST['id']) && $_POST['id'] !== '' ? (int)$_POST['id'] : ($story['id'] ?? null);
+        $story['image_id'] = isset($_POST['image_id']) && $_POST['image_id'] !== '' ? (int)$_POST['image_id'] : ($story['image_id'] ?? null);
 
+        $story['title']   = $_POST['title']   ?? '';
+        $story['summary'] = $_POST['summary'] ?? '';
+        $story['content'] = $_POST['content'] ?? '';
 
+        $story['member_id'] = isset($_POST['member_id']) ? (int)$_POST['member_id'] : ($story['member_id'] ?? 0);
+        $story['family_id'] = isset($_POST['family_id']) ? (int)$_POST['family_id'] : ($story['family_id'] ?? 0);
+        $story['menu_id']   = isset($_POST['menu_id'])   ? (int)$_POST['menu_id']   : ($story['menu_id'] ?? 0);
 
+        $story['published'] = !empty($_POST['published']) ? 1 : 0;
+        $story['seo_title'] = create_seo_name($story['title']);
 
-     if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update'])) {
+        $story['storyorder'] = isset($_POST['storyorder']) ? (int)$_POST['storyorder'] : ($story['storyorder'] ?? 0);
 
-    $story['title']      = $_POST['title']   ?? '';
-    $story['summary']    = $_POST['summary'] ?? '';
-    $story['content']    = $_POST['content'] ?? '';
+        // Checkboxes / toggles
+        $story['landscape']     = !empty($_POST['landscape']) ? 1 : 0;
+        $story['allow_comment'] = !empty($_POST['allow_comment']) ? 1 : 0;
 
-    $story['member_id']  = isset($_POST['member_id']) ? (int)$_POST['member_id'] : ($story['member_id'] ?? 0);
-    $story['family_id']  = isset($_POST['family_id']) ? (int)$_POST['family_id'] : ($story['family_id'] ?? 0);
-    $story['menu_id']    = isset($_POST['menu_id'])   ? (int)$_POST['menu_id']   : ($story['menu_id'] ?? 0);
+        $story['keyword'] = $_POST['keyword'] ?? '';
+        $story['website'] = (int)($_SESSION['website'] ?? 0);
 
-    $story['published']  = !empty($_POST['published']) ? 1 : 0;
+        $story['blog'] = isset($_POST['blog']) ? (int)$_POST['blog'] : ($story['blog'] ?? 0);
 
-    $story['seo_title']  = create_seo_name($story['title']);
+        $memberId = $story['member_id'];
+        $authors  = $cms->getMember()->get($memberId);
 
-    $story['storyorder'] = isset($_POST['storyorder'])
-        ? (int)$_POST['storyorder']
-        : ($story['storyorder'] ?? 0);
+        // -----------------------------
+        // B) Validate story fields
+        // -----------------------------
+        $errors['title']   = Validate::isText($story['title'], 1, 80) ? '' : 'Title should be 1 - 80 characters.';
+        $errors['summary'] = Validate::isText($story['summary'], 1, 254) ? '' : 'Summary should be 0 - 254 characters.';
+        $errors['content'] = Validate::isText($story['content'], 1, 100000) ? '' : 'Content should be 0 - 100,000 characters.';
+        $errors['menu']    = Validate::isMenuId($story['menu_id'], $menus) ? '' : 'Not a valid menu';
+        $errors['keyword'] = Validate::isText($story['keyword'], 1, 80) ? '' : 'Keyword should be 1 - 80 characters.';
 
-    // Checkboxes / toggles
-    $story['landscape']     = !empty($_POST['landscape']) ? 1 : 0;
-    $story['allow_comment'] = empty($_POST['allow_comment']) ? 1 : 0; // or adjust logic to your intent
+        $invalid = implode($errors);
 
-    $story['keyword']   = $_POST['keyword'] ?? '';
+        // -----------------------------
+        // C) Save if valid
+        // -----------------------------
+        if ($invalid) {
+            $errors['warning'] = 'Please correct form errors';
+        } else {
 
-    $story['website']   = (int)($_SESSION['website'] ?? 0);
-
-    $story['blog']      = isset($_POST['blog'])
-        ? (int)$_POST['blog']
-        : ($story['blog'] ?? 0);
-
-    $memberId = $story['member_id'];
-    $authors  = $cms->getMember()->get($memberId);
-
-    // Optional HTMLPurifier
-    /*
-    $purifier = new HTMLPurifier();
-    $purifier->config->set('HTML.Allowed', 'p,br,strong,em,b,i,a[href],img[src|alt]');
-    $story['content'] = $purifier->purify($story['content']);
-    */
-     }
-
-    // Check if all data was valid and create error messages if it is invalid
-    $errors['title']    = Validate::isText($story['title'], 1, 80)
-        ? '' : 'Title should be 1 - 80 characters.';     // Validate title
-    $errors['summary']  = Validate::isText($story['summary'], 1, 254)
-        ? '' : 'Summary should be 0 - 254 characters.';  // Validate summary
-    $errors['content']  = Validate::isText($story['content'], 1, 100000)
-        ? '' : 'Content should be 0 - 100,000 characters.'; // Validate content
-    //$errors['member']   = Validate::isMemberId($story['member_id'], $authors)
-    //    ? '' : 'Not a valid author';                     // Validate author
-    $errors['menu'] = Validate::isMenuId($story['menu_id'], $menus)
-        ? '' : 'Not a valid menu';                   // Validate menu
-    $errors['keyword']    = Validate::isText($story['keyword'], 1, 80)
-        ? '' : 'Keyword should be 1 - 80 characters.';     // Validate title
-    $invalid = implode($errors);
-
-    // Part C: Check if data is valid, if so update database
-
-    if ($invalid) {
-
-        ($story);                                                  // If invalid data
-        $errors['warning'] = 'Please correct form errors';              // Store error
-    } else {
-                                                        // Otherwise
-        $arguments = $story;
-
-         // 🔥 DEBUG: log what we're actually passing into create()
-        file_put_contents(
-            '/tmp/story-debug.log',
-            date('c') . " work.php BEFORE create:\n" .
-            print_r($arguments, true) . "\n\n",
-            FILE_APPEND
-        );
-
-
-    $arguments['image_id'] = (int)$imageId;
-}
-
-// 🔥 DEBUG: what we actually send to Story->update/create (after image service)
-file_put_contents(
-    '/tmp/story-debug.log',
-    date('c') . " work.php AFTER ImageService:\n" .
-    print_r($arguments, true) . "\n\n",
-    FILE_APPEND
-);
-// ------------------------------------------------------------
-// OPTION A: Image upload orchestration (Story Create + Update)
+            $arguments = $story;            // ------------------------------------------------------------
+// Image upload orchestration (Story Create + Update)
 // ------------------------------------------------------------
 
-// Ensure image_id is defined (NULL unless proven otherwise)
-$arguments['image_id'] = !empty($arguments['image_id'])
-    ? (int)$arguments['image_id']
-    : null;
+$hasUpload = isset($_FILES['image'])
+    && ($_FILES['image']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK
+    && is_uploaded_file($_FILES['image']['tmp_name'] ?? '');
 
-// Only run ImageService if a file was uploaded
-if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK && !empty($_FILES['image']['tmp_name'])) {
+if ($hasUpload) {
+
+    // Normalize image_id
+$arguments['image_id'] = !empty($arguments['image_id']) ? (int)$arguments['image_id'] : null;
+
+// Determine alt text
+
+$alt = trim((string)($arguments['image_alt'] ?? ''));
+if ($alt === '.' || $alt === '') {
+    $name = (string)($_FILES['image']['name'] ?? '');
+    $alt = $name ? pathinfo($name, PATHINFO_FILENAME) : '';
+}
+if ($alt === '.') { $alt = ''; }
 
 
-    // Reuse existing image_id if present, otherwise create image row
-    $imageId = (int)($arguments['image_id'] ?? 0);
+// Ensure we have an image row
+$imageId = (int)($arguments['image_id'] ?? 0);
 
-    if ($imageId <= 0) {
-        // Create image row FIRST (FK safety)
-        $sql = "INSERT INTO image (file, alt) VALUES (:file, :alt);";
-        $cms->getDb()->runSQL($sql, [
-            'file' => '',
-            'alt'  => $arguments['image_alt'] ?? '',
-        ]);
-        $imageId = (int)$cms->getDb()->lastInsertId();
-        $arguments['image_id'] = $imageId;
+
+$alt = trim((string)($arguments['image_alt'] ?? ''));
+if ($alt === '.' || $alt === '') {
+    $name = (string)($_FILES['image']['name'] ?? '');
+    $alt = $name ? pathinfo($name, PATHINFO_FILENAME) : '';
+}
+if ($alt === '.') { $alt = ''; }
+
+if ($imageId <= 0) {
+    $sql = "INSERT INTO image (file, alt) VALUES (:file, :alt);";
+    $cms->getDb()->runSQL($sql, [
+        'file' => '',
+        'alt'  => $alt,
+    ]);
+
+    $imageId = (int)$cms->getDb()->lastInsertId();
+    $arguments['image_id'] = $imageId;
+
     } else {
-        // Optional: keep alt text in sync
-        $sql = "UPDATE image SET alt = :alt WHERE id = :id;";
-        $cms->getDb()->runSQL($sql, [
-            'alt' => $arguments['image_alt'] ?? '',
-            'id'  => $imageId,
-        ]);
-    }
 
-    // Save uploaded image via ImageService
+    $sql = "UPDATE image SET alt = :alt WHERE id = :id;";
+    $cms->getDb()->runSQL($sql, [
+        'alt' => $alt,
+        'id'  => $imageId,
+    ]);
+
+}
+$alt = trim((string)($arguments['image_alt'] ?? ''));
+if ($alt === '.' || $alt === '') {
+    $name = (string)($_FILES['image']['name'] ?? '');
+    $alt = $name ? pathinfo($name, PATHINFO_FILENAME) : '';
+}
+if ($alt === '.') { $alt = ''; }
+
+    // Save uploaded image via ImageService (resize + naming + write to /public/uploads)
     $result = $cms->getImageService()->saveUploadedStoryImage(
-        $_FILES['image'],          // input name MUST be "image"
+        $_FILES['image'],
         $imageId,
         $arguments['title'] ?? ''
     );
 
-    // Update image row with final filename
-    $sql = "UPDATE image SET file = :file WHERE id = :id;";
-    $cms->getDb()->runSQL($sql, [
-        'file' => $result['filename'],
-        'id'   => $imageId,
-    ]);
+
+   // Update image row with final filename + alt (bulletproof)
+$sql = "UPDATE image SET file = :file, alt = :alt WHERE id = :id;";
+$cms->getDb()->runSQL($sql, [
+    'file' => $result['filename'],
+    'alt'  => $alt,
+    'id'   => $imageId,
+]);
 
     // Propagate derived values back into story args
     $arguments['landscape'] = (int)($result['landscape'] ?? 0);
 }
 
-        // Save data as $arguments
-        if (!empty($arguments['id'])) {
-           $saved = $cms->getStory()->update($arguments);// Update story
-        } else {
-            // No id create
-            unset($arguments['id']);
-            $saved = $cms->getStory()->create($arguments); // Create story
 
-        }
-        if ($saved == true) {
-        // If updated
-          redirect('admin/stories/', ['success' => 'Story saved']); // Redirect
-        } else {
-        // Otherwise
-            $errors['warning'] = 'Story title already in use';         // Store message
+            if (!empty($arguments['id'])) {
+                $saved = $cms->getStory()->update($arguments);
+            } else {
+                unset($arguments['id']);
+                $saved = $cms->getStory()->create($arguments);
+            }
+
+            if ($saved) {
+              $imageId = (int)($arguments['image_id'] ?? 0);
+              $alt = trim((string)($_POST['image_alt'] ?? ''));
+
+            if ($imageId > 0 && $alt !== '') {
+              $cms->getStory()->altUpdate($imageId, $alt);
+    }
+}
+
+
+            if ($saved) {
+                redirect('admin/stories/', ['success' => 'Story saved']);
+            } else {
+                $errors['warning'] = 'Story title already in use';
+            }
         }
     }
-
-    $story['image_file'] = $saved_image ? $story['image_file'] : ''; // Remove image if new story
 }
+
 
 $data['story']      = $story;                          // Story data for template
 $data['menus']      = $menus;                             // Menu data for template

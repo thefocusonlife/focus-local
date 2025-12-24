@@ -4,6 +4,7 @@
 {% block content %}
 
 	<form action="{{ doc_root }}work/{{ story.id }}" method="POST" enctype="multipart/form-data">
+
 		{% if failure %}
 			<div class="alert alert-success">{{ failure }}</div>
 		{% endif %}
@@ -32,6 +33,7 @@
 						{% endif %}
 						<section class="image">
 							<input type="hidden" name="id" id="id" value="{{ story.id }}" class="form-control">
+							<input type="hidden" name="image_id" value="{{ story.image_id }}">
 
 							{% if not story.image_file and photocount >= member.photo_limit%}
 								echo "work - line 41";
@@ -66,7 +68,7 @@
 									<div
 										class="form-group">
 										<!--<label for="image_alt">Alt text: </label> -->
-										<input type="hidden" name="image_alt" id="image_alt" value="." class="form-control">
+										<input type="hidden" name="image_alt" id="image_alt" value="" class="form-control">
 										<span class="errors">{{ errors.image_alt }}</span>
 									</div>
 									<br>

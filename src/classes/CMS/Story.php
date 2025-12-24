@@ -577,15 +577,6 @@ public function create(array $story): bool
 // Update story (DB only)
 public function update(array $story): bool
 {
-    // Story does NOT handle uploads or file writes (handled by CMS + ImageService)
-    // If you want to keep image alt synchronized when editing story, do DB-only update here.
-    if (!empty($story['image_id'])) {
-        $sql = "UPDATE image SET alt = :alt WHERE id = :id;";
-        $this->db->runSQL($sql, [
-            'alt' => $story['image_alt'] ?? '',
-            'id'  => (int) $story['image_id'],
-        ]);
-    }
 
     // Remove non-column / derived keys
     unset(
@@ -634,6 +625,8 @@ public function update(array $story): bool
    // Delete image from story
 public function imageDelete(int $image_id, string $path, int $story_id): bool
 {
+
+
     // 1. Clear the image_id on the story record
     $sql = "UPDATE story
                SET image_id = NULL
@@ -641,6 +634,9 @@ public function imageDelete(int $image_id, string $path, int $story_id): bool
     $this->db->runSQL($sql, ['story_id' => $story_id]);
 
     // 2. Delete the image row itself
+
+
+
     $sql = "DELETE FROM image
              WHERE id = :id";
     $this->db->runSQL($sql, ['id' => $image_id]);

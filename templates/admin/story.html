@@ -7,11 +7,11 @@
 		<main>
 			<!-- class="container admin" id="content"> -->
 			<!--      {% if story.image_file %}
-									      <h1>Edit Story</h1>
-									      {% else %}
-									      <h1>Create Story</h1>
-									      {% endif %}
-									    -->
+												      <h1>Edit Story</h1>
+												      {% else %}
+												      <h1>Create Story</h1>
+												      {% endif %}
+												    -->
 				{% if errors.warning %}
 					<div class="alert alert-danger"> {{ errors.warning }}</div>
 			{% endif %}
@@ -51,7 +51,7 @@
 							<div
 								class="form-group">
 								<!--   <label for="image_alt">Alt text: </label> -->
-								<input type="hidden" name="image_alt" id="image_alt" value="." class="form-control">
+								<input type="hidden" name="image_alt" id="image_alt" value="" class="form-control">
 								<span class="errors">{{ errors.image_alt }}</span>
 							</div>
 							<br>
