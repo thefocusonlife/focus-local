@@ -79,7 +79,9 @@ $password = $db_pass;                // DB password
 // DO NOT CHANGE NEXT LINE
 $dsn = "$type:host=$server;dbname=$db;port=$port;charset=$charset"; // Create DSN
 
+// ===============================
 // File upload settings (smartphone-friendly)
+// ===============================
 
 // Prefer validating by MIME detected server-side (finfo), not by extension.
 define('MEDIA_TYPES', [
@@ -87,7 +89,7 @@ define('MEDIA_TYPES', [
     'image/png',
     'image/gif',
     'image/webp',
-    // iOS HEIC / HEIF (you may or may not be able to convert depending on server libs)
+    // iOS HEIC / HEIF (may or may not be convertible depending on server libs)
     'image/heic',
     'image/heif',
 ]);
@@ -96,16 +98,93 @@ define('FILE_EXTENSIONS', [
     'jpg', 'jpeg', 'png', 'gif', 'webp', 'heic', 'heif'
 ]);
 
-// Max upload size in bytes
-// 5MB is often too small for modern phones. 20MB is a practical starting point.
-define('MAX_SIZE', 20 * 1024 * 1024); // 20 MB
+// =====================================================
+// TFOL Image + Upload Constants (canonical + safe guards)
+// =====================================================
 
-// Image processing targets (new)
-define('IMAGE_MAX_WIDTH', 2000);     // adjust to taste (e.g., 1600–2400)
-define('IMAGE_MAX_HEIGHT', 2000);
-define('IMAGE_JPEG_QUALITY', 82);    // 75–85 usually looks great
-define('IMAGE_WEBP_QUALITY', 80);
-define('IMAGE_OUTPUT_FORMAT', 'jpg'); // normalize all uploads to jpg (recommended)
+// --- Upload size ---
+if (!defined('MAX_SIZE')) {
+    // 5MB is often too small for modern phones. 20MB is a practical starting point.
+    define('MAX_SIZE', 20 * 1024 * 1024); // 20 MB
+}
+
+// --- Image driver selection: auto | imagick | gd ---
+if (!defined('IMAGE_DRIVER')) {
+    $driver = strtolower((string)(getenv('IMAGE_DRIVER') ?: 'auto'));
+    if (!in_array($driver, ['auto', 'imagick', 'gd'], true)) {
+        $driver = 'auto';
+    }
+    define('IMAGE_DRIVER', $driver);
+}
+
+// --- Canonical max dimension (long edge of bounding box) ---
+if (!defined('IMAGE_MAX_DIM')) {
+    $dim = (int)(getenv('IMAGE_MAX_DIM') ?: 1600);
+    if ($dim < 200) { $dim = 200; }          // prevent nonsense values
+    if ($dim > 8000) { $dim = 8000; }        // prevent runaway memory use
+    define('IMAGE_MAX_DIM', $dim);
+}
+
+// --- Thumbnail defaults ---
+if (!defined('IMAGE_THUMB_W')) {
+    $tw = (int)(getenv('IMAGE_THUMB_W') ?: 600);
+    if ($tw < 50) { $tw = 50; }
+    if ($tw > 4000) { $tw = 4000; }
+    define('IMAGE_THUMB_W', $tw);
+}
+
+if (!defined('IMAGE_THUMB_H')) {
+    $th = (int)(getenv('IMAGE_THUMB_H') ?: 400);
+    if ($th < 50) { $th = 50; }
+    if ($th > 4000) { $th = 4000; }
+    define('IMAGE_THUMB_H', $th);
+}
+
+// --- Canonical quality (single knob) ---
+if (!defined('IMAGE_QUALITY')) {
+    $q = (int)(getenv('IMAGE_QUALITY') ?: 82);
+    if ($q < 40) { $q = 40; }
+    if ($q > 95) { $q = 95; }
+    define('IMAGE_QUALITY', $q);
+}
+
+// --- Output format (keep existing behavior; can move to .env later) ---
+if (!defined('IMAGE_OUTPUT_FORMAT')) {
+    $fmt = strtolower((string)(getenv('IMAGE_OUTPUT_FORMAT') ?: 'jpg'));
+    if (!in_array($fmt, ['jpg', 'jpeg', 'webp', 'png'], true)) {
+        $fmt = 'jpg';
+    }
+    // normalize jpeg -> jpg for consistency
+    if ($fmt === 'jpeg') { $fmt = 'jpg'; }
+    define('IMAGE_OUTPUT_FORMAT', $fmt);
+}
+
+// -----------------------------------------------------
+// Backward-compatible aliases (only if not already set)
+// -----------------------------------------------------
+
+if (!defined('IMAGE_MAX_WIDTH')) {
+    define('IMAGE_MAX_WIDTH', IMAGE_MAX_DIM);
+}
+
+if (!defined('IMAGE_MAX_HEIGHT')) {
+    define('IMAGE_MAX_HEIGHT', IMAGE_MAX_DIM);
+}
+
+// ImageService.php currently references IMAGE_JPEG_QUALITY.
+// Keep it as an alias to the canonical IMAGE_QUALITY.
+if (!defined('IMAGE_JPEG_QUALITY')) {
+    define('IMAGE_JPEG_QUALITY', IMAGE_QUALITY);
+}
+
+if (!defined('IMAGE_WEBP_QUALITY')) {
+    define('IMAGE_WEBP_QUALITY', IMAGE_QUALITY);
+}
+
+// Optional legacy aliases if you have older code somewhere:
+// (uncomment ONLY if you find references)
+// if (!defined('THUMB_W')) { define('THUMB_W', IMAGE_THUMB_W); }
+// if (!defined('THUMB_H')) { define('THUMB_H', IMAGE_THUMB_H); }
 
 // DO NOT EDIT:
 define(

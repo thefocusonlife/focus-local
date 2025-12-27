@@ -4,7 +4,6 @@
 declare(strict_types = 1);                               // Use strict types
 use PhpBook\Validate\Validate;                           // Use Validate class
 
-
 $member=[];
 $temp        = $_FILES['image']['tmp_name'] ?? '';       // Temporary image
 $destination = '';                                     // Where to save file
@@ -308,4 +307,40 @@ $data['photocount'] = $photocount;
 $data['family']     = $families;
 $data['website']     = $cms->getWebsite()->getById(intval($authors['website']));
 
-echo $twig->render('work.html', $data);                             // Render template
+$debugPanel = null;
+
+if (defined('DEV') && DEV) {
+    // Safe: only compute resolved driver if the class exists
+    $resolved = '(n/a)';
+    if (class_exists('ImageCapabilities') && method_exists('ImageCapabilities', 'resolvedDriver')) {
+        try {
+            $resolved = ImageCapabilities::resolvedDriver();
+        } catch (\Throwable $e) {
+            $resolved = 'ERROR: ' . $e->getMessage();
+        }
+    }
+
+    $debugPanel = [
+        'document_root'    => $_SERVER['DOCUMENT_ROOT'] ?? '',
+        'script_filename'  => $_SERVER['SCRIPT_FILENAME'] ?? '',
+        'cwd'              => getcwd(),
+        'uploads'          => defined('UPLOADS') ? UPLOADS : '(undef)',
+
+        'IMAGE_DRIVER'     => defined('IMAGE_DRIVER') ? IMAGE_DRIVER : '(undef)',
+        'resolved_driver'  => $resolved,
+        'imagick_loaded'   => extension_loaded('imagick') ? 'yes' : 'no',
+        'gd_loaded'        => extension_loaded('gd') ? 'yes' : 'no',
+
+        'MAX_DIM'          => defined('IMAGE_MAX_DIM') ? IMAGE_MAX_DIM : '(undef)',
+        'THUMB'            => (defined('IMAGE_THUMB_W') && defined('IMAGE_THUMB_H')) ? (IMAGE_THUMB_W . 'x' . IMAGE_THUMB_H) : '(undef)',
+        'QUALITY'          => defined('IMAGE_QUALITY') ? IMAGE_QUALITY : '(undef)',
+        'JPEG_QUALITY'     => defined('IMAGE_JPEG_QUALITY') ? IMAGE_JPEG_QUALITY : '(undef)',
+        'FORMAT'           => defined('IMAGE_OUTPUT_FORMAT') ? IMAGE_OUTPUT_FORMAT : '(undef)',
+    ];
+}
+
+if (defined('DEV') && DEV) {
+    $data['debug_panel'] = $debugPanel;
+}
+
+echo $twig->render('work.html', $data);

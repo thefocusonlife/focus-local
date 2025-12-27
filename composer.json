@@ -8,6 +8,8 @@
         "psr-4": {
             "PhpBook\\":"src/classes/"
         }
+    },
+    "require-dev": {
+        "jetbrains/phpstorm-stubs": "^2024.3"
     }
-
 }

@@ -1,7 +1,7 @@
 <?php
-if (!isset($_SESSION)) {
     require_once '../src/bootstrap.php';
-}
+    require_once dirname(__DIR__) . '/src/services/ImageCapabilities.php';
+
           // get path for website and menus                             // Setup file
 //$id = 2;
 $parts[] = null;

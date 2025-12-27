@@ -1,0 +1,10 @@
+
+<?php
+if (!extension_loaded('imagick')) {
+    die('Imagick NOT loaded');
+}
+$img = new Imagick();
+$img->newImage(200, 100, 'white');
+$img->setImageFormat('png');
+header('Content-Type: image/png');
+echo $img;

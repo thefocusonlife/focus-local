@@ -2,20 +2,18 @@
 {% block title %}Edit/create story
 {% endblock %}
 {% block content %}
-
 	<form action="{{ doc_root }}work/{{ story.id }}" method="POST" enctype="multipart/form-data">
 
 		{% if failure %}
 			<div class="alert alert-success">{{ failure }}</div>
 		{% endif %}
 
-		<body
-			oncontextmenu="return true;">
+		<body oncontextmenu="return true;">
 			<!---  <main class="story container" id="content"> -->
+			<!-- WORK.HTML LOADED -->
 
-			{% if story.blog ==3 %}
-				<main class="blog container">
-				{% endif %}
+				{% if story.blog ==3 %}
+				<main class="blog container"> {% endif %}
 				{% if story.blog == 2 %}
 					<main class="blog1">
 					{% endif %}
@@ -243,6 +241,8 @@
 					{% endif %}
 				</div>
 				<!-- /.admin-story -->
+				{% include 'partials/debug_panel.html' %}
+
 			</main>
 		</body>
 	</body>
