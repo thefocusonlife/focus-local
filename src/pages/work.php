@@ -18,6 +18,11 @@ $blog = 1;
 $allow_comment = 1;
 
 // Initialize variables needed for the HTML page
+// Always initialize/parse id BEFORE building default story
+$id = 0;
+if (isset($parts[1]) && ctype_digit((string) $parts[1])) {
+    $id = (int) $parts[1];
+}
 
 $story = [
     'id' => $id,
@@ -50,38 +55,51 @@ $errors = [
     'image_file' => '',
     'image_alt' => '',
 ];
-if (!empty($parts[1])) {
-    $id = (int) $parts[1];
-}
-if ($id) {
-    $story = $cms->getStory()->get($id, false); // Get story data
-    if (!$story) {
-        // If story is empty
-        $cms->getSession()->id;
 
-        include APP_ROOT . '/src/pages/page-not-found.php'; // Page not found
-    }
+// Resolve logged-in member id (prefer session service; fallback to $_SESSION)
+$sessionMemberId = 0;
 
-    if ($story['member_id'] !== $cms->getSession()->id) {
-        // If not author of story
-        if ($_SESSION['id'] > 1) {
-            include APP_ROOT . '/src/pages/page-not-found.php'; // Page not found
-        }
-    }
-}
-if ($id) {
-    // If valid id
-    $story = $cms->getStory()->get($id, false); // Get story data
-    if (!$story) {
-        // If story empty
-        redirect('admin/stories/', ['failure' => 'Story not found']); // Redirect
-    }
+if (isset($cms) && method_exists($cms, 'getSession') && isset($cms->getSession()->id)) {
+    $sessionMemberId = (int) $cms->getSession()->id;
 }
 
-$id = $cms->getSession()->id;
+if ($sessionMemberId <= 0) {
+    $sessionMemberId = (int) ($_SESSION['id'] ?? 0);
+}
+
+// If this page requires login (admin/work), fail fast
+if ($sessionMemberId <= 0) {
+    // Choose one behavior:
+    // 1) Redirect to login:
+    redirect('login', ['failure' => 'Please log in to add a story.']);
+    exit();
+
+    // OR 2) show not-found:
+    // include APP_ROOT . '/src/pages/page-not-found.php';
+    // exit;
+}
+
+if ($id > 0) {
+    $story = $cms->getStory()->get($id, false);
+
+    if (!$story || !is_array($story)) {
+        include APP_ROOT . '/src/pages/page-not-found.php';
+        exit();
+    }
+
+    // Author check (using the same resolved session id)
+    if ((int) $story['member_id'] !== $sessionMemberId) {
+        include APP_ROOT . '/src/pages/page-not-found.php';
+        exit();
+    }
+} else {
+    // Create mode: ensure author is set
+    $story['member_id'] = $sessionMemberId;
+}
 
 //user's id from session
-if ($id === 0) {
+//if ($id === 0) {
+if ($sessionMemberId === 0) {
     //logged in
     redirect('login/');
     //not found
@@ -95,7 +113,11 @@ if ($story['id'] == false) {
 }
 //$menus       = $cms->getMenu()->getAll2($_SESSION['website'],$_SESSION['account_id']);                    // Get menus
 $menus = $cms->getMenu()->getAll2($authors['website'], $authors['account_id']); // Get menus
-$member = $cms->getMember()->get($id);
+$member = $cms->getMember()->get((int) $sessionMemberId);
+if (!$member || !is_array($member)) {
+    include APP_ROOT . '/src/pages/page-not-found.php';
+    exit();
+}
 if ($story['id'] == false) {
     $families = $cms->getMember()->get($member['account_id']);
     $photocount = 0;
@@ -135,6 +157,20 @@ if (empty($storyorder)) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Form submitted
+    error_log(
+        '[work.php] POST update=' .
+            (isset($_POST['update']) ? 'yes' : 'no') .
+            ' files_image=' .
+            (isset($_FILES['image']) ? 'yes' : 'no') .
+            ' err=' .
+            ($_FILES['image']['error'] ?? 'NULL') .
+            ' tmp=' .
+            ($_FILES['image']['tmp_name'] ?? 'NULL') .
+            ' size=' .
+            ($_FILES['image']['size'] ?? 'NULL') .
+            ' name=' .
+            ($_FILES['image']['name'] ?? 'NULL'),
+    );
 
     // Only handle save when the Save button was used
     if (isset($_POST['update'])) {
@@ -310,6 +346,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+$member = $cms->getMember()->get($sessionMemberId);
+
+if (!$member || !is_array($member)) {
+    error_log('[work.php] Member lookup failed for id=' . $sessionMemberId);
+    include APP_ROOT . '/src/pages/page-not-found.php';
+    exit();
+}
 
 $data['story'] = $story; // Story data for template
 $data['menus'] = $menus; // Menu data for template
@@ -319,7 +362,32 @@ $data['errors'] = $errors; // Error data for template
 $data['storyorder'] = $storyorder;
 $data['photocount'] = $photocount;
 $data['family'] = $families;
-$data['website'] = $cms->getWebsite()->getById(intval($authors['website']));
+// Website for template: prefer story.website (or story.website_id), fallback to session/default
+$websiteId = 0;
+
+// If your story has website id stored under 'website' (common in your arrays)
+if (isset($story['website']) && ctype_digit((string) $story['website'])) {
+    $websiteId = (int) $story['website'];
+}
+
+// Or if it’s stored as website_id
+if ($websiteId <= 0 && isset($story['website_id'])) {
+    $websiteId = (int) $story['website_id'];
+}
+
+// Fallback to session website_id if your app uses it
+if ($websiteId <= 0) {
+    $websiteId = (int) ($_SESSION['website_id'] ?? 0);
+}
+
+// Final fallback: choose a sane default (adjust if your default is not 1)
+if ($websiteId <= 0) {
+    $websiteId = 1;
+}
+
+$data['website'] = $cms->getWebsite()->getById($websiteId) ?: [];
+
+//$data['website'] = $cms->getWebsite()->getById($websiteId) ?: [];
 
 $debugPanel = null;
 
@@ -359,5 +427,11 @@ if (defined('DEV') && DEV) {
 if (defined('DEV') && DEV) {
     $data['debug_panel'] = $debugPanel;
 }
+error_log(
+    '[work.php] BEFORE RENDER ob_level=' .
+        ob_get_level() .
+        ' headers_sent=' .
+        (headers_sent() ? 'yes' : 'no'),
+);
 
 echo $twig->render('work.html', $data);
