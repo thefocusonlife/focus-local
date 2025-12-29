@@ -1,53 +1,78 @@
 <?php
-declare(strict_types = 1);                                 // Use strict types
+declare(strict_types=1);
 include APP_ROOT . '/src/pages/menu-path.php';
 
-if (!$id) {                                                // If no valid id
-    include APP_ROOT . '/src/pages/page-not-found.php';    // Page not found
+if (!$id) {
+    include APP_ROOT . '/src/pages/page-not-found.php';
+    exit();
 }
-if (($parts[2])=="get-focused") {
+
+// Resolve menu
+if (($parts[2] ?? '') === 'get-focused') {
     $menu = $cms->getMenu()->get(50);
-} else { 
-    $menu = $cms->getMenu()->get($id);                         // Get menu data
-}
-if (!$menu) {                                              // If menu is empty
-    include APP_ROOT . '/src/pages/page-not-found.php';    // Page not found
-}
-/*
-if (mb_strtolower($parts[2]) != mb_strtolower($menu['seo_name'])) {  // If SEO name wrong
-    redirect('menu/' . $id . '/' . $menu['seo_name'], [], 301);      // Redirect to correct URL
-}
-*/
-
-    $website = $cms->getWebsite()->getById(intval($_SESSION['website']));
-
-if(empty($_SESSION['id'])) {
-    $member = 0; 
-    $mem = intval($website['id']);
-   
-  } else { 
-      $member = $cms->getMember()->get(intval($_SESSION['id']));
-      $mem = intval($member['account_id']);
-  }
-  
-  $cms->getSession()->create($member,$website['id']);
-  
-
-$data['navigation'] = $cms->getMenu()->getAll2($_SESSION['website'],$_SESSION['account_id']);     // All menus for navigation
-$data['menu']       = $menu;
-                                // Current menu
-if ($_SESSION['id'] > 0) {
-    if ($menu['id']==50) {                                              // if GET Focused menu
-        $data['stories']    = $cms->getStory()->getAll(true, 50, 1,);  // Get stories
-    } else {    
-    //$data['stories']    = $cms->getStory()->getAll(true, $menu['id'], $_SESSION['account_id'],);  // Get stories
-    $data['stories']    = $cms->getStory()->getAll(true, $menu['id'], null,);  // Get stories 
-    }
 } else {
-    $data['stories']    = $cms->getStory()->getAll(true, $menu['id'], null,);  // Get stories 
+    $menu = $cms->getMenu()->get((int) $id);
 }
-$data['section']    = $menu['id'];                          // Menu id for nav
-$data['website']    = $cms->getWebsite()->getById($menu['website']);
+if (!$menu) {
+    include APP_ROOT . '/src/pages/page-not-found.php';
+    exit();
+}
 
+// Website context
+$websiteId = (int) ($_SESSION['website'] ?? (int) ($menu['website'] ?? 1));
+$website = $cms->getWebsite()->getById($websiteId);
+if (!$website) {
+    $websiteId = 1;
+    $website = $cms->getWebsite()->getById(1);
+}
+$_SESSION['website'] = (int) $website['id']; // safe for guests
 
-echo $twig->render('menu.html', $data);                     // Render Twig template
+// Logged-in member (read-only)
+$member = null;
+$accountId = 0;
+
+if (!empty($_SESSION['id'])) {
+    $member = $cms->getMember()->get((int) $_SESSION['id']);
+    $accountId = (int) ($member['account_id'] ?? 0);
+}
+
+// Standard template context (recommended)
+$data['session'] = $_SESSION;
+$data['website'] = $website;
+if ($member) {
+    $data['member'] = $member;
+}
+
+// Navigation (use accountId, not $_SESSION['account_id'])
+$data['navigation'] = $cms->getMenu()->getAll2((int) $website['id'], $accountId);
+
+// Current menu
+$data['menu'] = $menu;
+$data['section'] = (int) $menu['id'];
+
+// ---- Menu-scoped sort wiring ----
+$menuId = (int) $menu['id'];
+$preferred = (int) ($_SESSION['sorttype'] ?? (int) ($member['sorttype'] ?? 0));
+$resolvedSorttypeId = $cms->getSorttype()->resolveForMenu($menuId, $preferred);
+$data['active_sorttype_id'] = $resolvedSorttypeId;
+$data['menu_id'] = $menuId;
+
+// Stories
+// If your Story::getAll3() now supports $sorttypeId as the last argument, use it:
+if ($menuId === 50) {
+    $data['stories'] = $cms->getStory()->getAll(true, 50, 1);
+} else {
+    // Prefer getAll3 for menu grids if that’s your “latest story summaries” function:
+    $data['stories'] = $cms
+        ->getStory()
+        ->getAll3(
+            (int) $website['id'],
+            true,
+            $menuId,
+            $accountId > 0 ? (int) $_SESSION['id'] : null,
+            300,
+            $resolvedSorttypeId,
+        );
+}
+
+echo $twig->render('menu.html', $data);

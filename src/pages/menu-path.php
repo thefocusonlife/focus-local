@@ -1,41 +1,37 @@
 <?php
-declare(strict_types = 1); 
-$id = 2;  
+declare(strict_types=1);
+$id = 2;
 
-  $path  = mb_strtolower($_SERVER['REQUEST_URI']);             // Get path in lowercase
-  $path  = substr($path, strlen(DOC_ROOT));                    // Remove up to DOC_ROOT 
-  if($path == ""){
-      $path = "index/". 1;
-  }
-                   
-  $parts = explode('/', $path); 
-                              // Split into array at /
-  if (!empty($parts)) {
-   
-    if ($parts[0] != 'admin') {                                  // If an admin page
-      $page = $parts[0] ?: 'index';                            // Page name (or use index)
-      if (!empty($parts[1])) {
-        $id   = (intval($parts[1])) ?? 1;
-        } else {
-            $id = 1;
-        }                                   // Get ID (or use null)
-  } else {                                                     // If not an admin page
-      $page = 'admin/' . ($parts[1] ?? '');                    // Page name
-      $id   = intval($parts[2]) ?? null;                               // Get ID
-  }
-} else {
-    $page ='index';
-    $id = 1;
+$path = mb_strtolower($_SERVER['REQUEST_URI']);
+$path = substr($path, strlen(DOC_ROOT));
+$path = trim($path, '/');
+
+if ($path === '') {
+    $path = 'index/1';
 }
 
+$parts = explode('/', $path);
 
- if (empty($_SESSION['id']) ) {
+$page = $parts[0] ?? 'index';
 
-     $website = $cms->getWebsite()->getById(1);
- } else {
-    
-     $website = $cms->getWebsite()->getById(intval($_SESSION['website']));
-     }
-  
-      
-  
+// Admin routes: /admin/<page>/<id>
+if ($page === 'admin') {
+    $page = 'admin/' . ($parts[1] ?? 'index');
+    $id = isset($parts[2]) && $parts[2] !== '' ? (int) $parts[2] : null;
+} else {
+    // Public routes: /<page>/<id>
+    $id = isset($parts[1]) && $parts[1] !== '' ? (int) $parts[1] : null;
+}
+
+if (empty($_SESSION['id'])) {
+    $websiteId = 1;
+} else {
+    $websiteId = (int) ($_SESSION['website'] ?? 1);
+}
+
+$website = $cms->getWebsite()->getById($websiteId);
+
+if (!$website || !isset($website['id'])) {
+    // absolute last-ditch safety
+    $website = $cms->getWebsite()->getById(1);
+}

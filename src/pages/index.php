@@ -1,71 +1,77 @@
 <?php
-declare(strict_types = 1); 
-                                          // Use strict types
-//include APP_ROOT . '/src/pages/menu-path.php';           // get path for website and menus
-$guidetext = "";
+declare(strict_types=1);
 
-if (! $id) {
-   
-        $website = $cms->getWebsite()->getById(intval($_SESSION['website']));
-        $cms->getSession()->create(2,1); 
-        
-} else {  
-    if($id != 99999) {
-        if (!isset($_SESSION)) {
-        $website = $cms->getWebsite()->getById(intval(1));
-        $cms->getSession()->create(0,1);
-        } else {
-          
-        $website = $cms->getWebsite()->getById(intval($id));
-        $cms->getSession()->create(0,1);
-        }
-    } else {
-        $website = $cms->getWebsite()->getById(intval($_SESSION['website']));
-    }    
-   }
+// index/{websiteId}
+// $id is coming from menu-path.php routing
+file_put_contents(
+    '/tmp/tfol-route.log',
+    date('c') .
+        " ROUTE page={$page} id=" .
+        var_export($id, true) .
+        ' parts=' .
+        (isset($parts) ? json_encode($parts) : 'NA') .
+        "\n",
+    FILE_APPEND,
+);
 
-if ($id > 1 and !isset($_SESSION['id']) and !isset($website['non_members']))  {
-    $msg = "WARNING: You must be a registered member in order to access a GET FOCUSED website.  Click the Register link above to view subscription plans OR click the Refresh link for more photos on this page. ** Note: You may access websites marked as FREE-Access without a membership.";
-    $data['failure'] = $msg;
+$data = [];
+$guidetext = '';
+
+// 1) Resolve website id (guest default = 1)
+$websiteId = (int) ($id ?? 0);
+
+if ($websiteId <= 0) {
+    $websiteId = (int) ($_SESSION['website'] ?? 1);
+}
+if ($websiteId <= 0) {
+    $websiteId = 1;
+}
+
+// 2) Load website (fallback to 1 if invalid)
+$website = $cms->getWebsite()->getById($websiteId);
+if (!$website || !isset($website['id'])) {
+    $websiteId = 1;
     $website = $cms->getWebsite()->getById(1);
-} else if ( $_SESSION['id']==2 and $website['non_members'] == 0) {
-    $msg = "WARNING: You must be a registered member in order to access a GET FOCUSED website.  Click the Register link above to view subscription plans OR click the Refresh link for more photos on this page. ** Note: You may access websites marked as FREE-Access without a membership.";
+}
+
+// 3) Determine logged-in member (or null)
+$member = null;
+$memAccountId = 0;
+
+if (!empty($_SESSION['id'])) {
+    $member = $cms->getMember()->get((int) $_SESSION['id']);
+    if ($member && isset($member['account_id'])) {
+        $memAccountId = (int) $member['account_id'];
+    }
+}
+
+// 4) Membership gating for websites that require membership
+// non_members: allow guests if set (based on your existing logic)
+if ($websiteId > 1 && empty($_SESSION['id']) && empty($website['non_members'])) {
+    $msg =
+        'WARNING: You must be a registered member in order to access a GET FOCUSED website.  Click the Register link above to view subscription plans OR click the Refresh link for more photos on this page. ** Note: You may access websites marked as FREE-Access without a membership.';
     $data['failure'] = $msg;
+
+    $websiteId = 1;
     $website = $cms->getWebsite()->getById(1);
-} else {
-    
-        $guidetext = $cms->getQuickguide()->getAll();
-        $msg = implode("",$guidetext[0]);
-        $data['success'] = $msg;
-    
 }
 
-
-if(!isset($_SESSION['id'])) {
-  $member = $cms->getMember()->get(2);
-  $x =$cms->getWebsite()->getById(1);
-  $mem = intval($x);
-  $cms->getSession()->create($member,$mem); 
-} else { 
-    $member = $cms->getMember()->get(intval($_SESSION['id']));
-    $mem = intval($member['account_id']);
-    $cms->getSession()->create($member,$mem);
+// 5) Quickguide success message (your existing behavior)
+$guidetext = $cms->getQuickguide()->getAll();
+if (!empty($guidetext) && !empty($guidetext[0])) {
+    $data['success'] = implode('', $guidetext[0]);
 }
 
-//$cms->getSession()->create(0,$website['id']);
-// $data['failure']  = $_GET['failure'] ?? null;            // Check for failure message
-if (!isset($_SESSION['id'])) {
-    $cms->getSession()->create($member,$id); 
+// 6) Stories
+$data['stories'] = $cms->getStory()->getAll3((int) $website['id'], true, null, null, 100);
+
+// 7) Navigation (guest account_id = 0)
+$data['navigation'] = $cms->getMenu()->getAll2((int) $website['id'], $memAccountId);
+
+// 8) Data for template
+$data['website'] = $website;
+if ($member) {
+    $data['member'] = $member;
 }
 
-
-$data['stories']     = $cms->getStory()->getAll3(intval($website['id']), true, null, null,100); // Get latest story summaries
-
-if (($member['id']) <= 1) {
-    $data['navigation']  = $cms->getMenu()->getAll2(1,1);
-    $cms->getSession()->create(0,$website['id']); 
-} else {
-   $data['navigation']  = $cms->getMenu()->getAll2($website['id'],$mem);  
-}
-$data['website']     = $website;             // Get menus
-echo $twig->render('index.html', $data);                     // Render Twig template
+echo $twig->render('index.html', $data);

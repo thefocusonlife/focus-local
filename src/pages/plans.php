@@ -4,7 +4,6 @@
 //    redirect('page-not-found/');                                   // Page not found
 //}
 
+$data['plan'] = 'plan';
 
-$data['plan']="plan";
-
-echo $twig->render('plans.html', $data); 
+echo $twig->render('plans.html', $data);

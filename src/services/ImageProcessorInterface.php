@@ -14,6 +14,6 @@ interface ImageProcessorInterface
         string $destPath,
         int $maxDim,
         string $format,
-        int $quality
+        int $quality,
     ): void;
 }

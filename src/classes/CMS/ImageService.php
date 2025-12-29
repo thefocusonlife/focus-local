@@ -23,7 +23,6 @@ class ImageService
      */
     public function saveUploadedStoryImage(array $file, int $imageId, string $storyTitle): array
     {
-
         // ---- Validate upload payload ----
         if (!isset($file['error']) || is_array($file['error'])) {
             throw new RuntimeException('Invalid upload payload.');
@@ -38,7 +37,9 @@ class ImageService
             throw new RuntimeException('Empty upload.');
         }
         if ($file['size'] > (int) MAX_SIZE) {
-            throw new RuntimeException('File too large. Max is ' . round(MAX_SIZE / 1024 / 1024) . 'MB.');
+            throw new RuntimeException(
+                'File too large. Max is ' . round(MAX_SIZE / 1024 / 1024) . 'MB.',
+            );
         }
 
         $mime = $this->detectMime($file['tmp_name']);
@@ -126,16 +127,22 @@ class ImageService
 
         $this->normalizeUploadsDir($this->uploadsDir);
 
-        if (!imagejpeg($final, $destPath, defined('IMAGE_JPEG_QUALITY') ? (int) IMAGE_JPEG_QUALITY : 82)) {
+        if (
+            !imagejpeg(
+                $final,
+                $destPath,
+                defined('IMAGE_JPEG_QUALITY') ? (int) IMAGE_JPEG_QUALITY : 82,
+            )
+        ) {
             imagedestroy($src);
             imagedestroy($resized);
             imagedestroy($final);
             throw new RuntimeException('Failed to write image to uploads.');
         }
 
-// ✅ normalize perms AFTER final write succeeds
-$this->normalizeUploadsDir($this->uploadsDir);   // optional here; better once earlier (see note below)
-$this->normalizeUploadFile($destPath);
+        // ✅ normalize perms AFTER final write succeeds
+        $this->normalizeUploadsDir($this->uploadsDir); // optional here; better once earlier (see note below)
+        $this->normalizeUploadFile($destPath);
 
         // Cleanup
         imagedestroy($src);
@@ -153,155 +160,162 @@ $this->normalizeUploadFile($destPath);
 
     private function gdCreateFromMime(string $tmpPath, string $mime)
     {
-
         return match ($mime) {
-
             'image/jpeg' => @imagecreatefromjpeg($tmpPath),
-            'image/png'  => @imagecreatefrompng($tmpPath),
-            'image/gif'  => @imagecreatefromgif($tmpPath),
-            'image/webp' => function_exists('imagecreatefromwebp') ? @imagecreatefromwebp($tmpPath) : false,
-            default      => false,
+            'image/png' => @imagecreatefrompng($tmpPath),
+            'image/gif' => @imagecreatefromgif($tmpPath),
+            'image/webp' => function_exists('imagecreatefromwebp')
+                ? @imagecreatefromwebp($tmpPath)
+                : false,
+            default => false,
         };
-      }
-      public function saveUploadedMemberImage(array $file, int $memberId, string $displayName = ''): array
-{
-    // Validate upload payload (same checks as story)
-    if (!isset($file['error']) || is_array($file['error'])) {
-        throw new \RuntimeException('Invalid upload payload.');
     }
-    if ($file['error'] !== UPLOAD_ERR_OK) {
-        throw new \RuntimeException('Upload failed (PHP error code: ' . $file['error'] . ').');
-    }
-    if (empty($file['tmp_name']) || !is_uploaded_file($file['tmp_name'])) {
-        throw new \RuntimeException('Upload temp file missing.');
-    }
-    if (!isset($file['size']) || $file['size'] <= 0) {
-        throw new \RuntimeException('Empty upload.');
-    }
-    if ($file['size'] > (int) MAX_SIZE) {
-        throw new \RuntimeException('File too large. Max is ' . round(MAX_SIZE / 1024 / 1024) . 'MB.');
-    }
+    public function saveUploadedMemberImage(
+        array $file,
+        int $memberId,
+        string $displayName = '',
+    ): array {
+        // Validate upload payload (same checks as story)
+        if (!isset($file['error']) || is_array($file['error'])) {
+            throw new \RuntimeException('Invalid upload payload.');
+        }
+        if ($file['error'] !== UPLOAD_ERR_OK) {
+            throw new \RuntimeException('Upload failed (PHP error code: ' . $file['error'] . ').');
+        }
+        if (empty($file['tmp_name']) || !is_uploaded_file($file['tmp_name'])) {
+            throw new \RuntimeException('Upload temp file missing.');
+        }
+        if (!isset($file['size']) || $file['size'] <= 0) {
+            throw new \RuntimeException('Empty upload.');
+        }
+        if ($file['size'] > (int) MAX_SIZE) {
+            throw new \RuntimeException(
+                'File too large. Max is ' . round(MAX_SIZE / 1024 / 1024) . 'MB.',
+            );
+        }
 
-    $mime = $this->detectMime($file['tmp_name']);
-    if (!in_array($mime, MEDIA_TYPES, true)) {
-        throw new \RuntimeException('Unsupported image type: ' . $mime);
-    }
+        $mime = $this->detectMime($file['tmp_name']);
+        if (!in_array($mime, MEDIA_TYPES, true)) {
+            throw new \RuntimeException('Unsupported image type: ' . $mime);
+        }
 
-    $src = $this->gdCreateFromMime($file['tmp_name'], $mime);
-    if (!$src) {
-        throw new \RuntimeException('Failed to load image with GD.');
-    }
+        $src = $this->gdCreateFromMime($file['tmp_name'], $mime);
+        if (!$src) {
+            throw new \RuntimeException('Failed to load image with GD.');
+        }
 
-    // Auto-rotate JPEGs using EXIF (smartphones)
-    if ($mime === 'image/jpeg') {
-        $src = $this->autoOrientJpegIfPossible($src, $file['tmp_name']);
-    }
+        // Auto-rotate JPEGs using EXIF (smartphones)
+        if ($mime === 'image/jpeg') {
+            $src = $this->autoOrientJpegIfPossible($src, $file['tmp_name']);
+        }
 
-    $origW = imagesx($src);
-    $origH = imagesy($src);
-    if ($origW <= 0 || $origH <= 0) {
-        imagedestroy($src);
-        throw new \RuntimeException('Invalid image dimensions.');
-    }
+        $origW = imagesx($src);
+        $origH = imagesy($src);
+        if ($origW <= 0 || $origH <= 0) {
+            imagedestroy($src);
+            throw new \RuntimeException('Invalid image dimensions.');
+        }
 
-    // Target: square avatar
-    $target = 512; // adjust to 400/512 as you prefer
-    $targetW = $target;
-    $targetH = $target;
+        // Target: square avatar
+        $target = 512; // adjust to 400/512 as you prefer
+        $targetW = $target;
+        $targetH = $target;
 
-    // Resize-to-cover then center-crop
-    $scale = max($targetW / $origW, $targetH / $origH);
-    $resizeW = (int) ceil($origW * $scale);
-    $resizeH = (int) ceil($origH * $scale);
+        // Resize-to-cover then center-crop
+        $scale = max($targetW / $origW, $targetH / $origH);
+        $resizeW = (int) ceil($origW * $scale);
+        $resizeH = (int) ceil($origH * $scale);
 
-    $resized = imagecreatetruecolor($resizeW, $resizeH);
-    if (!$resized) {
-        imagedestroy($src);
-        throw new \RuntimeException('Failed to allocate resized image.');
-    }
+        $resized = imagecreatetruecolor($resizeW, $resizeH);
+        if (!$resized) {
+            imagedestroy($src);
+            throw new \RuntimeException('Failed to allocate resized image.');
+        }
 
-    imagealphablending($resized, true);
-    imagesavealpha($resized, false);
+        imagealphablending($resized, true);
+        imagesavealpha($resized, false);
 
-    if (!imagecopyresampled($resized, $src, 0, 0, 0, 0, $resizeW, $resizeH, $origW, $origH)) {
-        imagedestroy($src);
-        imagedestroy($resized);
-        throw new \RuntimeException('Resample failed.');
-    }
+        if (!imagecopyresampled($resized, $src, 0, 0, 0, 0, $resizeW, $resizeH, $origW, $origH)) {
+            imagedestroy($src);
+            imagedestroy($resized);
+            throw new \RuntimeException('Resample failed.');
+        }
 
-    $cropX = (int) max(0, floor(($resizeW - $targetW) / 2));
-    $cropY = (int) max(0, floor(($resizeH - $targetH) / 2));
+        $cropX = (int) max(0, floor(($resizeW - $targetW) / 2));
+        $cropY = (int) max(0, floor(($resizeH - $targetH) / 2));
 
-    $final = imagecreatetruecolor($targetW, $targetH);
-    if (!$final) {
-        imagedestroy($src);
-        imagedestroy($resized);
-        throw new \RuntimeException('Failed to allocate final image.');
-    }
+        $final = imagecreatetruecolor($targetW, $targetH);
+        if (!$final) {
+            imagedestroy($src);
+            imagedestroy($resized);
+            throw new \RuntimeException('Failed to allocate final image.');
+        }
 
-    if (!imagecopy($final, $resized, 0, 0, $cropX, $cropY, $targetW, $targetH)) {
-        imagedestroy($src);
-        imagedestroy($resized);
-        imagedestroy($final);
-        throw new \RuntimeException('Crop failed.');
-    }
+        if (!imagecopy($final, $resized, 0, 0, $cropX, $cropY, $targetW, $targetH)) {
+            imagedestroy($src);
+            imagedestroy($resized);
+            imagedestroy($final);
+            throw new \RuntimeException('Crop failed.');
+        }
 
-    // Stable filename (no renames needed if display name changes)
-    $id = str_pad((string) $memberId, 6, '0', STR_PAD_LEFT);
-    $filename = "{$id}_profile.jpg";
+        // Stable filename (no renames needed if display name changes)
+        $id = str_pad((string) $memberId, 6, '0', STR_PAD_LEFT);
+        $filename = "{$id}_profile.jpg";
 
-    // Optional: keep member pics organized
-    $subdir = 'members' . DIRECTORY_SEPARATOR;
-    $destDir = $this->uploadsDir . $subdir;
+        // Optional: keep member pics organized
+        $subdir = 'members' . DIRECTORY_SEPARATOR;
+        $destDir = $this->uploadsDir . $subdir;
 
-    $this->normalizeUploadsDir($this->uploadsDir);
-    $this->normalizeUploadsDir($destDir);
+        $this->normalizeUploadsDir($this->uploadsDir);
+        $this->normalizeUploadsDir($destDir);
 
+        $destPath = $destDir . $filename;
 
-    $destPath = $destDir . $filename;
+        if (
+            !imagejpeg(
+                $final,
+                $destPath,
+                defined('IMAGE_JPEG_QUALITY') ? (int) IMAGE_JPEG_QUALITY : 82,
+            )
+        ) {
+            imagedestroy($src);
+            imagedestroy($resized);
+            imagedestroy($final);
+            throw new \RuntimeException('Failed to write member image to uploads.');
+        }
 
-if (!imagejpeg($final, $destPath, defined('IMAGE_JPEG_QUALITY') ? (int) IMAGE_JPEG_QUALITY : 82)) {
-    imagedestroy($src);
-    imagedestroy($resized);
-    imagedestroy($final);
-    throw new \RuntimeException('Failed to write member image to uploads.');
-}
+        // ✅ normalize AFTER final write
+        $this->normalizeUploadFile($destPath);
 
-// ✅ normalize AFTER final write
-$this->normalizeUploadFile($destPath);
-
-
-    // Store path relative to uploads so templates can build URL easily
-    return ['filename' => 'members/' . $filename];
-}
-
-
-private function normalizeUploadsDir(string $dir): void
-{
-    if (!is_dir($dir)) {
-        @mkdir($dir, 0775, true);
-    }
-
-    // directory should be rwx for owner/group; and setgid so new files inherit group
-    @chmod($dir, 02775);
-
-    // best-effort: keep group consistent (won't always work, but harmless to try)
-    @chgrp($dir, 'geoff');
-}
-
-private function normalizeUploadFile(string $path): void
-{
-    if (!is_file($path)) {
-        return;
+        // Store path relative to uploads so templates can build URL easily
+        return ['filename' => 'members/' . $filename];
     }
 
-    // Most important: make it group-writable so you can edit without sudo
-    @chmod($path, 0664);
+    private function normalizeUploadsDir(string $dir): void
+    {
+        if (!is_dir($dir)) {
+            @mkdir($dir, 0775, true);
+        }
 
-    // best-effort group fix
-    @chgrp($path, 'geoff');
-}
+        // directory should be rwx for owner/group; and setgid so new files inherit group
+        @chmod($dir, 02775);
 
+        // best-effort: keep group consistent (won't always work, but harmless to try)
+        @chgrp($dir, 'geoff');
+    }
+
+    private function normalizeUploadFile(string $path): void
+    {
+        if (!is_file($path)) {
+            return;
+        }
+
+        // Most important: make it group-writable so you can edit without sudo
+        @chmod($path, 0664);
+
+        // best-effort group fix
+        @chgrp($path, 'geoff');
+    }
 
     private function autoOrientJpegIfPossible($img, string $tmpPath)
     {
@@ -327,9 +341,7 @@ private function normalizeUploadFile(string $path): void
     private function buildFilename(int $imageId, string $title, string $ext): string
     {
         $slug = strtolower(trim(preg_replace('/[^a-z0-9]+/i', '-', $title), '-'));
-        $id   = str_pad((string) $imageId, 6, '0', STR_PAD_LEFT);
+        $id = str_pad((string) $imageId, 6, '0', STR_PAD_LEFT);
         return "{$id}_{$slug}.{$ext}";
     }
-
 } //end class
-

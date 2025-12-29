@@ -1,127 +1,162 @@
 <!DOCTYPE html>
 <html lang="en-US">
-  <head>
-    <script src="https://js.chargebee.com/v2/chargebee.js" data-cb-site="thefocusonlife-test" ></script>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-     <script src="https://cdn.tiny.cloud/1/7tkofysu0j4zom5h6jzs7crranermxfznweam4rf1irmolqf/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
-   <!-- Initialize TinyMCE with default settings and custom plugins and toolbars  -->
+	<head>
+		<script src="https://js.chargebee.com/v2/chargebee.js" data-cb-site="thefocusonlife-test"></script>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<script src="https://cdn.tiny.cloud/1/7tkofysu0j4zom5h6jzs7crranermxfznweam4rf1irmolqf/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+		<!-- Initialize TinyMCE with default settings and custom plugins and toolbars  -->
 
- <script> 
-     
-     tinymce.init({
-        selector: 'textarea1',
-        branding: false,
-        plugins: 'anchor emoticons  wordcount checklist  ',
-        toolbar: 'undo redo | bold italic underline| spellcheckdialog | align | removeformat',
-      });   
-      
-      // Initialize TinyMCE for textareas with class "tinymce" and a custom toolbar
-      
-      tinymce.init({
-        selector: 'textarea.tinymce',
-        branding: false,
-        plugins: 'anchor autolink  link lists searchreplace table wordcount',
-        toolbar: 'undo redo | bold italic underline  link |  image table  | spellcheckdialog | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
-      });  
-     
-    </script>
-    
-  <!-- Normal textarea 
-    <textarea id="myTextarea1" class="normal"></textarea>
-    
-    
-    <textarea id="myTextarea2" class="tinymce"></textarea>
-  -->
+		<script>
 
-    <title>{% block title %}theFocusOnLife{% endblock %}</title>
-   
-    <meta name="description" value="{% block description %}HHT Consulting{% endblock %}">
-    <link rel="stylesheet" type="text/css" href="{{ doc_root }}css/styles.css">
-    <link rel="preconnect" href="https://fonts.gstatic.com"> 
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap">
-    <link rel="shortcut icon" type="image/png" href="{{ doc_root }}img/{{website.image_file}}">  
- 
-  </head>
-  <body oncontextmenu="return true;">
-   
-    <header class="header-admin">
-      <a class="skip-link" href="#content">Skip to content</a>
-      <nav class="member-menu">
-        
-          {% if session.id == 0 %}
-            <span class="icon-user"></span><a href="{{ doc_root }}login/{{website.id}}" class="nav-item nav-link">Log in</a> /
-            <span class="icon-user"></span><a href="{{ doc_root }}register/{{website.id}}" class="nav-item nav-link">Register</a> / 
-<!--      <span class="icon-user"></span><a href="{{ doc_root }}plans/" class="nav-item nav-link">Register</a> / -->            
-            <span class="icon-user"></span><a href="{{ doc_root }}sort/{{website.id}}" class="nav-item nav-link">Sort</a> / 
-        
- <!--           <span class="icon-user"></span><a href="{{ doc_root }}plans/" class="nav-item nav-link">Register</a> /
- -->   
-      <span class="icon-user"></span><a href = "{{ doc_root }}select-website/" class="nav-item nav-link">Home</a> /
-<!--            <span class="icon-user"></span><a href = "{{ doc_root }}invite/" class="nav-item nav-link">Share</a> </div>           ** Remove Share link -->
-          {% else %}
-            <span class="icon-user"></span><a href="{{ doc_root }}member/{{ session.id }}">{{ session.forename }}</a> /
-           
-            {% if session.role == 'admin' %}
-            <span class="icon-user"></span><a href="{{ doc_root }}admin/index">Admin</a> /
-           
-            {% endif %}
-            <span class="icon-user"></span><a href="{{ doc_root }}logout">Logout</a> /
-           
-              <span class="icon-user"></span><a href="{{ doc_root }}index/{{session.website}}" class="nav-item nav-link">Refresh</a> /
-              <span class="icon-user"></span><a href = "javascript:history.back()" class="nav-item nav-link"s>Back</a> /
-              <span class="icon-user"></span><a href = "{{ doc_root }}select-website/" class="nav-item nav-link">Home</a> /
-<!--              <span class="icon-user"></span><a href = "{{ doc_root }}invite/" class="nav-item nav-link">Share</a> </div>  ** Remove Share link -->0
+			tinymce.init({selector: 'textarea1', branding: false, plugins: 'anchor emoticons  wordcount checklist  ', toolbar: 'undo redo | bold italic underline| spellcheckdialog | align | removeformat'});
 
-           
-          {% endif %}
-      
-      </nav>
-    
-      <div class="container">
-        <div class="logo">
-            <a href="{{ doc_root }}"><img src="{{ doc_root }}img/{{website.image_file}}" alt="theFocusOnLife"></a>
-    
-        </div>
-        <nav>
-          <button id="toggle-navigation" aria-expanded="false">
-            <span class="icon-menu"></span><span class="hidden">Menu</span>
-          </button>
-         
-          <ul id="menu">
-            <li><a href="{{ doc_root }}admin/stories/" class="nav-item nav-link">Stories</a></li>
-            <li><a href="{{ doc_root }}admin/menus/" class="nav-item nav-link">Menus</a></li>
-            <li><a href="{{ doc_root }}admin/members" class="nav-item nav-link">Members</a></li>
-            
-          </ul>
-        </nav>
-        
-      </div><!-- /.container -->
-    </header>
-    {% block content %}{% endblock %}
-   
-      
- <script src="https://cdn.tiny.cloud/1/7tkofysu0j4zom5h6jzs7crranermxfznweam4rf1irmolqf/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+// Initialize TinyMCE for textareas with class "tinymce" and a custom toolbar
 
- <script>
-    if (document.getElementById('story-content')){
-      tinymce.init({
-      selector: 'textarea',
-      plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount checklist mediaembed casechange export formatpainter pageembed linkchecker a11ychecker tinymcespellchecker permanentpen powerpaste advtable advcode editimage tinycomments tableofcontents footnotes mergetags autocorrect typography inlinecss',
-      toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
-      tinycomments_mode: 'embedded',
-      tinycomments_author: 'Author name',
-      mergetags_list: [
-        { value: 'First.Name', title: 'First Name' },
-        { value: 'Email', title: 'Email' },
-      ],
-    });
-      };
-    
-     </script>
-    <script src="{{ doc_root }}js/site.js"></script>
+tinymce.init({selector: 'textarea.tinymce', branding: false, plugins: 'anchor autolink  link lists searchreplace table wordcount', toolbar: 'undo redo | bold italic underline  link |  image table  | spellcheckdialog | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat'});
+		</script>
 
-    {% include 'partials/footer.html' %}
-    
-  </body>
+		<!-- Normal textarea
+																    <textarea id="myTextarea1" class="normal"></textarea>
+		
+		
+																    <textarea id="myTextarea2" class="tinymce"></textarea>
+																  -->
+
+		<title>
+			{% block title %}theFocusOnLife
+			{% endblock %}
+		</title>
+
+		<meta name="description" value="{% block description %}HHT Consulting{% endblock %}">
+		<link rel="stylesheet" type="text/css" href="{{ doc_root }}css/styles.css">
+		<link rel="preconnect" href="https://fonts.gstatic.com">
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap">
+		<link rel="shortcut icon" type="image/png" href="{{ doc_root }}img/{{website.image_file}}">
+
+	</head>
+	<body oncontextmenu="return true;">
+		{{ include('screen0.html') }}
+		<header class="header-admin">
+			<a class="skip-link" href="#content">Skip to content</a>
+			<!-- DEBUG sid={{ session.id|default('NULL') }} role={{ session.role|default('NULL') }} sw={{ session.website|default('NULL') }} -->
+
+			<nav class="member-menu">
+
+				{% if session.id == 0 %}
+					<span class="icon-user"></span>
+					<a href="{{ doc_root }}login/{{website.id}}" class="nav-item nav-link">Log in</a>
+					/
+					<span class="icon-user"></span>
+					<a href="{{ doc_root }}register/{{website.id}}" class="nav-item nav-link">Register</a>
+					/
+					<!--      <span class="icon-user"></span><a href="{{ doc_root }}plans/" class="nav-item nav-link">Register</a> / -->
+					<span class="icon-user"></span>
+					{% if menu_id is defined and menu_id %}
+						<a href="{{ doc_root }}sort/{{ menu_id }}/" class="nav-item nav-link">Sort</a>
+					{% endif %}
+
+					/
+
+					<!--           <span class="icon-user"></span><a href="{{ doc_root }}plans/" class="nav-item nav-link">Register</a> /
+																																								 -->
+					<span class="icon-user"></span>
+					<a href="{{ doc_root }}select-website/" class="nav-item nav-link">Home</a>
+					/
+					<!--            <span class="icon-user"></span><a href = "{{ doc_root }}invite/" class="nav-item nav-link">Share</a> </div>           ** Remove Share link -->
+				{% else %}
+					<span class="icon-user"></span>
+					{% if session.id is defined and session.id %}
+						<a href="{{ doc_root }}member/{{ session.id }}">{{ session.forename|default('Member') }}</a>
+					{% else %}
+						<a href="{{ doc_root }}index/{{ website.id|default(1) }}">Guest</a>
+					{% endif %}
+
+					/
+
+					{% if session.role == 'admin' %}
+						<span class="icon-user"></span>
+						<a href="{{ doc_root }}admin/index">Admin</a>
+						/
+
+					{% endif %}
+					<span class="icon-user"></span>
+					<a href="{{ doc_root }}logout">Logout</a>
+					/
+
+					<span class="icon-user"></span>
+					<a href="{{ doc_root }}index/{{session.website}}" class="nav-item nav-link">Refresh</a>
+					/
+					<span class="icon-user"></span>
+					<a href="javascript:history.back()" class="nav-item nav-link" s>Back</a>
+					/
+					<span class="icon-user"></span>
+					<a href="{{ doc_root }}select-website/" class="nav-item nav-link">Home</a>
+					/
+					<!--              <span class="icon-user"></span><a href = "{{ doc_root }}invite/" class="nav-item nav-link">Share</a> </div>  ** Remove Share link -->
+					0
+
+
+				{% endif %}
+
+			</nav>
+
+			<div class="container">
+				<div class="logo">
+					<a href="{{ doc_root }}"><img src="{{ doc_root }}img/{{website.image_file}}" alt="theFocusOnLife"></a>
+
+				</div>
+				<nav>
+					<button id="toggle-navigation" aria-expanded="false">
+						<span class="icon-menu"></span>
+						<span class="hidden">Menu</span>
+					</button>
+
+					<ul id="menu">
+						<li>
+							<a href="{{ doc_root }}admin/stories/" class="nav-item nav-link">Stories</a>
+						</li>
+						<li>
+							<a href="{{ doc_root }}admin/menus/" class="nav-item nav-link">Menus</a>
+						</li>
+						<li>
+							<a href="{{ doc_root }}admin/members" class="nav-item nav-link">Members</a>
+						</li>
+
+					</ul>
+				</nav>
+
+			</div>
+			<!-- /.container -->
+		</header>
+		{% block content %}{% endblock %}
+
+
+		<script src="https://cdn.tiny.cloud/1/7tkofysu0j4zom5h6jzs7crranermxfznweam4rf1irmolqf/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+
+		<script>
+			if (document.getElementById('story-content')) {
+tinymce.init({
+selector: 'textarea',
+plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount checklist mediaembed casechange export formatpainter pageembed linkchecker a11ychecker tinymcespellchecker permanentpen powerpaste advtable advcode editimage tinycomments tableofcontents footnotes mergetags autocorrect typography inlinecss',
+toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
+tinycomments_mode: 'embedded',
+tinycomments_author: 'Author name',
+mergetags_list: [
+{
+value: 'First.Name',
+title: 'First Name'
+}, {
+value: 'Email',
+title: 'Email'
+},
+]
+});
+};
+		</script>
+		<script src="{{ doc_root }}js/site.js"></script>
+
+		{% include 'partials/footer.html' %}
+
+	</body>
 </html>

@@ -1,21 +1,18 @@
 <?php
-namespace PhpBook\CMS;                                   // Declare namespace
+namespace PhpBook\CMS; // Declare namespace
 
-class Quickguide
-{                                                        // Define Session class
-   
+class Quickguide // Define Session class
+{
     public $guidetext;
-   
-                           
 
-    protected $db;                                       // Holds ref to Database object
+    protected $db; // Holds ref to Database object
 
     public function __construct(Database $db)
     {
-        $this->db = $db;                                 // Add ref to Database object
+        $this->db = $db; // Add ref to Database object
     }
 
-     /*Get individual guidetext by id
+    /*Get individual guidetext by id
     public function get(int $id)
     {
         $sql = "SELECT guidetext
@@ -32,7 +29,6 @@ class Quickguide
                   WHERE active = 1                        
                   ORDER BY  RAND()
                   LIMIT 1;";
-        return $this->db->runSQL($sql)->fetchAll();      // Return all pagelimits
+        return $this->db->runSQL($sql)->fetchAll(); // Return all pagelimits
     }
-    
 }

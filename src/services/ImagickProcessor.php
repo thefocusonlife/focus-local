@@ -8,7 +8,7 @@ final class ImagickProcessor implements ImageProcessorInterface
         string $destPath,
         int $maxDim,
         string $format,
-        int $quality
+        int $quality,
     ): void {
         $img = new Imagick($srcPath);
 
@@ -30,14 +30,16 @@ final class ImagickProcessor implements ImageProcessorInterface
         $scale = min($maxDim / max($w, 1), $maxDim / max($h, 1), 1.0);
 
         if ($scale < 1.0) {
-            $newW = (int)max(1, round($w * $scale));
-            $newH = (int)max(1, round($h * $scale));
+            $newW = (int) max(1, round($w * $scale));
+            $newH = (int) max(1, round($h * $scale));
             // Lanczos = good quality
             $img->resizeImage($newW, $newH, Imagick::FILTER_LANCZOS, 1);
         }
 
         $format = strtolower($format);
-        if ($format === 'jpeg') { $format = 'jpg'; }
+        if ($format === 'jpeg') {
+            $format = 'jpg';
+        }
 
         // Flatten transparency for JPG
         if ($format === 'jpg') {

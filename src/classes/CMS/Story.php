@@ -1,36 +1,35 @@
 <?php
-namespace PhpBook\CMS;                                   // Namespace declaration
+namespace PhpBook\CMS; // Namespace declaration
 
 class Story
 {
-    public $id;                                          // Store story id
-    public $website;                                     // Store website id
-    public $title;                                       // Store story title
-    public $summary;                                     // Store story summary
-    public $content;                                     // Store story content
-    public $created;                                     // Store story creation date
-    public $menu_id;                                     // Story story menu_id
-    public $member_id;                                   // Store story member_id
-    public $family_id;                                   // Store story family id
-    public $published;                                   // Store story published flag
-    public $seo_title;                                   // Store story seo_title
-    public $storyorder;                                    // Store story storyorder
-    public $landscape;                                   // Store story landscape flag
+    public $id; // Store story id
+    public $website; // Store website id
+    public $title; // Store story title
+    public $summary; // Store story summary
+    public $content; // Store story content
+    public $created; // Store story creation date
+    public $menu_id; // Story story menu_id
+    public $member_id; // Store story member_id
+    public $family_id; // Store story family id
+    public $published; // Store story published flag
+    public $seo_title; // Store story seo_title
+    public $storyorder; // Store story storyorder
+    public $landscape; // Store story landscape flag
     public $allow_comment;
-    public $keyword;                                     // Store story keyword
+    public $keyword; // Store story keyword
     public $geomitry_info;
 
-    protected $db;                                       // Holds ref to Database object
+    protected $db; // Holds ref to Database object
 
     public function __construct(Database $db)
     {
-
-        $this->db = $db;                                   // Add ref to Database object
+        $this->db = $db; // Add ref to Database object
     }
 
     // Get individual story
-    public function get(int $id, bool $published) {
-
+    public function get(int $id, bool $published)
+    {
         $sql = "SELECT a.id, a.website, a.title, a.summary, a.content, a.created, a.menu_id, a.member_id, a.family_id, a.published, a.seo_title,
                      a.storyorder, a.landscape, a.allow_comment, a.keyword, a.blog,
                        c.name AS menu,
@@ -51,44 +50,45 @@ class Story
                   JOIN menu   AS c ON a.menu_id = c.id
                   JOIN member     AS m ON a.member_id   = m.id
                   LEFT JOIN image AS i ON a.image_id    = i.id
-                 WHERE a.id = :id ";                     // SQL statement
-        if ($published) {                                // If must be published
-            $sql .= "AND a.published = 1 ";              // Add clause to SQL
+                 WHERE a.id = :id "; // SQL statement
+        if ($published) {
+            // If must be published
+            $sql .= 'AND a.published = 1 '; // Add clause to SQL
         }
 
-
-        $sql .= "GROUP BY 1;";                          // Add GROUP BY clause
-        return $this->db->runSQL($sql, [$id])->fetch();  // Return story
+        $sql .= 'GROUP BY 1;'; // Add GROUP BY clause
+        return $this->db->runSQL($sql, [$id])->fetch(); // Return story
     }
 
-
     // Get summaries of stories - published only
-            public function getAll( $published=null ,$menu = null, $member=null,  $limit = 300): array {
+    public function getAll($published = null, $menu = null, $member = null, $limit = 300): array
+    {
+        // Setup file
+        $path = mb_strtolower($_SERVER['REQUEST_URI']); // Get path in lowercase
+        $path = substr($path, strlen(DOC_ROOT)); // Remove up to DOC_ROOT
+        $parts = explode('/', $path); // Split into array at /
 
-            // Setup file
-$path  = mb_strtolower($_SERVER['REQUEST_URI']);             // Get path in lowercase
-$path  = substr($path, strlen(DOC_ROOT));                    // Remove up to DOC_ROOT
-$parts = explode('/', $path);                                // Split into array at /
+        if ($parts[0] != 'admin') {
+            // If an admin page
+            $page = $parts[0] ?: 'index'; // Page name (or use index)
+            $id = $parts[1] ?? null; // Get ID (or use null)
+        } else {
+            // If not an admin page
+            $page = 'admin/' . ($parts[1] ?? ''); // Page name
+            $id = $parts[2] ?? null; // Get ID
+        }
+        // Validate ID
 
-if ($parts[0] != 'admin') {                                  // If an admin page
-    $page = $parts[0] ?: 'index';                            // Page name (or use index)
-    $id   = $parts[1] ?? null;                               // Get ID (or use null)
-} else {                                                     // If not an admin page
-    $page = 'admin/' . ($parts[1] ?? '');                    // Page name
-    $id   = $parts[2] ?? null;                               // Get ID
-}
-                 // Validate ID
+        //$php_page = APP_ROOT . '/src/pages/' . $page . '.php';       // Path to PHP page
 
-//$php_page = APP_ROOT . '/src/pages/' . $page . '.php';       // Path to PHP page
-
-        $arguments['menu'] = $arguments['menu1'] = $menu;  // Menu id
-        $arguments['member']   = $arguments['member1']   = $member;   // Author id
-         if(empty($_SESSION['pagelimit'])) {
+        $arguments['menu'] = $arguments['menu1'] = $menu; // Menu id
+        $arguments['member'] = $arguments['member1'] = $member; // Author id
+        if (empty($_SESSION['pagelimit'])) {
             $arguments['limit'] = $limit;
-         } else {
-            $arguments['limit']    = $_SESSION['pagelimit'];
-         }
-         $sql = "SELECT a.id, a.website, a.title, a.summary, a.created, a.family_id, a.menu_id, a.member_id, a.family_id, a.published,
+        } else {
+            $arguments['limit'] = $_SESSION['pagelimit'];
+        }
+        $sql = "SELECT a.id, a.website, a.title, a.summary, a.created, a.family_id, a.menu_id, a.member_id, a.family_id, a.published,
          a.seo_title, a.storyorder,a.landscape, a.allow_comment, keyword, a.blog,
          c.name AS menu,
          c.seo_name AS seo_menu,
@@ -108,90 +108,86 @@ if ($parts[0] != 'admin') {                                  // If an admin page
             JOIN member     AS m ON a.member_id   = m.id
             LEFT JOIN image AS i ON a.image_id    = i.id
             WHERE (a.menu_id = :menu OR :menu1 is null)
-            AND (a.member_id   = :member   OR :member1   is null)";"
+            AND (a.member_id   = :member   OR :member1   is null)";
+        "
             AND (a.website = :website);";
-            if ($_SESSION['role'] == 'admin') {
-                $sql .= " AND (a.published = 0 or a.published = 1)";
-            } elseif ($_SESSION['id'] == $member)  {
-                $sql .= " AND (a.published = 0 or a.published = 1)";
+        if ($_SESSION['role'] == 'admin') {
+            $sql .= ' AND (a.published = 0 or a.published = 1)';
+        } elseif ($_SESSION['id'] == $member) {
+            $sql .= ' AND (a.published = 0 or a.published = 1)';
+        } else {
+            $sql .= ' AND (a.published = 1)';
+        }
+        // JUST FOR TESTING
 
-            } else {
-                $sql .= " AND (a.published = 1)";
-            }
-            // JUST FOR TESTING
-
-            if (empty($_SESSION['sorttype'])) {
-                if(empty($parts[2])) {
+        if (empty($effectiveSorttype)) {
+            if (empty($parts[2])) {
                 $sql .= " ORDER BY a.landscape, RAND()
                 LIMIT :limit;";
 
                 //$sql .= " ORDER BY a.menu_id ASC, a.storyorder,a.landscape DESC
                 //                LIMIT :limit;";
-                }
-                } elseif ($_SESSION['sorttype'] == 1)   {
-                    $sql .= " ORDER BY  a.landscape DESC, RAND()
-                    LIMIT :limit;";                                             //landscape Random
-                } elseif ($_SESSION['sorttype'] == 2)   {
-                    $sql .= " ORDER BY  a.landscape DESC, a.created DESC
-                    LIMIT :limit;";                                         //recent landscape first
-                } elseif ($_SESSION['sorttype'] == 3)   {
-                    $sql .= " ORDER BY  a.landscape DESC, a.created ASC
-                    LIMIT :limit;";                                         //oldest landscape first
-                } elseif ($_SESSION['sorttype'] == 4) {
-                    $sql .= " ORDER BY  a.landscape ASC, a.created DESC
-                    LIMIT :limit;";                                             //recent portrait first
-                } elseif ($_SESSION['sorttype'] == 5) {
-                    $sql .= " ORDER BY   a.landscape ASC, a.created ASC
-                    LIMIT :limit;";                                             //oldest portrait first random
-                } elseif ($_SESSION['sorttype'] == 6) {
-                        $sql .= " ORDER BY  a.landscape ASC, RAND()
-                            LIMIT :limit;";                                  //portrait first random
-                } elseif ($_SESSION['sorttype'] == 7) {
-                                $sql .= " ORDER BY  a.title ASC
-                                LIMIT :limit;";                             //alphabetical
-                } elseif ($_SESSION['sorttype'] == 8) {
-                        $sql .= " ORDER BY  RAND()
-                                LIMIT :limit;";                              //mixed portrait and landscape random
-                } elseif ($_SESSION['sorttype'] == 9) {
-                        $sql .= " ORDER BY   a.created DESC
-                                LIMIT :limit;";                              //mixed portrait and oldest
-                } elseif ($_SESSION['sorttype'] == 10) {
-                        $sql .= " ORDER BY  a.storyorder,a.landscape DESC
+            }
+        } elseif ($effectiveSorttype == 1) {
+            $sql .= " ORDER BY  a.landscape DESC, RAND()
+                    LIMIT :limit;"; //landscape Random
+        } elseif ($effectiveSorttype == 2) {
+            $sql .= " ORDER BY  a.landscape DESC, a.created DESC
+                    LIMIT :limit;"; //recent landscape first
+        } elseif ($effectiveSorttype == 3) {
+            $sql .= " ORDER BY  a.landscape DESC, a.created ASC
+                    LIMIT :limit;"; //oldest landscape first
+        } elseif ($effectiveSorttype == 4) {
+            $sql .= " ORDER BY  a.landscape ASC, a.created DESC
+                    LIMIT :limit;"; //recent portrait first
+        } elseif ($effectiveSorttype == 5) {
+            $sql .= " ORDER BY   a.landscape ASC, a.created ASC
+                    LIMIT :limit;"; //oldest portrait first random
+        } elseif ($effectiveSorttype == 6) {
+            $sql .= " ORDER BY  a.landscape ASC, RAND()
+                            LIMIT :limit;"; //portrait first random
+        } elseif ($effectiveSorttype == 7) {
+            $sql .= " ORDER BY  a.title ASC
+                                LIMIT :limit;"; //alphabetical
+        } elseif ($effectiveSorttype == 8) {
+            $sql .= " ORDER BY  RAND()
+                                LIMIT :limit;"; //mixed portrait and landscape random
+        } elseif ($effectiveSorttype == 9) {
+            $sql .= " ORDER BY   a.created DESC
+                                LIMIT :limit;"; //mixed portrait and oldest
+        } elseif ($effectiveSorttype == 10) {
+            $sql .= " ORDER BY  a.storyorder,a.landscape DESC
                                  LIMIT :limit;";
-                } else {
-                        $sql .= " ORDER BY  a.storyorder,a.landscape DESC
+        } else {
+            $sql .= " ORDER BY  a.storyorder,a.landscape DESC
                                 LIMIT :limit;";
-                }
+        }
 
-
-         return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return data
+        return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return data
         // SQL for story summary
-
     }
 
     // Get summaries of stories - Published and not-published
-            public function getAll2($website, $published, $menu=null , $member = null, $limit = 150): array {
+    public function getAll2($website, $published, $menu = null, $member = null, $limit = 150): array
+    {
+        // Setup file
+        // Validate ID
 
+        //$php_page = APP_ROOT . '/src/pages/' . $page . '.php';       // Path to PHP page
 
-                // Setup file
-                 // Validate ID
-
-//$php_page = APP_ROOT . '/src/pages/' . $page . '.php';       // Path to PHP page
-
-        $arguments['menu']      = $arguments['menu1']     = $menu;  // Menu id
-        $arguments['member']    = $arguments['member1']   = $member;   // Author id
-        $arguments['website']   = $website;
-         if(empty($_SESSION['pagelimit'])) {
+        $arguments['menu'] = $arguments['menu1'] = $menu; // Menu id
+        $arguments['member'] = $arguments['member1'] = $member; // Author id
+        $arguments['website'] = $website;
+        if (empty($_SESSION['pagelimit'])) {
             $arguments['limit'] = $limit;
-         } else {
-            if($_SESSION['id'] == 1) {
-                $arguments['limit'] = 150;                      // manually toggle here for managing UberAdmin stories
+        } else {
+            if ($_SESSION['id'] == 1) {
+                $arguments['limit'] = 150; // manually toggle here for managing UberAdmin stories
                 //$arguments['limit'] = $_SESSION['pagelimit'];
             } else {
-            $arguments['limit']    = $_SESSION['pagelimit'];
+                $arguments['limit'] = $_SESSION['pagelimit'];
             }
-         }
-
+        }
 
         $sql = "SELECT a.id, a.website, a.title, a.summary, a.created, a.family_id, a.menu_id, a.member_id, a.family_id, a.published,
                        a.seo_title, a.storyorder,a.landscape, a.allow_comment, keyword, a.blog,
@@ -215,95 +211,102 @@ if ($parts[0] != 'admin') {                                  // If an admin page
                   LEFT JOIN image AS i ON a.image_id    = i.id
                   WHERE (a.menu_id = :menu OR :menu1 is null)
                   AND (a.member_id   = :member   OR :member1   is null)
-                  AND (a.website = :website)";"
+                  AND (a.website = :website)";
+        "
                   AND (a.website = :website);";
-                  if ($_SESSION['role'] == 'admin') {
-                    $sql .= " AND (a.published = 0 or a.published = 1)";
-                } elseif ($_SESSION['id'] == $member)  {
-                    $sql .= " AND (a.published = 0 or a.published = 1)";
-
-                } else {
-                    $sql .= " AND (a.published = 1)";
-                }
-                if (empty($_SESSION['sorttype'])) {
-                    if(empty($parts[2])) {
-                    $sql .= " ORDER BY a.landscape, RAND()
+        if ($_SESSION['role'] == 'admin') {
+            $sql .= ' AND (a.published = 0 or a.published = 1)';
+        } elseif ($_SESSION['id'] == $member) {
+            $sql .= ' AND (a.published = 0 or a.published = 1)';
+        } else {
+            $sql .= ' AND (a.published = 1)';
+        }
+        if (empty($effectiveSorttype)) {
+            if (empty($parts[2])) {
+                $sql .= " ORDER BY a.landscape, RAND()
                     LIMIT :limit;";
 
-                    //$sql .= " ORDER BY a.menu_id ASC, a.storyorder,a.landscape DESC
-                    //                LIMIT :limit;";
-                    }
-                    } elseif ($_SESSION['sorttype'] == 1)   {
-                        $sql .= " ORDER BY  a.landscape DESC, RAND()
-                        LIMIT :limit;";                                             //landscape Random
-                    } elseif ($_SESSION['sorttype'] == 2)   {
-                        $sql .= " ORDER BY  a.landscape DESC, a.created DESC
-                        LIMIT :limit;";                                         //recent landscape first
-                    } elseif ($_SESSION['sorttype'] == 3)   {
-                        $sql .= " ORDER BY  a.landscape DESC, a.created ASC
-                        LIMIT :limit;";                                         //oldest landscape first
-                    } elseif ($_SESSION['sorttype'] == 4) {
-                        $sql .= " ORDER BY  a.landscape ASC, a.created DESC
-                        LIMIT :limit;";                                             //recent portrait first
-                    } elseif ($_SESSION['sorttype'] == 5) {
-                        $sql .= " ORDER BY   a.landscape ASC, a.created ASC
-                        LIMIT :limit;";                                             //oldest portrait first random
-                    } elseif ($_SESSION['sorttype'] == 6) {
-                            $sql .= " ORDER BY  a.landscape ASC, RAND()
-                                LIMIT :limit;";                                  //portrait first random
-                    } elseif ($_SESSION['sorttype'] == 7) {
-                                    $sql .= " ORDER BY  a.title ASC
-                                    LIMIT :limit;";                             //alphabetical
-                    } elseif ($_SESSION['sorttype'] == 8) {
-                            $sql .= " ORDER BY  RAND()
-                                    LIMIT :limit;";                              //mixed portrait and landscape random
-                    } elseif ($_SESSION['sorttype'] == 9) {
-                            $sql .= " ORDER BY   a.created DESC
-                                    LIMIT :limit;";                              //mixed portrait and oldest
-                    } elseif ($_SESSION['sorttype'] == 10) {
-                            $sql .= " ORDER BY  a.storyorder,a.landscape DESC
+                //$sql .= " ORDER BY a.menu_id ASC, a.storyorder,a.landscape DESC
+                //                LIMIT :limit;";
+            }
+        } elseif ($effectiveSorttype == 1) {
+            $sql .= " ORDER BY  a.landscape DESC, RAND()
+                        LIMIT :limit;"; //landscape Random
+        } elseif ($effectiveSorttype == 2) {
+            $sql .= " ORDER BY  a.landscape DESC, a.created DESC
+                        LIMIT :limit;"; //recent landscape first
+        } elseif ($effectiveSorttype == 3) {
+            $sql .= " ORDER BY  a.landscape DESC, a.created ASC
+                        LIMIT :limit;"; //oldest landscape first
+        } elseif ($effectiveSorttype == 4) {
+            $sql .= " ORDER BY  a.landscape ASC, a.created DESC
+                        LIMIT :limit;"; //recent portrait first
+        } elseif ($effectiveSorttype == 5) {
+            $sql .= " ORDER BY   a.landscape ASC, a.created ASC
+                        LIMIT :limit;"; //oldest portrait first random
+        } elseif ($effectiveSorttype == 6) {
+            $sql .= " ORDER BY  a.landscape ASC, RAND()
+                                LIMIT :limit;"; //portrait first random
+        } elseif ($effectiveSorttype == 7) {
+            $sql .= " ORDER BY  a.title ASC
+                                    LIMIT :limit;"; //alphabetical
+        } elseif ($effectiveSorttype == 8) {
+            $sql .= " ORDER BY  RAND()
+                                    LIMIT :limit;"; //mixed portrait and landscape random
+        } elseif ($effectiveSorttype == 9) {
+            $sql .= " ORDER BY   a.created DESC
+                                    LIMIT :limit;"; //mixed portrait and oldest
+        } elseif ($effectiveSorttype == 10) {
+            $sql .= " ORDER BY  a.storyorder,a.landscape DESC
                             LIMIT :limit;";
-                    } else {
-                            $sql .= " ORDER BY  a.storyorder,a.landscape DESC
+        } else {
+            $sql .= " ORDER BY  a.storyorder,a.landscape DESC
                                     LIMIT :limit;";
-                    }
-
+        }
 
         return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return data
         // SQL for story summary
     }
-// Get summaries of stories - Published by website
-public function getAll3($website, $published = null ,$menu = null, $member=null,  $limit = 300): array {
-    $arguments['menu']      = $arguments['menu1']     = $menu;  // Menu id
-    $arguments['member']    = $arguments['member1']   = $member;   // Author id
-    $arguments['website']   = $website;
+    // Get summaries of stories - Published by website
+    public function getAll3(
+        $website,
+        $published = null,
+        $menu = null,
+        $member = null,
+        $limit = 300,
+        $sorttypeId = null,
+    ): array {
+        $arguments['menu'] = $arguments['menu1'] = $menu; // Menu id
+        $arguments['member'] = $arguments['member1'] = $member; // Author id
+        $arguments['website'] = $website;
 
-//$arguments = array($website);
-    // Setup file
-$path  = mb_strtolower($_SERVER['REQUEST_URI']);             // Get path in lowercase
-$path  = substr($path, strlen(DOC_ROOT));                    // Remove up to DOC_ROOT
-$parts = explode('/', $path);                                // Split into array at /
+        //$arguments = array($website);
+        // Setup file
+        $path = mb_strtolower($_SERVER['REQUEST_URI']); // Get path in lowercase
+        $path = substr($path, strlen(DOC_ROOT)); // Remove up to DOC_ROOT
+        $parts = explode('/', $path); // Split into array at /
 
-if ($parts[0] != 'admin') {                                  // If an admin page
-$page = $parts[0] ?: 'index';                            // Page name (or use index)
-$id   = $parts[1] ?? null;                               // Get ID (or use null)
-} else {                                                     // If not an admin page
-$page = 'admin/' . ($parts[1] ?? '');                    // Page name
-$id   = $parts[2] ?? null;                               // Get ID
-}
+        if ($parts[0] != 'admin') {
+            // If an admin page
+            $page = $parts[0] ?: 'index'; // Page name (or use index)
+            $id = $parts[1] ?? null; // Get ID (or use null)
+        } else {
+            // If not an admin page
+            $page = 'admin/' . ($parts[1] ?? ''); // Page name
+            $id = $parts[2] ?? null; // Get ID
+        }
 
-// Validate ID
+        // Validate ID
 
-//$php_page = APP_ROOT . '/src/pages/' . $page . '.php';       // Path to PHP page
+        //$php_page = APP_ROOT . '/src/pages/' . $page . '.php';       // Path to PHP page
 
+        if (empty($_SESSION['pagelimit'])) {
+            $arguments['limit'] = $limit;
+        } else {
+            $arguments['limit'] = $_SESSION['pagelimit'];
+        }
 
-if(empty($_SESSION['pagelimit'])) {
-$arguments['limit'] = $limit;
-} else {
-$arguments['limit']    = $_SESSION['pagelimit'];
-}
-
-$sql = "SELECT a.id, a.website, a.title, a.summary, a.created, a.family_id, a.menu_id, a.member_id, a.family_id, a.published,
+        $sql = "SELECT a.id, a.website, a.title, a.summary, a.created, a.family_id, a.menu_id, a.member_id, a.family_id, a.published,
 a.seo_title, a.storyorder,a.landscape, a.allow_comment, keyword, a.blog,
 c.name AS menu,
 c.seo_name AS seo_menu,
@@ -328,74 +331,75 @@ WHERE (a.menu_id = :menu OR :menu1 is null)
 AND (a.member_id   = :member   OR :member1   is null)
 AND (a.website = :website)
 AND (m.publik = 1)";
+        $sessionRole = (string) ($_SESSION['role'] ?? 'guest');
+        $sessionMemberId = (int) ($_SESSION['id'] ?? 0);
+        $sessionSorttype = (int) ($_SESSION['sorttype'] ?? 0);
 
-if ($_SESSION['role'] == 'admin') {
-    $sql .= " AND (a.published = 0 or a.published = 1)";
-} elseif ($_SESSION['id'] == $member)  {
-    $sql .= " AND (a.published = 0 or a.published = 1)";
+        if ($sessionRole === 'admin') {
+            $sql .= ' AND (a.published = 0 or a.published = 1)';
+        } elseif ($sessionMemberId === (int) $member) {
+            $sql .= ' AND (a.published = 0 or a.published = 1)';
+        } else {
+            $sql .= ' AND (a.published = 1)';
+        }
+        $effectiveSorttype = (int) ($sorttypeId ?? ($_SESSION['sorttype'] ?? 0));
 
-} else {
-    $sql .= " AND (a.published = 1)";
-}
+        if ($sessionSorttype <= 0) {
+            if (empty($parts[2])) {
+                $sql .= " ORDER BY a.landscape, RAND()
+                  LIMIT :limit;";
+            }
+        } elseif ($sessionSorttype === 1) {
+            $sql .= " ORDER BY a.landscape DESC, RAND()
+              LIMIT :limit;";
+        } elseif ($sessionSorttype === 2) {
+            $sql .= " ORDER BY a.landscape DESC, a.created DESC
+              LIMIT :limit;";
+        } elseif ($sessionSorttype === 3) {
+            $sql .= " ORDER BY a.landscape DESC, a.created ASC
+              LIMIT :limit;";
+        } elseif ($sessionSorttype === 4) {
+            $sql .= " ORDER BY a.landscape ASC, a.created DESC
+              LIMIT :limit;";
+        } elseif ($sessionSorttype === 5) {
+            $sql .= " ORDER BY a.landscape ASC, a.created ASC
+              LIMIT :limit;";
+        } elseif ($sessionSorttype === 6) {
+            $sql .= " ORDER BY a.landscape ASC, RAND()
+              LIMIT :limit;";
+        } elseif ($sessionSorttype === 7) {
+            $sql .= " ORDER BY a.title ASC
+              LIMIT :limit;";
+        } elseif ($sessionSorttype === 8) {
+            $sql .= " ORDER BY RAND()
+              LIMIT :limit;";
+        } elseif ($sessionSorttype === 9) {
+            $sql .= " ORDER BY a.created DESC
+              LIMIT :limit;";
+        } elseif ($sessionSorttype === 10) {
+            $sql .= " ORDER BY a.storyorder, a.landscape DESC
+              LIMIT :limit;";
+        } else {
+            $sql .= " ORDER BY a.storyorder, a.landscape DESC
+              LIMIT :limit;";
+        }
 
-if (empty($_SESSION['sorttype'])) {
-if(empty($parts[2])) {
-$sql .= " ORDER BY a.landscape, RAND()
-LIMIT :limit;";
-
-//$sql .= " ORDER BY a.menu_id ASC, a.storyorder,a.landscape DESC
-//                LIMIT :limit;";
-}
-} elseif ($_SESSION['sorttype'] == 1)   {
-    $sql .= " ORDER BY  a.landscape DESC, RAND()
-    LIMIT :limit;";                                             //landscape Random
-} elseif ($_SESSION['sorttype'] == 2)   {
-    $sql .= " ORDER BY  a.landscape DESC, a.created DESC
-    LIMIT :limit;";                                         //recent landscape first
-} elseif ($_SESSION['sorttype'] == 3)   {
-    $sql .= " ORDER BY  a.landscape DESC, a.created ASC
-    LIMIT :limit;";                                         //oldest landscape first
-} elseif ($_SESSION['sorttype'] == 4) {
-    $sql .= " ORDER BY  a.landscape ASC, a.created DESC
-    LIMIT :limit;";                                             //recent portrait first
-} elseif ($_SESSION['sorttype'] == 5) {
-    $sql .= " ORDER BY   a.landscape ASC, a.created ASC
-    LIMIT :limit;";                                             //oldest portrait first random
-} elseif ($_SESSION['sorttype'] == 6) {
-        $sql .= " ORDER BY  a.landscape ASC, RAND()
-            LIMIT :limit;";                                  //portrait first random
-} elseif ($_SESSION['sorttype'] == 7) {
-                $sql .= " ORDER BY  a.title ASC
-                LIMIT :limit;";                             //alphabetical
-} elseif ($_SESSION['sorttype'] == 8) {
-        $sql .= " ORDER BY  RAND()
-             LIMIT :limit;";                              //mixed portrait and landscape random
-} elseif ($_SESSION['sorttype'] == 9) {
-    $sql .= " ORDER BY   a.created DESC
-             LIMIT :limit;";                              //mixed portrait and oldest
-} elseif ($_SESSION['sorttype'] == 10) {
-    $sql .= " ORDER BY  a.storyorder,a.landscape DESC
-        LIMIT :limit;";
-} else {
-    $sql .= " ORDER BY  a.storyorder,a.landscape DESC
-    LIMIT :limit;";
-}
-
-return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return data
-// SQL for story summary
-}
+        return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return data
+        // SQL for story summary
+    }
 
     // Get number of search matches
     public function searchCount(string $term): int
     {
-        $arguments['term1'] = $arguments['term2'] = $arguments['term3'] = $arguments['term4'] = '%' . $term . '%'; // Add wildcards to search term
-        $sql   = "SELECT COUNT(title)
+        $arguments['term1'] = $arguments['term2'] = $arguments['term3'] = $arguments['term4'] =
+            '%' . $term . '%'; // Add wildcards to search term
+        $sql = "SELECT COUNT(title)
                 FROM story
                 WHERE story.published = 1 AND  story.title   LIKE :term1
                   OR story.published = 1 AND  story.summary  LIKE :term2
                   OR story.published = 1 AND  story.content LIKE :term3
                   OR story.published = 1 AND story.keyword LIKE :term4;";
-                                       // SQL to count matches
+        // SQL to count matches
         return $this->db->runSQL($sql, $arguments)->fetchColumn(); // Return number of matches
     }
 
@@ -407,8 +411,7 @@ return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return data
         $arguments['term4'] = '%' . $term1 . '%'; // Add wildcards to search term
         $arguments['term8'] = '%' . $term2 . '%'; // Add wildcards to search term
 
-
-        $sql   = "SELECT COUNT(title)
+        $sql = "SELECT COUNT(title)
                 FROM story
                 WHERE
                 /* (story.published = 1 AND  story.title   LIKE :term1
@@ -419,23 +422,24 @@ return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return data
                   (story.published = 1 AND story.keyword LIKE :term4
                   AND
                   story.published = 1 AND story.keyword LIKE :term8);";
-                  /*(story.published = 1 AND  story.title   LIKE :term5
+        /*(story.published = 1 AND  story.title   LIKE :term5
                   OR story.published = 1 AND  story.summary  LIKE :term6
                   OR story.published = 1 AND  story.content LIKE :term7
                   OR story.published = 1 AND story.keyword LIKE :term8);";
                 */
 
-                                       // SQL to count matches
+        // SQL to count matches
         return $this->db->runSQL($sql, $arguments)->fetchColumn(); // Return number of matches
     }
 
     // Get story summaries of search matches
     public function search(string $term, int $show = 30, int $from = 0): array
     {
-        $arguments['term1'] = $arguments['term2'] = $arguments['term3'] = $arguments['term4'] = '%' . $term . '%'; // Add wildcards to search term
-        $arguments['show']  = $show;                          // Number of results to show
-        $arguments['from']  = $from;                          // Number of results to skip
-        $sql  = "SELECT a.id,a.website, a.title, a.summary, a.created, a.menu_id, a.member_id, a.family_id, a.published,
+        $arguments['term1'] = $arguments['term2'] = $arguments['term3'] = $arguments['term4'] =
+            '%' . $term . '%'; // Add wildcards to search term
+        $arguments['show'] = $show; // Number of results to show
+        $arguments['from'] = $from; // Number of results to skip
+        $sql = "SELECT a.id,a.website, a.title, a.summary, a.created, a.menu_id, a.member_id, a.family_id, a.published,
                         a.seo_title, a.storyorder, a.landscape, a.allow_comment, a.keyword, a.blog,
                         c.name     AS menu,
                         c.seo_name AS seo_menu,
@@ -463,21 +467,21 @@ return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return data
 
                   ORDER BY a.id DESC
                   LIMIT :show
-                  OFFSET :from;";                                 // SQL to get story summaries
-        return $this->db->runSQL($sql, $arguments)->fetchAll();  // Return story summaries
+                  OFFSET :from;"; // SQL to get story summaries
+        return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return story summaries
     }
 
-       // Get story summaries of search matches with + connector
-       public function search1(string $term1, string $term2, int $show = 30, int $from = 0): array
-       {
-           //$arguments['term1'] = $arguments['term2'] = $arguments['term3'] = $arguments['term4'] = '%' . $term1 . '%'; // Add wildcards to search term
-           //$arguments['term5'] = $arguments['term6'] = $arguments['term7'] = $arguments['term8']  = '%' . $term2 . '%';
-           $arguments['term4'] = '%' . $term1 . '%'; // Add wildcards to search term
-           $arguments['term8']  = '%' . $term2 . '%';
+    // Get story summaries of search matches with + connector
+    public function search1(string $term1, string $term2, int $show = 30, int $from = 0): array
+    {
+        //$arguments['term1'] = $arguments['term2'] = $arguments['term3'] = $arguments['term4'] = '%' . $term1 . '%'; // Add wildcards to search term
+        //$arguments['term5'] = $arguments['term6'] = $arguments['term7'] = $arguments['term8']  = '%' . $term2 . '%';
+        $arguments['term4'] = '%' . $term1 . '%'; // Add wildcards to search term
+        $arguments['term8'] = '%' . $term2 . '%';
 
-           $arguments['show']  = $show;                          // Number of results to show
-           $arguments['from']  = $from;                          // Number of results to skip
-           $sql  = "SELECT a.id,a.website, a.title, a.summary, a.created, a.menu_id, a.member_id, a.family_id, a.published,
+        $arguments['show'] = $show; // Number of results to show
+        $arguments['from'] = $from; // Number of results to skip
+        $sql = "SELECT a.id,a.website, a.title, a.summary, a.created, a.menu_id, a.member_id, a.family_id, a.published,
                            a.seo_title, a.storyorder, a.landscape, a.allow_comment, a.keyword, blog,
                            c.name     AS menu,
                            c.seo_name AS seo_menu,
@@ -514,28 +518,29 @@ return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return data
                      ORDER BY a.id DESC
                      LIMIT :show
                      OFFSET :from;";
-                                                                     // SQL to get story summaries
-           return $this->db->runSQL($sql, $arguments)->fetchAll();  // Return story summaries
-       }
+        // SQL to get story summaries
+        return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return story summaries
+    }
 
     //Get Story Order
-       public function getStoryorder(int $id) {
-
- $sql = "SELECT (a.storyorder+1) as 'storyorder'
+    public function getStoryorder(int $id)
+    {
+        $sql = "SELECT (a.storyorder+1) as 'storyorder'
                  FROM story    AS a
                  WHERE a.member_id = :id
                  ORDER BY a.storyorder DESC, a.member_id
-                 LIMIT 1;";                          // Add GROUP BY clause
-                 return $this->db->runSQL($sql, [$id])->fetch();  // Return story
-         }
+                 LIMIT 1;"; // Add GROUP BY clause
+        return $this->db->runSQL($sql, [$id])->fetch(); // Return story
+    }
 
     // get families
-        public function getFamily(int $id) {
+    public function getFamily(int $id)
+    {
         $sql = "SELECT DISTINCT m2.id, CONCAT (m2.forename,' ',m2.surname) AS family
                 FROM member as m
                 JOIN member as m2 ON m2.id = m.account_id;";
-                return $this->db->runSQL($sql, [$id])->fetch();  // Return story
-         }
+        return $this->db->runSQL($sql, [$id])->fetch(); // Return story
+    }
 
     // ADMIN METHODS
     // Get number of stories
@@ -543,56 +548,54 @@ return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return data
     {
         $sql = "SELECT COUNT(id) FROM story
                 WHERE story.member_id = $_SESSION[id];";
-        return $this->db->runSQL($sql)->fetchColumn();   // Return count from result set
+        return $this->db->runSQL($sql)->fetchColumn(); // Return count from result set
     }
 
     // Get total story count used by member
 
-  public function used(int $id): int
-{
-    // NOTE: Previously this calculated total disk usage by summing `imagesize`.
-    // That field has been removed, and the quota system now uses story count instead.
-    $sql = "SELECT COUNT(image_id)
+    public function used(int $id): int
+    {
+        // NOTE: Previously this calculated total disk usage by summing `imagesize`.
+        // That field has been removed, and the quota system now uses story count instead.
+        $sql = "SELECT COUNT(image_id)
             FROM story
             WHERE member_id = $id;";
 
-    return $this->db->runSQL($sql)->fetchColumn();
-}
+        return $this->db->runSQL($sql)->fetchColumn();
+    }
 
- // Save new story (DB only)
-public function create(array $story): bool
-{
-    unset($story['id'], $story['image_file'], $story['image_alt']);
+    // Save new story (DB only)
+    public function create(array $story): bool
+    {
+        unset($story['id'], $story['image_file'], $story['image_alt']);
 
-    $sql = "INSERT INTO story (website, title, summary, content, menu_id, member_id, family_id,
+        $sql = "INSERT INTO story (website, title, summary, content, menu_id, member_id, family_id,
                image_id, published, seo_title, storyorder, landscape, allow_comment, keyword, blog)
             VALUES (:website, :title, :summary, :content, :menu_id, :member_id, :family_id, :image_id,
              :published, :seo_title, :storyorder, :landscape, :allow_comment, :keyword, :blog);";
 
-    $this->db->runSQL($sql, $story);
-    return true;
-}
+        $this->db->runSQL($sql, $story);
+        return true;
+    }
 
+    // Update story (DB only)
+    public function update(array $story): bool
+    {
+        // Remove non-column / derived keys
+        unset(
+            $story['menu'],
+            $story['seo_menu'],
+            $story['created'],
+            $story['forename'],
+            $story['surname'],
+            $story['author'],
+            $story['image_file'],
+            $story['image_alt'],
+            $story['likes'],
+            $story['comments'],
+        );
 
-// Update story (DB only)
-public function update(array $story): bool
-{
-
-    // Remove non-column / derived keys
-    unset(
-        $story['menu'],
-        $story['seo_menu'],
-        $story['created'],
-        $story['forename'],
-        $story['surname'],
-        $story['author'],
-        $story['image_file'],
-        $story['image_alt'],
-        $story['likes'],
-        $story['comments']
-    );
-
-    $sql = "UPDATE story
+        $sql = "UPDATE story
                SET website = :website,
                    title = :title,
                    summary = :summary,
@@ -610,57 +613,52 @@ public function update(array $story): bool
                    blog = :blog
              WHERE id = :id;";
 
-    $this->db->runSQL($sql, $story)->rowCount();
-    return true;
-}
+        $this->db->runSQL($sql, $story)->rowCount();
+        return true;
+    }
 
     // Delete story
     public function delete(int $id): bool
     {
-        $sql = "DELETE FROM story WHERE id = :id;";    // SQL statement
-        $this->db->runSQL($sql, [$id]);                  // Delete story
-        return true;                                     // Return true
+        $sql = 'DELETE FROM story WHERE id = :id;'; // SQL statement
+        $this->db->runSQL($sql, [$id]); // Delete story
+        return true; // Return true
     }
 
-   // Delete image from story
-public function imageDelete(int $image_id, string $path, int $story_id): bool
-{
-
-
-    // 1. Clear the image_id on the story record
-    $sql = "UPDATE story
+    // Delete image from story
+    public function imageDelete(int $image_id, string $path, int $story_id): bool
+    {
+        // 1. Clear the image_id on the story record
+        $sql = "UPDATE story
                SET image_id = NULL
              WHERE id = :story_id";
-    $this->db->runSQL($sql, ['story_id' => $story_id]);
+        $this->db->runSQL($sql, ['story_id' => $story_id]);
 
-    // 2. Delete the image row itself
+        // 2. Delete the image row itself
 
-
-
-    $sql = "DELETE FROM image
+        $sql = "DELETE FROM image
              WHERE id = :id";
-    $this->db->runSQL($sql, ['id' => $image_id]);
+        $this->db->runSQL($sql, ['id' => $image_id]);
 
-    // 3. Delete the physical file
-    if ($path && file_exists($path)) {
-        unlink($path);
+        // 3. Delete the physical file
+        if ($path && file_exists($path)) {
+            unlink($path);
+        }
+
+        return true;
     }
 
-    return true;
-}
-
-// Update alt text for story image
-public function altUpdate(int $image_id, string $alt): bool
-{
-    $sql = "UPDATE image
+    // Update alt text for story image
+    public function altUpdate(int $image_id, string $alt): bool
+    {
+        $sql = "UPDATE image
                SET alt = :alt
              WHERE id = :image_id";
-    $this->db->runSQL($sql, [
-        'alt'      => $alt,
-        'image_id' => $image_id,
-    ]);
+        $this->db->runSQL($sql, [
+            'alt' => $alt,
+            'image_id' => $image_id,
+        ]);
 
-    return true;
-}
-
+        return true;
+    }
 }

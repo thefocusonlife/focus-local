@@ -18,11 +18,13 @@ final class ImageCapabilities
      */
     public static function resolvedDriver(): string
     {
-        $requested = strtolower((string)IMAGE_DRIVER);
+        $requested = strtolower((string) IMAGE_DRIVER);
 
         if ($requested === 'imagick') {
             if (!self::imagickAvailable()) {
-                throw new RuntimeException('IMAGE_DRIVER=imagick forced but Imagick is not available.');
+                throw new RuntimeException(
+                    'IMAGE_DRIVER=imagick forced but Imagick is not available.',
+                );
             }
             return 'imagick';
         }

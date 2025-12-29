@@ -1,54 +1,57 @@
 <?php
-declare(strict_types = 1);                               // Use strict types
+declare(strict_types=1);
+
 use PhpBook\Validate\Validate;
-include APP_ROOT . '/src/pages/menu-path.php';  // menu-path includeinclude                            // Use Validate class
-/*
-$id = $_SESSION['id'];                                   // Get user's id from session
-if ($id === 0) {                                         // If not logged in
-    redirect('login/');                                  // Page not found
+
+include APP_ROOT . '/src/pages/menu-path.php';
+
+$errors = [];
+$menuId = (int) ($_POST['menu_id'] ?? ($_GET['menu_id'] ?? ($_SESSION['menu_id'] ?? 0)));
+if ($menuId <= 0) {
+    redirect('page-not-found/');
+    exit();
 }
-*/
-$errors  = [];                                            // Check if admin
+$_SESSION['menu_id'] = $menuId; // remember last menu
 
-
-//$data['members'] = $cms->getMember()->getAll
-//();          // Member data for template
-
-$member = $cms->getMember()->get($_SESSION['id']) ;                             // Get member data
-
-if (!$member) {                                                    // If no member data
-    redirect('page-not-found/');                                   // Page not found
+$member = $cms->getMember()->get($_SESSION['id']);
+if (!$member) {
+    redirect('page-not-found/');
 }
 
-$pagelimit = $cms->getPagelimit()->getAll();
-$sorttype  = $cms->getSorttype()->getAll();
-
-
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {                        // If form submitted
-   
-    $member['pagelimit'] = intval($_POST['pagelimit']) ?? 10; 
-    $member['sorttype']  = intval($_POST['sorttype'])  ?? 8;                           
-    
-   
-    $cms->getMember()->update($member);                       // Update pagelimit and sorttype  <<< need to unset joined and member
-    $cms->getSession()->create($member,$member['website']);
-
-   
-        //redirect('member/' . $member['id'] .'/',['success' => 'You must logout/login for changes to take effect.']);
-    if(!isset($_SESSION['id']) or $_SESSION['id']== 0) {
-        $member[] = null;
-        redirect('index/' . ($_SESSION['website'] . '/'));
-    }    
-        redirect('member/' . $member['id'] .'/');
+/* ---------- POST: update settings ---------- */
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $member['pagelimit'] = (int) ($_POST['pagelimit'] ?? 10);
+    $menuId = (int) ($_POST['menu_id'] ?? ($_GET['menu_id'] ?? 0));
+    if ($menuId <= 0) {
+        redirect('page-not-found/');
+        exit();
     }
 
+    $incomingSorttype = (int) ($_POST['sorttype'] ?? 0);
+    $resolvedSorttype = $cms->getSorttype()->resolveForMenu($menuId, $incomingSorttype);
+    $member['sorttype'] = $resolvedSorttype;
 
+    $cms->getMember()->update($member);
+    $cms->getSession()->create($member, (int) $member['website']);
 
-$data['member']  = $member;                                        // Member data for template
+    redirect('member/' . $member['id'] . '/');
+    exit();
+}
+
+/* ---------- GET: render form ---------- */
+
+$pagelimit = $cms->getPagelimit()->getAll();
+$sorttype = $cms->getSorttype()->getByMenu($menuId);
+
+$activeSorttypeId = $cms
+    ->getSorttype()
+    ->resolveForMenu($menuId, (int) ($member['sorttype'] ?? (int) ($_SESSION['sorttype'] ?? 0)));
+
+$data['member'] = $member;
 $data['pagelimit'] = $pagelimit;
-$data['sorttype']  = $sorttype;
-$data['website'] = $cms->getWebsite()->getById($member['website']);
+$data['sorttype'] = $sorttype;
+$data['active_sorttype_id'] = $activeSorttypeId;
+$data['menu_id'] = $menuId;
+$data['website'] = $cms->getWebsite()->getById((int) $member['website']);
 
-echo $twig->render('sort.html', $data);                 // Render Twig template
-
-
+echo $twig->render('sort.html', $data);

@@ -9,7 +9,14 @@ php_flag   display_errors      on
 php_flag   log_errors          on
 
 RewriteEngine On
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule . public/index.php [L]
+
+# If the request is a real file or directory, serve it normally
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Otherwise route everything through the front controller
+RewriteRule ^ public/index.php [L]
+
 
 ErrorDocument 500 /phpbook/section_c/c17/public/error.php

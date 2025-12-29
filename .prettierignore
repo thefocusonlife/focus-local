@@ -1,0 +1,23 @@
+# ================================
+# Legacy / Twig HTML templates
+# ================================
+# These contain conditional markup and known HTML-structure issues
+# that browsers tolerate but Prettier correctly rejects.
+templates/**/*.html
+
+# ================================
+# Third-party / generated files
+# ================================
+node_modules/
+vendor/
+
+# ================================
+# Build / lock files (optional)
+# ================================
+package-lock.json
+composer.lock
+
+# ================================
+# PHP info / diagnostics
+# ================================
+phpinfo.php

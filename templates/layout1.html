@@ -1,123 +1,261 @@
 <!DOCTYPE html>
 <html lang="en-US">
-  <meta name="viewport" content="width=screen-width, initial-scale=.8">
-  <head>
-    
-      <title>My PHP App</title>
-      <script type="text/javascript">
-        window.onload = function() {
-          window.resizeTo(window.innerWidth, 800);
-        }
-      </script>
-    
-    <!-- Normal textarea 
-    <textarea id="myTextarea1" class="normal"></textarea>
-    
-    
-    <textarea id="myTextarea2" class="tinymce"></textarea>
-    -->
-    <title>{% block title %}theFocusOnLife{% endblock %}</title>
-   
-    <meta name="description" content="{% block description %}HHT Consulting{% endblock %}">
-    <link rel="stylesheet" type="text/css" href="{{ doc_root }}css/styles.css">
-    <link rel="preconnect" href="https://fonts.gstatic.com"> 
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap">
-    <link rel="shortcut icon" type="image/png" href="{{ doc_root }}img/{{website.image_file}}"> 
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 
-  </head>
-  <body oncontextmenu="return true;">
-    
-    <header>
-    
-      <a class="skip-link" href="#content">Skip to content</a>
-      <nav class="member-menu">
-        
-        
-        {% if session.id == 2 %}
-        <a href="{{ doc_root }}member/{{ session.id }}">{{ session.forename }}</a> /
-            <span class="icon-user"></span><a href="{{ doc_root }}login/{{website.id}}" class="nav-item nav-link">Log in</a> /
-<!--            <span class="icon-user"></span><a href="{{ doc_root }}register/{{website.id}}" class="nav-item nav-link">Register</a> / ** Remove Register link -->
-<!--      <span class="icon-user"></span><a href="{{ doc_root }}plans/" class="nav-item nav-link">Register</a> / -->            
-            <span class="icon-user"></span><a href="{{ doc_root }}sort/{{website.id}}" class="nav-item nav-link">Sort</a> / 
-           
-        <!--    <span class="icon-user"></span><a href="{{ doc_root }}index/{{website.id}}" class="nav-item nav-link">Refresh</a> /
-        -->
-            <span class="icon-user"></span><a href="{{ doc_root }}index/{{session.website}}" class="nav-item nav-link">Refresh</a> /
-          
-      {% if website.id != NULL %}
-      
-            
-            <span class="icon-user"></span><a href = "javascript:history.back()" class="nav-item nav-link">Back</a> /
-            <span class="icon-user"></span><a href = "{{ doc_root }}select-website/" class="nav-item nav-link">Home</a> /
-<!--            <span class="icon-user"></span><a href = "{{ doc_root }}invite/" class="nav-item nav-link">Share</a> /  ** Remove Share link -->
-            {% else %}
-         
-            <span class="icon-user"></span><a href="{{ doc_root }}index/{{session.website}}" class="nav-item nav-link">Refresh</a> /
-            <span class="icon-user"></span><a href = "javascript:history.back()" class="nav-item nav-link">Back</a> /
-            <span class="icon-user"></span><a href = "{{ doc_root }}select-website/" class="nav-item nav-link">Home</a> /
-<!--            <span class="icon-user"></span><a href = "{{ doc_root }}invite/" class="nav-item nav-link">Share</a> / ** Remove Share link -->
-            {% endif %}
-        {% else %}
-        
-            <a href="{{ doc_root }}member/{{ session.id }}">{{ session.forename }}</a> /
-            {% if session.role == 'admin' %}
-            <span class="icon-user"></span><a href="{{ doc_root }}admin/index/{{session.id}}/">Admin</a> /
-            {% endif %}
-            <span class="icon-user"></span><a href="{{ doc_root }}logout">Logout</a> /
-            <span class="icon-user"></span><a href="{{ doc_root }}settings" class="nav-item nav-link">Sort</a> /
-            <span class="icon-user"></span><a href="{{ doc_root }}admin/notes" class="nav-item nav-link">Notifications</a> /
-            {% if website.id != NULL %}
-            
-            <!-- <span class="icon-user"></span><a href="{{ doc_root }}index/{{website.id}}" class="nav-item nav-link">Refresh</a> /
-            -->
-              <span class="icon-user"></span><a href = "javascript:history.back()" class="nav-item nav-link">Back</a> /
-            <span class="icon-user"></span><a href = "{{ doc_root }}select-website" class="nav-item nav-link">Home</a> /
-<!--            <span class="icon-user"></span><a href = "{{ doc_root }}invite/" class="nav-item nav-link">Share</a>   |   ** Remove Share link -->
-            {% else %}
-           
-           
-            <span class="icon-user"></span><a href = "javascript:history.back()" class="nav-item nav-link">Back</a> /
-            <span class="icon-user"></span><a href = "{{ doc_root }}select-website/" class="nav-item nav-link">Home</a> /
-<!--            <span class="icon-user"></span><a href = "{{ doc_root }}invite/" class="nav-item nav-link">Share</a>   |   ** Remove Share link -->
-            {% endif %}
-        {% endif %}    
-           
-      
-         
-      </nav>
-        <div class="container">
-        
-    <!--    {% if SESSION_id >= 0 %} --> 
-    
-    <!--    {% if {source} == "select-website" %} 
-    -->
-  
-        <form action="{{ doc_root }}select-website/{{session.website}}"  method="POST" class="form-membership">  
-    <!--    {% endif %} -->
-    <!--   {% endif %} -->    
-        </div>
-  
-        <div class="logo">
-         <input type="image" src="{{doc_root}}img/{{website.image_file}}" height="100px" width="300px" alt="submit" /> 
-        </div>
-        <nav>
-          <button id="toggle-navigation" aria-expanded="false">
-            <span class="icon-menu"></span><span class="hidden">Menu</span>
-          </button>
-          <ul id="menu">
-          {% for link in navigation %}
-              <li><a href="{{ doc_root }}menu/{{ link.id }}/{{ link.seo_name }}"
-              {% if (section == link.id) %} class="on"{% endif %}>
-                {{ link.name }}</a></li>
-         {% endfor %}
-        
-            <li><a href="{{ doc_root }}search">
-              <span class="icon-search"></span><span class="search-text">Search</span>
-            </a></li>
-          </ul>
-        </nav>
-      </div><!-- /.container -->
-   </header> 
-    {% block content %}{% endblock %}
-   
-</html>
+	<head>
+
+		<title>My PHP App</title>
+		<script type="text/javascript">
+			window.onload = function () {
+window.resizeTo(window.innerWidth, 800);
+}
+		</script>
+
+		<!-- Normal textarea
+																																		    <textarea id="myTextarea1" class="normal"></textarea>
+		
+		
+																																		    <textarea id="myTextarea2" class="tinymce"></textarea>
+																																		    -->
+		<title>
+			{% block title %}theFocusOnLife
+			{% endblock %}
+		</title>
+
+		<meta name="description" content="{% block description %}HHT Consulting{% endblock %}">
+		<link rel="stylesheet" type="text/css" href="{{ doc_root }}css/styles.css">
+		<link rel="preconnect" href="https://fonts.gstatic.com">
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap">
+		<link rel="shortcut icon" type="image/png" href="{{ doc_root }}img/{{website.image_file}}">
+
+	</head>
+	<body oncontextmenu="return true;">
+		{{ include('screen0.html') }}
+		<header>
+
+			<a class="skip-link" href="#content">Skip to content</a>
+			<nav class="member-menu">
+
+				{% if session.id == 2 %}
+
+					<!-- DEBUG: session.id={{ session.id|default('NULL') }}
+										     session.website={{ session.website|default('NULL') }}
+										     website.id={{ website.id|default('NULL') }} -->
+
+					{% if session.id is defined and session.id %}
+						<a href="{{ doc_root }}member/{{ session.id }}">{{ session.forename|default('Member') }}</a>
+					{% else %}
+						<a href="{{ doc_root }}index/{{ website.id|default(1) }}">Guest</a>
+					{% endif %}
+
+
+					/
+					<span class="icon-user"></span>
+					<a href="{{ doc_root }}login/{{website.id}}" class="nav-item nav-link">Log in</a>
+					/
+					<span class="icon-user"></span>
+					<a href="{{ doc_root }}register/{{website.id}}" class="nav-item nav-link">Register</a>
+					/
+					<!--    <span class="icon-user"></span><a href="{{ doc_root }}plans/" class="nav-item nav-link">Register</a> / /> ** Remove Plans link  -->
+					<span class="icon-user"></span>
+					<!--    <span class="icon-user"></span><a href="{{ doc_root }}plans/" class="nav-item nav-link">Register</a> / /> ** Remove Plans link  -->
+					<span class="icon-user"></span>
+					<a href="{{ doc_root }}sort/{{website.id}}" class="nav-item nav-link">Sort</a>
+					<!--    <span class="icon-user"></span><a href="{{ doc_root }}index/{{website.id}}" class="nav-item nav-link">Refresh</a> /-->
+					<span class="icon-user"></span>
+					<a href="{{ doc_root }}index/{{session.website}}" class="nav-item nav-link">Refresh</a>
+					/
+					{% if website.id != NULL %}
+						<span class="icon-user"></span>
+						<a href="javascript:history.back()" class="nav-item nav-link">Back</a>
+						/
+						<span class="icon-user"></span>
+						<a href="{{ doc_root }}select-website/" class="nav-item nav-link">Home</a>
+						/
+						<!--            <span class="icon-user"></span><a href = "{{ doc_root }}invite/" class="nav-item nav-link">Share</a> / ** Remove Share link -->
+					{% else %}
+
+						<span class="icon-user"></span>
+						<a href="{{ doc_root }}index/{{session.website}}" class="nav-item nav-link">Refresh</a>
+						/
+						<span class="icon-user"></span>
+						<a href="javascript:history.back()" class="nav-item nav-link">Back</a>
+						/
+						<span class="icon-user"></span>
+						<a href="{{ doc_root }}select-website/" class="nav-item nav-link">Home</a>
+						/
+						<!--            <span class="icon-user"></span><a href = "{{ doc_root }}invite/" class="nav-item nav-link">Share</a> / ** Remove Share link -->
+					{% endif %}
+				{% else %}
+
+					<a href="{{ doc_root }}member/{{ session.id }}">{{ session.forename }}</a>
+					/
+					{% if session.role == 'admin' %}
+						<span class="icon-user"></span>
+						<a href="{{ doc_root }}admin/index/{{session.id}}/">Admin</a>
+						/
+					{% endif %}
+					<span class="icon-user"></span>
+					<a href="{{ doc_root }}logout">Logout</a>
+					/
+					<span class="icon-user"></span>
+					<a href="{{ doc_root }}settings" class="nav-item nav-link">Sort</a>
+					/
+					<span class="icon-user"></span>
+					<a href="{{ doc_root }}admin/notes" class="nav-item nav-link">Notifications</a>
+					/
+					{% if website.id != NULL %}
+
+						<!-- <span class="icon-user"></span><a href="{{ doc_root }}index/{{website.id}}" class="nav-item nav-link">Refresh</a> /
+																																																																																																					            -->
+						<span class="icon-user"></span>
+						<a href="javascript:history.back()" class="nav-item nav-link">Back</a>
+						/
+						<span class="icon-user"></span>
+						<a href="{{ doc_root }}select-website" class="nav-item nav-link">Home</a>
+						/
+						<!--            <span class="icon-user"></span><a href = "{{ doc_root }}invite/" class="nav-item nav-link">Share</a>   |   ** Remove Share link -->
+					{% else %}
+
+
+						<span class="icon-user"></span>
+						<a href="javascript:history.back()" class="nav-item nav-link">Back</a>
+						/
+						<span class="icon-user"></span>
+						<a href="{{ doc_root }}select-website/" class="nav-item nav-link">Home</a>
+						/
+						<!--            <span class="icon-user"></span><a href = "{{ doc_root }}invite/" class="nav-item nav-link">Share</a>   |   ** Remove Share link -->
+					{% endif %}
+				{% endif %}
+
+
+			</nav>
+			<div class="container">
+
+				<!--    {% if SESSION_id >= 0 %} -->
+
+				<!--    {% if {source} == "select-website" %}
+																																																																			    --><form action="{{ doc_root }}select-website/{{session.website}}" method="POST" class="form-membership"> <!--    {% endif %} -->
+					<!--   {% endif %} -->
+				</div>
+
+				<div class="logo">
+					<input type="image" src="{{doc_root}}img/{{website.image_file}}" height="100px" width="300px" alt="submit"/>
+				</div>
+				<nav>
+					<button id="toggle-navigation" aria-expanded="false">
+						<span class="icon-menu"></span>
+						<span class="hidden">Menu</span>
+					</button>
+					<ul id="menu">
+						{% for link in navigation %}
+							<li>
+								<a href="{{ doc_root }}menu/{{ link.id }}/{{ link.seo_name }}" {% if (section == link.id) %} class="on" {% endif %}>
+									{{ link.name }}</a>
+							</li>
+						{% endfor %}
+
+						<li>
+							<a href="{{ doc_root }}search">
+								<span class="icon-search"></span>
+								<span class="search-text">Search</span>
+							</a>
+						</li>
+					</ul>
+				</nav>
+			</div>
+			<!-- /.container -->
+		</body>
+	</body>
+</html></header>{% block content %}{% endblock %}{% include 'partials/footer.html' %}<script>
+(function () {
+const splash = document.getElementById('splashScreen');
+if (! splash) 
+return;
+
+
+
+const HIDDEN_CLASS = 'hidden';
+
+// Save original inline styles so we can restore cleanly
+const orig = {
+htmlOverflow: document.documentElement.style.overflow,
+htmlHeight: document.documentElement.style.height,
+bodyOverflow: document.body.style.overflow,
+bodyPosition: document.body.style.position,
+bodyInset: document.body.style.inset,
+bodyWidth: document.body.style.width,
+bodyHeight: document.body.style.height,
+bodyMargin: document.body.style.margin,
+bodyPadding: document.body.style.padding
+};
+
+function lockScroll() { // Lock the scroller (HTML)
+document.documentElement.style.overflow = 'hidden';
+document.documentElement.style.height = '100%';
+
+// Freeze body
+document.body.style.overflow = 'hidden';
+document.body.style.position = 'fixed';
+document.body.style.inset = '0';
+document.body.style.width = '100%';
+document.body.style.height = '100%';
+document.body.style.margin = '0';
+document.body.style.padding = '0';
+
+// Hide reCAPTCHA badge if present
+const badge = document.querySelector('.grecaptcha-badge');
+if (badge) 
+badge.style.display = 'none';
+
+
+
+}
+
+function unlockScroll() {
+document.documentElement.style.overflow = orig.htmlOverflow;
+document.documentElement.style.height = orig.htmlHeight;
+
+document.body.style.overflow = orig.bodyOverflow;
+document.body.style.position = orig.bodyPosition;
+document.body.style.inset = orig.bodyInset;
+document.body.style.width = orig.bodyWidth;
+document.body.style.height = orig.bodyHeight;
+document.body.style.margin = orig.bodyMargin;
+document.body.style.padding = orig.bodyPadding;
+
+const badge = document.querySelector('.grecaptcha-badge');
+if (badge) 
+badge.style.display = '';
+
+
+
+}
+
+function showSplash() {
+splash.classList.remove(HIDDEN_CLASS);
+lockScroll();
+}
+
+function hideSplash() {
+splash.classList.add(HIDDEN_CLASS);
+unlockScroll();
+}
+
+// Show only once per browser session
+if (sessionStorage.getItem('tfolSplashShown')) {
+hideSplash();
+return;
+}
+
+sessionStorage.setItem('tfolSplashShown', '1');
+showSplash();
+
+// Clicking the splash hides it (your <a> will still navigate)
+splash.addEventListener('click', hideSplash);
+})();
+
+// Force a viewport reflow after splash shows
+requestAnimationFrame(() => {
+window.dispatchEvent(new Event('resize'));
+});</script></body></html>

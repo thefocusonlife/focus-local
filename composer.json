@@ -6,7 +6,7 @@
     },
     "autoload": {
         "psr-4": {
-            "PhpBook\\":"src/classes/"
+            "PhpBook\\": "src/classes/"
         }
     },
     "require-dev": {
