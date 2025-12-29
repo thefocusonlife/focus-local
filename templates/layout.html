@@ -86,7 +86,8 @@ tinymce.init({selector: 'textarea.tinymce', branding: false, plugins: 'anchor au
 					{# Sort link: only show when menu context exists AND logged in #}
 					{% if menu_id is defined and menu_id %}
 						<span class="icon-user"></span>
-						<a href="{{ doc_root }}sort/{{ menu_id }}/" class="nav-item nav-link">Sort</a>
+						<a href="{{ doc_root }}sort/{{ menu_id }}" class="nav-item nav-link">Sort</a>
+
 						/
 					{% endif %}
 				{% endif %}
@@ -108,7 +109,7 @@ tinymce.init({selector: 'textarea.tinymce', branding: false, plugins: 'anchor au
 				<!--    {% if SESSION_id >= 0 %} -->
 
 				<!--    {% if {source} == "select-website" %}
-																																																																																																																		    --><form action="{{ doc_root }}select-website/{{session.website}}" method="POST" class="form-membership"> <!--    {% endif %} -->
+																																																																																																																						    --><form action="{{ doc_root }}select-website/{{session.website}}" method="POST" class="form-membership"> <!--    {% endif %} -->
 					<!--   {% endif %} -->
 				</div>
 

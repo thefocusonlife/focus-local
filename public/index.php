@@ -44,10 +44,12 @@ if (preg_match('#^' . preg_quote(DOC_ROOT, '#') . '(img|css|js|uploads)/#', $uri
 
 // get path for website and menus                             // Setup file
 //$id = 2;
-$parts[] = null;
-$path = mb_strtolower($_SERVER['REQUEST_URI']); // Get path in lowercase
-$path = substr($path, strlen(DOC_ROOT));
-$parts = explode('/', $path); // Split into array at /
+// Normalize path: strip query string, strip DOC_ROOT, trim leading/trailing slashes
+$path = mb_strtolower($uriPath);
+$path = preg_replace('#^' . preg_quote(DOC_ROOT, '#') . '#', '', $path);
+$path = trim($path, '/');
+
+$parts = $path === '' ? [''] : explode('/', $path);
 
 if ($parts[0] != 'admin') {
     // If an admin page

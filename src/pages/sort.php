@@ -1,21 +1,42 @@
 <?php
 declare(strict_types=1);
+file_put_contents(
+    '/tmp/tfol-sort-hit.log',
+    date('c') . ' HIT sort.php id=' . var_export($id ?? null, true) . "\n",
+    FILE_APPEND,
+);
 
 use PhpBook\Validate\Validate;
 
 include APP_ROOT . '/src/pages/menu-path.php';
 
 $errors = [];
-$menuId = (int) ($_POST['menu_id'] ?? ($_GET['menu_id'] ?? ($_SESSION['menu_id'] ?? 0)));
+// Menu id comes primarily from the route: /sort/{menuId}
+$menuId = (int) ($id ?? 0);
+
+// Fallbacks for POST/GET/session (legacy support)
+if ($menuId <= 0) {
+    $menuId = (int) ($_POST['menu_id'] ?? ($_GET['menu_id'] ?? ($_SESSION['menu_id'] ?? 0)));
+}
+
 if ($menuId <= 0) {
     redirect('page-not-found/');
     exit();
 }
+
 $_SESSION['menu_id'] = $menuId; // remember last menu
 
-$member = $cms->getMember()->get($_SESSION['id']);
+// Require login for Sort (menu-scoped)
+if (($_SESSION['id'] ?? 0) <= 0) {
+    redirect('login/' . $menuId);
+    exit();
+}
+
+$member = $cms->getMember()->get((int) ($_SESSION['id'] ?? 0));
 if (!$member) {
-    redirect('page-not-found/');
+    // Session says logged in, but member missing → force re-auth
+    redirect('login/' . $menuId);
+    exit();
 }
 
 /* ---------- POST: update settings ---------- */
@@ -34,7 +55,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $cms->getMember()->update($member);
     $cms->getSession()->create($member, (int) $member['website']);
 
-    redirect('member/' . $member['id'] . '/');
+    redirect('menu/' . $menuId . '/');
+
     exit();
 }
 

@@ -17,11 +17,11 @@ tinymce.init({selector: 'textarea.tinymce', branding: false, plugins: 'anchor au
 		</script>
 
 		<!-- Normal textarea
-																    <textarea id="myTextarea1" class="normal"></textarea>
+																		    <textarea id="myTextarea1" class="normal"></textarea>
 		
 		
-																    <textarea id="myTextarea2" class="tinymce"></textarea>
-																  -->
+																		    <textarea id="myTextarea2" class="tinymce"></textarea>
+																		  -->
 
 		<title>
 			{% block title %}theFocusOnLife
@@ -53,13 +53,14 @@ tinymce.init({selector: 'textarea.tinymce', branding: false, plugins: 'anchor au
 					<!--      <span class="icon-user"></span><a href="{{ doc_root }}plans/" class="nav-item nav-link">Register</a> / -->
 					<span class="icon-user"></span>
 					{% if menu_id is defined and menu_id %}
-						<a href="{{ doc_root }}sort/{{ menu_id }}/" class="nav-item nav-link">Sort</a>
+						<a href="{{ doc_root }}sort/{{ menu_id }}" class="nav-item nav-link">Sort</a>
+
 					{% endif %}
 
 					/
 
 					<!--           <span class="icon-user"></span><a href="{{ doc_root }}plans/" class="nav-item nav-link">Register</a> /
-																																								 -->
+																																													 -->
 					<span class="icon-user"></span>
 					<a href="{{ doc_root }}select-website/" class="nav-item nav-link">Home</a>
 					/
