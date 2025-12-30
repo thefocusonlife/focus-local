@@ -334,6 +334,8 @@ AND (m.publik = 1)";
         $sessionRole = (string) ($_SESSION['role'] ?? 'guest');
         $sessionMemberId = (int) ($_SESSION['id'] ?? 0);
         $sessionSorttype = (int) ($_SESSION['sorttype'] ?? 0);
+        $effectiveSorttype = (int) ($sorttypeId ?? $sessionSorttype);
+        $sessionSorttype = $effectiveSorttype; // <-- one-liner to honor menu-scoped sort
 
         if ($sessionRole === 'admin') {
             $sql .= ' AND (a.published = 0 or a.published = 1)';
@@ -347,6 +349,10 @@ AND (m.publik = 1)";
         if ($sessionSorttype <= 0) {
             if (empty($parts[2])) {
                 $sql .= " ORDER BY a.landscape, RAND()
+                  LIMIT :limit;";
+            } else {
+                // pick your default order for slug routes
+                $sql .= " ORDER BY a.storyorder, a.landscape DESC
                   LIMIT :limit;";
             }
         } elseif ($sessionSorttype === 1) {
@@ -382,6 +388,11 @@ AND (m.publik = 1)";
         } else {
             $sql .= " ORDER BY a.storyorder, a.landscape DESC
               LIMIT :limit;";
+        }
+        foreach (array_keys($arguments) as $k) {
+            if (!str_contains($sql, ':' . $k)) {
+                unset($arguments[$k]);
+            }
         }
 
         return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return data
