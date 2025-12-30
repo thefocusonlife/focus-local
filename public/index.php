@@ -1,8 +1,60 @@
 <?php
 declare(strict_types=1);
+error_log('[INDEX HIT UNCONDITIONAL] ' . date('c') . ' ' . ($_SERVER['REQUEST_URI'] ?? ''));
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
+}
+
+$uri = $_SERVER['REQUEST_URI'] ?? '';
+
+// If someone hits the non-public front path, redirect to the canonical /public path
+if (strpos($uri, '/focus-local/index/') === 0) {
+    header('Location: /focus-local/public' . substr($uri, strlen('/focus-local')), true, 302);
+    exit();
+}
+
+// Also cover exact /focus-local/index (no trailing slash)
+if ($uri === '/focus-local/index' || $uri === '/focus-local/index/') {
+    header('Location: /focus-local/public/index/1', true, 302); // or /public/index/
+    exit();
+}
+
+if (defined('DEV') && DEV) {
+    error_log(
+        '[INDEX] ' .
+            date('c') .
+            ' method=' .
+            ($_SERVER['REQUEST_METHOD'] ?? '') .
+            ' uri=' .
+            ($_SERVER['REQUEST_URI'] ?? '') .
+            ' host=' .
+            ($_SERVER['HTTP_HOST'] ?? '') .
+            ' sid=' .
+            (session_id() ?: 'NONE') .
+            ' user=' .
+            ($_SESSION['id'] ?? 'NULL'),
+    );
+}
+
+if (defined('DEV') && DEV) {
+    $rid = bin2hex(random_bytes(3));
+    $_SESSION['__rid'] = $rid;
+
+    error_log(
+        '[ROUTER] rid=' .
+            $rid .
+            ' method=' .
+            ($_SERVER['REQUEST_METHOD'] ?? '') .
+            ' uri=' .
+            ($_SERVER['REQUEST_URI'] ?? '') .
+            ' host=' .
+            ($_SERVER['HTTP_HOST'] ?? '') .
+            ' sess_id=' .
+            (session_id() ?: 'NONE') .
+            ' user=' .
+            ($_SESSION['id'] ?? 'NULL'),
+    );
 }
 
 // Required session defaults (prevents undefined index warnings)
