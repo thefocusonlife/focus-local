@@ -51,7 +51,7 @@ if ($member) {
 }
 
 // Navigation (use accountId, not $_SESSION['account_id'])
-$data['navigation'] = $cms->getMenu()->getAll2((int) $website['id'], $accountId);
+$data['navigation'] = $cms->getMenu()->getAll2((int) $website['id'], $menuOwnerId);
 
 // Current menu
 $data['menu'] = $menu;

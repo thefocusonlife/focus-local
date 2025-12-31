@@ -45,6 +45,35 @@ if (!empty($_SESSION['id'])) {
     }
 }
 
+// Viewer vs menu owner:
+// - viewerId is who is logged in (June=182)
+// - menuOwnerId is whose menus we are browsing (Geoff=3 via your account_id hack)
+// - guests should browse UberAdmin (1)
+$viewerId = (int) ($_SESSION['id'] ?? 0);
+
+if ($viewerId > 0) {
+    $menuOwnerId = (int) ($accountId > 0 ? $accountId : $viewerId);
+} else {
+    $menuOwnerId = 1; // Guest: UberAdmin menus
+}
+
+// Visibility filter:
+// - owner sees owner-view
+// - everyone else (including guests) sees public-view
+$visibilityViewerId = $viewerId > 0 && $viewerId === $menuOwnerId ? $viewerId : null;
+
+// Menu owner for navigation: guests should see UberAdmin menus
+$viewerId = (int) ($_SESSION['id'] ?? 0);
+$menuOwnerId = 0;
+
+if ($viewerId > 0) {
+    // Your existing shared-menu behavior: account_id points at the "menu owner" member id
+    $menuOwnerId = (int) ($memAccountId > 0 ? $memAccountId : $viewerId);
+} else {
+    // Guest: show UberAdmin menus
+    $menuOwnerId = 1;
+}
+
 // 4) Membership gating for websites that require membership
 // non_members: allow guests if set (based on your existing logic)
 if ($websiteId > 1 && empty($_SESSION['id']) && empty($website['non_members'])) {
@@ -66,7 +95,7 @@ if (!empty($guidetext) && !empty($guidetext[0])) {
 $data['stories'] = $cms->getStory()->getAll3((int) $website['id'], true, null, null, 100);
 
 // 7) Navigation (guest account_id = 0)
-$data['navigation'] = $cms->getMenu()->getAll2((int) $website['id'], $memAccountId);
+$data['navigation'] = $cms->getMenu()->getAll2((int) $website['id'], $menuOwnerId);
 
 // 8) Data for template
 $data['website'] = $website;
