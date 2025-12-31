@@ -36,6 +36,13 @@ if (!empty($_SESSION['id'])) {
     $accountId = (int) ($member['account_id'] ?? 0);
 }
 
+// Viewer vs menu-owner (accountId is being used as "menu owner member id" for shared menus)
+$viewerId = (int) ($_SESSION['id'] ?? 0);
+$menuOwnerId = (int) ($accountId > 0 ? $accountId : $viewerId);
+
+// Only owners should get owner-visibility; everyone else sees public visibility
+$visibilityViewerId = $viewerId > 0 && $viewerId === $menuOwnerId ? $viewerId : null;
+
 // Standard template context (recommended)
 $data['session'] = $_SESSION;
 $data['website'] = $website;
@@ -69,7 +76,7 @@ if ($menuId === 50) {
             (int) $website['id'],
             true,
             $menuId,
-            $accountId > 0 ? (int) $_SESSION['id'] : null,
+            $visibilityViewerId,
             300,
             $resolvedSorttypeId,
         );
