@@ -66,20 +66,8 @@ $data['menu_id'] = $menuId;
 
 // Stories
 // If your Story::getAll3() now supports $sorttypeId as the last argument, use it:
-if ($menuId === 50) {
-    $data['stories'] = $cms->getStory()->getAll(true, 50, 1);
-} else {
-    // Prefer getAll3 for menu grids if that’s your “latest story summaries” function:
-    $data['stories'] = $cms
-        ->getStory()
-        ->getAll3(
-            (int) $website['id'],
-            true,
-            $menuId,
-            $visibilityViewerId,
-            300,
-            $resolvedSorttypeId,
-        );
-}
+$data['stories'] = $cms
+    ->getStory()
+    ->getAll3((int) $website['id'], true, $menuId, $visibilityViewerId, 300, $resolvedSorttypeId);
 
 echo $twig->render('menu.html', $data);
