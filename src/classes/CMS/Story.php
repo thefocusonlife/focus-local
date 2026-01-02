@@ -348,45 +348,30 @@ AND (m.publik = 1)";
 
         if ($sessionSorttype <= 0) {
             if (empty($parts[2])) {
-                $sql .= " ORDER BY a.landscape, RAND()
+                $sql .= " ORDER BY RAND()
                   LIMIT :limit;";
             } else {
                 // pick your default order for slug routes
-                $sql .= " ORDER BY a.storyorder, a.landscape DESC
+                $sql .= " ORDER BY a.storyorder DESC
                   LIMIT :limit;";
             }
         } elseif ($sessionSorttype === 1) {
-            $sql .= " ORDER BY a.landscape DESC, RAND()
-              LIMIT :limit;";
-        } elseif ($sessionSorttype === 2) {
-            $sql .= " ORDER BY a.landscape DESC, a.created DESC
-              LIMIT :limit;";
-        } elseif ($sessionSorttype === 3) {
-            $sql .= " ORDER BY a.landscape DESC, a.created ASC
-              LIMIT :limit;";
-        } elseif ($sessionSorttype === 4) {
-            $sql .= " ORDER BY a.landscape ASC, a.created DESC
-              LIMIT :limit;";
-        } elseif ($sessionSorttype === 5) {
-            $sql .= " ORDER BY a.landscape ASC, a.created ASC
-              LIMIT :limit;";
-        } elseif ($sessionSorttype === 6) {
-            $sql .= " ORDER BY a.landscape ASC, RAND()
-              LIMIT :limit;";
-        } elseif ($sessionSorttype === 7) {
-            $sql .= " ORDER BY a.title ASC
-              LIMIT :limit;";
-        } elseif ($sessionSorttype === 8) {
             $sql .= " ORDER BY RAND()
               LIMIT :limit;";
-        } elseif ($sessionSorttype === 9) {
-            $sql .= " ORDER BY a.created DESC
+        } elseif ($sessionSorttype === 2) {
+            $sql .= " ORDER BY a.storyorder DESC
               LIMIT :limit;";
-        } elseif ($sessionSorttype === 10) {
-            $sql .= " ORDER BY a.storyorder, a.landscape DESC
+        } elseif ($sessionSorttype === 3) {
+            $sql .= " ORDER BY a.storyorder ASC
+              LIMIT :limit;";
+        } elseif ($sessionSorttype === 4) {
+            $sql .= " ORDER BY a.title ASC
+              LIMIT :limit;";
+        } elseif ($sessionSorttype === 5) {
+            $sql .= " ORDER BY a.title DESC
               LIMIT :limit;";
         } else {
-            $sql .= " ORDER BY a.storyorder, a.landscape DESC
+            $sql .= " ORDER BY a.storyorder DESC
               LIMIT :limit;";
         }
         foreach (array_keys($arguments) as $k) {
