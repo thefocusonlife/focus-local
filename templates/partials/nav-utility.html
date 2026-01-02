@@ -52,22 +52,6 @@
 		<a href="{{ doc_root }}logout">Logout</a>
 		/
 	{% endif %}
-	{# -------------------------------
-	   Resolve menu id for Sort link
-	   (try MANY likely controller variable names)
-	   ------------------------------- #}
-
-	{# Safe “page source” debug so we can see what's actually present #}
-	<!-- NAV DEBUG:
-	sort_menu_id={{ sort_menu_id|default('NULL') }}
-	menu_id={{ menu_id|default('NULL') }}
-	menuId={{ menuId|default('NULL') }}
-	active_menu_id={{ active_menu_id|default('NULL') }}
-	activeMenuId={{ activeMenuId|default('NULL') }}
-	section={{ section|default('NULL') }}
-	menu.id={{ menu.id|default('NULL') }}
-	menu['id']={{ attribute(menu, 'id')|default('NULL') }}
-	-->
 
 	{% set resolved_sort_menu_id =
     sort_menu_id|default(
