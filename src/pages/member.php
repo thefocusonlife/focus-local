@@ -38,11 +38,16 @@ if (isset($id) and $id == 2) {
     $data['stories'] = $cms->getStory()->getAll3($website['id'], true, null, null);
 }
 
+//$data['member']  = null;
 //get all stories for member's website
 else {
     $id = intval($parts[1]);
     $data['stories'] = $cms->getStory()->getAll2($website['id'], 0, null, $id);
 }
-//$data['member']  = null;
+
+// Default Sort target for global member page (Focus menu id=2)
+if (empty($data['sort_menu_id'])) {
+    $data['sort_menu_id'] = 2;
+}
 
 echo $twig->render('member.html', $data); // Render Twig template

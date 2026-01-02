@@ -58,16 +58,35 @@ $data['menu'] = $menu;
 $data['section'] = (int) $menu['id'];
 
 // ---- Menu-scoped sort wiring ----
+// ---- Menu-scoped sort wiring ----
 $menuId = (int) $menu['id'];
-$preferred = (int) ($_SESSION['sorttype'] ?? (int) ($member['sorttype'] ?? 0));
-$resolvedSorttypeId = $cms->getSorttype()->resolveForMenu($menuId, $preferred);
+
+// Prefer menu-scoped session sort if present, then session global, then member setting
+$preferred =
+    (int) ($_SESSION['sorttype_by_menu'][$menuId] ??
+        (null ?? ($_SESSION['sorttype'] ?? (null ?? ($member['sorttype'] ?? 0)))));
+
+$resolvedSorttypeId = (int) $cms->getSorttype()->resolveForMenu($menuId, $preferred);
 $data['active_sorttype_id'] = $resolvedSorttypeId;
-$data['menu_id'] = $menuId;
+
+// ---- Story account filter: only apply viewer filter for member-owned menus ----
+$menuAccountId = (int) ($menu['account_id'] ?? 0);
+$storyAccountFilter = $menuAccountId > 0 ? $menuAccountId : null;
+
+// ---- Page limit (member or guest default) ----
+$pageLimit = (int) ($_SESSION['pagelimit'] ?? ($member['pagelimit'] ?? 100));
 
 // Stories
-// If your Story::getAll3() now supports $sorttypeId as the last argument, use it:
 $data['stories'] = $cms
     ->getStory()
-    ->getAll3((int) $website['id'], true, $menuId, $visibilityViewerId, 300, $resolvedSorttypeId);
+    ->getAll3(
+        (int) $website['id'],
+        true,
+        $menuId,
+        $storyAccountFilter,
+        $pageLimit,
+        $resolvedSorttypeId,
+    );
+$data['sort_menu_id'] = (int) $menuId;
 
 echo $twig->render('menu.html', $data);

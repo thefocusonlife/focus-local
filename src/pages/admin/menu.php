@@ -26,9 +26,9 @@ if ($parts[2] != 0 and $_SERVER['REQUEST_METHOD'] != 'POST') {
 }
 /*
 if($menu == null) {
-        
+
         $menu['account_id']     = $_SESSION['id'];
-       
+
     }
 */
 // PART B: Get and validate form data
@@ -81,4 +81,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 $data['menu'] = $menu; // Add menu to template
 $data['errors'] = $errors; // Add errors to template
 $data['website'] = $cms->getWebsite()->getById(intval($_SESSION['website']));
+$data['sort_menu_id'] = (int) $menuId;
+
 echo $twig->render('admin/menu.html', $data); // Render Twig template

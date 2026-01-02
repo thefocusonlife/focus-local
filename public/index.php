@@ -5,6 +5,12 @@ error_log('[INDEX HIT UNCONDITIONAL] ' . date('c') . ' ' . ($_SERVER['REQUEST_UR
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
+if (($_SESSION['id'] ?? 0) <= 0) {
+    // guest
+    if (!isset($_SESSION['pagelimit'])) {
+        $_SESSION['pagelimit'] = 100;
+    }
+}
 
 $uri = $_SERVER['REQUEST_URI'] ?? '';
 

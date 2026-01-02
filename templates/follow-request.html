@@ -1,63 +1,88 @@
 {% extends 'layout.html' %}
 
-{% block title %}"FOLLOWS"{% endblock %}
-{% block description %}{{ member.forename|e('html_attr') }} {{ member.surname|e('html_attr') }} on theFocusOnLife{% endblock %}
+{% block title %}"FOLLOWS"
+{% endblock %}
+{% block description %}
+	{{ member.forename|e('html_attr') }}
+	{{ member.surname|e('html_attr') }}
+	on theFocusOnLife
+{% endblock %}
 
 {% block content %}
 
-<main> <!-- class="container" id="content">-->
-  {% if  member.id == 1 %}
-  <!--href = "javascript:history.back()" class="btn btn-primary">Invalid Page</a>
-  -->
-  {% else %}
-  <section class="header">
-    <h1>FOLLOWS</h1>
-    {% if (session.id == member.id  and session.id > 1) %}
-    <p></p>
+	<main>
+		<!-- class="container" id="content">-->
+		{% if  member.id == 1 %}
+			<!--href = "javascript:history.back()" class="btn btn-primary">Invalid Page</a>
+			  -->
+		{% else %}
+			<section class="header">
+				<h1>FOLLOWS</h1>
+				{% if (session.id == member.id  and session.id > 1) %}
+					<p></p>
 
-    <a href="{{ doc_root }}member-edit-profile/{{ member.id }}" class="btn btn-primary">Follow Request</a>
-    {% endif %}
-    <p class="member"><b>Member since:</b> {{ member.joined|date('F d, Y') }}</p>
-    <p class="member"><b>Family ID:</b> {{ member.account_id}}</p>
-    {% if member.picture %}
-      <img src="{{ doc_root }}uploads/{{ member.picture }}" alt="{{ member.forename }}"><br>
-    {% else %}
-      <img src="{{ doc_root }}uploads/person.png"  alt="" class="profile"><br>
-    {% endif %}
-    {% if success %}<div class="alert alert-success">{{ success }}</div>{% endif %}
-  
-    <table class="table table-striped">     
-      <th>Profile picture</th><th>Forename</th><th>Surname</th><th>Role</th><th>Member Id</th><th>Family Id</th></th><th>Follow Status</th>
-  
-    {% for member1 in members %}
-    {% if member1.id != 1 and member1.id != session.id %}  
-    
-    <tr>
-      <td>
-        {% if member1.picture %}
-          <img src="{{ doc_root }}uploads/{{ member1.picture }}" alt="{{ member1.forename }}" class="profile" />
-        {% else %}
-          <img src="{{ doc_root }}uploads/person.png" alt="" class="profile" />
-        {% endif %}
-        {{ member1.id}} {{member.id}} {{member.account_id}}
-      </td>
-      <td>{{ member1.forename }}</td>
-      <td>{{ member1.surname }}</td>
-      <td>{{ member1.role }}</td>
-      <td>{{ member1.id }}</td>
-      <td>{{member1.account_id}}</td>
-      
-     
-      {% if member1.account_id != member.account_id %}
-      <td><a href = "javascript:history.back()" class="btn btn-primary">MAKE REQUEST</a></td>
-      
-      {% else %}     
-      <td><a href = "javascript:history.back()" class="btn btn-danger">UNFOLLOW</a></td>
-      {% endif %}   
-      {% endif %}
-    {% endfor %}
-  </table>
+					<a href="{{ doc_root }}member-edit-profile/{{ member.id }}" class="btn btn-primary">Follow Request</a>
+				{% endif %}
+				<p class="member">
+					<b>Member since:</b>
+					{{ member.joined|date('F d, Y') }}</p>
+				<p class="member">
+					<b>Family ID:</b>
+					{{ member.account_id}}</p>
+				{% if member.picture %}
+					<img src="{{ doc_root }}uploads/{{ member.picture }}" alt="{{ member.forename }}"><br>
+				{% else %}
+					<img src="{{ doc_root }}uploads/person.png" alt="" class="profile"><br>
+				{% endif %}
+				{% if success %}
+					<div class="alert alert-success">{{ success }}</div>
+				{% endif %}
 
-{% endif %}
-</main>
-{% endblock %}
+				<table class="table table-striped">
+					<th>Profile picture</th>
+					<th>Forename</th>
+					<th>Surname</th>
+					<th>Role</th>
+					<th>Member Id</th>
+					<th>Family Id</th>
+				</th>
+				<th>Follow Status</th>
+
+				{% for member1 in members %}
+					{% if member1.id != 1 and member1.id != session.id %}
+
+						<tr>
+							<td>
+								{% if member1.picture %}
+									<img src="{{ doc_root }}uploads/{{ member1.picture }}" alt="{{ member1.forename }}" class="profile"/>
+								{% else %}
+									<img src="{{ doc_root }}uploads/person.png" alt="" class="profile"/>
+								{% endif %}
+								{{ member1.id}}
+								{{member.id}}
+								{{member.account_id}}
+							</td>
+							<td>{{ member1.forename }}</td>
+							<td>{{ member1.surname }}</td>
+							<td>{{ member1.role }}</td>
+							<td>{{ member1.id }}</td>
+							<td>{{member1.account_id}}</td>
+
+
+							{% if member1.account_id != member.account_id %}
+								<td>
+									<a href="javascript:history.back()" class="btn btn-primary">MAKE REQUEST</a>
+								</td>
+
+							{% else %}
+								<td>
+									<a href="javascript:history.back()" class="btn btn-danger">UNFOLLOW</a>
+								</td>
+							{% endif %}
+						{% endif %}
+					{% endfor %}
+				</table>
+
+			{% endif %}
+		</main>
+	{% endblock %}

@@ -80,6 +80,13 @@ $password = $db_pass; // DB password
 $dsn = "$type:host=$server;dbname=$db;port=$port;charset=$charset"; // Create DSN
 
 // ===============================
+// TinyMCE Key
+// ===============================
+// config/editor.php (or config/app.php)
+
+define('TINYMCE_API_KEY', 'loa13xcgol9r7x3fvk59jcxyxhcnxm80oc3l0umm4jgjhs2q');
+
+// ===============================
 // File upload settings (smartphone-friendly)
 // ===============================
 

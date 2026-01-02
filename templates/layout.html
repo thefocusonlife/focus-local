@@ -4,7 +4,9 @@
 		<script src="https://js.chargebee.com/v2/chargebee.js" data-cb-site="thefocusonlife-test"></script>
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<script src="https://cdn.tiny.cloud/1/7tkofysu0j4zom5h6jzs7crranermxfznweam4rf1irmolqf/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+		<script src="https://cdn.tiny.cloud/1/{{ constant('TINYMCE_API_KEY') }}/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+
+
 		<script>
 
 			tinymce.init({selector: 'textarea1', branding: false, plugins: 'anchor emoticons  wordcount checklist  ', toolbar: 'undo redo | bold italic underline| spellcheckdialog | align | removeformat'});
@@ -28,90 +30,16 @@ tinymce.init({selector: 'textarea.tinymce', branding: false, plugins: 'anchor au
 
 	</head>
 
-	<body oncontextmenu="return true;"></body>
-	<body class="{{ body_class|default('') }}">
+	<body oncontextmenu="return true;" class="{{ body_class|default('') }}">
 		{{ include('screen0.html') }}
 
-		{# the rest of your layout... header/nav/content/etc #}
-
 		<header>
-
 			<a class="skip-link" href="#content">Skip to content</a>
-			<nav
-				class="member-menu">
+			{% include 'partials/nav-utility.html' %}
 
-				{# ---- nav state ---- #}
-				{% set is_logged_in = session.id is defined and session.id %}
-				{% set role = session.role|default('guest') %}
-				{% set is_admin = is_logged_in and role == 'admin' %}
-
-				{# ---- identity link (always shown) ---- #}
-				<span class="icon-user"></span>
-				{% if is_logged_in %}
-					<a href="{{ doc_root }}member/{{ session.id }}">{{ session.forename|default('Member') }}</a>
-				{% else %}
-					<a href="{{ doc_root }}index/{{ website.id|default(1) }}">Guest</a>
-				{% endif %}
-				/
-
-				{# ---- guest-only links ---- #}
-				{% if not is_logged_in %}
-					<span class="icon-user"></span>
-					<a href="{{ doc_root }}login/{{ website.id|default(1) }}" class="nav-item nav-link">Log in</a>
-					/
-					<span class="icon-user"></span>
-					<a href="{{ doc_root }}register/{{ website.id|default(1) }}" class="nav-item nav-link">Register</a>
-					/
-				{% endif %}
-
-				{# ---- member-only links ---- #}
-				{% if is_logged_in %}
-					{% if is_admin %}
-						<span class="icon-user"></span>
-						<a href="{{ doc_root }}admin/index/{{ session.id }}/" class="nav-item nav-link">Admin</a>
-						/
-						<span class="icon-user"></span>
-						<a href="{{ doc_root }}admin/notes" class="nav-item nav-link">Notifications</a>
-						/
-					{% endif %}
-
-					<span class="icon-user"></span>
-					{% if session.id is defined and session.id %}
-						<a href="{{ doc_root }}logout" class="nav-item nav-link">Logout</a>
-						/
-					{% endif %}
-
-					/
-
-					{# Sort link: only show when menu context exists AND logged in #}
-					{% if menu_id is defined and menu_id %}
-						<span class="icon-user"></span>
-						<a href="{{ doc_root }}sort/{{ menu_id }}" class="nav-item nav-link">Sort</a>
-
-						/
-					{% endif %}
-				{% endif %}
-
-				{# ---- utility links (always kept) ---- #}
-				<span class="icon-user"></span>
-				<a href="{{ doc_root }}index/{{ website.id|default(1) }}" class="nav-item nav-link">Refresh</a>
-				/
-				<span class="icon-user"></span>
-				<a href="javascript:history.back()" class="nav-item nav-link">Back</a>
-				/
-				<span class="icon-user"></span>
-				<a href="{{ doc_root }}select-website/" class="nav-item nav-link">Home</a>
-				/
-
-
-			</nav>
 			<div class="container">
-				<!--    {% if SESSION_id >= 0 %} -->
 
-				<!--    {% if {source} == "select-website" %}
-																																																																																																																						    --><form action="{{ doc_root }}select-website/{{session.website}}" method="POST" class="form-membership"> <!--    {% endif %} -->
-					<!--   {% endif %} -->
-				</div>
+				<a class="skip-link" href="#content">Skip to content</a>
 
 				<div class="logo">
 					<input type="image" src="{{doc_root}}img/{{website.image_file}}" height="100px" width="300px" alt="submit"/>
@@ -139,9 +67,18 @@ tinymce.init({selector: 'textarea.tinymce', branding: false, plugins: 'anchor au
 				</nav>
 			</div>
 			<!-- /.container -->
+			<div class="container">
+				<!--    {% if SESSION_id >= 0 %} -->
+
+				<!--    {% if {source} == "select-website" %}
+																																																																																																																																																																																																				    --><form action="{{ doc_root }}select-website/{{session.website}}" method="POST" class="form-membership"> <!--    {% endif %} -->
+					<!--   {% endif %} -->
+				</div>
+
+			</body>
 		</body>
 	</body>
-</html></body></html></body></html></header>{% block content %}{% endblock %}<script src="{{ doc_root }}js/site.js"></script>{% if recaptcha_site_key %}{# Load reCAPTCHA v3 library #}<script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}"></script>{% endif %}{# Only load reCAPTCHA if we have a site key configured #}{% if recaptcha_site_key is defined and recaptcha_site_key %}<script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}"></script><script>document.addEventListener('DOMContentLoaded', function () { // Look for all forms that declare a reCAPTCHA action
+</html></body></html></body></html></body></html></body></html></body> </html></header>{% block content %}{% endblock %}<script src="{{ doc_root }}js/site.js"></script>{% if recaptcha_site_key %}{# Load reCAPTCHA v3 library #}<script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}"></script>{% endif %}{# Only load reCAPTCHA if we have a site key configured #}{% if recaptcha_site_key is defined and recaptcha_site_key %} <script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}"></script> <script>document.addEventListener('DOMContentLoaded', function () { // Look for all forms that declare a reCAPTCHA action
 const forms = document.querySelectorAll('form[data-recaptcha-action]');
 if (! forms.length) 
 return;
@@ -179,7 +116,7 @@ form.submit();
 });
 });
 });
-});</script>{% endif %}{% include 'partials/footer.html' %}<script>(function () {
+});</script>{% endif %}{% include 'partials/footer.html' %}<script> (function () {
 const splash = document.getElementById('splashScreen');
 if (! splash) 
 return;

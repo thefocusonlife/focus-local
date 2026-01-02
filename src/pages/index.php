@@ -44,6 +44,7 @@ if (!empty($_SESSION['id'])) {
         $memAccountId = (int) $member['account_id'];
     }
 }
+$accountId = (int) ($_SESSION['id'] ?? 0);
 
 // Viewer vs menu owner:
 // - viewerId is who is logged in (June=182)
@@ -102,5 +103,20 @@ $data['website'] = $website;
 if ($member) {
     $data['member'] = $member;
 }
+// 7) Navigation (guest account_id = 0)
+$data['navigation'] = $cms->getMenu()->getAll2((int) $website['id'], $menuOwnerId);
+
+// 7.5) Default Sort target for global pages (Focus menu id=2)
+if (empty($data['sort_menu_id'])) {
+    $data['sort_menu_id'] = 2;
+}
+
+// 8) Data for template
+$data['website'] = $website;
+if ($member) {
+    $data['member'] = $member;
+}
+
+echo $twig->render('index.html', $data);
 
 echo $twig->render('index.html', $data);

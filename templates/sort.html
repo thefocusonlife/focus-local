@@ -1,35 +1,35 @@
 {% extends 'layout.html' %}
+
 {% block content %}
 	<main>
-		<!-- class="container" id="content"> -->
-
-		<form action="{{ doc_root }}sort/" method="POST" class="narrow">
+		<form action="{{ doc_root }}sort/{{ menu_id }}" method="POST" class="narrow">
 			<input type="hidden" name="menu_id" value="{{ menu_id }}">
 
 			<h1>Edit Page Sort</h1>
-			<p>Member name:
-				{{ member.forename }}
-				{{ member.surname }}</p>
 
-			<div class="form-group">
-				<label for="pagelimit">Max Stories Displayed:
-				</label>
-				<select name="pagelimit" id="pagelimit">
-					{% for limit in pagelimit %}
-						<option value="{{ limit.amount }}" {% if limit.amount == member.pagelimit %} selected {% endif %}>
-							{{limit.amount}}
-						</option>
-					{% endfor %}
-				</select>
-				<span class="errors">{{ errors.pagelimit }}</span>
-			</div>
+			{% if member %}
+				<p>Member name:
+					{{ member.forename }}
+					{{ member.surname }}</p>
 
-			{# --- Sort dropdown block (menu-scoped) --- #}
+				<div class="form-group">
+					<label for="pagelimit">Max Stories Displayed:</label>
+					<select name="pagelimit" id="pagelimit">
+						{% for limit in pagelimit %}
+							<option value="{{ limit.amount }}" {% if limit.amount == member.pagelimit %} selected {% endif %}>
+								{{ limit.amount }}
+							</option>
+						{% endfor %}
+					</select>
+					<span class="errors">{{ errors.pagelimit|default('') }}</span>
+				</div>
+			{% endif %}
+
 			<div class="form-group">
 				<label for="sorttype">Sort:</label>
 				<select name="sorttype" id="sorttype">
 					{% for st in sorttype %}
-						<option value="{{ st.id }}" {% if st.id == member.sorttype %} selected {% endif %}>
+						<option value="{{ st.id }}" {% if (member and st.id == member.sorttype) or (not member and st.id == active_sorttype_id) %} selected {% endif %}>
 							{{ st.name }}
 							-
 							{{ st.sorttype }}
@@ -39,8 +39,6 @@
 			</div>
 
 			<input type="submit" value="Update Settings" class="btn btn-primary"/>
-		</p>
-
-
-	</form>
-</main>{% endblock %}
+		</form>
+	</main>
+{% endblock %}
