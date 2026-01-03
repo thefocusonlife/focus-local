@@ -153,39 +153,34 @@ class CMS
 
     public function getByMenu(int $menuId): array
     {
-        $sql = "
-        SELECT st.*
-        FROM menu_sorttype mst
-        JOIN sorttype st ON st.id = mst.sorttype_id
-        WHERE mst.menu_id = :menu_id
-        ORDER BY mst.display_order, st.id
-    ";
-
-        return $this->db->runSQL($sql, ['menu_id' => $menuId])->fetchAll();
+        // menu_sorttype mapping removed; return all sorttypes
+        return $this->getSorttype()->getAll();
     }
 
     public function getDefaultIdForMenu(int $menuId): int
     {
-        return $this->getSorttype()->getDefaultIdForMenu($menuId);
+        // menu_sorttype mapping removed; pick a safe default
+        // Prefer 1 if present
+        $row = $this->db->runSQL('SELECT 1 FROM sorttype WHERE id = 1 LIMIT 1;')->fetch();
+        if ($row) {
+            return 1;
+        }
+
+        // Next, prefer 9 if present (your old fallback)
+        $row = $this->db->runSQL('SELECT 1 FROM sorttype WHERE id = 9 LIMIT 1;')->fetch();
+        if ($row) {
+            return 9;
+        }
+
+        // Ultimate fallback: smallest id available
+        $row = $this->db->runSQL('SELECT id FROM sorttype ORDER BY id ASC LIMIT 1;')->fetch();
+        return $row && isset($row['id']) ? (int) $row['id'] : 1;
     }
 
     public function isAllowedForMenu(int $menuId, int $sorttypeId): bool
     {
-        $sql = "
-        SELECT 1
-        FROM menu_sorttype
-        WHERE menu_id = :menu_id AND sorttype_id = :sorttype_id
-        LIMIT 1
-    ";
-
-        $row = $this->db
-            ->runSQL($sql, [
-                'menu_id' => $menuId,
-                'sorttype_id' => $sorttypeId,
-            ])
-            ->fetch();
-
-        return (bool) $row;
+        // menu_sorttype mapping removed; any existing sorttype is allowed
+        return $this->getSorttype()->isAllowedForMenu($menuId, $sorttypeId);
     }
 
     public function getFollow()

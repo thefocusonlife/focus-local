@@ -35,62 +35,36 @@ class Sorttype // Define Session class
     // Get allowed sorttypes for a specific menu (menu-scoped)
     public function getByMenu(int $menuId): array
     {
-        $sql = "
-        SELECT st.id, st.name, st.sorttype, st.filter
-        FROM menu_sorttype mst
-        JOIN sorttype st ON st.id = mst.sorttype_id
-        WHERE mst.menu_id = :menu_id
-        ORDER BY mst.display_order, st.id
-    ";
-
-        return $this->db
-            ->runSQL($sql, [
-                'menu_id' => $menuId,
-            ])
-            ->fetchAll();
+        // menu_sorttype mapping removed; return all sorttypes
+        return $this->getAll();
     }
+
     public function isAllowedForMenu(int $menuId, int $sorttypeId): bool
     {
-        $sql = "
-        SELECT 1
-        FROM menu_sorttype
-        WHERE menu_id = :menu_id
-          AND sorttype_id = :sorttype_id
-        LIMIT 1
-    ";
-
-        $row = $this->db
-            ->runSQL($sql, [
-                'menu_id' => $menuId,
-                'sorttype_id' => $sorttypeId,
-            ])
-            ->fetch();
-
+        // menu_sorttype mapping removed; any existing sorttype is allowed
+        $sql = "SELECT 1
+              FROM sorttype
+             WHERE id = :id
+             LIMIT 1;";
+        $row = $this->db->runSQL($sql, ['id' => $sorttypeId])->fetch();
         return (bool) $row;
     }
 
     public function getDefaultIdForMenu(int $menuId): int
     {
-        $sql = "
-        SELECT sorttype_id
-        FROM menu_sorttype
-        WHERE menu_id = :menu_id
-          AND is_default = 1
-        LIMIT 1
-    ";
-
-        $row = $this->db
-            ->runSQL($sql, [
-                'menu_id' => $menuId,
-            ])
-            ->fetch();
-
-        if ($row && isset($row['sorttype_id'])) {
-            return (int) $row['sorttype_id'];
+        // menu_sorttype mapping removed; pick a safe default
+        $row = $this->db->runSQL('SELECT 1 FROM sorttype WHERE id = 1 LIMIT 1;')->fetch();
+        if ($row) {
+            return 1;
         }
 
-        // Ultimate safety fallback (Mixed / Newest)
-        return 9;
+        $row = $this->db->runSQL('SELECT 1 FROM sorttype WHERE id = 9 LIMIT 1;')->fetch();
+        if ($row) {
+            return 9;
+        }
+
+        $row = $this->db->runSQL('SELECT id FROM sorttype ORDER BY id ASC LIMIT 1;')->fetch();
+        return $row && isset($row['id']) ? (int) $row['id'] : 1;
     }
 
     public function resolveForMenu(int $menuId, int $preferredSorttypeId): int
