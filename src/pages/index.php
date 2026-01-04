@@ -118,5 +118,4 @@ if ($member) {
 }
 
 echo $twig->render('index.html', $data);
-
-echo $twig->render('index.html', $data);
+return;
