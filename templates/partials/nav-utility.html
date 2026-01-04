@@ -1,17 +1,16 @@
-<nav
-	class="member-menu">
+<nav class="member-menu">
+
+	{# ------------------------------------
+		       NAV STATE (single source of truth)
+			 ------------------------------------ #}
+	{# Logged in if we have any real account identity #}
+
+	{% set is_logged_in = (session.account_id|default(0) > 0) %}{% set is_admin = (session.role|default('') == 'admin') %}
+
 
 	{# -------------------------------
-			       NAV STATE (single source of truth)
-			       ------------------------------- #}
-	{% set is_logged_in = session.id is defined and session.id %}
-	{% set role = session.role|default('guest') %}
-	{% set is_admin = is_logged_in and role == 'admin' %}
-
-	{# -------------------------------
-			       Identity (always visible)
-			       ------------------------------- #}
-	<span class="icon-user"></span>
+			     Identity (always visible)
+			 ------------------------------- #}<span class="icon-user"> </span>
 	{% if is_logged_in %}
 		<a href="{{ doc_root }}member/{{ session.id }}">
 			{{ session.forename|default('Member') }}
@@ -24,8 +23,8 @@
 	/
 
 	{# -------------------------------
-			       Guest-only links
-			       ------------------------------- #}
+			        Guest-only link
+		  -------------------------------- #}
 	{% if not is_logged_in %}
 		<span class="icon-user"></span>
 		<a href="{{ doc_root }}login/{{ website.id|default(1) }}">Log in</a>
@@ -36,8 +35,8 @@
 	{% endif %}
 
 	{# -------------------------------
-			       Member/Admin links
-			       ------------------------------- #}
+													       Member/Admin links
+													       ------------------------------- #}
 	{% if is_logged_in %}
 		{% if is_admin %}
 			<span class="icon-user"></span>
@@ -72,17 +71,18 @@
 %}
 
 	{# -------------------------------
-		   SORT (guest + member)
-		   ------------------------------- #}
-		{% if resolved_sort_menu_id %}<span class="icon-user"> </span>
+												   SORT (guest + member)
+												   ------------------------------- #}
+	{% if resolved_sort_menu_id %}
+		<span class="icon-user"></span>
 		<a href="{{ doc_root }}sort/{{ resolved_sort_menu_id }}">Sort</a>
 		/
 	{% endif %}
 
 
 	{# -------------------------------
-			       Utility links (always available)
-			       ------------------------------- #}
+													       Utility links (always available)
+													       ------------------------------- #}
 	<span class="icon-user"></span>
 	<a href="{{ doc_root }}index/{{ website.id|default(1) }}">Refresh</a>
 	/
