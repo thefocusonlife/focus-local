@@ -53,17 +53,21 @@ class Sorttype // Define Session class
     public function getDefaultIdForMenu(int $menuId): int
     {
         // menu_sorttype mapping removed; pick a safe default
-        $row = $this->db->runSQL('SELECT 1 FROM sorttype WHERE id = 1 LIMIT 1;')->fetch();
-        if ($row) {
+
+        // Prefer 1 if it exists
+        $row = $this->db->runSql('SELECT id FROM sorttype WHERE id = 1 LIMIT 1;')->fetch();
+        if ($row && isset($row['id'])) {
             return 1;
         }
 
-        $row = $this->db->runSQL('SELECT 1 FROM sorttype WHERE id = 9 LIMIT 1;')->fetch();
-        if ($row) {
-            return 9;
+        // Otherwise prefer 2 if it exists
+        $row = $this->db->runSql('SELECT id FROM sorttype WHERE id = 2 LIMIT 1;')->fetch();
+        if ($row && isset($row['id'])) {
+            return 2;
         }
 
-        $row = $this->db->runSQL('SELECT id FROM sorttype ORDER BY id ASC LIMIT 1;')->fetch();
+        // Otherwise fall back to the lowest id available
+        $row = $this->db->runSql('SELECT id FROM sorttype ORDER BY id ASC LIMIT 1;')->fetch();
         return $row && isset($row['id']) ? (int) $row['id'] : 1;
     }
 
