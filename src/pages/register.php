@@ -12,7 +12,12 @@ $abc = [];
 $data = [];
 $last_id = 0;
 $lastid = 0;
-
+$menuId = (int) ($menuId ?? 0);
+if ($menuId <= 0) {
+    // Fallback: choose a sensible default menu id for this member/website
+    // (see Option B below for how to do this properly)
+    $menuId = 1;
+}
 //echo $twig->render('plans.html');
 //exit;
 
@@ -158,3 +163,4 @@ $data['lastid'] = $last_id;
 
 echo $twig->render('register.html', $data); // Render Twig template
 //echo $twig->render('plans.html', $data);
+exit();
