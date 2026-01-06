@@ -9,7 +9,28 @@ if ($menuId <= 0) {
     $menuId = 1;
 }
 
+$memberId = (int) ($parts[1] ?? 0);
+
+// If someone hits /member/0 (or any non-positive id), treat as Guest and bounce
+
+if ($memberId <= 0) {
+    $websiteId = (int) ($_SESSION['website'] ?? 0);
+    if ($websiteId > 0) {
+        redirect('index/' . $websiteId);
+        exit();
+    }
+    redirect('index/1'); // last-resort fallback
+    exit();
+}
+
 $member = $cms->getMember()->get(intval($parts[1]));
+
+$member = $cms->getMember()->get($memberId);
+if (!$member || empty($member['id'])) {
+    redirect('index/99999', ['failure' => 'Member not found.']);
+    exit();
+}
+
 $mem = intval($member['account_id']);
 if (!$_SESSION['id']) {
     $website = $cms->getWebsite()->getById($member['website']);

@@ -3,8 +3,51 @@ declare(strict_types=1); // Use strict types
 use PhpBook\Validate\Validate; // Import Validate class
 
 require_once __DIR__ . '/../../config/recaptcha.php';
+error_log(
+    '[LOGIN DEBUG] ' .
+        json_encode(
+            [
+                'id' => $_SESSION['id'] ?? null,
+                'account_id' => $_SESSION['account_id'] ?? null,
+                'role' => $_SESSION['role'] ?? null,
+                'forename' => $_SESSION['forename'] ?? null,
+                'member' => isset($_SESSION['member']),
+                'website' => $_SESSION['website'] ?? null,
+            ],
+            JSON_UNESCAPED_SLASHES,
+        ),
+);
 
-// include APP_ROOT . '/src/pages/menu-path.php';        // get path for website and menus
+// ----------------------------
+// Resolve website context
+// ----------------------------
+$websiteId = (int) ($parts[1] ?? 0);
+if ($websiteId <= 0) {
+    $websiteId = (int) ($_SESSION['website'] ?? 1);
+}
+$_SESSION['website'] = $websiteId;
+
+// Fetch website using the method that works in select-website.php
+$website = $cms->getWebsite()->get($websiteId);
+
+// Fail fast if invalid
+if (empty($website) || empty($website['id'])) {
+    redirect('index/1', ['failure' => 'Website not found.']);
+    exit();
+}
+
+// Guest context for login page navigation menus
+$mem = 0;
+
+if (empty($website) || empty($website['id'])) {
+    redirect('index/1', ['failure' => 'Website not found.']);
+    exit();
+}
+
+if (!empty($_SESSION['id']) && (int) $_SESSION['id'] > 0) {
+    redirect('member/' . (int) $_SESSION['id']);
+    exit();
+}
 
 // If user is already logged in, redirect them to their member page
 if ($cms->getSession()->role !== 'public' && $cms->getSession()->role !== 'guest') {

@@ -53,6 +53,25 @@ class Menu
         return $this->db->runSQL($sql, $arguments)->fetchAll();
     }
 
+    public function getFirstForWebsite(int $websiteId): ?int
+    {
+        $sql = "
+        SELECT id
+        FROM menu
+        WHERE website_id = :website_id
+        ORDER BY id ASC
+        LIMIT 1
+    ";
+
+        $row = $this->db
+            ->runSQL($sql, [
+                'website_id' => $websiteId,
+            ])
+            ->fetch();
+
+        return $row ? (int) $row['id'] : null;
+    }
+
     // ADMIN METHODS
     // Get number of menus
     public function count(): int
