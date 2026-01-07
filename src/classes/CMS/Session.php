@@ -104,4 +104,66 @@ class Session // Define Session class
         // Destroy the session
         session_destroy();
     }
+
+    /**
+     * Force session into a clean Guest context (prevents identity bleed across websites).
+     * Keeps website selection (or sets it if provided).
+     */
+    public function resetToGuest(?int $websiteId = null, bool $regenerateId = true): void
+    {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
+
+        // ---- Clear identity that can leak ----
+        unset(
+            $_SESSION['forename'],
+            $_SESSION['role'],
+            $_SESSION['account_id'],
+            $_SESSION['member'],
+            $_SESSION['member_id'],
+            $_SESSION['email'],
+            $_SESSION['logged_in'],
+        );
+
+        // ---- Clear UI/nav/page state that shouldn't carry across sites ----
+        unset(
+            $_SESSION['menu_owner_id'],
+            $_SESSION['section'],
+            $_SESSION['menu_id'],
+            $_SESSION['active_sorttype_id'],
+            // NOTE: decide whether you want to unset sorttype; leaving it is ok too
+            // $_SESSION['sorttype'],
+        );
+
+        // ---- Set explicit Guest identity (TFOL conventions) ----
+        $_SESSION['id'] = 2;
+        $_SESSION['forename'] = 'Guest';
+        $_SESSION['role'] = 'guest';
+        $_SESSION['account_id'] = 1;
+
+        // Other defaults your app expects
+        $_SESSION['landscape'] = $_SESSION['landscape'] ?? true;
+        $_SESSION['follow_id'] = 0;
+        $_SESSION['pagelimit'] = $_SESSION['pagelimit'] ?? 200;
+        $_SESSION['sorttype'] = $_SESSION['sorttype'] ?? 1;
+
+        // Website context
+        if ($websiteId !== null && $websiteId > 0) {
+            $_SESSION['website'] = $websiteId;
+        } elseif (empty($_SESSION['website'])) {
+            $_SESSION['website'] = 1;
+        }
+
+        if ($regenerateId) {
+            session_regenerate_id(true);
+        }
+
+        // Keep object properties in sync (optional but nice)
+        $this->id = (int) $_SESSION['id'];
+        $this->forename = (string) $_SESSION['forename'];
+        $this->role = (string) $_SESSION['role'];
+        $this->account_id = (int) $_SESSION['account_id'];
+        $this->website = (int) $_SESSION['website'];
+    }
 }

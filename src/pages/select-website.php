@@ -1,11 +1,6 @@
 <?php
 declare(strict_types=1); // Use strict types
 use PhpBook\Validate\Validate; // Import Validate class
-// menu-path include
-
-//$websites = [];                                            // Initialize member array
-//$errors = [];
-//var_dump_pre($_SESSION);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $w = (int) ($_POST['website'] ?? 0);
@@ -20,51 +15,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit();
     }
 
-    /**
-     * P1 FIX: switching websites from Home should NOT carry member context.
-     * Force Guest context + clear cached per-website/per-member session state.
-     */
-    $_SESSION['id'] = 0;
-    $_SESSION['account_id'] = 0;
-
-    $_SESSION['role'] = 'guest';
-
-    // Clear cached objects / navigation state (adjust as you discover more keys)
-    unset(
-        $_SESSION['role'],
-        $_SESSION['forename'],
-        $_SESSION['surname'],
-        $_SESSION['email'],
-        $_SESSION['logged_in'], // if you use it
-        $_SESSION['member'],
-        $_SESSION['member_id'],
-        $_SESSION['menu_owner_id'],
-        $_SESSION['section'],
-        $_SESSION['menu_id'],
-        $_SESSION['active_sorttype_id'],
-        $_SESSION['sorttype'],
-        $_SESSION['website_id'],
-        $_SESSION['website'], // you use this later for $cms->getWebsite()->get(...)
-    );
-
-    // Now set ONLY the newly selected website in session
-    $_SESSION['website'] = (int) $website['id'];
-    $_SESSION['role'] = 'guest';
-
-    // Optional but recommended when identity/context changes
-    if (session_status() === PHP_SESSION_ACTIVE) {
-        session_regenerate_id(true);
-    }
-
-    // Respect access rules
-    if ((int) $website['non_members'] === 1) {
+    // Enforce access rule: if non-members allowed, switch as Guest and go there
+    if ((int) ($website['non_members'] ?? 0) === 1) {
+        $cms->getSession()->resetToGuest((int) $website['id']);
         redirect('index/' . (int) $website['id']);
         exit();
     }
 
+    // Members-only site
     redirect('index/99999', [
         'failure' => 'You must register as a member to access GET FOCUSED websites.
-      Click the "Register" link on top of this page to see pricing.',
+Click the "Register" link on top of this page to see pricing.',
     ]);
     exit();
 }

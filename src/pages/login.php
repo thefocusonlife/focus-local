@@ -1,6 +1,14 @@
 <?php
 declare(strict_types=1); // Use strict types
 use PhpBook\Validate\Validate; // Import Validate class
+error_log(
+    '[LOGIN HIT] uri=' .
+        ($_SERVER['REQUEST_URI'] ?? '') .
+        ' parts=' .
+        json_encode($parts ?? null) .
+        ' sess_website=' .
+        json_encode($_SESSION['website'] ?? null),
+);
 
 require_once __DIR__ . '/../../config/recaptcha.php';
 error_log(
@@ -32,27 +40,42 @@ $website = $cms->getWebsite()->get($websiteId);
 
 // Fail fast if invalid
 if (empty($website) || empty($website['id'])) {
-    redirect('index/1', ['failure' => 'Website not found.']);
+    error_log('[LOGIN REDIRECT] line=' . __LINE__ . ' to=' . $target);
+
+    // Resolve website id from route, then session fallback
+    $websiteId = (int) ($parts[1] ?? 0);
+    if ($websiteId <= 0) {
+        $websiteId = (int) ($_SESSION['website'] ?? 1);
+    }
+    if ($websiteId <= 0) {
+        $websiteId = 1;
+    }
+    $_SESSION['website'] = $websiteId;
+
+    // Fetch website using the method you know works (select-website.php uses get())
+    $website = $cms->getWebsite()->get($websiteId);
+
+    // Fail fast (once)
+    if (empty($website) || empty($website['id'])) {
+        redirect('index/1', ['failure' => 'Website not found.']);
+        exit();
+    }
+
     exit();
 }
 
 // Guest context for login page navigation menus
 $mem = 0;
 
-if (empty($website) || empty($website['id'])) {
-    redirect('index/1', ['failure' => 'Website not found.']);
-    exit();
-}
+$role = $_SESSION['role'] ?? 'guest';
 
-if (!empty($_SESSION['id']) && (int) $_SESSION['id'] > 0) {
-    redirect('member/' . (int) $_SESSION['id']);
-    exit();
-}
-
-// If user is already logged in, redirect them to their member page
-if ($cms->getSession()->role !== 'public' && $cms->getSession()->role !== 'guest') {
-    redirect('member/' . $cms->getSession()->id);
-    exit();
+// Only redirect away from login if the user is truly logged in (non-guest role)
+if ($role !== 'guest') {
+    $sid = (int) ($_SESSION['id'] ?? 0);
+    if ($sid > 0) {
+        redirect('member/' . $sid);
+        exit();
+    }
 }
 
 // If form has not been submitted yet, load the website info
@@ -130,23 +153,25 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
             $website = $cms->getWebsite()->getById($websiteId);
 
-            // Create session
-
-            // Otherwise for members
-            $cms->getSession()->create($member, $website['id']); // Create session
-            redirect('member/' . $member['id']); // Redirect to their page
-        } else {
-            // Otherwise
-            $errors['message'] = 'Please try again.'; // Store error message
+            if (empty($website) || empty($website['id'])) {
+                $errors['message'] = 'Website not found.';
+            } else {
+                // ✅ SUCCESS: create session and redirect to member home
+                $cms->getSession()->create($member, (int) $website['id']);
+                redirect('member/' . (int) $member['id']);
+                exit();
+            }
         }
-    } // end $invalid branch
-} // end POST: if ($_SERVER['REQUEST_METHOD'] == 'POST')
+    }
+}
 
 // Website context for this page
-$websiteId = (int) ($id ?? ($_SESSION['website'] ?? 1));
+$$websiteId = (int) ($id ?? ($_SESSION['website'] ?? 1));
 $website = $cms->getWebsite()->getById($websiteId);
-if (!$website) {
+
+if (empty($website) || empty($website['id'])) {
     redirect('index/1', ['failure' => 'Website not found.']);
+    exit();
 }
 
 // Session/member context for navigation
@@ -166,11 +191,6 @@ if ($sessionId === 2 || $sessionId === 0) {
         $mem = (int) $member['account_id'];
     }
 }
-
-// ✅ DO NOT create session here. login.php GET should not mutate session.
-// if ($member) {
-//     $cms->getSession()->create($member, (int)$website['id']);
-// }
 
 $data['navigation'] = $cms->getMenu()->getAll2((int) $website['id'], (int) $mem);
 $data['success'] = $success;
