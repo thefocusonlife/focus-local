@@ -1,0 +1,49 @@
+{# templates/guide/index.html #}
+{% extends "layout.html" %}
+
+{% block title %}TFOL Guide
+{% endblock %}
+
+{% block content %}
+
+	<section class="guide-index">
+
+		<header class="guide-index__header">
+			<h1>The FocusOnLife Guide</h1>
+
+			{% if guide_index.intro %}
+				<p class="guide-index__intro">
+					{{ guide_index.intro|raw }}
+				</p>
+			{% endif %}
+		</header>
+
+		{% for group in guide_index.groups %}
+			<section class="guide-index__group">
+				<h2>{{ group.title }}</h2>
+
+				{% if group.summary %}
+					<p class="guide-index__summary">{{ group.summary }}</p>
+				{% endif %}
+
+				<ul class="guide-index__list">
+					{% for item in group.items %}
+						<li class="guide-index__item">
+							<a href="{{ doc_root }}guide/{{ item.slug }}">
+								{{ item.title }}
+							</a>
+
+							{% if item.note %}
+								<div class="guide-index__note">
+									{{ item.note }}
+								</div>
+							{% endif %}
+						</li>
+					{% endfor %}
+				</ul>
+			</section>
+		{% endfor %}
+
+	</section>
+
+{% endblock %}

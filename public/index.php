@@ -1,6 +1,5 @@
 <?php
 declare(strict_types=1);
-error_log('[INDEX HIT UNCONDITIONAL] ' . date('c') . ' ' . ($_SERVER['REQUEST_URI'] ?? ''));
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
@@ -117,6 +116,13 @@ if ($parts[0] != 'admin') {
         $php_page = APP_ROOT . '/src/pages/' . $page . '.php';
 
         include $php_page;
+        exit();
+    }
+    // Special-case: Guide uses /guide and /guide/<slug> (slug is not numeric)
+    if ($parts[0] === 'guide') {
+        $page = 'guide';
+        // Pass slug via $parts[1] (can be empty for /guide)
+        include APP_ROOT . '/src/pages/guide.php';
         exit();
     }
 
