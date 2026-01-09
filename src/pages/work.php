@@ -87,8 +87,27 @@ if ($id > 0) {
         exit();
     }
 
-    // Author check (using the same resolved session id)
-    if ((int) $story['member_id'] !== $sessionMemberId) {
+    // ---- Permission guard (author OR scoped-admin OR uber/future) ----
+    $role = (string) ($_SESSION['role'] ?? 'guest');
+    $isUber = $role === 'uber'; // future
+    $isAdmin = $role === 'admin' || $isUber;
+
+    $member = $cms->getMember()->get($sessionMemberId);
+    if (!$member || !is_array($member)) {
+        include APP_ROOT . '/src/pages/page-not-found.php';
+        exit();
+    }
+
+    $storyOwnerId = (int) ($story['member_id'] ?? 0);
+    $storyWebsiteId = (int) ($story['website'] ?? ($story['website_id'] ?? 0));
+    $memberWebsiteId = (int) ($member['website'] ?? 0);
+
+    $canEdit =
+        $storyOwnerId === $sessionMemberId ||
+        ($isAdmin && $memberWebsiteId > 0 && $storyWebsiteId === $memberWebsiteId) ||
+        $isUber;
+
+    if (!$canEdit) {
         include APP_ROOT . '/src/pages/page-not-found.php';
         exit();
     }
@@ -155,6 +174,17 @@ if (empty($storyorder)) {
     }
 }
 
+// ---- CSRF (simple session token) ----
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
+
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+$csrfToken = (string) $_SESSION['csrf_token'];
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Form submitted
     error_log(
@@ -171,177 +201,200 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ' name=' .
             ($_FILES['image']['name'] ?? 'NULL'),
     );
-
-    // Only handle save when the Save button was used
     if (isset($_POST['update'])) {
-        // -----------------------------
-        // A) Build $story from POST
-        // -----------------------------
-        $story['id'] =
-            isset($_POST['id']) && $_POST['id'] !== '' ? (int) $_POST['id'] : $story['id'] ?? null;
-        $story['image_id'] =
-            isset($_POST['image_id']) && $_POST['image_id'] !== ''
-                ? (int) $_POST['image_id']
-                : $story['image_id'] ?? null;
-
-        $story['title'] = $_POST['title'] ?? '';
-        $story['summary'] = $_POST['summary'] ?? '';
-        $story['content'] = $_POST['content'] ?? '';
-
-        $story['member_id'] = isset($_POST['member_id'])
-            ? (int) $_POST['member_id']
-            : $story['member_id'] ?? 0;
-        $story['family_id'] = isset($_POST['family_id'])
-            ? (int) $_POST['family_id']
-            : $story['family_id'] ?? 0;
-        $story['menu_id'] = isset($_POST['menu_id'])
-            ? (int) $_POST['menu_id']
-            : $story['menu_id'] ?? 0;
-
-        $story['published'] = !empty($_POST['published']) ? 1 : 0;
-        $story['seo_title'] = create_seo_name($story['title']);
-
-        $story['storyorder'] = isset($_POST['storyorder'])
-            ? (int) $_POST['storyorder']
-            : $story['storyorder'] ?? 0;
-
-        // Checkboxes / toggles
-        $story['landscape'] = !empty($_POST['landscape']) ? 1 : 0;
-        $story['allow_comment'] = !empty($_POST['allow_comment']) ? 1 : 0;
-
-        $story['keyword'] = $_POST['keyword'] ?? '';
-        $story['website'] = (int) ($_SESSION['website'] ?? 0);
-
-        $story['blog'] = isset($_POST['blog']) ? (int) $_POST['blog'] : $story['blog'] ?? 0;
-
-        $memberId = $story['member_id'];
-        $authors = $cms->getMember()->get($memberId);
-
-        // -----------------------------
-        // B) Validate story fields
-        // -----------------------------
-        $errors['title'] = Validate::isText($story['title'], 1, 80)
-            ? ''
-            : 'Title should be 1 - 80 characters.';
-        $errors['summary'] = Validate::isText($story['summary'], 1, 254)
-            ? ''
-            : 'Summary should be 0 - 254 characters.';
-        $errors['content'] = Validate::isText($story['content'], 1, 100000)
-            ? ''
-            : 'Content should be 0 - 100,000 characters.';
-        $errors['menu'] = Validate::isMenuId($story['menu_id'], $menus) ? '' : 'Not a valid menu';
-        $errors['keyword'] = Validate::isText($story['keyword'], 1, 80)
-            ? ''
-            : 'Keyword should be 1 - 80 characters.';
-
-        $invalid = implode($errors);
-
-        // -----------------------------
-        // C) Save if valid
-        // -----------------------------
-        if ($invalid) {
-            $errors['warning'] = 'Please correct form errors';
+        $posted = (string) ($_POST['csrf_token'] ?? '');
+        if ($posted === '' || !hash_equals($csrfToken, $posted)) {
+            $errors['warning'] =
+                'Security check failed (CSRF). Please reload the page and try again.';
+            // Do NOT process the save
         } else {
-            $arguments = $story; // ------------------------------------------------------------
-            // Image upload orchestration (Story Create + Update)
-            // ------------------------------------------------------------
+            // ... proceed with save logic ...
+            // Only handle save when the Save button was used
+            if (isset($_POST['update'])) {
+                // -----------------------------
+                // A) Build $story from POST
+                // -----------------------------
+                $story['id'] =
+                    isset($_POST['id']) && $_POST['id'] !== ''
+                        ? (int) $_POST['id']
+                        : $story['id'] ?? null;
+                $story['image_id'] =
+                    isset($_POST['image_id']) && $_POST['image_id'] !== ''
+                        ? (int) $_POST['image_id']
+                        : $story['image_id'] ?? null;
 
-            $hasUpload =
-                isset($_FILES['image']) &&
-                ($_FILES['image']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK &&
-                is_uploaded_file($_FILES['image']['tmp_name'] ?? '');
+                $story['title'] = $_POST['title'] ?? '';
+                $story['summary'] = $_POST['summary'] ?? '';
+                $story['content'] = $_POST['content'] ?? '';
 
-            if ($hasUpload) {
-                // Normalize image_id
-                $arguments['image_id'] = !empty($arguments['image_id'])
-                    ? (int) $arguments['image_id']
-                    : null;
-
-                // Determine alt text
-
-                $alt = trim((string) ($arguments['image_alt'] ?? ''));
-                if ($alt === '.' || $alt === '') {
-                    $name = (string) ($_FILES['image']['name'] ?? '');
-                    $alt = $name ? pathinfo($name, PATHINFO_FILENAME) : '';
-                }
-                if ($alt === '.') {
-                    $alt = '';
-                }
-
-                // Ensure we have an image row
-                $imageId = (int) ($arguments['image_id'] ?? 0);
-
-                $alt = trim((string) ($arguments['image_alt'] ?? ''));
-                if ($alt === '.' || $alt === '') {
-                    $name = (string) ($_FILES['image']['name'] ?? '');
-                    $alt = $name ? pathinfo($name, PATHINFO_FILENAME) : '';
-                }
-                if ($alt === '.') {
-                    $alt = '';
-                }
-
-                if ($imageId <= 0) {
-                    $sql = 'INSERT INTO image (file, alt) VALUES (:file, :alt);';
-                    $cms->getDb()->runSQL($sql, [
-                        'file' => '',
-                        'alt' => $alt,
-                    ]);
-
-                    $imageId = (int) $cms->getDb()->lastInsertId();
-                    $arguments['image_id'] = $imageId;
+                // Force author: never trust POST member_id
+                if (!empty($story['id'])) {
+                    // editing: keep the owner from the loaded record
+                    $story['member_id'] = (int) ($story['member_id'] ?? 0);
                 } else {
-                    $sql = 'UPDATE image SET alt = :alt WHERE id = :id;';
-                    $cms->getDb()->runSQL($sql, [
-                        'alt' => $alt,
-                        'id' => $imageId,
-                    ]);
-                }
-                $alt = trim((string) ($arguments['image_alt'] ?? ''));
-                if ($alt === '.' || $alt === '') {
-                    $name = (string) ($_FILES['image']['name'] ?? '');
-                    $alt = $name ? pathinfo($name, PATHINFO_FILENAME) : '';
-                }
-                if ($alt === '.') {
-                    $alt = '';
+                    // creating: force to logged-in user
+                    $story['member_id'] = $sessionMemberId;
                 }
 
-                // Save uploaded image via ImageService (resize + naming + write to /public/uploads)
-                $result = $cms
-                    ->getImageService()
-                    ->saveUploadedStoryImage($_FILES['image'], $imageId, $arguments['title'] ?? '');
+                $story['family_id'] = isset($_POST['family_id'])
+                    ? (int) $_POST['family_id']
+                    : $story['family_id'] ?? 0;
+                $story['menu_id'] = isset($_POST['menu_id'])
+                    ? (int) $_POST['menu_id']
+                    : $story['menu_id'] ?? 0;
 
-                // Update image row with final filename + alt (bulletproof)
-                $sql = 'UPDATE image SET file = :file, alt = :alt WHERE id = :id;';
-                $cms->getDb()->runSQL($sql, [
-                    'file' => $result['filename'],
-                    'alt' => $alt,
-                    'id' => $imageId,
-                ]);
+                $story['published'] = !empty($_POST['published']) ? 1 : 0;
+                $story['seo_title'] = create_seo_name($story['title']);
 
-                // Propagate derived values back into story args
-                $arguments['landscape'] = (int) ($result['landscape'] ?? 0);
-            }
+                $story['storyorder'] = isset($_POST['storyorder'])
+                    ? (int) $_POST['storyorder']
+                    : $story['storyorder'] ?? 0;
 
-            if (!empty($arguments['id'])) {
-                $saved = $cms->getStory()->update($arguments);
-            } else {
-                unset($arguments['id']);
-                $saved = $cms->getStory()->create($arguments);
-            }
+                // Checkboxes / toggles
+                $story['landscape'] = !empty($_POST['landscape']) ? 1 : 0;
+                $story['allow_comment'] = !empty($_POST['allow_comment']) ? 1 : 0;
 
-            if ($saved) {
-                $imageId = (int) ($arguments['image_id'] ?? 0);
-                $alt = trim((string) ($_POST['image_alt'] ?? ''));
+                $story['keyword'] = $_POST['keyword'] ?? '';
+                $story['website'] = (int) ($_SESSION['website'] ?? 0);
 
-                if ($imageId > 0 && $alt !== '') {
-                    $cms->getStory()->altUpdate($imageId, $alt);
+                $story['blog'] = isset($_POST['blog']) ? (int) $_POST['blog'] : $story['blog'] ?? 0;
+
+                $memberId = $story['member_id'];
+                $authors = $cms->getMember()->get($memberId);
+
+                // -----------------------------
+                // B) Validate story fields
+                // -----------------------------
+                $errors['title'] = Validate::isText($story['title'], 1, 80)
+                    ? ''
+                    : 'Title should be 1 - 80 characters.';
+                $errors['summary'] = Validate::isText($story['summary'], 1, 254)
+                    ? ''
+                    : 'Summary should be 0 - 254 characters.';
+                $errors['content'] = Validate::isText($story['content'], 1, 100000)
+                    ? ''
+                    : 'Content should be 0 - 100,000 characters.';
+                $errors['menu'] = Validate::isMenuId($story['menu_id'], $menus)
+                    ? ''
+                    : 'Not a valid menu';
+                $errors['keyword'] = Validate::isText($story['keyword'], 1, 80)
+                    ? ''
+                    : 'Keyword should be 1 - 80 characters.';
+
+                $invalid = implode($errors);
+
+                // -----------------------------
+                // C) Save if valid
+                // -----------------------------
+                if ($invalid) {
+                    $errors['warning'] = 'Please correct form errors';
+                } else {
+                    $arguments = $story; // ------------------------------------------------------------
+                    // Image upload orchestration (Story Create + Update)
+                    // ------------------------------------------------------------
+
+                    $hasUpload =
+                        isset($_FILES['image']) &&
+                        ($_FILES['image']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK &&
+                        is_uploaded_file($_FILES['image']['tmp_name'] ?? '');
+
+                    if ($hasUpload) {
+                        // Normalize image_id
+                        $arguments['image_id'] = !empty($arguments['image_id'])
+                            ? (int) $arguments['image_id']
+                            : null;
+
+                        // Determine alt text
+
+                        $alt = trim((string) ($arguments['image_alt'] ?? ''));
+                        if ($alt === '.' || $alt === '') {
+                            $name = (string) ($_FILES['image']['name'] ?? '');
+                            $alt = $name ? pathinfo($name, PATHINFO_FILENAME) : '';
+                        }
+                        if ($alt === '.') {
+                            $alt = '';
+                        }
+
+                        // Ensure we have an image row
+                        $imageId = (int) ($arguments['image_id'] ?? 0);
+
+                        $alt = trim((string) ($arguments['image_alt'] ?? ''));
+                        if ($alt === '.' || $alt === '') {
+                            $name = (string) ($_FILES['image']['name'] ?? '');
+                            $alt = $name ? pathinfo($name, PATHINFO_FILENAME) : '';
+                        }
+                        if ($alt === '.') {
+                            $alt = '';
+                        }
+
+                        if ($imageId <= 0) {
+                            $sql = 'INSERT INTO image (file, alt) VALUES (:file, :alt);';
+                            $cms->getDb()->runSQL($sql, [
+                                'file' => '',
+                                'alt' => $alt,
+                            ]);
+
+                            $imageId = (int) $cms->getDb()->lastInsertId();
+                            $arguments['image_id'] = $imageId;
+                        } else {
+                            $sql = 'UPDATE image SET alt = :alt WHERE id = :id;';
+                            $cms->getDb()->runSQL($sql, [
+                                'alt' => $alt,
+                                'id' => $imageId,
+                            ]);
+                        }
+                        $alt = trim((string) ($arguments['image_alt'] ?? ''));
+                        if ($alt === '.' || $alt === '') {
+                            $name = (string) ($_FILES['image']['name'] ?? '');
+                            $alt = $name ? pathinfo($name, PATHINFO_FILENAME) : '';
+                        }
+                        if ($alt === '.') {
+                            $alt = '';
+                        }
+
+                        // Save uploaded image via ImageService (resize + naming + write to /public/uploads)
+                        $result = $cms
+                            ->getImageService()
+                            ->saveUploadedStoryImage(
+                                $_FILES['image'],
+                                $imageId,
+                                $arguments['title'] ?? '',
+                            );
+
+                        // Update image row with final filename + alt (bulletproof)
+                        $sql = 'UPDATE image SET file = :file, alt = :alt WHERE id = :id;';
+                        $cms->getDb()->runSQL($sql, [
+                            'file' => $result['filename'],
+                            'alt' => $alt,
+                            'id' => $imageId,
+                        ]);
+
+                        // Propagate derived values back into story args
+                        $arguments['landscape'] = (int) ($result['landscape'] ?? 0);
+                    }
+
+                    if (!empty($arguments['id'])) {
+                        $saved = $cms->getStory()->update($arguments);
+                    } else {
+                        unset($arguments['id']);
+                        $saved = $cms->getStory()->create($arguments);
+                    }
+
+                    if ($saved) {
+                        $imageId = (int) ($arguments['image_id'] ?? 0);
+                        $alt = trim((string) ($_POST['image_alt'] ?? ''));
+
+                        if ($imageId > 0 && $alt !== '') {
+                            $cms->getStory()->altUpdate($imageId, $alt);
+                        }
+                    }
+
+                    if ($saved) {
+                        redirect('admin/stories/', ['success' => 'Story saved']);
+                    } else {
+                        $errors['warning'] = 'Story title already in use';
+                    }
                 }
-            }
-
-            if ($saved) {
-                redirect('admin/stories/', ['success' => 'Story saved']);
-            } else {
-                $errors['warning'] = 'Story title already in use';
             }
         }
     }
@@ -386,8 +439,7 @@ if ($websiteId <= 0) {
 }
 
 $data['website'] = $cms->getWebsite()->getById($websiteId) ?: [];
-
-//$data['website'] = $cms->getWebsite()->getById($websiteId) ?: [];
+$data['csrf_token'] = $csrfToken;
 
 $debugPanel = null;
 

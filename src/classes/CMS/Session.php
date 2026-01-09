@@ -47,38 +47,43 @@ class Session // Define Session class
     // Create new session
     public function create($member, $website)
     {
-        session_regenerate_id(true); // Update session id
-        if ($member > 0) {
-            // var_dump_pre($member);
-            // var_dump_pre($_SESSION);
-            // echo "Session -52";
-            // exit;
-            $_SESSION['id'] = $member['id'] ?? null; // Add member id to session
-            $_SESSION['forename'] = $member['forename'] ?? null; // Add forename to session
-            $_SESSION['role'] = $member['role'] ?? null; // Add role to session
-            $_SESSION['account_id'] = $member['account_id'] ?? null; // Add account_id to session
-            $_SESSION['landscape'] = true ?? null;
-            $_SESSION['follow_id'] = $member['account_id'] ?? null; // Add account_id to session
-            $_SESSION['pagelimit'] = $member['pagelimit'] ?? null; // Add pagelimit to session
-            $_SESSION['sorttype'] = (int) ($member['sorttype'] ?? 0); // Add sottype to session
-            $_SESSION['website'] = $member['website'] ?? null; // Add member's website o session
-        } else {
-            $_SESSION['id'] = 2; // Add member id to session
-            $_SESSION['forename'] = 'Guest'; // Add forename to session
-            $_SESSION['role'] = 'guest'; // Add role to session
-            $_SESSION['account_id'] = 1; // Add account_id to session
+        session_regenerate_id(true);
+
+        // Logged-in session ONLY if member array + valid id + active status
+        if (
+            is_array($member) &&
+            (int) ($member['id'] ?? 0) > 0 &&
+            (string) ($member['status'] ?? 'active') === 'active'
+        ) {
+            $_SESSION['id'] = (int) $member['id'];
+            $_SESSION['forename'] = (string) ($member['forename'] ?? '');
+            $_SESSION['role'] = (string) ($member['role'] ?? 'guest');
+            $_SESSION['account_id'] = (int) ($member['account_id'] ?? 0);
             $_SESSION['landscape'] = true;
-            $_SESSION['follow_id'] = 0; // Add account_id to session
-            $_SESSION['pagelimit'] = 200; // Add pagelimit to session
-            $_SESSION['sorttype'] = 1; // Add sottype to session
-            $_SESSION['website'] = $website ?? 1; // Add member's website o sess
+            $_SESSION['follow_id'] = (int) ($member['account_id'] ?? 0);
+            $_SESSION['pagelimit'] = (int) ($member['pagelimit'] ?? 200);
+            $_SESSION['sorttype'] = (int) ($member['sorttype'] ?? 1);
+            $_SESSION['website'] = (int) ($member['website'] ?? ($website ?? 1));
+
+            return; // ✅ stop here — authenticated session created
         }
+
+        // Guest session (covers: not array, id<=0, pending, suspended)
+        $_SESSION['id'] = 2;
+        $_SESSION['forename'] = 'Guest';
+        $_SESSION['role'] = 'guest';
+        $_SESSION['account_id'] = 1;
+        $_SESSION['landscape'] = true;
+        $_SESSION['follow_id'] = 0;
+        $_SESSION['pagelimit'] = 200;
+        $_SESSION['sorttype'] = 1;
+        $_SESSION['website'] = (int) ($website ?? 1);
     }
 
     // Update existing session - alias for create()
-    public function update($member)
+    public function update($member, $website = null)
     {
-        $this->create($member); // Update data in session
+        $this->create($member, $website); // alias for create()
     }
 
     // Delete existing session

@@ -109,20 +109,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if (empty($member)) {
             $w = $cms->getWebsite()->getById($website_id);
             $errors['message'] = 'This email not valid for ' . $w['name'];
-        } elseif ($member && $member['role'] == 'suspended') {
-            // If member is suspended
-            $errors['message'] = 'Account suspended'; // Store message
-        } /*
-                elseif ($member['website'] != 1 AND $website_id == 1) {
-                    $errors['message'] = "Must use a registered theFocusOnLife email.";
-                }
-                */ elseif (
-            $member &&
-            $member['role'] == 'pending'
-        ) {
-            // If member is pending
+        } elseif ($member && ($member['status'] ?? 'active') === 'suspended') {
+            $errors['message'] = 'Account suspended';
+        } elseif ($member && ($member['status'] ?? 'active') === 'pending') {
             $errors['message'] =
-                'Membership pending. Use Contact Us to inquire about your registration.'; // Store message
+                'Membership pending. Use Contact Us to inquire about your registration.';
         } elseif ($member) {
             // Get website for this member (or fallback to 1)
             $websiteId = isset($member['website'])

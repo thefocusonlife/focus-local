@@ -20,7 +20,7 @@ class Family // Define Session class
     // Get individual member by id
     public function get(int $id)
     {
-        $sql = "SELECT id,website, forename, surname, role, account_id
+        $sql = "SELECT id,website, forename, surname, role, status,account_id
                   FROM member
                  WHERE id = :id;"; // SQL to get member
         return $this->db->runSQL($sql, [$id])->fetch(); // Return member
@@ -29,7 +29,7 @@ class Family // Define Session class
     // Get details of all members
     public function getAll(): array
     {
-        $sql = "SELECT id, website, forename, surname, role, account_id
+        $sql = "SELECT id, website, forename, surname, role, status, account_id
                   FROM member;"; // SQL to get all members
         return $this->db->runSQL($sql)->fetchAll(); // Return all members
     }

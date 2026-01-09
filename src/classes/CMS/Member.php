@@ -13,7 +13,7 @@ class Member
     // Get individual member by id
     public function get(int $id)
     {
-        $sql = "SELECT id, website, forename, surname, email, email_master, joined, picture, role, account_id, photo_limit, agegroup, plan, pagelimit,sorttype,  publik, termsok
+        $sql = "SELECT id, website, forename, surname, email, email_master, joined, picture, role, status, account_id, photo_limit, agegroup, plan, pagelimit,sorttype,  publik, termsok
                   FROM member
                  WHERE id = :id;"; // SQL to get member
         return $this->db->runSQL($sql, [$id])->fetch(); // Return member
@@ -22,7 +22,7 @@ class Member
     // Get details of all members
     public function getAll(): array
     {
-        $sql = "SELECT id, website, forename, surname, email, email_master, joined, picture, role, account_id, photo_limit, agegroup, plan, pagelimit,sorttype,  publik, termsok
+        $sql = "SELECT id, website, forename, surname, email, email_master, joined, picture, role, status, account_id, photo_limit, agegroup, plan, pagelimit,sorttype,  publik, termsok
                   FROM member;"; // SQL to get all members
         return $this->db->runSQL($sql)->fetchAll(); // Return all members
     }
@@ -30,7 +30,7 @@ class Member
     public function getAll2(int $id): array
     {
         $arguments = [$id];
-        $sql = "SELECT id, website, forename, surname, email, email_master, joined, picture, role, account_id, photo_limit, agegroup, plan, pagelimit,sorttype,  publik, termsok
+        $sql = "SELECT id, website, forename, surname, email, email_master, joined, picture, role, status, account_id, photo_limit, agegroup, plan, pagelimit,sorttype,  publik, termsok
                   FROM member
                   WHERE website = :id;"; // SQL to get all members
         return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return all members
@@ -38,7 +38,7 @@ class Member
     public function getAll3(int $id): array
     {
         $arguments = [$id];
-        $sql = "SELECT id, website, forename, surname, email, email_master, joined, picture, role, account_id, photo_limit, agegroup, plan, pagelimit,sorttype,  publik, termsok
+        $sql = "SELECT id, website, forename, surname, email, email_master, joined, picture, role, status, account_id, photo_limit, agegroup, plan, pagelimit,sorttype,  publik, termsok
                   FROM member
                   WHERE account_id = :id;"; // SQL to get all members
         return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return all members
@@ -67,8 +67,8 @@ class Member
     {
         $arguments['email'] = $email;
         $arguments['website'] = $website;
-        $sql = "SELECT id, website, forename, surname, joined, email, email_master, password, picture, role, account_id, photo_limit, agegroup, plan, pagelimit,sorttype,  publik, termsok
-                  FROM member 
+        $sql = "SELECT id, website, forename, surname, joined, email, email_master, password, picture, role, status, account_id, photo_limit, agegroup, plan, pagelimit,sorttype,  publik, termsok
+                  FROM member
                  WHERE email = :email
                  AND website = :website;"; // SQL to collect member data
 
@@ -77,16 +77,25 @@ class Member
             // If no member found
             return false; // Return false
         } // Otherwise
-        $authenticated = password_verify($password, $member['password']); // Did password match
-        return $authenticated ? $member : false; // Return whether password matched
+        $authenticated = password_verify($password, $member['password']);
+        if (!$authenticated) {
+            return false;
+        }
+        /*
+        $status = (string) ($member['status'] ?? 'active'); // transitional default
+        if ($status !== 'active') {
+            return false; // pending/suspended cannot log in
+        }
+*/
+        return $member;
     }
     // Login: returns member data if authenticated, false if not
     public function login2(string $email, string $password)
     {
         $arguments['email'] = $email;
 
-        $sql = "SELECT id, website, forename, surname, joined, email, email_master, password, picture, role, account_id, photo_limit, agegroup, plan, pagelimit,sorttype,  publik, termsok
-              FROM member 
+        $sql = "SELECT id, website, forename, surname, joined, email, email_master, password, picture, role, status, account_id, photo_limit, agegroup, plan, pagelimit,sorttype,  publik, termsok
+              FROM member
              WHERE email = :email;"; // SQL to collect member data
 
         $member = $this->db->runSQL($sql, $arguments)->fetch(); // Run SQL
@@ -94,8 +103,17 @@ class Member
             // If no member found
             return false; // Return false
         } // Otherwise
-        $authenticated = password_verify($password, $member['password']); // Did password match
-        return $authenticated ? $member : false; // Return whether password matched
+        $authenticated = password_verify($password, $member['password']);
+        if (!$authenticated) {
+            return false;
+        }
+        /*
+        $status = (string) ($member['status'] ?? 'active'); // transitional default
+        if ($status !== 'active') {
+            return false; // pending/suspended cannot log in
+        }
+        */
+        return $member;
     }
     public function count(): int
     {
@@ -111,7 +129,7 @@ class Member
 
         try {
             // Try to add member
-            $sql = "INSERT INTO member (website, forename, surname, email, email_master, password, role, account_id, photo_limit, agegroup, plan, pagelimit,sorttype,  publik, termsok) 
+            $sql = "INSERT INTO member (website, forename, surname, email, email_master, password, role, account_id, photo_limit, agegroup, plan, pagelimit,sorttype,  publik, termsok)
                     VALUES (:website, :forename, :surname, :email, :email_master, :password, :role, :account_id, :photo_limit, :agegroup, :plan, :pagelimit, :sorttype, :publik, :termsok);"; // SQL to add member
 
             $this->db->runSQL($sql, $member); // Run SQL
@@ -133,10 +151,10 @@ class Member
         unset($member['joined'], $member['picture']); // Remove joined and member from array
         try {
             $this->db->beginTransaction(); // Start                                                         // Try to update member
-            $sql = "UPDATE member 
-                       SET website = :website, forename = :forename, surname = :surname, email = :email, email_master = :email_master, role = :role, 
+            $sql = "UPDATE member
+                       SET website = :website, forename = :forename, surname = :surname, email = :email, email_master = :email_master, role = :role,
                        account_id =:account_id, photo_limit = :photo_limit, agegroup = :agegroup, plan = :plan,
-                       pagelimit = :pagelimit,sorttype = :sorttype,  publik = :publik, termsok = :termsok  
+                       pagelimit = :pagelimit,sorttype = :sorttype,  publik = :publik, termsok = :termsok
                        WHERE id = :id;";
             // SQL to update member
             $this->db->runSQL($sql, $member);
@@ -157,7 +175,7 @@ class Member
     // Upload member profile image
     /*  public function pictureCreate(int $id, string $filename, string $temporary, string $destination): bool
     {
-        if ($temporary) {   
+        if ($temporary) {
             // If image uploaded
         // Crop and save file
         //$file_size = (filesize($temporary)/ 1000000);
@@ -167,10 +185,10 @@ class Member
         $orig_width  = $image_data[0];                        // Image width
         $orig_height = $image_data[1];                        // Image length
         // set cropping size for upload image
-       
+
             $new_width = 350;                          // Square -- may want to give it a fixed siz later on
-            $new_height = 350;                             
-        
+            $new_height = 350;
+
         // var_dump_pre($temporary);
         // var_dump_pre($image_data);
         //     exit;     // for testing image data
@@ -189,18 +207,18 @@ class Member
         } else {
 
         }
-         // See if it failed 
-         
+         // See if it failed
+
     if(!$original_image)
     {
-    // Create a black image 
+    // Create a black image
         $im  = imagecreatetruecolor(150, 30);
         $bgc = imagecolorallocate($im, 255, 255, 255);
         $tc  = imagecolorallocate($im, 0, 0, 0);
 
     imagefilledrectangle($im, 0, 0, 150, 30, $bgc);
 
-    // Output an error message 
+    // Output an error message
     imagestring($im, 1, 5, 5, 'Error loading ' . $temporary, $tc);
     }
 
@@ -217,18 +235,18 @@ class Member
     $new_image = imagecreatetruecolor($width, $height);
     // Resize the original image to fit the new image size
     // Load the original image
-    
+
     //$source_image = imagecreatefromjpeg('path/to/small_image.jpg');
-    
+
     // Get the dimensions of the original image
      $source_width = imagesx($new_image);
     $source_height = imagesy($new_image);
 
     // Create a new blank image with the desired dimensions
-   
+
         $target_width = 350;
         $target_height = 350;
-   
+
     $target_image = imagecreatetruecolor($target_width, $target_height);
 
 
@@ -266,7 +284,7 @@ class Member
     imagedestroy($new_image);
     imagedestroy($target_image);
     $imageName = basename($filename);
-        $sql = "UPDATE member 
+        $sql = "UPDATE member
                    SET picture = :picture
                  WHERE id = :id;";                                  // SQL to create picture
         $this->db->runSQL($sql, ['id'=>$id, 'picture'=>$imageName]); // Run SQL pass in user id and filename
@@ -375,7 +393,7 @@ class Member
 
         // Save name in DB
         $imageName = basename($file_string);
-        $sql = "UPDATE member 
+        $sql = "UPDATE member
                SET picture = :picture
              WHERE id = :id;";
         $this->db->runSQL($sql, ['id' => $id, 'picture' => $imageName]);
@@ -393,7 +411,7 @@ class Member
             // If failed throw exception
             throw new \Exception('Unable to delete image or image is missing');
         }
-        $sql = "UPDATE member 
+        $sql = "UPDATE member
                    SET picture = null
                  WHERE id = :id;"; // SQL to set picture to null
         $this->db->runSQL($sql, ['id' => $member['id']]); // Run SQL
@@ -404,8 +422,8 @@ class Member
     public function passwordUpdate(int $id, string $password): bool
     {
         $hash = password_hash($password, PASSWORD_DEFAULT); // Hash the password
-        $sql = 'UPDATE member 
-                   SET password = :password 
+        $sql = 'UPDATE member
+                   SET password = :password
                  WHERE id = :id'; // SQL to update password
         $this->db->runSQL($sql, ['id' => $id, 'password' => $hash]); // Run SQL
         return true; // Return true

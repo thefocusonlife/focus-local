@@ -32,9 +32,9 @@ class Session // Define Session class
     }
 
     // Update existing session - alias for create()
-    public function update($member)
+    public function update($member, $website = null)
     {
-        $this->create($member); // Update data in session
+        $this->create($member, $website); // alias for create()
     }
 
     // Delete existing session
