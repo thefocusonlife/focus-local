@@ -51,6 +51,11 @@ $guideIndex = [
                     'title' => 'User Roles & Member Options',
                     'note' => 'Guest, Member, Admin, UberAdmin',
                 ],
+                [
+                    'slug' => 'security-deep-links',
+                    'title' => 'Security: Roles, Permissions, and Safe Sharing',
+                    'note' => 'Deep links without risk',
+                ],
             ],
         ],
         [
@@ -235,6 +240,145 @@ $topics = [
         ],
         'related' => [['slug' => 'registration-login', 'title' => 'Registration and Login']],
         'prev' => ['slug' => 'registration-login', 'title' => 'Registration and Login'],
+        'next' => ['slug' => 'creating-menus-stories', 'title' => 'Creating Menus and Stories'],
+    ],
+
+    'security-deep-links' => [
+        'title' => 'Security: Roles, Permissions, and Safe Sharing (Deep Links)',
+        'subtitle' => 'Deep links are great—when permissions are enforced server-side',
+        'meta' => [
+            'read_time' => '6 min',
+            'updated' => '2026-01-07',
+            'level' => 'Beginner → Intermediate',
+        ],
+
+        'what_this_is' => '
+        <p>This topic explains how FocusOnLife keeps admin capabilities safe even when users share direct links (deep links) to stories, menus, and pages.</p>
+        <p>It also explains what admins can safely share—and what happens when someone opens an admin link without permission.</p>
+    ',
+
+        'why_it_matters' => '
+        <p>Deep links make TFOL feel modern: you can bookmark a story, share a website, or jump straight to a Guide topic.</p>
+        <p>The only risk is confusing “a link you can open” with “a power you can use.” TFOL avoids that by enforcing roles and permissions on the server for every sensitive action.</p>
+    ',
+
+        'sections' => [
+            [
+                'id' => 'deep-links-good',
+                'title' => 'Why TFOL allows deep links',
+                'content' => '
+                <ul>
+                    <li><strong>Sharing:</strong> Send someone straight to a story or guide topic.</li>
+                    <li><strong>Bookmarks:</strong> Your browser bookmarks work naturally.</li>
+                    <li><strong>Support:</strong> You can return to (or share) the exact page where something happened.</li>
+                    <li><strong>Discovery:</strong> Public content can be found and referenced more easily.</li>
+                </ul>
+            ',
+                'callouts' => [
+                    [
+                        'kind' => 'note',
+                        'title' => 'Important idea',
+                        'body' =>
+                            '<p>Deep links improve usability. They are not a security feature and should not be treated like one.</p>',
+                    ],
+                ],
+            ],
+
+            [
+                'id' => 'permissions-vs-visibility',
+                'title' => 'Visibility vs permission',
+                'content' => '
+                <p><strong>Visibility</strong> answers: “Can someone view this page?”</p>
+                <p><strong>Permission</strong> answers: “Can someone perform this action?” (create, edit, delete, manage)</p>
+                <p>In TFOL, a person may be able to <em>reach</em> an admin URL, but they cannot <em>use</em> admin powers unless the server confirms their role and access.</p>
+            ',
+            ],
+
+            [
+                'id' => 'what-happens',
+                'title' => 'What happens if someone opens an admin link?',
+                'steps' => [
+                    [
+                        'title' => 'If they are not logged in',
+                        'text' =>
+                            '<p>They should be sent to Login (or shown a friendly “Please log in” message). After login, they return only if they have the right permissions.</p>',
+                    ],
+                    [
+                        'title' => 'If they are logged in but not an admin',
+                        'text' =>
+                            '<p>They should see an “Access denied” page (403) or a “Not found” page (404). Either is acceptable; the key is they cannot perform the action.</p>',
+                    ],
+                    [
+                        'title' => 'If they are an admin but not for that website',
+                        'text' =>
+                            '<p>They should be blocked the same way. Admin power should be scoped to the correct website/ownership model.</p>',
+                    ],
+                ],
+                'callouts' => [
+                    [
+                        'kind' => 'tip',
+                        'title' => 'UX tip',
+                        'body' =>
+                            '<p>For non-admins, showing a friendly “You don’t have permission” page with a Login link is often better than a blank error.</p>',
+                    ],
+                ],
+            ],
+
+            [
+                'id' => 'required-controls',
+                'title' => 'The required security controls',
+                'content' => '
+                <p>To keep deep links safe, TFOL should enforce these checks on the server:</p>
+                <ul>
+                    <li><strong>Authentication:</strong> the user must be logged in.</li>
+                    <li><strong>Role check:</strong> the user must have the required role (Member/Admin/UberAdmin).</li>
+                    <li><strong>Ownership/scope:</strong> the user must have rights for the target website/content.</li>
+                    <li><strong>Method safety:</strong> write actions must use POST (not GET).</li>
+                    <li><strong>CSRF protection:</strong> every create/edit/delete must include a valid CSRF token.</li>
+                </ul>
+            ',
+                'callouts' => [
+                    [
+                        'kind' => 'warn',
+                        'title' => 'Rule',
+                        'body' =>
+                            '<p>A GET request should never delete or change data. If it changes data, it must be POST + CSRF.</p>',
+                    ],
+                ],
+            ],
+
+            [
+                'id' => 'safe-sharing',
+                'title' => 'Safe sharing guidelines for admins',
+                'content' => '
+                <ul>
+                    <li>It’s safe to share links to <strong>public content</strong> (stories, menus, guide topics).</li>
+                    <li>Be cautious sharing links to <strong>admin pages</strong>; they won’t grant power, but they can confuse users.</li>
+                    <li>If you share an admin link with a collaborator, make sure they have the right role and website access.</li>
+                </ul>
+            ',
+            ],
+        ],
+
+        'related' => [
+            [
+                'slug' => 'user-roles',
+                'title' => 'User Roles & Member Options',
+                'note' => 'Who can do what',
+            ],
+            [
+                'slug' => 'registration-login',
+                'title' => 'Registration and Login',
+                'note' => 'Identity and sessions',
+            ],
+            [
+                'slug' => 'creating-menus-stories',
+                'title' => 'Creating Menus and Stories',
+                'note' => 'Where permissions matter most',
+            ],
+        ],
+
+        'prev' => ['slug' => 'user-roles', 'title' => 'User Roles & Member Options'],
         'next' => ['slug' => 'creating-menus-stories', 'title' => 'Creating Menus and Stories'],
     ],
 
