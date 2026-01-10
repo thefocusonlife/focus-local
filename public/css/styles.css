@@ -591,6 +591,29 @@ textarea {
     border-radius: 0.25rem;
 }
 
+/* ---------- ADMIN FORMS ---------- */
+
+main.admin form {
+    display: block;
+}
+
+main.admin .form-group {
+    display: block;
+    margin-bottom: 1rem;
+}
+
+main.admin label {
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+main.admin input[type='text'],
+main.admin input[type='submit'] {
+    display: block;
+    width: 100%;
+    max-width: 600px;
+}
+
 label {
     display: inline-block;
 }
