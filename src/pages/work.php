@@ -440,6 +440,8 @@ if ($websiteId <= 0) {
 
 $data['website'] = $cms->getWebsite()->getById($websiteId) ?: [];
 $data['csrf_token'] = $csrfToken;
+// Image panel UI state (default minimized)
+$data['image_panel_minimized'] = (bool) ($_SESSION['ui']['image_panel_minimized'] ?? true);
 
 $debugPanel = null;
 

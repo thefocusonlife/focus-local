@@ -80,6 +80,9 @@ $data['story'] = $story; // Story
 $data['section'] = $story['menu_id']; // Current menu
 $data['comments'] = $cms->getComment()->getAll($id); // Get comments
 $data['website'] = $cms->getWebsite()->getById($story['website']);
+// Image panel: default minimized, remember per session
+$data['image_panel_minimized'] = (bool) ($_SESSION['ui']['image_panel_minimized'] ?? true);
+
 if ($cms->getSession()->id > 0) {
     // If user logged in
     $data['liked'] = $cms->getLike()->get([$id, $cms->getSession()->id]); // Did user like?

@@ -1,4 +1,6 @@
 <?php
+die('admin/story.php EXECUTED — THIS SHOULD NOT HAPPEN');
+
 // Part A: Setup
 use PhpBook\Validate\Validate; // Import Validate namespace
 
@@ -267,7 +269,11 @@ $data['storyorder'] = $storyorder;
 $data['photocount'] = $photocount;
 $data['family'] = $families;
 $data['website'] = $cms->getWebsite()->getById(intval($story['website']));
+// Image panel: default minimized, remember per session
+$data['image_panel_minimized'] = (bool) ($_SESSION['ui']['image_panel_minimized'] ?? true);
+
 if (!empty($msg)) {
     $data['failure'] = $msg;
 }
+
 echo $twig->render('admin/story.html', $data); // Render Twig template
