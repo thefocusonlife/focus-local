@@ -11,29 +11,42 @@ $errors = []; // Array for errors
 $success = ''; // Success message
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // If form submitted
-    $from = $_POST['email']; // Email address
-    $message = $_POST['message']; // Message
-    $errors['email'] = Validate::IsEmail($from) ? '' : 'Email not valid';
-    $errors['message'] = Validate::IsText($message, 1, 1000)
-        ? ''
-        : 'Please enter a 
-        message up to 1000 characters';
-    $invalid = implode($errors); // Join any error messages
+    $from = $_POST['email'] ?? '';
+    $message = $_POST['message'] ?? '';
 
-    if ($invalid) {
-        // If there are errors
-        $errors['warning'] = 'Please correct the errors'; // Warning
+    // -----------------------------
+    // reCAPTCHA v3 verification
+    // -----------------------------
+    $recaptchaToken = $_POST['g-recaptcha-response'] ?? '';
+    if (empty($recaptchaToken)) {
+        $errors['warning'] = 'Security check token missing. Please refresh the page and try again.';
     } else {
-        // Otherwise try to send
-        $subject = 'Contact form message from ' . $from; // Create message body
-        $mail = new \PhpBook\Email\Email($email_config); // Create email object
-        $mail->sendEmail($from, $email_config['admin_email'], $subject, $message);
+        $secretKey = $config['recaptcha_secret_key'] ?? '';
+        if (!verify_recaptcha_v3($recaptchaToken, 'contact', $secretKey, 0.1)) {
+            $errors['recaptcha12'] = 'Message failed security check. Please try again.';
+        }
+    }
 
-        // Send
-        $success = 'Your message has been sent'; // Success message
+    // Only validate/send if security check passed
+    if (empty($errors['warning']) && empty($errors['message'])) {
+        $errors['email'] = Validate::IsEmail($from) ? '' : 'Email not valid';
+        $errors['message'] = Validate::IsText($message, 1, 1000)
+            ? ''
+            : 'Please enter a message up to 1000 characters';
+
+        $invalid = implode($errors);
+
+        if ($invalid) {
+            $errors['warning'] = 'Please correct the errors';
+        } else {
+            $subject = 'Contact form message from ' . $from;
+            $mail = new \PhpBook\Email\Email($email_config);
+            $mail->sendEmail($from, $email_config['admin_email'], $subject, $message);
+            $success = 'Your message has been sent';
+        }
     }
 }
+
 $data['navigation'] = $cms->getMenu()->getAll2(1, 1); // All categories for nav
 
 // The following values are only created if the user has submitted the form

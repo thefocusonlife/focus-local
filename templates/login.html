@@ -1,57 +1,108 @@
 {% extends 'layout.html' %}
-{% block title %}Log In{% endblock %}
-{% block description %}Log in to your  account{% endblock %}
+{% block title %}Log In
+{% endblock %}
+{% block description %}Log in to your  account
+{% endblock %}
 {% block content %}
 
-<main> <!-- class="container" id="content">  -->
-  <section class = "form-membership">
-    
-   
-  <section class="header">
-    <h1>Log in</h1>
-  </section>
- 
- <form method="post"
-      action="{{ doc_root }}login/1"
-      class="form-membership form-login"
-      data-recaptcha-action="login">
-
-    {% if success %}<div class="alert alert-success">{{ success }}</div>{% endif %}
-    {% if errors.warning %}
-      <div class="alert alert-danger">{{ errors.warning|raw }}</div>
-    {% endif %}
-
-    {% if errors.message %}
-      <div class="alert alert-danger">{{ errors.message|raw }}</div>
-    {% endif %}
+	<main>
+		<!-- class="container" id="content">  -->
+		<section class="form-membership">
 
 
-     <div class="form-group">
-       <label for="email">Email </label>
-       <input type="text" name="email" id="email" value="{{ email }}" class="form-control">
-       <div class="errors">{{ errors.email }}</div>
-     </div>
-     <div class="form-group">
-      
-      <input type="hidden" name="website" id="website" value="{{ website.id }}" readonly class="form-control">
-      <div class="errors">{{ errors.website }}</div>
-    </div>
-    <div class="form-group">
-      <label for="password">Password </label>
-      <input type="password" name="password" id="password" class="form-control">
-      <div class="errors">{{ errors.password|raw }}</div>
-    </div>
+			<section class="header">
+				<h1>Log in</h1>
+			</section>
 
-    {# ⭐ Hidden reCAPTCHA v3 token #}
-    <input type="hidden" name="g-recaptcha-response">
+			<form method="post" action="{{ doc_root }}login/1" class="form-membership form-login" data-recaptcha-action="login">
 
-    <input type="submit" class="btn btn-primary" value="Log in"><br>
-    <p><a href="{{ doc_root }}password-lost/">Lost password?</a></p>
-  </form>
-</main>
-  {# existing closing tags #}
-  </form>
+				{% if success %}
+					<div class="alert alert-success">{{ success }}</div>
+				{% endif %}
+				{% if errors.warning %}
+					<div class="alert alert-danger">{{ errors.warning|raw }}</div>
+				{% endif %}
 
-</main>
+				{% if errors.message %}
+					<div class="alert alert-danger">{{ errors.message|raw }}</div>
+				{% endif %}
 
-{% endblock %}
+
+				<div class="form-group">
+					<label for="email">Email
+					</label>
+					<input type="text" name="email" id="email" value="{{ email }}" class="form-control">
+					<div class="errors">{{ errors.email }}</div>
+				</div>
+				<div class="form-group">
+
+					<input type="hidden" name="website" id="website" value="{{ website.id }}" readonly class="form-control">
+					<div class="errors">{{ errors.website }}</div>
+				</div>
+				<div class="form-group">
+					<label for="password">Password
+					</label>
+					<input type="password" name="password" id="password" class="form-control">
+					<div class="errors">{{ errors.password|raw }}</div>
+				</div>
+
+				{# ⭐ Hidden reCAPTCHA v3 token #}
+				<input type="hidden" name="g-recaptcha-response">
+
+				<input type="submit" class="btn btn-primary" value="Log in"><br>
+				<p>
+					<a href="{{ doc_root }}password-lost/">Lost password?</a>
+				</p>
+			</form>
+		</main>
+		{# existing closing tags #}
+	</form>
+
+</main>{% endblock %}{% block body_end %}
+{{ parent() }}
+
+{% if recaptcha_site_key is defined and recaptcha_site_key %}
+	<script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}"></script>
+	<script>
+		document.addEventListener('DOMContentLoaded', function () {
+const forms = document.querySelectorAll('form[data-recaptcha-action]');
+if (! forms.length) 
+return;
+
+
+forms.forEach(function (form) {
+const action = form.getAttribute('data-recaptcha-action') || '';
+
+form.addEventListener('submit', function (e) {
+const existing = form.querySelector('input[name="g-recaptcha-response"]');
+if (existing && existing.value) 
+return;
+
+
+e.preventDefault();
+
+if (typeof grecaptcha === 'undefined') {
+form.submit(); // server will fail closed
+return;
+}
+
+grecaptcha.ready(function () {
+grecaptcha.execute('{{ recaptcha_site_key }}', {action: action}).then(function (token) {
+let field = form.querySelector('input[name="g-recaptcha-response"]');
+if (! field) {
+field = document.createElement('input');
+field.type = 'hidden';
+field.name = 'g-recaptcha-response';
+form.appendChild(field);
+}
+field.value = token || '';
+form.submit();
+}).catch(function () {
+form.submit();
+});
+});
+});
+});
+});
+	</script>
+{% endif %}{% endblock %}

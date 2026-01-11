@@ -88,49 +88,6 @@ tinymce.init({selector: 'textarea.tinymce', branding: false, plugins: 'anchor au
 
 			<script src="{{ doc_root }}js/site.js"></script>
 
-			{# reCAPTCHA v3 (load once, only if key exists) #}
-			{% if recaptcha_site_key is defined and recaptcha_site_key %}
-				<script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}"></script>
-				<script>
-					document.addEventListener('DOMContentLoaded', function () {
-const forms = document.querySelectorAll('form[data-recaptcha-action]');
-if (! forms.length) 
-return;
-
-
-
-forms.forEach(function (form) {
-const action = form.getAttribute('data-recaptcha-action') || '';
-form.addEventListener('submit', function (e) {
-e.preventDefault();
-
-if (typeof grecaptcha === 'undefined') {
-console.error('reCAPTCHA not loaded. Submitting normally.');
-form.submit();
-return;
-}
-
-grecaptcha.ready(function () {
-grecaptcha.execute('{{ recaptcha_site_key }}', {action: action}).then(function (token) {
-let field = form.querySelector('input[name="g-recaptcha-response"]');
-if (! field) {
-field = document.createElement('input');
-field.type = 'hidden';
-field.name = 'g-recaptcha-response';
-form.appendChild(field);
-}
-field.value = token || '';
-form.submit();
-}).catch(function (err) {
-console.error('reCAPTCHA execute error:', err);
-form.submit();
-});
-});
-});
-});
-});
-				</script>
-			{% endif %}
 
 			{# Splash logic (as you had it, cleaned) #}
 			<script>
@@ -165,13 +122,6 @@ document.body.style.width = '100%';
 document.body.style.height = '100%';
 document.body.style.margin = '0';
 document.body.style.padding = '0';
-
-const badge = document.querySelector('.grecaptcha-badge');
-if (badge) 
-badge.style.display = 'none';
-
-
-
 }
 
 function unlockScroll() {
@@ -185,13 +135,6 @@ document.body.style.width = orig.bodyWidth;
 document.body.style.height = orig.bodyHeight;
 document.body.style.margin = orig.bodyMargin;
 document.body.style.padding = orig.bodyPadding;
-
-const badge = document.querySelector('.grecaptcha-badge');
-if (badge) 
-badge.style.display = '';
-
-
-
 }
 
 function showSplash() {

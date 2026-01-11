@@ -3,6 +3,7 @@
 use PhpBook\Validate\Validate; // Import Validate namespace
 is_admin($session->role); // Check if admin
 include APP_ROOT . '/src/pages/menu-path.php'; // menu-path includeinclude
+
 // initialize variables
 if ($parts[2] == 0) {
     $menu['id'] = 0;
@@ -13,6 +14,9 @@ if ($parts[2] == 0) {
     $menu['navigaton'] = 1;
     $menu['position'] = intval($cms->getMenu()->count()) + 1;
 }
+
+$menuId = isset($menuId) ? (int) $menuId : 0;
+
 $errors = [];
 // Initialize variables that the PHP code needs
 $saved = null; // Did menu save

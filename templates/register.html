@@ -1,113 +1,174 @@
 {% extends 'layout.html' %}
 
 {% block content %}
-<main>
+	<main>
 
-  <section class="header">
-    {% if success %}<div class="alert alert-success">{{ success }}</div>{% endif %}
-    {% if failure %}<div class="alert alert-danger">{{ failure }}</div>{% endif %}
-    <h1>Register</h1>
-  </section>
+		<section class="header">
+			{% if success %}
+				<div class="alert alert-success">{{ success }}</div>
+			{% endif %}
+			{% if failure %}
+				<div class="alert alert-danger">{{ failure }}</div>
+			{% endif %}
+			<h1>Register</h1>
+		</section>
 
-  <section class="form-membership">
+		<section class="form-membership">
 
-    <form method="post"
-          action="{{ doc_root }}register"
-          class="form-membership js-recaptcha-form"
-          data-recaptcha-action="register">
-          
-        <!-- hidden recaptcha score  -->
-          <input type="hidden" name="g-recaptcha-response" value="">
+			<form
+				method="post" action="{{ doc_root }}register" class="form-membership js-recaptcha-form" data-recaptcha-action="register">
 
-      {% if errors %}<div class="alert alert-danger">{{ errors.master }}</div>{% endif %}
+				<!-- hidden recaptcha score  -->
+				<input type="hidden" name="g-recaptcha-response" value="">
 
-      <div class="form-group">
-        <label for="forename">Forename: </label>
-        <input type="text" name="forename" value="{{ member.forename }}" id="forename" class="form-control">
-        <div class="errors">{{ errors.forename }}</div>
-      </div>
-      
-    </div>
-    <div class="form-group">
-      <label for="surname">Surname: </label><input type="text" name="surname" value="{{ member.surname }}" id="surname" class="form-control">
-      <div class="errors">{{ errors.surname }}</div>
-    </div>
+				{% if errors %}
+					<div class="alert alert-danger">{{ errors.master }}</div>
+				{% endif %}
 
-    <div class="form-group">
-      <label for="email">Email address: </label><input type="email" name="email" value="{{ member.email }}" id="email" class="form-control">
-      <div class="errors">{{ errors.email }}</div>
-    </div>
-   
-    <div class="form-group">
-            <label for="plan">Plan: </label>
-            <select name="plan" id="plan">
-              {% for plan in plans %}
-              <option value="{{ plan.id }}"
-              {% if plan.id == 1 %} selected{% endif %}>
-              {{plan.name}} {{plan.description}} - {{ plan.photolimit }}
-              {% if plan.monthly != 0%} ${{  plan.monthly }} 
-              {% else %}  ${{ plan.annual }} 
-              {% endif %}
-            </option>
-              {% endfor %}
-           </select>
-            <span class="errors">{{ errors.plan }}</span>
-          </div>
-     <div class="form-group">
-            <label for="agegroup">Age Group: </label>
+				<div class="form-group">
+					<label for="forename">Forename:
+					</label>
+					<input type="text" name="forename" value="{{ member.forename }}" id="forename" class="form-control">
+					<div class="errors">{{ errors.forename }}</div>
+				</div>
 
-            <select name="agegroup" id="agegroup">
-              {% for agegroup in agegroups %}
-              <option value="{{ agegroup.age }}"
-              {% if agegroup.age == 3 %} selected{% endif %}>
-              {{agegroup.agegroup}} </option>
-              {% endfor %}
-            </select>
-            <span class="errors">{{ errors.agegroup }}</span>
-          </div>
-    
-    
-    <div class="form-group">
-      <label for="password">Password: </label><input type="password" name="password" id="password" class="form-control">
-      <div class="errors">{{ errors.password|raw }}</div>
-    </div>
+			</div>
+			<div class="form-group">
+				<label for="surname">Surname:
+				</label><input type="text" name="surname" value="{{ member.surname }}" id="surname" class="form-control">
+				<div class="errors">{{ errors.surname }}</div>
+			</div>
 
-    <div class="form-group">
-      <label for="confirm">Confirm Password: </label><input type="password" name="confirm" id="confirm" class="form-control">
-      <div class="errors">{{ errors.confirm }}</div>
-    </div>
-    
-    <div class="form-group">
-      <label for="websitename">Website: </label>
-      <input type="text" name="websitename" value={{website.name}} readonly class="form-control">
-      <div class="errors">{{ errors.website}}</div>
-    </div>
-    <div class="form-group">
-         <label for="website">Website ID:</label>
-         <input type="number" name="website" id="website" class="form-control"
-       value="{{ website.id }}">
-       <span class="errors">{{ errors.website }}</span>
-     </div>
-    
-    <div class="form-group">
-      <input type="hidden" name="photo_limit" value=150 id="photo_limit" class="form-control">
-      <div class="errors">{{ errors.photo_limit }}</div>
-    </div>
-    <div class="form-group">
-      <input type="hidden" name="lastid" value={{lastid}} id="lastid" readonly class="form-control">
-      <div class="errors">{{ errors.lastid}}</div>
-    </div>
-    <div class="form-group">
-      <input type="hidden" name="publik" value={{publik}} id="publik" readonly class="form-control">
-      <div class="errors">{{ errors.publik}}</div>
-    </div>
-    <div class="form-group">
-      <input type="hidden" name="termsok" value={{termsok}} id="termsok" readonly class="form-control">
-      <div class="errors">{{ errors.termsok}}</div>
-    </div>
-    <input type="submit" class="btn btn-primary" value="Register">
-  </form>
-  </section>
+			<div class="form-group">
+				<label for="email">Email address:
+				</label><input type="email" name="email" value="{{ member.email }}" id="email" class="form-control">
+				<div class="errors">{{ errors.email }}</div>
+			</div>
 
-</main>
-{% endblock %}
+			<div class="form-group">
+				<label for="plan">Plan:
+				</label>
+				<select name="plan" id="plan">
+					{% for plan in plans %}
+						<option value="{{ plan.id }}" {% if plan.id == 1 %} selected {% endif %}>
+							{{plan.name}}
+							{{plan.description}}
+							-
+							{{ plan.photolimit }}
+							{% if plan.monthly != 0%}
+								${{  plan.monthly }}
+							{% else %}
+								${{ plan.annual }}
+							{% endif %}
+						</option>
+					{% endfor %}
+				</select>
+				<span class="errors">{{ errors.plan }}</span>
+			</div>
+			<div class="form-group">
+				<label for="agegroup">Age Group:
+				</label>
+
+				<select name="agegroup" id="agegroup">
+					{% for agegroup in agegroups %}
+						<option value="{{ agegroup.age }}" {% if agegroup.age == 3 %} selected {% endif %}>
+							{{agegroup.agegroup}}
+						</option>
+					{% endfor %}
+				</select>
+				<span class="errors">{{ errors.agegroup }}</span>
+			</div>
+
+
+			<div class="form-group">
+				<label for="password">Password:
+				</label><input type="password" name="password" id="password" class="form-control">
+				<div class="errors">{{ errors.password|raw }}</div>
+			</div>
+
+			<div class="form-group">
+				<label for="confirm">Confirm Password:
+				</label><input type="password" name="confirm" id="confirm" class="form-control">
+				<div class="errors">{{ errors.confirm }}</div>
+			</div>
+
+			<div class="form-group">
+				<label for="websitename">Website:
+				</label>
+				<input type="text" name="websitename" value={{website.name}} readonly class="form-control">
+				<div class="errors">{{ errors.website}}</div>
+			</div>
+			<div class="form-group">
+				<label for="website">Website ID:</label>
+				<input type="number" name="website" id="website" class="form-control" value="{{ website.id }}">
+				<span class="errors">{{ errors.website }}</span>
+			</div>
+
+			<div class="form-group">
+				<input type="hidden" name="photo_limit" value="150" id="photo_limit" class="form-control">
+				<div class="errors">{{ errors.photo_limit }}</div>
+			</div>
+			<div class="form-group">
+				<input type="hidden" name="lastid" value={{lastid}} id="lastid" readonly class="form-control">
+				<div class="errors">{{ errors.lastid}}</div>
+			</div>
+			<div class="form-group">
+				<input type="hidden" name="publik" value={{publik}} id="publik" readonly class="form-control">
+				<div class="errors">{{ errors.publik}}</div>
+			</div>
+			<div class="form-group">
+				<input type="hidden" name="termsok" value={{termsok}} id="termsok" readonly class="form-control">
+				<div class="errors">{{ errors.termsok}}</div>
+			</div>
+			<input type="submit" class="btn btn-primary" value="Register">
+		</form>
+	</section>
+
+</main>{% endblock %}{% block body_end %}
+{{ parent() }}
+
+{% if recaptcha_site_key is defined and recaptcha_site_key %}
+	<script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}"></script>
+	<script>
+		document.addEventListener('DOMContentLoaded', function () {
+const forms = document.querySelectorAll('form[data-recaptcha-action]');
+if (! forms.length) 
+return;
+
+
+forms.forEach(function (form) {
+const action = form.getAttribute('data-recaptcha-action') || '';
+
+form.addEventListener('submit', function (e) {
+const existing = form.querySelector('input[name="g-recaptcha-response"]');
+if (existing && existing.value) 
+return;
+
+
+e.preventDefault();
+
+if (typeof grecaptcha === 'undefined') {
+form.submit(); // server will fail closed
+return;
+}
+
+grecaptcha.ready(function () {
+grecaptcha.execute('{{ recaptcha_site_key }}', {action: action}).then(function (token) {
+let field = form.querySelector('input[name="g-recaptcha-response"]');
+if (! field) {
+field = document.createElement('input');
+field.type = 'hidden';
+field.name = 'g-recaptcha-response';
+form.appendChild(field);
+}
+field.value = token || '';
+form.submit();
+}).catch(function () {
+form.submit();
+});
+});
+});
+});
+});
+	</script>
+{% endif %}{% endblock %}

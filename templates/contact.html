@@ -1,37 +1,88 @@
 {% extends 'layout.html' %}
 
 {% block content %}
-<main> <!-- class="container" id="content"> -->
-  <section class="header"><h1>Contact us</h1></section>
-  <form method="post"
-      action="{{ doc_root }}contact"
-      class="form-contact"
-      data-recaptcha-action="contact">
+	<main>
+		<!-- class="container" id="content"> -->
+		<section class="header">
+			<h1>Contact us</h1>
+		</section>
+		<form method="post" action="{{ doc_root }}contact" class="form-contact" data-recaptcha-action="contact">
 
-    {% if errors.warning %}
-        <div class="alert alert-danger">{{ errors.warning }}</div>
-    {% endif %}
-    {% if success %}
-        <div class="alert alert-success">{{ success }}</div>
-    {% endif %}
+			{% if errors.warning %}
+				<div class="alert alert-danger">{{ errors.warning }}</div>
+			{% endif %}
+			{% if success %}
+				<div class="alert alert-success">{{ success }}</div>
+			{% endif %}
 
-    <div class="form-group">
-      <label for="email">Your Email address: </label>
-      <input type="text" name="email" id="email" value="{{ from }}" class="form-control">
-      <span class="errors">{{ errors.email }}</span><br>
-    </div>
+			<div class="form-group">
+				<label for="email">Your Email address:
+				</label>
+				<input type="text" name="email" id="email" value="{{ from }}" class="form-control">
+				<span class="errors">{{ errors.email }}</span><br>
+			</div>
 
-    <div class="form-group">
-      <label for="message">Message: </label><br>
-      <textarea id="message" name="message" class="form-control">{{ message }}</textarea>
-      <span class="errors">{{ errors.message }}</span><br>
-    </div>
+			<div class="form-group">
+				<label for="message">Message:
+				</label><br>
+				<textarea id="message" name="message" class="form-control">{{ message }}</textarea>
+				<span class="errors">{{ errors.message }}</span><br>
+			</div>
 
-    {# ⭐ Hidden reCAPTCHA token field #}
-    <input type="hidden" name="g-recaptcha-response">
+			{# ⭐ Hidden reCAPTCHA token field #}
+			<input type="hidden" name="g-recaptcha-response">
 
-    <input type="submit" value="Submit Message" class="btn">
-</form>
+			<input type="submit" value="Submit Message" class="btn">
+		</form>
 
-</main>
+	</main>
+{% endblock %}
+{% block body_end %}
+	{{ parent() }}
+
+	{% if recaptcha_site_key is defined and recaptcha_site_key %}
+		<script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}"></script>
+		<script>
+			document.addEventListener('DOMContentLoaded', function () {
+const forms = document.querySelectorAll('form[data-recaptcha-action]');
+if (! forms.length) 
+return;
+
+
+forms.forEach(function (form) {
+const action = form.getAttribute('data-recaptcha-action') || '';
+
+form.addEventListener('submit', function (e) {
+const existing = form.querySelector('input[name="g-recaptcha-response"]');
+if (existing && existing.value) 
+return;
+
+
+e.preventDefault();
+
+if (typeof grecaptcha === 'undefined') {
+form.submit(); // server will fail closed
+return;
+}
+
+grecaptcha.ready(function () {
+grecaptcha.execute('{{ recaptcha_site_key }}', {action: action}).then(function (token) {
+let field = form.querySelector('input[name="g-recaptcha-response"]');
+if (! field) {
+field = document.createElement('input');
+field.type = 'hidden';
+field.name = 'g-recaptcha-response';
+form.appendChild(field);
+}
+field.value = token || '';
+form.submit();
+}).catch(function () {
+form.submit();
+});
+});
+});
+});
+});
+		</script>
+	{% endif %}
 {% endblock %}
