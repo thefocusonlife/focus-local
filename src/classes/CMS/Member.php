@@ -115,6 +115,20 @@ class Member
         */
         return $member;
     }
+
+    public function updateSorttype(int $memberId, int $sorttypeId): void
+    {
+        $sql = "UPDATE member
+            SET sorttype = :sorttype
+            WHERE id = :id
+            LIMIT 1";
+
+        $this->db->runSql($sql, [
+            'sorttype' => $sorttypeId,
+            'id' => $memberId,
+        ]);
+    }
+
     public function count(): int
     {
         $sql = "SELECT COUNT(id) FROM member

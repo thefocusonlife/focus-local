@@ -76,7 +76,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $member['pagelimit'] = $pagelimitVal;
         $member['sorttype'] = $resolvedSorttype;
 
-        $cms->getMember()->update($member);
+        $cms->getMember()->updateSorttype((int) $cms->getSession()->id, (int) $sorttypeId);
+
         $cms->getSession()->create($member, (int) $member['website']);
         // Always reflect choice into session (so grids/refresh use it immediately)
         $_SESSION['sorttype'] = $resolvedSorttype;
