@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require __DIR__ . '/../src/bootstrap.php'; // <-- this must create $cms (or include file that does)
+
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
@@ -15,13 +17,31 @@ $uri = $_SERVER['REQUEST_URI'] ?? '';
 
 // If someone hits the non-public front path, redirect to the canonical /public path
 if (strpos($uri, '/focus-local/index/') === 0) {
-    header('Location: /focus-local/public' . substr($uri, strlen('/focus-local')), true, 302);
-    exit();
+    $prefix = '/focus-local/index';
+    if (strpos($uri, $prefix . '/') === 0) {
+        header('Location: /focus-local/public' . substr($uri, strlen($prefix)), true, 302);
+        exit();
+    }
 }
 
 // Also cover exact /focus-local/index (no trailing slash)
 if ($uri === '/focus-local/index' || $uri === '/focus-local/index/') {
     header('Location: /focus-local/public/index/1', true, 302); // or /public/index/
+    exit();
+}
+
+// ----------------------------
+// EARLY TERMINAL ROUTES
+// ----------------------------
+$path = parse_url($uri, PHP_URL_PATH) ?? '';
+$path = rtrim($path, '/');
+
+// Normalize against DOC_ROOT so this works on local + staging + prod
+$normalized = preg_replace('#^' . preg_quote(DOC_ROOT, '#') . '#', '', $path);
+$normalized = trim($normalized, '/');
+
+if ($normalized === 'logout') {
+    require __DIR__ . '/../src/pages/logout.php';
     exit();
 }
 
@@ -86,7 +106,6 @@ file_put_contents(
     FILE_APPEND,
 );
 
-require_once '../src/bootstrap.php';
 require_once dirname(__DIR__) . '/src/services/ImageCapabilities.php';
 
 $uriPath = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?? '';
@@ -136,13 +155,7 @@ if ($parts[0] != 'admin') {
         $id = intval($parts[2]) ?? 1; // Get ID
     }
 }
-//if (isset($_SESSION['id']) and $_SESSION['id']==1) {
-//    $cms->getSession()->create(0,$id);
-//}
-//var_dump_pre($path);
-//var_dump_pre($parts);
-//var_dump_pre($id);
-//echo "public/index.php -24";
+
 if (isset($id)) {
     $id = filter_var($id, FILTER_VALIDATE_INT); // Validate ID
 }
