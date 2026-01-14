@@ -2,8 +2,6 @@
 declare(strict_types=1); // Use strict types
 use PhpBook\Validate\Validate; // Import Validate class
 
-error_log('[LOGIN] session_status=' . session_status() . ' session_id=' . session_id());
-
 require_once __DIR__ . '/../../config/recaptcha.php';
 
 // ----------------------------
@@ -68,28 +66,28 @@ $errors = []; // Initialize errors
 $success = $_GET['success'] ?? null; // Get success message
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $email = $_POST['email'] ?? '';
-    $password = $_POST['password'] ?? '';
-    $website_id = (int) ($_POST['website'] ?? 0);
-
-    $member = null;
-    $okToAttemptLogin = true;
-
+    // If form submitted
+    $email = $_POST['email']; // Get email address
+    $password = $_POST['password']; // Get password
+    $website_id = intval($_POST['website']);
     // -----------------------------
     // reCAPTCHA v3 verification
     // -----------------------------
     $recaptchaToken = $_POST['g-recaptcha-response'] ?? '';
+    // error_log('LOGIN recaptcha token: ' . substr($recaptchaToken, 0, 40));
 
     if (empty($recaptchaToken)) {
+        // Front-end didn't provide a token at all
         $errors['warning'] = 'Security check token missing. Please refresh the page and try again.';
-        $okToAttemptLogin = false;
     } else {
         $secretKey = $config['recaptcha_secret_key'] ?? '';
+
+        // Use a slightly lower threshold for login to reduce false negatives
         if (!verify_recaptcha_v3($recaptchaToken, 'login', $secretKey, 0.1)) {
+            // reCAPTCHA failed – do NOT attempt login
             $errors['message'] = 'Login failed security check. Please try again.';
-            $okToAttemptLogin = false;
-        }
-    }
+        } // end verify_recaptcha_v3()
+    } // end empty token check
 
     // Validate email and password
     $errors['email'] = Validate::isEmail($email) ? '' : 'Please enter a valid email address';
@@ -97,54 +95,56 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $errors['password'] = Validate::isPassword($password)
         ? ''
         : 'Passwords must be at least 8 characters and have:<br>
-            A lowercase letter<br>An uppercase letter<br>A number<br>
-            And a special character';
+                A lowercase letter<br>An uppercase letter<br>A number
+                <br>And a special character';
 
-    if ($okToAttemptLogin) {
-        $invalid = implode($errors);
-        if ($invalid) {
-            $errors['message'] = 'Please try again.';
-        } else {
-            $member = $cms->getMember()->login2($email, $password);
-        }
-    }
+    $invalid = implode($errors);
 
-    // Only continue if we actually attempted login
-    if ($okToAttemptLogin && $member) {
-        if (($member['status'] ?? 'active') === 'suspended') {
-            $errors['message'] = 'Account suspended';
-        } elseif (($member['status'] ?? 'active') === 'pending') {
-            $errors['message'] =
-                'Membership pending. Use Contact Us to inquire about your registration.';
-        } else {
-            // -------- SUCCESS PATH --------
-            $websiteId = (int) ($member['website'] ?? 0);
+    if ($invalid) {
+        // If data is not valid
+        $errors['message'] = 'Please try again.'; // Store error message
+    } else {
+        $member = $cms->getMember()->login2($email, $password); // Get member details
 
-            if ($websiteId <= 0) {
-                $errors['message'] = 'Login error: no website assigned to this account.';
-            } else {
-                $website = $cms->getWebsite()->getById($websiteId);
-
-                if (empty($website) || empty($website['id'])) {
-                    $errors['message'] = 'Website not found.';
-                } else {
-                    $cms->getSession()->create($member, (int) $website['id']);
-                    redirect('member/' . (int) $member['id']);
-                    exit();
+        if (empty($member)) {
+            $w = $cms->getWebsite()->getById($website_id);
+            $errors['message'] = 'This email not valid for ' . $w['name'];
+        } elseif ($member && $member['role'] == 'suspended') {
+            // If member is suspended
+            $errors['message'] = 'Account suspended'; // Store message
+        } /*
+                elseif ($member['website'] != 1 AND $website_id == 1) {
+                    $errors['message'] = "Must use a registered theFocusOnLife email.";
                 }
+                */ elseif (
+            $member &&
+            $member['role'] == 'pending'
+        ) {
+            // If member is pending
+            $errors['message'] =
+                'Membership pending. Use Contact Us to inquire about your registration.'; // Store message
+        } elseif ($member) {
+            // Get website for this member (or fallback to 1)
+            $websiteId = isset($member['website'])
+                ? (int) $member['website']
+                : (int) ($_SESSION['website'] ?? 1);
+
+            $website = $cms->getWebsite()->getById($websiteId);
+
+            if (empty($website) || empty($website['id'])) {
+                $errors['message'] = 'Website not found.';
+            } else {
+                // ✅ SUCCESS: create session and redirect to member home
+                $cms->getSession()->create($member, (int) $website['id']);
+                redirect('member/' . (int) $member['id']);
+                exit();
             }
         }
-    } elseif ($okToAttemptLogin && empty($member) && empty($errors['message'])) {
-        // Generic failure (avoid leaking whether email exists / belongs to site)
-        $errors['message'] = 'Invalid email or password.';
-        // If you still want your old message during dev:
-        // $w = $cms->getWebsite()->getById($website_id);
-        // $errors['message'] = 'This email not valid for ' . ($w['name'] ?? 'this website');
     }
 }
 
 // Website context for this page
-$websiteId = (int) ($id ?? ($_SESSION['website'] ?? 1));
+$$websiteId = (int) ($id ?? ($_SESSION['website'] ?? 1));
 $website = $cms->getWebsite()->getById($websiteId);
 
 if (empty($website) || empty($website['id'])) {
@@ -153,16 +153,16 @@ if (empty($website) || empty($website['id'])) {
 }
 
 // Session/member context for navigation
-
 $sessionId = (int) ($_SESSION['id'] ?? 0);
 
-if ($sessionId <= 0) {
+if ($sessionId === 2 || $sessionId === 0) {
+    // Guest-ish: no member row
     $member = 0;
-    $mem = 1;
+    $mem = 1; // safest default account_id for menus; adjust if your public menus use a different account
 } else {
     $member = $cms->getMember()->get($sessionId);
     if (!$member) {
-        // reset session state here if you can
+        // session is stale; treat as guest
         $member = 0;
         $mem = 1;
     } else {
