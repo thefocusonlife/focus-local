@@ -1,0 +1,206 @@
+{# templates/guide/topic.html #}
+{% extends "layout.html" %}
+
+{% block title %}
+	{{ guide.title }}
+	| TFOL Guide
+{% endblock %}
+
+{% block content %}
+
+	<article
+		class="guide-topic">
+
+		{# Breadcrumbs #}
+		<nav class="guide-topic__breadcrumbs" aria-label="Breadcrumb">
+			<a href="{{ doc_root }}guide">Guide</a>
+			<span>›</span>
+			<span>{{ guide.title }}</span>
+		</nav>
+
+		<header class="guide-topic__header">
+			<h1>{{ guide.title }}</h1>
+
+			{% if guide.subtitle %}
+				<p class="guide-topic__subtitle">
+					{{ guide.subtitle }}
+				</p>
+			{% endif %}
+
+			{% if guide.meta %}
+				<dl class="guide-topic__meta">
+					{% if guide.meta.read_time %}
+						<div>
+							<dt>Read</dt>
+							<dd>{{ guide.meta.read_time }}</dd>
+						</div>
+					{% endif %}
+					{% if guide.meta.updated %}
+						<div>
+							<dt>Updated</dt>
+							<dd>{{ guide.meta.updated }}</dd>
+						</div>
+					{% endif %}
+					{% if guide.meta.level %}
+						<div>
+							<dt>Level</dt>
+							<dd>{{ guide.meta.level }}</dd>
+						</div>
+					{% endif %}
+				</dl>
+			{% endif %}
+		</header>
+
+		<div
+			class="guide-topic__layout">
+
+			{# Optional Table of Contents #}
+			{% if guide.sections is defined and guide.sections|length > 1 %}
+				<aside class="guide-topic__toc">
+					<h2>On this page</h2>
+					<ol>
+						{% for s in guide.sections %}
+							{% set sid = s.id ?? ('section-' ~ loop.index) %}
+							<li>
+								<a href="#{{ sid }}">{{ s.title }}</a>
+							</li>
+						{% endfor %}
+					</ol>
+				</aside>
+			{% endif %}
+
+			<div class="guide-topic__body">
+
+				{% if guide.what_this_is %}
+					<section id="what-this-is" class="guide-block guide-block--intro">
+						<h2>What this is</h2>
+						{{ guide.what_this_is|raw }}
+					</section>
+				{% endif %}
+
+				{% if guide.why_it_matters %}
+					<section id="why-it-matters" class="guide-block">
+						<h2>Why it matters</h2>
+						{{ guide.why_it_matters|raw }}
+					</section>
+				{% endif %}
+
+				{% for s in guide.sections %}
+					{% set sid = s.id ?? ('section-' ~ loop.index) %}
+					<section id="{{ sid }}" class="guide-block">
+
+						<h2>{{ s.title }}</h2>
+
+						{% if s.summary %}
+							<p class="guide-summary">{{ s.summary }}</p>
+						{% endif %}
+
+						{% if s.content %}
+							<div class="guide-prose">
+								{{ s.content|raw }}
+							</div>
+						{% endif %}
+
+						{# Step-by-step blocks #}
+						{% if s.steps is defined %}
+							<ol class="guide-steps">
+								{% for step in s.steps %}
+									<li class="guide-step">
+										{% if step.title %}
+											<strong>{{ step.title }}</strong>
+										{% endif %}
+
+										{% if step.text %}
+											<div class="guide-step__text">
+												{{ step.text|raw }}
+											</div>
+										{% endif %}
+
+										{% if step.image %}
+											<figure class="guide-figure">
+												<img src="{{ step.image.src }}" alt="{{ step.image.alt|default('') }}" loading="lazy">
+												{% if step.image.caption %}
+													<figcaption>{{ step.image.caption }}</figcaption>
+												{% endif %}
+											</figure>
+										{% endif %}
+									</li>
+								{% endfor %}
+							</ol>
+						{% endif %}
+
+						{# Visuals (screenshots / diagrams) #}
+						{% if s.visuals is defined %}
+							<div class="guide-visuals">
+								{% for v in s.visuals %}
+									<figure class="guide-figure">
+										<img src="{{ v.src }}" alt="{{ v.alt|default('') }}" loading="lazy">
+										{% if v.caption %}
+											<figcaption>{{ v.caption }}</figcaption>
+										{% endif %}
+									</figure>
+								{% endfor %}
+							</div>
+						{% endif %}
+
+						{# Callouts #}
+						{% if s.callouts is defined %}
+							{% for c in s.callouts %}
+								<aside class="guide-callout guide-callout--{{ c.kind|default('note') }}">
+									{% if c.title %}
+										<div class="guide-callout__title">{{ c.title }}</div>
+									{% endif %}
+									<div class="guide-callout__body">
+										{{ c.body|raw }}
+									</div>
+								</aside>
+							{% endfor %}
+						{% endif %}
+
+					</section>
+				{% endfor %}
+
+				{# Related topics #}
+				{% if guide.related is defined %}
+					<section class="guide-block guide-related">
+						<h2>Related topics</h2>
+						<ul>
+							{% for r in guide.related %}
+								<li>
+									<a href="{{ doc_root }}guide/{{ r.slug }}">{{ r.title }}</a>
+									{% if r.note %}
+										—
+										{{ r.note }}
+									{% endif %}
+								</li>
+							{% endfor %}
+						</ul>
+					</section>
+				{% endif %}
+
+				{# Prev / Next #}
+				<nav class="guide-pager">
+					<div>
+						{% if guide.prev %}
+							<a href="{{ doc_root }}guide/{{ guide.prev.slug }}">
+								←
+								{{ guide.prev.title }}
+							</a>
+						{% endif %}
+					</div>
+					<div>
+						{% if guide.next %}
+							<a href="{{ doc_root }}guide/{{ guide.next.slug }}">
+								{{ guide.next.title }}
+								→
+							</a>
+						{% endif %}
+					</div>
+				</nav>
+
+			</div>
+		</div>
+
+	</article>
+
+{% endblock %}

@@ -1,30 +1,8 @@
 <?php
 declare(strict_types=1); // Use strict types
 use PhpBook\Validate\Validate; // Import Validate class
-error_log(
-    '[LOGIN HIT] uri=' .
-        ($_SERVER['REQUEST_URI'] ?? '') .
-        ' parts=' .
-        json_encode($parts ?? null) .
-        ' sess_website=' .
-        json_encode($_SESSION['website'] ?? null),
-);
 
 require_once __DIR__ . '/../../config/recaptcha.php';
-error_log(
-    '[LOGIN DEBUG] ' .
-        json_encode(
-            [
-                'id' => $_SESSION['id'] ?? null,
-                'account_id' => $_SESSION['account_id'] ?? null,
-                'role' => $_SESSION['role'] ?? null,
-                'forename' => $_SESSION['forename'] ?? null,
-                'member' => isset($_SESSION['member']),
-                'website' => $_SESSION['website'] ?? null,
-            ],
-            JSON_UNESCAPED_SLASHES,
-        ),
-);
 
 // ----------------------------
 // Resolve website context

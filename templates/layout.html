@@ -1,33 +1,40 @@
+{# templates/layout.html #}
 <!DOCTYPE html>
 <html lang="en-US">
 	<head>
 		<script src="https://js.chargebee.com/v2/chargebee.js" data-cb-site="thefocusonlife-test"></script>
+
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<script src="https://cdn.tiny.cloud/1/{{ constant('TINYMCE_API_KEY') }}/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
-
-
-		<script>
-
-			tinymce.init({selector: 'textarea1', branding: false, plugins: 'anchor emoticons  wordcount checklist  ', toolbar: 'undo redo | bold italic underline| spellcheckdialog | align | removeformat'});
-
-// Initialize TinyMCE for textareas with class "tinymce" and a custom toolbar
-
-tinymce.init({selector: 'textarea.tinymce', branding: false, plugins: 'anchor autolink  link lists searchreplace table wordcount', toolbar: 'undo redo | bold italic underline  link |  image table  | spellcheckdialog | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat'});
-		</script>
-		<!-- DEBUG doc_root={{ doc_root|default('NULL') }} -->
 
 		<title>
 			{% block title %}theFocusOnLife
 			{% endblock %}
 		</title>
+		<meta
+		name="description" content="{% block description %}HHT Consulting{% endblock %}">
 
-		<meta name="description" content="{% block description %}HHT Consulting{% endblock %}">
+		{# Styles / fonts #}
 		<link rel="stylesheet" type="text/css" href="{{ doc_root }}css/styles.css">
 		<link rel="preconnect" href="https://fonts.gstatic.com">
 		<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap">
-		<link rel="shortcut icon" type="image/png" href="{{ doc_root }}img/{{website.image_file}}">
+		<link
+		rel="shortcut icon" type="image/png" href="{{ doc_root }}img/{{ website.image_file }}">
 
+		{# TinyMCE (only if key exists) #}
+		{% if constant('TINYMCE_API_KEY') is defined and constant('TINYMCE_API_KEY') %}
+			<script src="https://cdn.tiny.cloud/1/{{ constant('TINYMCE_API_KEY') }}/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+			<script>
+				// textarea1 legacy init
+tinymce.init({selector: 'textarea1', branding: false, plugins: 'anchor emoticons wordcount checklist', toolbar: 'undo redo | bold italic underline | spellcheckdialog | align | removeformat'});
+
+// class-based init
+tinymce.init({selector: 'textarea.tinymce', branding: false, plugins: 'anchor autolink link lists searchreplace table wordcount', toolbar: 'undo redo | bold italic underline link | image table | spellcheckdialog | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat'});
+			</script>
+		{% endif %}
+
+		{# Page-specific head additions (optional) #}
+		{% block head_extra %}{% endblock %}
 	</head>
 
 	<body oncontextmenu="return true;" class="{{ body_class|default('') }}">
@@ -35,25 +42,27 @@ tinymce.init({selector: 'textarea.tinymce', branding: false, plugins: 'anchor au
 
 		<header>
 			<a class="skip-link" href="#content">Skip to content</a>
+
 			{% include 'partials/nav-utility.html' %}
 
 			<div class="container">
-
-				<a class="skip-link" href="#content">Skip to content</a>
-
 				<div class="logo">
 					<input type="image" src="{{doc_root}}img/{{website.image_file}}" height="100px" width="300px" alt="submit"/>
 				</div>
+
+
 				<nav>
-					<button id="toggle-navigation" aria-expanded="false">
+					<button id="toggle-navigation" aria-expanded="false" aria-controls="menu">
 						<span class="icon-menu"></span>
 						<span class="hidden">Menu</span>
 					</button>
+
 					<ul id="menu">
 						{% for link in navigation %}
 							<li>
-								<a href="{{ doc_root }}menu/{{ link.id }}/{{ link.seo_name }}" {% if (section == link.id) %} class="on" {% endif %}>
-									{{ link.name }}</a>
+								<a href="{{ doc_root }}menu/{{ link.id }}/{{ link.seo_name }}" {% if (section is defined and section == link.id) %} class="on" {% endif %}>
+									{{ link.name }}
+								</a>
 							</li>
 						{% endfor %}
 
@@ -66,19 +75,23 @@ tinymce.init({selector: 'textarea.tinymce', branding: false, plugins: 'anchor au
 					</ul>
 				</nav>
 			</div>
-			<!-- /.container -->
-			<div class="container">
-				<!--    {% if SESSION_id >= 0 %} -->
 
-				<!--    {% if {source} == "select-website" %}
-																																																																																																																																																																																																																																												    --><form action="{{ doc_root }}select-website/{{session.website}}" method="POST" class="form-membership"> <!--    {% endif %} -->
-					<!--   {% endif %} -->
-				</div>
+			{# Optional: keep this only if you truly need it; right now it’s a half-open form in your file #}
+			{% block header_extra %}{% endblock %}
+		</header>
 
-			</body>
-		</body>
-	</body>
-</html></body></html></body></html></body></html></body></html></body> </html></header>{% block content %}{% endblock %}<script src="{{ doc_root }}js/site.js"></script>{% if recaptcha_site_key %}{# Load reCAPTCHA v3 library #}<script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}"></script>{% endif %}{# Only load reCAPTCHA if we have a site key configured #}{% if recaptcha_site_key is defined and recaptcha_site_key %} <script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}"></script> <script>document.addEventListener('DOMContentLoaded', function () { // Look for all forms that declare a reCAPTCHA action
+		<main id="content"> {% block content %}{% endblock %}
+			</main>
+
+			{% include 'partials/footer.html' %}
+
+			<script src="{{ doc_root }}js/site.js"></script>
+
+			{# reCAPTCHA v3 (load once, only if key exists) #}
+			{% if recaptcha_site_key is defined and recaptcha_site_key %}
+				<script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}"></script>
+				<script>
+					document.addEventListener('DOMContentLoaded', function () {
 const forms = document.querySelectorAll('form[data-recaptcha-action]');
 if (! forms.length) 
 return;
@@ -87,7 +100,6 @@ return;
 
 forms.forEach(function (form) {
 const action = form.getAttribute('data-recaptcha-action') || '';
-
 form.addEventListener('submit', function (e) {
 e.preventDefault();
 
@@ -106,7 +118,6 @@ field.type = 'hidden';
 field.name = 'g-recaptcha-response';
 form.appendChild(field);
 }
-
 field.value = token || '';
 form.submit();
 }).catch(function (err) {
@@ -116,7 +127,13 @@ form.submit();
 });
 });
 });
-});</script>{% endif %}{% include 'partials/footer.html' %}<script> (function () {
+});
+				</script>
+			{% endif %}
+
+			{# Splash logic (as you had it, cleaned) #}
+			<script>
+				(function () {
 const splash = document.getElementById('splashScreen');
 if (! splash) 
 return;
@@ -124,8 +141,6 @@ return;
 
 
 const HIDDEN_CLASS = 'hidden';
-
-// Save original inline styles so we can restore cleanly
 const orig = {
 htmlOverflow: document.documentElement.style.overflow,
 htmlHeight: document.documentElement.style.height,
@@ -138,11 +153,10 @@ bodyMargin: document.body.style.margin,
 bodyPadding: document.body.style.padding
 };
 
-function lockScroll() { // Lock the scroller (HTML)
+function lockScroll() {
 document.documentElement.style.overflow = 'hidden';
 document.documentElement.style.height = '100%';
 
-// Freeze body
 document.body.style.overflow = 'hidden';
 document.body.style.position = 'fixed';
 document.body.style.inset = '0';
@@ -151,7 +165,6 @@ document.body.style.height = '100%';
 document.body.style.margin = '0';
 document.body.style.padding = '0';
 
-// Hide reCAPTCHA badge if present
 const badge = document.querySelector('.grecaptcha-badge');
 if (badge) 
 badge.style.display = 'none';
@@ -190,7 +203,6 @@ splash.classList.add(HIDDEN_CLASS);
 unlockScroll();
 }
 
-// Show only once per browser session
 if (sessionStorage.getItem('tfolSplashShown')) {
 hideSplash();
 return;
@@ -198,12 +210,14 @@ return;
 
 sessionStorage.setItem('tfolSplashShown', '1');
 showSplash();
-
-// Clicking the splash hides it (your <a> will still navigate)
 splash.addEventListener('click', hideSplash);
 })();
 
-// Force a viewport reflow after splash shows
 requestAnimationFrame(() => {
 window.dispatchEvent(new Event('resize'));
-});</script></body></html>
+});
+			</script>
+
+			{% block body_end %}{% endblock %}
+		</body>
+	</html>

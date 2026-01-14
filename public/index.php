@@ -1,6 +1,5 @@
 <?php
 declare(strict_types=1);
-error_log('[INDEX HIT UNCONDITIONAL] ' . date('c') . ' ' . ($_SERVER['REQUEST_URI'] ?? ''));
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
@@ -15,14 +14,14 @@ if (($_SESSION['id'] ?? 0) <= 0) {
 $uri = $_SERVER['REQUEST_URI'] ?? '';
 
 // If someone hits the non-public front path, redirect to the canonical /public path
-if (strpos($uri, '/focus-local/index/') === 0) {
-    header('Location: /focus-local/public' . substr($uri, strlen('/focus-local')), true, 302);
+if (strpos($uri, '/focus-local__RESTORE/index/') === 0) {
+    header('Location: /focus-local__RESTORE/public' . substr($uri, strlen('/focus-local')), true, 302);
     exit();
 }
 
-// Also cover exact /focus-local/index (no trailing slash)
-if ($uri === '/focus-local/index' || $uri === '/focus-local/index/') {
-    header('Location: /focus-local/public/index/1', true, 302); // or /public/index/
+// Also cover exact /focus-local__RESTORE/index (no trailing slash)
+if ($uri === '/focus-local__RESTORE/index' || $uri === '/focus-local__RESTORE/index/') {
+    header('Location: /focus-local__RESTORE/public/index/1', true, 302); // or /public/index/
     exit();
 }
 
@@ -117,6 +116,13 @@ if ($parts[0] != 'admin') {
         $php_page = APP_ROOT . '/src/pages/' . $page . '.php';
 
         include $php_page;
+        exit();
+    }
+    // Special-case: Guide uses /guide and /guide/<slug> (slug is not numeric)
+    if ($parts[0] === 'guide') {
+        $page = 'guide';
+        // Pass slug via $parts[1] (can be empty for /guide)
+        include APP_ROOT . '/src/pages/guide.php';
         exit();
     }
 
