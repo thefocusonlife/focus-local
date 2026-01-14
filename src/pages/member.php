@@ -2,6 +2,17 @@
 declare(strict_types=1);
 include APP_ROOT . '/src/pages/menu-path.php';
 
+file_put_contents(
+    '/tmp/tfol-session-keys.log',
+    date('c') .
+        ' ' .
+        ($_SERVER['REQUEST_URI'] ?? '') .
+        ' keys=' .
+        json_encode(array_keys($_SESSION)) .
+        "\n",
+    FILE_APPEND,
+);
+
 $menuId = (int) ($menuId ?? 0);
 if ($menuId <= 0) {
     // Fallback: choose a sensible default menu id for this member/website

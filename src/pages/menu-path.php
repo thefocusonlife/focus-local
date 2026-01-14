@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
-$id = 2;
+
+$id = null;
 
 $path = mb_strtolower($_SERVER['REQUEST_URI']);
 $path = substr($path, strlen(DOC_ROOT));
@@ -12,6 +13,12 @@ if ($path === '') {
 
 $parts = explode('/', $path);
 
+// ✅ Alias: /admin -> /admin/index
+if (($parts[0] ?? '') === 'admin' && empty($parts[1])) {
+    $parts[1] = 'index';
+}
+
+// then normal parsing
 $page = $parts[0] ?? 'index';
 
 // Admin routes: /admin/<page>/<id>

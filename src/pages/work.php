@@ -3,6 +3,9 @@
 declare(strict_types=1); // Use strict types
 use PhpBook\Validate\Validate; // Use Validate class
 
+require_once __DIR__ . '/../security/guard.php';
+require_once __DIR__ . '/../security/ownership.php';
+
 $member = [];
 $temp = $_FILES['image']['tmp_name'] ?? ''; // Temporary image
 $destination = ''; // Where to save file
@@ -102,10 +105,7 @@ if ($id > 0) {
     $storyWebsiteId = (int) ($story['website'] ?? ($story['website_id'] ?? 0));
     $memberWebsiteId = (int) ($member['website'] ?? 0);
 
-    $canEdit =
-        $storyOwnerId === $sessionMemberId ||
-        ($isAdmin && $memberWebsiteId > 0 && $storyWebsiteId === $memberWebsiteId) ||
-        $isUber;
+    $canEdit = $storyOwnerId === $sessionMemberId;
 
     if (!$canEdit) {
         include APP_ROOT . '/src/pages/page-not-found.php';
@@ -201,204 +201,212 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ' name=' .
             ($_FILES['image']['name'] ?? 'NULL'),
     );
+
+    // ---- WRITE BOUNDARY (must be first meaningful enforcement) ----
+    guard([
+        'requireLogin' => true,
+        'allowedRoles' => ['member', 'admin'],
+        'allowUber' => true,
+    ]);
+
+    $role = (string) ($_SESSION['role'] ?? 'guest');
+    $isUber = $role === 'uber';
+
+    // Enforce ownership for edits (owner or uber). For create: force author.
+    $storyId = (int) ($story['id'] ?? 0);
+    if ($storyId > 0) {
+        assertStoryOwnership($cms, $storyId, (int) $sessionMemberId, $isUber);
+    } else {
+        // Create mode: force author to session member to prevent spoofing
+        $story['member_id'] = (int) $sessionMemberId;
+    }
+
+    // Only handle save when the Save button was used
     if (isset($_POST['update'])) {
+        // ---- CSRF validation ----
         $posted = (string) ($_POST['csrf_token'] ?? '');
         if ($posted === '' || !hash_equals($csrfToken, $posted)) {
             $errors['warning'] =
                 'Security check failed (CSRF). Please reload the page and try again.';
             // Do NOT process the save
         } else {
-            // ... proceed with save logic ...
-            // Only handle save when the Save button was used
-            if (isset($_POST['update'])) {
-                // -----------------------------
-                // A) Build $story from POST
-                // -----------------------------
-                $story['id'] =
-                    isset($_POST['id']) && $_POST['id'] !== ''
-                        ? (int) $_POST['id']
-                        : $story['id'] ?? null;
-                $story['image_id'] =
-                    isset($_POST['image_id']) && $_POST['image_id'] !== ''
-                        ? (int) $_POST['image_id']
-                        : $story['image_id'] ?? null;
+            // -----------------------------
+            // A) Build $story from POST
+            // -----------------------------
+            $story['id'] =
+                isset($_POST['id']) && $_POST['id'] !== ''
+                    ? (int) $_POST['id']
+                    : $story['id'] ?? null;
 
-                $story['title'] = $_POST['title'] ?? '';
-                $story['summary'] = $_POST['summary'] ?? '';
-                $story['content'] = $_POST['content'] ?? '';
+            $story['image_id'] =
+                isset($_POST['image_id']) && $_POST['image_id'] !== ''
+                    ? (int) $_POST['image_id']
+                    : $story['image_id'] ?? null;
 
-                // Force author: never trust POST member_id
-                if (!empty($story['id'])) {
-                    // editing: keep the owner from the loaded record
-                    $story['member_id'] = (int) ($story['member_id'] ?? 0);
-                } else {
-                    // creating: force to logged-in user
-                    $story['member_id'] = $sessionMemberId;
-                }
+            $story['title'] = $_POST['title'] ?? '';
+            $story['summary'] = $_POST['summary'] ?? '';
+            $story['content'] = $_POST['content'] ?? '';
 
-                $story['family_id'] = isset($_POST['family_id'])
-                    ? (int) $_POST['family_id']
-                    : $story['family_id'] ?? 0;
-                $story['menu_id'] = isset($_POST['menu_id'])
-                    ? (int) $_POST['menu_id']
-                    : $story['menu_id'] ?? 0;
+            // Force author: never trust POST member_id
+            if (!empty($story['id'])) {
+                // editing: keep the owner from the loaded record
+                $story['member_id'] = (int) ($story['member_id'] ?? 0);
+            } else {
+                // creating: force to logged-in user
+                $story['member_id'] = (int) $sessionMemberId;
+            }
 
-                $story['published'] = !empty($_POST['published']) ? 1 : 0;
-                $story['seo_title'] = create_seo_name($story['title']);
+            $story['family_id'] = isset($_POST['family_id'])
+                ? (int) $_POST['family_id']
+                : $story['family_id'] ?? 0;
 
-                $story['storyorder'] = isset($_POST['storyorder'])
-                    ? (int) $_POST['storyorder']
-                    : $story['storyorder'] ?? 0;
+            $story['menu_id'] = isset($_POST['menu_id'])
+                ? (int) $_POST['menu_id']
+                : $story['menu_id'] ?? 0;
 
-                // Checkboxes / toggles
-                $story['landscape'] = !empty($_POST['landscape']) ? 1 : 0;
-                $story['allow_comment'] = !empty($_POST['allow_comment']) ? 1 : 0;
+            $story['published'] = !empty($_POST['published']) ? 1 : 0;
+            $story['seo_title'] = create_seo_name($story['title']);
 
-                $story['keyword'] = $_POST['keyword'] ?? '';
-                $story['website'] = (int) ($_SESSION['website'] ?? 0);
+            $story['storyorder'] = isset($_POST['storyorder'])
+                ? (int) $_POST['storyorder']
+                : $story['storyorder'] ?? 0;
 
-                $story['blog'] = isset($_POST['blog']) ? (int) $_POST['blog'] : $story['blog'] ?? 0;
+            // Checkboxes / toggles
+            $story['landscape'] = !empty($_POST['landscape']) ? 1 : 0;
+            $story['allow_comment'] = !empty($_POST['allow_comment']) ? 1 : 0;
 
-                $memberId = $story['member_id'];
-                $authors = $cms->getMember()->get($memberId);
+            $story['keyword'] = $_POST['keyword'] ?? '';
+            $story['website'] = (int) ($_SESSION['website'] ?? 0);
 
-                // -----------------------------
-                // B) Validate story fields
-                // -----------------------------
-                $errors['title'] = Validate::isText($story['title'], 1, 80)
-                    ? ''
-                    : 'Title should be 1 - 80 characters.';
-                $errors['summary'] = Validate::isText($story['summary'], 1, 254)
-                    ? ''
-                    : 'Summary should be 0 - 254 characters.';
-                $errors['content'] = Validate::isText($story['content'], 1, 100000)
-                    ? ''
-                    : 'Content should be 0 - 100,000 characters.';
-                $errors['menu'] = Validate::isMenuId($story['menu_id'], $menus)
-                    ? ''
-                    : 'Not a valid menu';
-                $errors['keyword'] = Validate::isText($story['keyword'], 1, 80)
-                    ? ''
-                    : 'Keyword should be 1 - 80 characters.';
+            $story['blog'] = isset($_POST['blog']) ? (int) $_POST['blog'] : $story['blog'] ?? 0;
 
-                $invalid = implode($errors);
+            $memberId = (int) ($story['member_id'] ?? 0);
+            $authors = $cms->getMember()->get($memberId);
 
-                // -----------------------------
-                // C) Save if valid
-                // -----------------------------
-                if ($invalid) {
-                    $errors['warning'] = 'Please correct form errors';
-                } else {
-                    $arguments = $story; // ------------------------------------------------------------
-                    // Image upload orchestration (Story Create + Update)
-                    // ------------------------------------------------------------
+            // -----------------------------
+            // B) Validate story fields
+            // -----------------------------
+            $errors['title'] = Validate::isText($story['title'], 1, 80)
+                ? ''
+                : 'Title should be 1 - 80 characters.';
 
-                    $hasUpload =
-                        isset($_FILES['image']) &&
-                        ($_FILES['image']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK &&
-                        is_uploaded_file($_FILES['image']['tmp_name'] ?? '');
+            $errors['summary'] = Validate::isText($story['summary'], 1, 254)
+                ? ''
+                : 'Summary should be 0 - 254 characters.';
 
-                    if ($hasUpload) {
-                        // Normalize image_id
-                        $arguments['image_id'] = !empty($arguments['image_id'])
-                            ? (int) $arguments['image_id']
-                            : null;
+            $errors['content'] = Validate::isText($story['content'], 1, 100000)
+                ? ''
+                : 'Content should be 0 - 100,000 characters.';
 
-                        // Determine alt text
+            $errors['menu'] = Validate::isMenuId($story['menu_id'], $menus)
+                ? ''
+                : 'Not a valid menu';
 
-                        $alt = trim((string) ($arguments['image_alt'] ?? ''));
-                        if ($alt === '.' || $alt === '') {
-                            $name = (string) ($_FILES['image']['name'] ?? '');
-                            $alt = $name ? pathinfo($name, PATHINFO_FILENAME) : '';
-                        }
-                        if ($alt === '.') {
-                            $alt = '';
-                        }
+            $errors['keyword'] = Validate::isText($story['keyword'], 1, 80)
+                ? ''
+                : 'Keyword should be 1 - 80 characters.';
 
-                        // Ensure we have an image row
-                        $imageId = (int) ($arguments['image_id'] ?? 0);
+            $invalid = implode($errors);
 
-                        $alt = trim((string) ($arguments['image_alt'] ?? ''));
-                        if ($alt === '.' || $alt === '') {
-                            $name = (string) ($_FILES['image']['name'] ?? '');
-                            $alt = $name ? pathinfo($name, PATHINFO_FILENAME) : '';
-                        }
-                        if ($alt === '.') {
-                            $alt = '';
-                        }
+            // -----------------------------
+            // C) Save if valid
+            // -----------------------------
+            if ($invalid) {
+                $errors['warning'] = 'Please correct form errors';
+            } else {
+                $arguments = $story;
 
-                        if ($imageId <= 0) {
-                            $sql = 'INSERT INTO image (file, alt) VALUES (:file, :alt);';
-                            $cms->getDb()->runSQL($sql, [
-                                'file' => '',
-                                'alt' => $alt,
-                            ]);
+                // ------------------------------------------------------------
+                // Image upload orchestration (Story Create + Update)
+                // ------------------------------------------------------------
+                $hasUpload =
+                    isset($_FILES['image']) &&
+                    ($_FILES['image']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK &&
+                    is_uploaded_file($_FILES['image']['tmp_name'] ?? '');
 
-                            $imageId = (int) $cms->getDb()->lastInsertId();
-                            $arguments['image_id'] = $imageId;
-                        } else {
-                            $sql = 'UPDATE image SET alt = :alt WHERE id = :id;';
-                            $cms->getDb()->runSQL($sql, [
-                                'alt' => $alt,
-                                'id' => $imageId,
-                            ]);
-                        }
-                        $alt = trim((string) ($arguments['image_alt'] ?? ''));
-                        if ($alt === '.' || $alt === '') {
-                            $name = (string) ($_FILES['image']['name'] ?? '');
-                            $alt = $name ? pathinfo($name, PATHINFO_FILENAME) : '';
-                        }
-                        if ($alt === '.') {
-                            $alt = '';
-                        }
+                if ($hasUpload) {
+                    // Normalize image_id
+                    $arguments['image_id'] = !empty($arguments['image_id'])
+                        ? (int) $arguments['image_id']
+                        : null;
 
-                        // Save uploaded image via ImageService (resize + naming + write to /public/uploads)
-                        $result = $cms
-                            ->getImageService()
-                            ->saveUploadedStoryImage(
-                                $_FILES['image'],
-                                $imageId,
-                                $arguments['title'] ?? '',
-                            );
+                    // Determine alt text
+                    $alt = trim((string) ($arguments['image_alt'] ?? ''));
+                    if ($alt === '.' || $alt === '') {
+                        $name = (string) ($_FILES['image']['name'] ?? '');
+                        $alt = $name ? pathinfo($name, PATHINFO_FILENAME) : '';
+                    }
+                    if ($alt === '.') {
+                        $alt = '';
+                    }
 
-                        // Update image row with final filename + alt (bulletproof)
-                        $sql = 'UPDATE image SET file = :file, alt = :alt WHERE id = :id;';
+                    // Ensure we have an image row
+                    $imageId = (int) ($arguments['image_id'] ?? 0);
+
+                    if ($imageId <= 0) {
+                        $sql = 'INSERT INTO image (file, alt) VALUES (:file, :alt);';
                         $cms->getDb()->runSQL($sql, [
-                            'file' => $result['filename'],
+                            'file' => '',
+                            'alt' => $alt,
+                        ]);
+
+                        $imageId = (int) $cms->getDb()->lastInsertId();
+                        $arguments['image_id'] = $imageId;
+                    } else {
+                        $sql = 'UPDATE image SET alt = :alt WHERE id = :id;';
+                        $cms->getDb()->runSQL($sql, [
                             'alt' => $alt,
                             'id' => $imageId,
                         ]);
-
-                        // Propagate derived values back into story args
-                        $arguments['landscape'] = (int) ($result['landscape'] ?? 0);
                     }
 
-                    if (!empty($arguments['id'])) {
-                        $saved = $cms->getStory()->update($arguments);
-                    } else {
-                        unset($arguments['id']);
-                        $saved = $cms->getStory()->create($arguments);
-                    }
+                    // Save uploaded image via ImageService
+                    $result = $cms
+                        ->getImageService()
+                        ->saveUploadedStoryImage(
+                            $_FILES['image'],
+                            $imageId,
+                            $arguments['title'] ?? '',
+                        );
 
-                    if ($saved) {
-                        $imageId = (int) ($arguments['image_id'] ?? 0);
-                        $alt = trim((string) ($_POST['image_alt'] ?? ''));
+                    // Update image row with final filename + alt
+                    $sql = 'UPDATE image SET file = :file, alt = :alt WHERE id = :id;';
+                    $cms->getDb()->runSQL($sql, [
+                        'file' => $result['filename'],
+                        'alt' => $alt,
+                        'id' => $imageId,
+                    ]);
 
-                        if ($imageId > 0 && $alt !== '') {
-                            $cms->getStory()->altUpdate($imageId, $alt);
-                        }
-                    }
+                    // Propagate derived values back into story args
+                    $arguments['landscape'] = (int) ($result['landscape'] ?? 0);
+                }
 
-                    if ($saved) {
-                        redirect('admin/stories/', ['success' => 'Story saved']);
-                    } else {
-                        $errors['warning'] = 'Story title already in use';
+                if (!empty($arguments['id'])) {
+                    $saved = $cms->getStory()->update($arguments);
+                } else {
+                    unset($arguments['id']);
+                    $saved = $cms->getStory()->create($arguments);
+                }
+
+                if ($saved) {
+                    $imageId = (int) ($arguments['image_id'] ?? 0);
+                    $alt = trim((string) ($_POST['image_alt'] ?? ''));
+
+                    if ($imageId > 0 && $alt !== '') {
+                        $cms->getStory()->altUpdate($imageId, $alt);
                     }
+                }
+
+                if ($saved) {
+                    redirect('admin/stories/', ['success' => 'Story saved']);
+                } else {
+                    $errors['warning'] = 'Story title already in use';
                 }
             }
         }
     }
 }
+
 $member = $cms->getMember()->get($sessionMemberId);
 
 if (!$member || !is_array($member)) {

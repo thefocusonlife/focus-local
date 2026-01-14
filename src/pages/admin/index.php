@@ -1,26 +1,42 @@
 <?php
-//echo "admin/index.php -2";
-is_admin($session->role); // Check if admin
-$path = mb_strtolower($_SERVER['REQUEST_URI']); // Get path in lowercase
-$path = substr($path, strlen(DOC_ROOT)); // Remove up to DOC_ROOT
-$parts = explode('/', $path);
-if ($parts[0] != 'admin') {
-    // If an admin page
-    $page = $parts[0] ?: 'index'; // Page name (or use index)
-    $id = $parts[1] ?? null; // Get ID (or use null)
-} else {
-    // If not an admin page
-    $page = 'admin/' . ($parts[1] ?? ''); // Page name
-    $id = $parts[2] ?? null; // Get ID
+declare(strict_types=1);
+
+require_once __DIR__ . '/../../security/guard.php';
+
+// Admin boundary: require login + allow admin, allow uber too
+guard([
+    'requireLogin' => true,
+    'allowedRoles' => ['admin'], // admin allowed
+    'allowUber' => true, // uber bypass allowed
+    'loginPath' => DOC_ROOT . 'login', // if DOC_ROOT is available here; else '/login'
+    // 'fallbackPath' => '/index/1', // optional: override default fallback
+]);
+
+// Website context (validate)
+$websiteId = (int) ($_SESSION['website'] ?? 0);
+if ($websiteId <= 0) {
+    $websiteId = 1;
+    $_SESSION['website'] = 1;
 }
-if (!$id) {
-    $id = 1;
+
+$website = $cms->getWebsite()->getById($websiteId);
+if (!$website || !isset($website['id'])) {
+    // If website context is invalid, recover to 1 (safe public default)
+    $websiteId = 1;
+    $_SESSION['website'] = 1;
+    $website = $cms->getWebsite()->getById(1);
 }
-$website = $cms->getWebsite()->getById(intval($_SESSION['website']));
-//echo "admin/index.php -24";
-$data['story_count'] = $cms->getStory()->count(); // Get number of stories
-$data['menu_count'] = $cms->getMenu()->count(); // Get number of menus
-$data['member_count'] = $cms->getMember()->count(); // Get number of menus
-$data['website_count'] = $cms->getWebsite()->count(); // Get number of websites
+
+// Capability flag for UI only (server-side enforcement still required in each controller)
+$role = (string) ($_SESSION['role'] ?? 'guest');
+$data = [];
+$data['isUber'] = $role === 'uber';
 $data['website'] = $website;
-echo $twig->render('admin/index.html', $data); // Render Twig template
+
+// Dashboard metrics (counts)
+$data['story_count'] = $cms->getStory()->count();
+$data['menu_count'] = $cms->getMenu()->count();
+$data['member_count'] = $cms->getMember()->count();
+$data['website_count'] = $cms->getWebsite()->count();
+
+echo $twig->render('admin/index.html', $data);

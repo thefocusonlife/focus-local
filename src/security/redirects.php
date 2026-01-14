@@ -1,19 +1,7 @@
 <?php
 declare(strict_types=1);
 
-/**
- * Redirect to login page and exit
- */
-function redirectToLogin(): void
-{
-    if (headers_sent()) {
-        echo '<script>window.location.href="/login";</script>';
-        exit();
-    }
-
-    header('Location: /login');
-    exit();
-}
+require_once __DIR__ . '/guard.php';
 
 /**
  * Redirect to safe public page (guest context)
@@ -24,7 +12,7 @@ function redirectToPublic(): void
     $safe = '/index/1';
 
     if (headers_sent()) {
-        echo '<script>window.location.href="' . $safe . '";</script>';
+        echo '<script>window.location.href=' . json_encode($safe) . ';</script>';
         exit();
     }
 
@@ -35,8 +23,10 @@ function redirectToPublic(): void
 /**
  * Hard deny with no context leak
  * Use when access should never be allowed
+ *
+ * NOTE: renamed to avoid collision with canonical denyAccess()
  */
-function denyAccess(): void
+function denyAccessHard(): void
 {
     if (defined('DEV') && DEV) {
         http_response_code(403);
@@ -54,15 +44,18 @@ function denyAccess(): void
 function redirectToMemberHome(): void
 {
     if (empty($_SESSION['member_id'])) {
-        redirectToLogin();
+        redirectToLogin('/login', true); // canonical
     }
 
-    $websiteId = (int) ($_SESSION['website_id'] ?? 1);
+    $websiteId = (int) ($_SESSION['website'] ?? 1);
+    if ($websiteId <= 0) {
+        $websiteId = 1;
+    }
 
     $target = '/member/' . $websiteId;
 
     if (headers_sent()) {
-        echo '<script>window.location.href="' . $target . '";</script>';
+        echo '<script>window.location.href=' . json_encode($target) . ';</script>';
         exit();
     }
 
@@ -79,5 +72,6 @@ function denyWithLog(string $reason): void
         error_log('[ACCESS DENIED] ' . $reason . ' | URI=' . ($_SERVER['REQUEST_URI'] ?? ''));
     }
 
-    denyAccess();
+    // If you truly want "no context leak", call denyAccessHard()
+    denyAccessHard();
 }
