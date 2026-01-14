@@ -134,9 +134,24 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             if (empty($website) || empty($website['id'])) {
                 $errors['message'] = 'Website not found.';
             } else {
-                // ✅ SUCCESS: create session and redirect to member home
+                // ✅ SUCCESS: create session
                 $cms->getSession()->create($member, (int) $website['id']);
+
+                // Redirect to intended deep-link if present (and safe), else safe fallback
+                $returnTo = $_SESSION['return_to'] ?? '';
+                unset($_SESSION['return_to']);
+
+                // Allow only local absolute paths to avoid open redirects
+                if (is_string($returnTo) && $returnTo !== '' && str_starts_with($returnTo, '/')) {
+                    redirect(ltrim($returnTo, '/')); // your redirect() likely expects no leading slash
+                    exit();
+                }
+
+                // Safe fallback: member home OR index/{website}
+                // If you prefer member home as default, keep this:
                 redirect('member/' . (int) $member['id']);
+                // Alternative safer “always works” fallback:
+                // redirect('index/' . (int) $website['id']);
                 exit();
             }
         }
