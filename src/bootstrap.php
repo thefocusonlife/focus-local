@@ -7,6 +7,13 @@ require APP_ROOT . '/src/functions.php'; // Functions
 require APP_ROOT . '/config/config.php'; // Configuration data
 require APP_ROOT . '/vendor/autoload.php'; // Autoload libraries
 
+// -------------------------------------------------
+// Session (before any output)
+// -------------------------------------------------
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
+
 if (DEV === false) {
     // If not in development
     set_exception_handler('handle_exception'); // Set exception handler
@@ -23,6 +30,12 @@ $twig_options['debug'] = DEV; // If dev mode, turn debug on
 $loader = new Twig\Loader\FilesystemLoader(APP_ROOT . '/templates'); // Twig loader
 $twig = new Twig\Environment($loader, $twig_options); // Twig environment
 $twig->addGlobal('doc_root', DOC_ROOT); // Document root
+// -------------------------------------------------
+// Twig globals (THIS IS WHERE IT GOES)
+// -------------------------------------------------
+$twig->addGlobal('session', $_SESSION);
+$twig->addGlobal('request_uri', $_SERVER['REQUEST_URI'] ?? '');
+
 // php.ini memory_limit setting not working so programatically set php memory limit in bootstrap.php
 // this resolved the out of memory problem when trying to upload and resize iphone size images
 ini_set('memory_limit', '128M');

@@ -37,8 +37,28 @@ tinymce.init({selector: 'textarea.tinymce', branding: false, plugins: 'anchor au
 		{% block head_extra %}{% endblock %}
 	</head>
 
-	<body oncontextmenu="return true;" class="{{ body_class|default('') }}">
-		{{ include('screen0.html') }}
+	<body
+		oncontextmenu="return true;" class="{{ body_class|default('') }}">
+		{# normalize request path to a "relative" route like /admin/menu #}
+		{% set path = (request_uri|default('')|split('?'))[0] %}
+		{% set rel = path|replace({'/focus-local/public': ''}) %}
+		{% if rel == '' %}
+			{% set rel = '/' %}
+		{% endif %}
+
+		{% set disableSplash =
+    session.nosplash|default(false)
+    or rel starts with '/login'
+    or rel starts with '/logout'
+    or rel starts with '/register'
+    or rel starts with '/admin'
+    or rel starts with '/work'
+    or rel starts with '/member'
+%}
+
+		{% if not disableSplash %}
+			{% include 'partials/screen0.html' %}
+		{% endif %}
 
 		<header>
 			<a class="skip-link" href="#content">Skip to content</a>
@@ -78,20 +98,20 @@ tinymce.init({selector: 'textarea.tinymce', branding: false, plugins: 'anchor au
 
 			{# Optional: keep this only if you truly need it; right now it’s a half-open form in your file #}
 			{% block header_extra %}{% endblock %}
-		</header>
+		</body>
+	</body>
+</html></header><main id="content"> {% block content %}{% endblock %}
+</main>
 
-		<main id="content"> {% block content %}{% endblock %}
-			</main>
+{% include 'partials/footer.html' %}
 
-			{% include 'partials/footer.html' %}
+<script src="{{ doc_root }}js/site.js"></script>
 
-			<script src="{{ doc_root }}js/site.js"></script>
-
-			{# reCAPTCHA v3 (load once, only if key exists) #}
-			{% if recaptcha_site_key is defined and recaptcha_site_key %}
-				<script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}"></script>
-				<script>
-					document.addEventListener('DOMContentLoaded', function () {
+{# reCAPTCHA v3 (load once, only if key exists) #}
+{% if recaptcha_site_key is defined and recaptcha_site_key %}
+	<script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}"></script>
+	<script>
+		document.addEventListener('DOMContentLoaded', function () {
 const forms = document.querySelectorAll('form[data-recaptcha-action]');
 if (! forms.length) 
 return;
@@ -128,12 +148,12 @@ form.submit();
 });
 });
 });
-				</script>
-			{% endif %}
+	</script>
+{% endif %}
 
-			{# Splash logic (as you had it, cleaned) #}
-			<script>
-				(function () {
+{# Splash logic (as you had it, cleaned) #}
+<script>
+	(function () {
 const splash = document.getElementById('splashScreen');
 if (! splash) 
 return;
@@ -216,8 +236,6 @@ splash.addEventListener('click', hideSplash);
 requestAnimationFrame(() => {
 window.dispatchEvent(new Event('resize'));
 });
-			</script>
+</script>
 
-			{% block body_end %}{% endblock %}
-		</body>
-	</html>
+{% block body_end %}{% endblock %}</body></html>
