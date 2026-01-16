@@ -19,15 +19,6 @@ class Menu
         return $this->db->runSQL($sql, [$id])->fetch(); // Return menu data
     }
 
-    // Get individual menu
-    public function getMenu(int $id)
-    {
-        $sql = "SELECT id, website, name, description, navigation, account_id, seo_name, position
-                   FROM menu
-                  WHERE account_id = :id;"; // SQL to get one menu
-        return $this->db->runSQL($sql, [$id])->fetch(); // Return menu data
-    }
-
     // Get all menus
     public function getAll(): array
     {
