@@ -60,6 +60,17 @@ class Story
         return $this->db->runSQL($sql, [$id])->fetch(); // Return story
     }
 
+    /**
+     * Fetch a story by id without applying published/draft filters.
+     * Intended for ownership checks and admin tooling.
+     */
+    public function getByIdAnyStatus(int $id): ?array
+    {
+        $sql = 'SELECT * FROM story WHERE id = :id LIMIT 1;';
+        $row = $this->db->runSql($sql, ['id' => $id])->fetch();
+        return $row ?: null;
+    }
+
     // Get summaries of stories - published only
     public function getAll($published = null, $menu = null, $member = null, $limit = 300): array
     {

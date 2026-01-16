@@ -9,7 +9,8 @@ require_once __DIR__ . '/guard.php';
  */
 function getStoryOwnerId($cms, int $storyId): int
 {
-    $story = $cms->getStory()->getById($storyId);
+    $story = $cms->getStory()->getByIdAnyStatus((int) $storyId);
+
     if (!$story || !isset($story['member_id'])) {
         http_response_code(404);
         exit('Story not found');
