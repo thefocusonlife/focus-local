@@ -1,21 +1,36 @@
 <?php
-is_admin($session->role); // Check if admin
+declare(strict_types=1);
 
-$member = $cms->getMember()->get($_SESSION['id']);
-if (!$_SESSION['id']) {
-    $website = $cms->getWebsite()->getByID(1);
-} else {
-    $website = $cms->getWebsite()->getByID($_SESSION['website']);
-    $mem = $member['account_id'];
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
 }
-$data['success'] = $_GET['success'] ?? null; // Check for success message
+
+require_once APP_ROOT . '/src/security/guard.php';
+
+is_admin($session->role);
+
+$websiteId = (int) ($_SESSION['website'] ?? 1);
+if ($websiteId <= 0) {
+    $websiteId = 1;
+    $_SESSION['website'] = 1;
+}
+
+$data = [];
+$data['success'] = $_GET['success'] ?? null;
 $data['failure'] = $_GET['failure'] ?? null;
-if ($_SESSION['id'] == 1) {
+
+// Your current Uber rule: id==1 sees all menus
+if ((int) ($_SESSION['id'] ?? 0) === 1) {
     $data['menus'] = $cms->getMenu()->getAll();
+    $data['website'] = $cms->getWebsite()->getById($websiteId);
 } else {
-    // Check for failure message
-    $data['menus'] = $cms->getMenu()->getAll2($website['id'], $mem); // Menu data for template
+    $member = $cms->getMember()->get((int) $_SESSION['id']);
+    $mem = (int) ($member['account_id'] ?? 0);
+
+    $website = $cms->getWebsite()->getById($websiteId);
+    $data['website'] = $website;
+
+    $data['menus'] = $cms->getMenu()->getAll2($websiteId, $mem);
 }
 
-$data['website'] = $website; // Pass website logo on to html
-echo $twig->render('admin/menus.html', $data); // Render Twig template
+echo $twig->render('admin/menus.html', $data);

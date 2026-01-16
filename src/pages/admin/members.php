@@ -1,8 +1,24 @@
 <?php
-is_admin($session->role);
-$id = $_SESSION['website']; // Check if admin
-$data['success'] = $_GET['success'] ?? null; // Store message if one exists
-$data['failure'] = $_GET['failure'] ?? null; // Store message if one exists
-$data['members'] = $cms->getMember()->getAll2($id); // Member data for template
+declare(strict_types=1);
 
-echo $twig->render('admin/members.html', $data); // Render Twig template
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
+
+require_once APP_ROOT . '/src/security/guard.php';
+
+// Use the existing runtime guard you already have
+is_admin($session->role);
+
+$websiteId = (int) ($_SESSION['website'] ?? 1);
+if ($websiteId <= 0) {
+    $websiteId = 1;
+    $_SESSION['website'] = 1;
+}
+
+$data = [];
+$data['success'] = $_GET['success'] ?? null;
+$data['failure'] = $_GET['failure'] ?? null;
+$data['members'] = $cms->getMember()->getAll2($websiteId);
+
+echo $twig->render('admin/members.html', $data);

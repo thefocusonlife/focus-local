@@ -1,36 +1,96 @@
 <?php
-is_admin($session->role); // Check if admin
-if (!$id) {
-    // If no id
-    redirect('page-not-found/'); // Page not found
-}
-$families = $cms->getMember()->getAll(); // Get all members
+declare(strict_types=1);
 
-$data['members'] = $cms->getMember()->getAll(); // Member data for template
-
-$member = $cms->getMember()->get($id); // Get member data
-if (!$member) {
-    // If no member data
-    redirect('page-not-found/'); // Page not found
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
 }
 
+require_once APP_ROOT . '/src/security/guard.php';
+is_admin($session->role);
+
+$data = [];
+$data['success'] = $_GET['success'] ?? null;
+$data['failure'] = $_GET['failure'] ?? null;
+
+$isPost = ($_SERVER['REQUEST_METHOD'] ?? '') === 'POST';
+
+// Website scope from session
+$sessionWebsiteId = (int) ($_SESSION['website'] ?? 1);
+if ($sessionWebsiteId <= 0) {
+    $sessionWebsiteId = 1;
+    $_SESSION['website'] = 1;
+}
+
+$sessionMemberId = (int) ($_SESSION['id'] ?? 0);
+$isUber = $sessionMemberId === 1; // your current uber rule
+
+// GET: show form (you likely load target member by route or query)
+if (!$isPost) {
+    // Your existing GET code here to fetch and display the member/role form
+    ($targetId = (int) ($parts[2] ?? 0)) or $_GET['id'];
+    $data['member'] = $cms->getMember()->get($targetId);
+    echo $twig->render('admin/edit-role.html', $data);
+    exit();
+}
+
+// ---------------------------
+// POST: update role
+// ---------------------------
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // If form submitted
-    $role = $_POST['role'] ?? '';
-    // Get new role
-    $id = $_POST['ID'] ?? '';
-    if (in_array($role, ['member', 'family', 'admin', 'suspended'])) {
-        // If valid role will update
-        $member['role'] = $role;
-        // Update role in array
-        //$member['account_id']=$id;
-        $cms->getMember()->update($member); // Update role in database  <<< need to unset joined and member
+    // 1) Parse inputs safely
+    $role = trim((string) ($_POST['role'] ?? ''));
 
-        redirect('admin/members/', ['success' => 'Role updated']); // Redirect with message
+    // Your form uses ID (uppercase). Keep that for now but normalize.
+    // $targetId = (int) ($_POST['id'] ?? 0);
+    $targetId = (int) ($parts[2] ?? 0);
+
+    if ($targetId <= 0) {
+        redirect('admin/edit-role/' . $targetId, ['failure' => 'Invalid member id.']);
+        exit();
     }
+
+    // 2) Load target member from DB (never trust POST for website/account)
+    $target = $cms->getMember()->get($targetId);
+    if (!$target || empty($target['id'])) {
+        redirect('admin/edit-role/' . $targetId, ['failure' => 'Member not found.']);
+        exit();
+    }
+
+    // 3) Website scope check (unless uber)
+    $targetWebsiteId = (int) ($target['website'] ?? 0);
+    if (!$isUber && $targetWebsiteId !== $sessionWebsiteId) {
+        redirect('admin/edit-role/' . $targetId, ['failure' => 'Out-of-scope member.']);
+        exit();
+    }
+
+    // 4) Protect special cases
+    if (!$isUber && $targetId === 1) {
+        redirect('admin/edit-role/' . $targetId, ['failure' => 'Protected account.']);
+        exit();
+    }
+    if ($targetId === $sessionMemberId) {
+        redirect('admin/edit-role/' . $targetId, ['failure' => 'You cannot change your own role.']);
+
+        exit();
+
+        exit();
+    }
+
+    // 5) Validate role allowlist (do NOT allow uber assignment here)
+    $allowedRoles = ['member', 'family', 'admin', 'pending', 'suspended'];
+    if (!in_array($role, $allowedRoles, true)) {
+        redirect('admin/edit-role/' . $targetId, ['failure' => 'Invalid role.']);
+        exit();
+    }
+
+    // 6) Allowlist update payload (prevents joined/HY093 and mass assignment)
+    $update = [
+        'id' => $targetId,
+        'role' => $role,
+    ];
+
+    // 7) Update
+    $cms->getMember()->updateRole($targetId, $role);
 }
-
-$data['member'] = $member; // Member data for template
-$data['families'] = $families; // Author data data for template
-
-echo $twig->render('admin/edit-role.html', $data); // Render Twig template
+redirect('admin/members', ['success' => 'Role updated.']);
+exit();

@@ -129,6 +129,15 @@ class Member
         ]);
     }
 
+    public function updateRole(int $memberId, string $role): void
+    {
+        $sql = 'UPDATE member SET role = :role WHERE id = :id LIMIT 1;';
+        $this->db->runSql($sql, [
+            'role' => $role,
+            'id' => $memberId,
+        ]);
+    }
+
     public function count(): int
     {
         $sql = "SELECT COUNT(id) FROM member

@@ -1,17 +1,33 @@
 <?php
 declare(strict_types=1);
-include APP_ROOT . '/src/pages/menu-path.php';
 
-file_put_contents(
-    '/tmp/tfol-session-keys.log',
-    date('c') .
-        ' ' .
-        ($_SERVER['REQUEST_URI'] ?? '') .
-        ' keys=' .
-        json_encode(array_keys($_SESSION)) .
-        "\n",
-    FILE_APPEND,
-);
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
+
+require_once APP_ROOT . '/src/security/guard.php';
+
+include APP_ROOT . '/src/pages/menu-path.php';
+$errors = [];
+$data = [];
+
+// 1) Require login + role
+//guardRequireLogin($cms);
+//guardRequireRole($cms, ['admin', 'uber']); // whatever your canonical admin roles are
+
+// 2) Resolve website scope (admin actions must be scoped)
+$websiteId = (int) ($_SESSION['website'] ?? 1);
+if ($websiteId <= 0) {
+    $websiteId = 1;
+}
+
+// Optional: ensure website exists
+$website = $cms->getWebsite()->getById($websiteId);
+if (!$website || !isset($website['id'])) {
+    $websiteId = 1;
+    $_SESSION['website'] = 1;
+    $website = $cms->getWebsite()->getById(1);
+}
 
 $menuId = (int) ($menuId ?? 0);
 if ($menuId <= 0) {
