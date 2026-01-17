@@ -11,6 +11,15 @@ include APP_ROOT . '/src/pages/menu-path.php';
 $errors = [];
 $data = [];
 
+error_log(
+    '[POST-LOGIN] session.id=' .
+        ($_SESSION['id'] ?? 'NA') .
+        ' session.account_id=' .
+        ($_SESSION['account_id'] ?? 'NA') .
+        ' session.website=' .
+        ($_SESSION['website'] ?? 'NA'),
+);
+
 // 1) Require login + role
 //guardRequireLogin($cms);
 //guardRequireRole($cms, ['admin', 'uber']); // whatever your canonical admin roles are
@@ -57,45 +66,72 @@ if (!$member || empty($member['id'])) {
     redirect('index/99999', ['failure' => 'Member not found.']);
     exit();
 }
+$viewerId = (int) ($_SESSION['id'] ?? 0);
+if ($viewerId <= 0) {
+    include APP_ROOT . '/src/pages/page-not-found.php';
+    exit();
+}
+
+$viewer = $cms->getMember()->get($viewerId);
+if (!$viewer) {
+    include APP_ROOT . '/src/pages/page-not-found.php';
+    exit();
+}
+
+// For now (today): member page shows your own profile + your own stories
+$targetMemberId = $viewerId;
+
+// Navigation ownership (keep your existing rule if you want)
+$mem = (int) ($viewer['account_id'] ?? $viewerId);
+
+// Template uses viewer
+
+$data['navigation'] = $cms->getMenu()->getAll2((int) $viewer['website'], $mem);
 
 $mem = intval($member['account_id']);
-if (!$_SESSION['id']) {
-    $website = $cms->getWebsite()->getById($member['website']);
-} else {
-    $website = $cms->getWebsite()->getByID($member['website']);
+$websiteId = (int) ($viewer['website'] ?? 1);
+if ($websiteId <= 0) {
+    $websiteId = 1;
 }
-if (empty($_SESSION['id'])) {
-} else {
-    $member = $cms->getMember()->get(intval($parts[1]));
-    $mem = intval($member['account_id']);
+
+$website = $cms->getWebsite()->getById($websiteId);
+if (!$website) {
+    $websiteId = 1;
+    $website = $cms->getWebsite()->getById(1);
 }
+$_SESSION['website'] = $websiteId;
+
 $data['success'] = $_GET['success'] ?? null; // Check for success message
 $data['failure'] = $_GET['failure'] ?? null; // Check for failure message
 // Get story summaries
 $data['navigation'] = $cms->getMenu()->getAll2($member['website'], $mem); // Get menus
-$data['member'] = $member; // Member data
+$data['member'] = $viewer; // Member data
 $data['website'] = $cms->getWebsite()->getById($member['website']);
 $resolvedSorttype = (int) ($member['sorttype'] ?? 9);
 $data['sorttype'] = $cms->getSorttype()->get($resolvedSorttype);
 
-if (isset($id) and $id == 2) {
-    $data['stories'] = $cms->getStory()->getAll(true, null, null); // Get all stories for Uber
-    //$cms->getSession()->create(0,1);
-} elseif (!empty($parts[2]) and $parts[2] == 1) {
-    //    $cms->getSession()->get;
-    $data['stories'] = $cms->getStory()->getAll3($website['id'], true, null, null);
-}
+$viewerId = (int) ($_SESSION['id'] ?? 0);
 
-//$data['member']  = null;
-//get all stories for member's website
-else {
-    $id = intval($parts[1]);
-    $data['stories'] = $cms->getStory()->getAll2($website['id'], 0, null, $id);
+if ($viewerId === 1) {
+    $data['stories'] = $cms->getStory()->getAll(true, null, null); // Uber only
+} elseif (!empty($parts[2]) and $parts[2] == 1) {
+    $data['stories'] = $cms->getStory()->getAll3($website['id'], true, null, null);
+} else {
+    $targetMemberId = $viewerId; // default: show logged-in member's own stories
+    $data['stories'] = $cms->getStory()->getAll2($website['id'], 0, null, $targetMemberId);
 }
 
 // Default Sort target for global member page (Focus menu id=2)
 if (empty($data['sort_menu_id'])) {
     $data['sort_menu_id'] = 2;
 }
+error_log(
+    '[member.php BEFORE RENDER] session.id=' .
+        ($_SESSION['id'] ?? 'NA') .
+        ' data.member.id=' .
+        (int) ($data['member']['id'] ?? -1) .
+        ' data.member.account_id=' .
+        (int) ($data['member']['account_id'] ?? -1),
+);
 
 echo $twig->render('member.html', $data); // Render Twig template

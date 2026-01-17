@@ -7,11 +7,12 @@ $path = mb_strtolower($_SERVER['REQUEST_URI']);
 $path = substr($path, strlen(DOC_ROOT));
 $path = trim($path, '/');
 
-if ($path === '') {
-    $path = 'index/1';
+$websiteId = (int) ($_SESSION['website'] ?? 1);
+if ($websiteId <= 0) {
+    $websiteId = 1;
 }
 
-$parts = explode('/', $path);
+$parts = $path === '' ? [] : explode('/', $path);
 
 // ✅ Alias: /admin -> /admin/index
 if (($parts[0] ?? '') === 'admin' && empty($parts[1])) {

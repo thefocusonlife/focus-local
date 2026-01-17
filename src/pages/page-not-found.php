@@ -1,13 +1,24 @@
 <?php
-declare(strict_types=1); // Use strict types
+declare(strict_types=1);
+
 file_put_contents(
     '/tmp/tfol-route.log',
     date('c') . ' PAGE-NOT-FOUND URI=' . ($_SERVER['REQUEST_URI'] ?? '') . "\n",
     FILE_APPEND,
 );
 
-http_response_code(404); // Set HTTP response code
+http_response_code(404);
 
-$data['navigation'] = $cms->getMenu()->getAll(); // Get menus
+// Keep website context if it exists; otherwise default to 1.
+// IMPORTANT: do not override a valid session website here.
+$websiteId = (int) ($_SESSION['website'] ?? 1);
+if ($websiteId <= 0) {
+    $websiteId = 1;
+}
 
-echo $twig->render('page-not-found.html', $data); // Render template
+$data = [];
+$data['session'] = $_SESSION; // optional, if template uses it
+$data['website_id'] = $websiteId; // lets template build a safe "Back to Home" link
+
+// Do NOT pass navigation/menus on 404 — avoids messy header + avoids info leakage
+echo $twig->render('page-not-found.html', $data);
