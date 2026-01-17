@@ -80,12 +80,23 @@ class Menu
         try {
             // Try to create menu
             $sql = "INSERT INTO menu (website, name, description, navigation, account_id, seo_name, position)
-                    VALUES (:website, :name, :description, :navigation, :account_id, :seo_name, :position);"; // SQL to add new menu
-            $this->db->runSQL($sql, $menu); // Add new menu
-            return true; // It worked, return true
+            VALUES (:website, :name, :description, :navigation, :account_id, :seo_name, :position);";
+
+            $params = [
+                'website' => $menu['website'],
+                'name' => $menu['name'],
+                'description' => $menu['description'],
+                'navigation' => $menu['navigation'],
+                'account_id' => $menu['account_id'],
+                'seo_name' => $menu['seo_name'],
+                'position' => $menu['position'],
+            ];
+
+            $this->db->runSQL($sql, $params);
+            return true;
         } catch (\PDOException $e) {
             // If a exception was thrown
-            if ($e->errorInfo[1] === 1062) {
+            if (($e->errorInfo[1] ?? null) === 1062) {
                 // If error indicates duplicate entry
                 return false; // Return false to indicate duplicate name
             } else {

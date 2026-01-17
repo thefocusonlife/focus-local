@@ -138,13 +138,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         // ----- CREATE MODE -----
         // Assign from current member context
-        $menu['id'] = 0; // auto-increment
+        // $menu['id'] = 0; // auto-increment
         $menu['website'] = (int) ($member['website'] ?? 1);
-
-        // Menu ownership:
-        // - public menus: 0
-        // - member-owned menus: member.account_id
-        $menu['account_id'] = (int) ($member['account_id'] ?? 0);
+        $menu['account_id'] = (int) ($member['account_id'] ?? $viewerId);
     }
 
     // Validate (minimal today)
@@ -154,7 +150,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($menu['position'] <= 0) {
         $errors['position'] = 'Position must be 1 or greater.';
     }
-
     $invalid = false;
     foreach ($errors as $msg) {
         if ($msg !== '') {
@@ -184,7 +179,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($isEdit) {
             $saved = $cms->getMenu()->update($menu);
         } else {
-            $saved = $cms->getMenu()->create($menu);
+            $createParams = [
+                'website' => (int) $menu['website'],
+                'name' => (string) $menu['name'],
+                'description' => (string) $menu['description'],
+                'navigation' => (int) $menu['navigation'],
+                'account_id' => (int) $menu['account_id'],
+                'seo_name' => (string) $menu['seo_name'],
+                'position' => (int) $menu['position'],
+            ];
+
+            $saved = $cms->getMenu()->create($createParams);
         }
 
         if ($saved) {
