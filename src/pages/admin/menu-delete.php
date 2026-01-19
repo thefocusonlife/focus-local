@@ -62,5 +62,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $data = [];
 $data['menu'] = $menu;
-
+$data['website'] = $cms->getWebsite()->getById($menu['website']);
 echo $twig->render('admin/menu-delete.html', $data);

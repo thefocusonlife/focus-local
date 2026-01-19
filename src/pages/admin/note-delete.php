@@ -30,4 +30,5 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 $data['note'] = $note; // Menu data for template
+$data['website'] = $cms->getWebsite()->getById($note['website']);
 echo $twig->render('admin/note-delete.html', $data); // Render Twig template

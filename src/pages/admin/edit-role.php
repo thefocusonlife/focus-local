@@ -29,6 +29,7 @@ if (!$isPost) {
     // Your existing GET code here to fetch and display the member/role form
     ($targetId = (int) ($parts[2] ?? 0)) or $_GET['id'];
     $data['member'] = $cms->getMember()->get($targetId);
+    $data['website'] = $cms->getWebsite()->getById($_SESSION['website']);
     echo $twig->render('admin/edit-role.html', $data);
     exit();
 }
@@ -70,8 +71,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
     if ($targetId === $sessionMemberId) {
         redirect('admin/edit-role/' . $targetId, ['failure' => 'You cannot change your own role.']);
-
-        exit();
 
         exit();
     }

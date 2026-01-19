@@ -50,5 +50,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // GET = render confirm page
 $data = [];
 $data['story'] = $story;
-
+$data['website'] = $cms->getWebsite()->getById($story['website']);
 echo $twig->render('admin/story-delete.html', $data);
