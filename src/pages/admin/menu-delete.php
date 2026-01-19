@@ -1,37 +1,66 @@
 <?php
-is_admin($session->role); // Check if admin
-$menu = []; // Initialize menu array
-$deleted = null; // Did menu delete
+declare(strict_types=1);
 
-if (!$id) {
-    // If valid id
-    redirect('admin/menus/', ['failure' => 'Menu not found']); // Redirect with error
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
 }
 
-$menu = $cms->getMenu()->get($id); // Get menu
-if (!$menu) {
-    // If valid id
-    redirect('admin/menus/', ['failure' => 'Menu not found']); // Redirect with error
+require_once APP_ROOT . '/src/security/guard.php';
+
+is_admin($session->role); // admin only
+
+$menuId = (int) ($id ?? 0);
+if ($menuId <= 0) {
+    redirect('admin/menus/', ['failure' => 'Menu not found']);
 }
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // If form was submitted
-    if ($id) {
-        // If valid id
-        $deleted = $cms->getMenu()->delete($id); // Delete menu
-        if ($deleted === true) {
-            // If it worked
-            redirect('admin/menus/', ['success' => 'Menu deleted']); // Redirect with error
-        }
-        if ($deleted === false) {
-            // If contains stories
-            redirect('admin/menus/', [
-                'failure' => 'Menu contains stories that 
-            must be moved or deleted before you can delete the menu',
-            ]); // Redirect
-        }
+// Load menu
+$menu = $cms->getMenu()->get($menuId);
+if (!$menu || !isset($menu['id'])) {
+    redirect('admin/menus/', ['failure' => 'Menu not found']);
+}
+
+// Ownership/website guard (Uber bypass)
+$sessionId = (int) ($_SESSION['id'] ?? 0);
+if ($sessionId !== 1) {
+    $member = $cms->getMember()->get($sessionId);
+    $memAccountId = (int) ($member['account_id'] ?? 0);
+
+    $sessionWebsiteId = (int) ($_SESSION['website'] ?? 1);
+    if ($sessionWebsiteId <= 0) {
+        $sessionWebsiteId = 1;
+        $_SESSION['website'] = 1;
+    }
+
+    $menuWebsiteId = (int) ($menu['website'] ?? 0);
+    $menuAccountId = (int) ($menu['account_id'] ?? 0);
+
+    if ($menuWebsiteId !== $sessionWebsiteId || $menuAccountId !== $memAccountId) {
+        redirect('admin/menus/', ['failure' => 'Not allowed']);
     }
 }
 
-$data['menu'] = $menu; // Menu data for template
-echo $twig->render('admin/menu-delete.html', $data); // Render Twig template
+$deleted = null;
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $deleted = $cms->getMenu()->delete($menuId);
+
+    if ($deleted === true) {
+        redirect('admin/menus/', ['success' => 'Menu deleted']);
+    }
+
+    if ($deleted === false) {
+        redirect('admin/menus/', [
+            'failure' =>
+                'Menu contains stories that must be moved or deleted before you can delete the menu',
+        ]);
+    }
+
+    // Defensive fallback
+    redirect('admin/menus/', ['failure' => 'Delete failed']);
+}
+
+$data = [];
+$data['menu'] = $menu;
+
+echo $twig->render('admin/menu-delete.html', $data);

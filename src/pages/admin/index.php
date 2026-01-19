@@ -35,7 +35,9 @@ $data['website'] = $website;
 
 // Dashboard metrics (counts)
 $data['story_count'] = $cms->getStory()->count();
+
 $data['menu_count'] = $cms->getMenu()->count();
+
 $data['member_count'] = $cms->getMember()->count();
 $data['website_count'] = $cms->getWebsite()->count();
 

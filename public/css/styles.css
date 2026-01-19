@@ -853,6 +853,26 @@ p.alt {
     margin-top: 0.5em;
 }
 
+.text-center {
+    text-align: center;
+}
+
+.img-centered {
+    display: block;
+    margin: 1.5rem auto;
+    max-width: 100%;
+}
+
+.delete-text {
+    margin: 1rem 0 1.5rem;
+}
+
+.button-row {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
 @media (min-width: 860px) {
     th.edit,
     th.view {
@@ -1033,6 +1053,39 @@ input[type='file']::file-selector-button {
     max-width: 100%;
     max-height: 100%;
 }
+/************************************/
+/* 8.1 Admin / Delete Forms         */
+/************************************/
+.container.admin form.narrow.story-delete {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.container.admin form.narrow.story-delete h1 {
+    text-align: center;
+    width: 100%;
+}
+
+.container.admin form.narrow.story-delete img {
+    display: block;
+    margin: 1rem auto;
+    max-width: 100%;
+}
+
+.container.admin form.narrow.story-delete p {
+    text-align: center;
+}
+
+.container.admin form.narrow.story-delete .story-delete__actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+}
+
+.container.admin form.narrow.story-delete .btn {
+    width: auto;
+}
 
 /************************************/
 /* 9. Terms & Privacy Policy Stiles */
@@ -1083,6 +1136,14 @@ main.grid img.story-thumb {
 main.grid img.story-thumb.thumb-portrait {
     object-position: 50% 10% !important;
 }
+/******************************************/
+/*  TFOL Specials                         */
+/******************************************/
+/* Story Delete: escape admin grid layout */
+.container.admin form.narrow.story-delete {
+    grid-column: 1 / -1;
+}
+
 /* ===== Splash hard-lock (KEEP AT END OF FILE) ===== */
 html.splash-active {
     overflow: hidden !important;
@@ -1099,4 +1160,77 @@ body.splash-active {
 
     margin: 0 !important;
     padding: 0 !important;
+}
+/* ===== Admin Story Delete: hard reset to a single column ===== */
+./* ===== Admin Story Delete: force a single centered column ===== */
+
+/* If the admin layout is a grid, make THIS form span full width */
+#content.container.admin form.narrow.story-delete {
+    grid-column: 1 / -1 !important;
+    justify-self: center !important;
+    width: 100%;
+}
+
+/* One inner column that we control */
+main#content.container.admin form.narrow.story-delete .story-delete__inner {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+}
+
+/* Ensure anything inside doesn’t get placed into “two columns” */
+main#content.container.admin form.narrow.story-delete .story-delete__inner > * {
+    width: 100%;
+}
+
+/* Image centered */
+main#content.container.admin form.narrow.story-delete .story-delete__inner img {
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 1rem auto;
+}
+
+/* Buttons centered and not stretched */
+main#content.container.admin form.narrow.story-delete .story-delete__actions {
+    display: flex !important;
+    justify-content: center !important;
+    gap: 1rem !important;
+    width: 100%;
+    margin-top: 1rem;
+}
+
+main#content.container.admin form.narrow.story-delete .story-delete__actions .btn,
+main#content.container.admin form.narrow.story-delete .story-delete__actions input[type='submit'] {
+    width: auto !important;
+    display: inline-block !important;
+}
+/* Keep text from riding up over image */
+#content.container.admin form.narrow.story-delete .story-delete__inner img {
+    margin-bottom: 1.25rem !important;
+}
+
+#content.container.admin form.narrow.story-delete .story-delete__inner p {
+    margin-top: 0 !important;
+    max-width: 520px; /* optional: keeps the text block tidy */
+}
+/* Match button sizing */
+#content.container.admin form.narrow.story-delete .story-delete__actions .btn,
+#content.container.admin form.narrow.story-delete .story-delete__actions input[type='submit'] {
+    padding: 0.6rem 1.1rem !important; /* tweak if needed */
+    line-height: 1.1 !important;
+    height: 44px !important; /* guarantees same height */
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* Reduce image size on admin confirm/delete pages */
+#content.container.admin form.narrow.story-delete img {
+    max-width: 70%;
+    height: auto;
 }

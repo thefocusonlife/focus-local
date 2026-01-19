@@ -1,54 +1,92 @@
 <?php
-declare(strict_types=1); // Use strict types
-use PhpBook\Validate\Validate;
-include APP_ROOT . '/src/pages/menu-path.php'; // menu-path includeinclude
-$families = [];
-$menu = [];
+declare(strict_types=1);
 
-is_admin($session->role); // Check if admin
-if (!$id) {
-    // If no id
-    redirect('page-not-found/'); // Page not found
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
 }
 
-$families = $cms->getMember()->getAll3($_SESSION['account_id']); // Get all members
+require_once APP_ROOT . '/src/security/guard.php';
 
-$data['members'] = $cms->getMember()->getAll3($_SESSION['account_id']); // Member data for template
+is_admin($session->role);
 
-$member = $cms->getMember()->get($_SESSION['id']); // Get member data
-
-if (!$member) {
-    // If no member data
-    redirect('page-not-found/'); // Page not found
+$menuId = (int) ($id ?? 0);
+if ($menuId <= 0) {
+    redirect('admin/menus/', ['failure' => 'Menu not found']);
 }
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // If form submitted
-
-    $families = $_POST['account_id'] ?? '1'; // Get new role
-    $account_id = intVal($_POST['member_id']) ?? 1; // Get new role
-    $menu['account_id'] = $account_id;
-    $cms->getMenu()->update($menu, '', ''); // Update family id in database  <<< need to unset joined and member
-    $cms->getMenu()->update($menu);
-
-    redirect('admin/menus/', ['success' => 'Family updated']); // Redirect with message
-}
-if (!$id) {
-    $website = $cms->getWebsite()->getById(intval($_SESSION['website']));
-} else {
-    $website = $cms->getWebsite()->getById(intval($id));
+// Load menu (this is the record we will update)
+$menu = $cms->getMenu()->get($menuId);
+if (!$menu || !isset($menu['id'])) {
+    redirect('admin/menus/', ['failure' => 'Menu not found']);
 }
 
-if (empty($_SESSION['id'])) {
-    $member = 0;
-    $mem = intval($website['id']);
-} else {
-    $member = $cms->getMember()->get(intval($_SESSION['id']));
-    $mem = intval($member['account_id']);
+// Ownership/website guard (Uber bypass)
+$sessionId = (int) ($_SESSION['id'] ?? 0);
+if ($sessionId !== 1) {
+    $member = $cms->getMember()->get($sessionId);
+    if (!$member || !isset($member['id'])) {
+        redirect('admin/menus/', ['failure' => 'Not allowed']);
+    }
+
+    $memAccountId = (int) ($member['account_id'] ?? 0);
+
+    $sessionWebsiteId = (int) ($_SESSION['website'] ?? 1);
+    if ($sessionWebsiteId <= 0) {
+        $sessionWebsiteId = 1;
+        $_SESSION['website'] = 1;
+    }
+
+    $menuWebsiteId = (int) ($menu['website'] ?? 0);
+    $menuAccountId = (int) ($menu['account_id'] ?? 0);
+
+    // Normal admins can only edit menus in their current website + their family/account
+    if ($menuWebsiteId !== $sessionWebsiteId || $menuAccountId !== $memAccountId) {
+        redirect('admin/menus/', ['failure' => 'Not allowed']);
+    }
 }
 
-$data['member'] = $member; // Member data for template
-$data['families'] = $families;
-$data['menu'] = $menu; // Author data data for template
+// Website data for header/context
+$websiteId = (int) ($_SESSION['website'] ?? 1);
+if ($websiteId <= 0) {
+    $websiteId = 1;
+    $_SESSION['website'] = 1;
+}
+$website = $cms->getWebsite()->getById($websiteId);
+
+// Families list (same list you were already using)
+$accountId = (int) ($_SESSION['account_id'] ?? 0);
+$families = $cms->getMember()->getAll3($accountId);
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if ((int) ($_SESSION['id'] ?? 0) !== 1) {
+        redirect('admin/menus/', ['failure' => 'Not allowed']);
+    }
+
+    // Your form appears to post a member.id (e.g., 4), not an account_id
+    $selectedMemberId = (int) ($_POST['member_id'] ?? 0);
+    if ($selectedMemberId <= 0) {
+        redirect('admin/menu-family/' . $menuId, ['failure' => 'Invalid selection']);
+    }
+
+    $selectedMember = $cms->getMember()->get($selectedMemberId);
+    $newAccountId = (int) ($selectedMember['id'] ?? 0);
+    if ($newAccountId <= 0) {
+        redirect('admin/menu-family/' . $menuId, ['failure' => 'Invalid family selection']);
+    }
+
+    $ok = $cms->getMenu()->updateAccountId($menuId, $newAccountId);
+    if (!$ok) {
+        redirect('admin/menu-family/' . $menuId, ['failure' => 'Update failed']);
+    }
+
+    redirect('admin/menus/', ['success' => 'Family updated']);
+}
+
+$data = [];
+$data['menu'] = $menu;
 $data['website'] = $website;
-echo $twig->render('admin/menu-family.html', $data); // Render Twig template
+$data['families'] = $families;
+$data['members'] = $families; // keep your template name stable
+$data['member'] = $cms->getMember()->get($sessionId); // current logged-in user (for header, if used)
+
+echo $twig->render('admin/menu-family.html', $data);

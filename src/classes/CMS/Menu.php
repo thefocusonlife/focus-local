@@ -44,6 +44,21 @@ class Menu
         return $this->db->runSQL($sql, $arguments)->fetchAll();
     }
 
+    public function getAllByWebsite(int $websiteId): array
+    {
+        $websiteId = (int) $websiteId;
+        if ($websiteId <= 0) {
+            $websiteId = 1;
+        }
+
+        $sql = "SELECT id, website, name, navigation, account_id, seo_name, position
+              FROM menu
+             WHERE website = :website
+             ORDER BY account_id ASC, position ASC;";
+
+        return $this->db->runSQL($sql, ['website' => $websiteId])->fetchAll();
+    }
+
     public function getFirstForWebsite(int $websiteId): ?int
     {
         $sql = "
@@ -104,6 +119,24 @@ class Menu
                 throw $e; // Re-throw exception
             }
         }
+    }
+
+    public function updateAccountId(int $menuId, int $accountId): bool
+    {
+        $menuId = (int) $menuId;
+        $accountId = (int) $accountId;
+
+        $sql = "UPDATE menu
+               SET account_id = :account_id
+             WHERE id = :id
+             LIMIT 1;";
+
+        $stmt = $this->db->runSQL($sql, [
+            'account_id' => $accountId,
+            'id' => $menuId,
+        ]);
+
+        return $stmt->rowCount() === 1;
     }
 
     // Update existing menu

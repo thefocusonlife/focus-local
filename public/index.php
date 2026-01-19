@@ -15,7 +15,11 @@ $uri = $_SERVER['REQUEST_URI'] ?? '';
 
 // If someone hits the non-public front path, redirect to the canonical /public path
 if (strpos($uri, '/focus-local__RESTORE/index/') === 0) {
-    header('Location: /focus-local__RESTORE/public' . substr($uri, strlen('/focus-local')), true, 302);
+    header(
+        'Location: /focus-local__RESTORE/public' . substr($uri, strlen('/focus-local')),
+        true,
+        302,
+    );
     exit();
 }
 
@@ -111,13 +115,18 @@ $parts = $path === '' ? [''] : explode('/', $path);
 if ($parts[0] != 'admin') {
     // If an admin page
     $page = $parts[0] ?: 'index'; // Page name (or use index)
-    if (!isset($parts[1]) and $parts[0] === '') {
-        $page = 'home';
-        $php_page = APP_ROOT . '/src/pages/' . $page . '.php';
+    if (!isset($parts[1]) && $parts[0] === '') {
+        $page = 'index';
+        $id = (int) ($_SESSION['website'] ?? 1);
+        if ($id <= 0) {
+            $id = 1;
+        }
 
+        $php_page = APP_ROOT . '/src/pages/' . $page . '.php';
         include $php_page;
         exit();
     }
+
     // Special-case: Guide uses /guide and /guide/<slug> (slug is not numeric)
     if ($parts[0] === 'guide') {
         $page = 'guide';
@@ -136,13 +145,7 @@ if ($parts[0] != 'admin') {
         $id = intval($parts[2]) ?? 1; // Get ID
     }
 }
-//if (isset($_SESSION['id']) and $_SESSION['id']==1) {
-//    $cms->getSession()->create(0,$id);
-//}
-//var_dump_pre($path);
-//var_dump_pre($parts);
-//var_dump_pre($id);
-//echo "public/index.php -24";
+
 if (isset($id)) {
     $id = filter_var($id, FILTER_VALIDATE_INT); // Validate ID
 }

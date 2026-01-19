@@ -12,23 +12,40 @@ is_admin($session->role);
 $websiteId = (int) ($_SESSION['website'] ?? 1);
 if ($websiteId <= 0) {
     $websiteId = 1;
+}
+$website = $cms->getWebsite()->getById($websiteId);
+if (!$website || !isset($website['id'])) {
+    $websiteId = 1;
     $_SESSION['website'] = 1;
+    $website = $cms->getWebsite()->getById(1);
 }
 
+$member = $cms->getMember()->get((int) $_SESSION['id']);
+$memberWebsiteId = (int) ($member['website'] ?? 0);
+
+if ($memberWebsiteId > 0 && $memberWebsiteId !== $websiteId) {
+    // hard reset to the member's own website
+    $websiteId = $memberWebsiteId;
+    $_SESSION['website'] = $websiteId;
+    $data['website'] = $cms->getWebsite()->getById($websiteId);
+}
+
+$data['website'] = $website;
 $data = [];
 $data['success'] = $_GET['success'] ?? null;
 $data['failure'] = $_GET['failure'] ?? null;
 
 // Your current Uber rule: id==1 sees all menus
+// 3) Menu loading — Uber vs normal admin
 if ((int) ($_SESSION['id'] ?? 0) === 1) {
+    // Uber admin:
+    // still global authority, but default view scoped to selected website
     $data['menus'] = $cms->getMenu()->getAll();
-    $data['website'] = $cms->getWebsite()->getById($websiteId);
+    //$data['menus'] = $cms->getMenu()->getAllByWebsite($websiteId);
 } else {
+    // Normal admin: website + account scoped
     $member = $cms->getMember()->get((int) $_SESSION['id']);
     $mem = (int) ($member['account_id'] ?? 0);
-
-    $website = $cms->getWebsite()->getById($websiteId);
-    $data['website'] = $website;
 
     $data['menus'] = $cms->getMenu()->getAll2($websiteId, $mem);
 }
