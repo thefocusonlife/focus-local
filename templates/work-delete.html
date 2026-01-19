@@ -1,12 +1,21 @@
-{% extends 'layout.html' %}
-{% block title %}Delete image{% endblock %}
+{% extends 'admin/layout.html' %}
 {% block content %}
-<main class="container" id="content">
-  <section class="header"><h1>Delete Story</h1></section>
-  <form action="{{ doc_root }}work-delete/{{ story.id }}" method="POST" class="form-membership">
-    <p>Click confirm to delete the story: <i>{{ story.title }}</i></p>
-    <input type="submit" name="delete" value="confirm"  class="btn btn-primary" />
-    <a href="{{ doc_root }}member/{{ session.id }}" class="btn btn-danger">cancel</a>
-  </form>
-</main>
-{% endblock %}
+<main class="container admin" id="content">
+
+	{% block title %}Delete image
+	{% endblock %}
+	{% block content %}
+		<main class="container" id="content">
+
+			<h1>Delete Story</h1>
+
+			<form action="{{ doc_root }}work-delete/{{ story.id }}" method="POST" class="narrow">
+				<p><img src="{{ doc_root }}uploads/{{ story.image_file }}" alt="{{ story.image_alt }}"></p>
+				<p>Click confirm to delete the story:
+					<em>{{ story.title }}</em>
+				</p>
+				<input type="submit" name="delete" value="confirm" class="btn btn-primary"/>
+				<a href="{{ doc_root }}admin/stories" class="btn btn-danger">cancel</a>
+			</form>
+		</main>
+	{% endblock %}

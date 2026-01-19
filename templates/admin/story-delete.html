@@ -1,15 +1,31 @@
 {% extends 'admin/layout.html' %}
 {% block content %}
 
-  <main class="container admin" id="content">
-    <form action="{{ doc_root }}admin/story-delete/{{story.id}}" method="POST" class="narrow">
-      <h1>Delete Story</h1>
+	<main class="container admin" id="content">
+		<form action="{{ doc_root }}admin/story-delete/{{ story.id }}" method="POST" class="narrow story-delete">
 
-      {% if warning %}<div class="alert alert-danger">{{ warning }}</div>{% endif %}
+			<h1>Delete Story</h1>
+			<!--	<div style="border:4px solid red; padding:8px; margin:10px 0;">
+													TEMPLATE FINGERPRINT: story-delete.html UPDATED
+												</div>
+									      -->
+			{% if warning %}
+				<div class="alert alert-danger story-delete__warning">{{ warning }}</div>
+			{% endif %}
 
-      <p>Click confirm to delete the story: <em>{{ story.title }}</em></p>
-      <input type="submit" name="delete" value="confirm"  class="btn btn-primary" />
-      <a href="{{ doc_root }}admin/stories" class="btn btn-danger">cancel</a>
-    </form>
-  </main>
+			<img src="{{ doc_root }}uploads/{{ story.image_file }}" alt="{{ story.image_alt }}" class="story-delete__image">
+
+			<p class="story-delete__text">
+				Click confirm to delete the story:<br>
+				<em>{{ story.title }}</em>
+			</p>
+
+			<div class="story-delete__actions">
+				<a href="{{ doc_root }}admin/stories" class="btn btn-danger">Cancel</a>
+				<input type="submit" name="delete" value="Confirm" class="btn btn-primary">
+			</div>
+
+		</form>
+	</main>
+
 {% endblock %}

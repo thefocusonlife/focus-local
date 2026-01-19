@@ -1,46 +1,54 @@
 <?php
-$deleted = null; // Did story delete
-is_admin($session->role); // Check if admin
-include APP_ROOT . '/src/pages/menu-path.php';
+declare(strict_types=1);
 
-if (!empty($parts[2])) {
-    $id = $parts[2];
-}
-if (!$id) {
-    // If no id
-    redirect('admin/stories/', ['failure' => 'Story not found']); // Redirect
-}
-$story = $cms->getStory()->get($id, false); // Get story
-if (!$story) {
-    // If no story
-    redirect('admin/stories/', ['failure' => 'Story not found']); // Redirect
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
 }
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // If form was submitted
-    if (isset($story['image_id'])) {
-        // If there was an image
-        $path = APP_ROOT . '/public/uploads/' . $story['image_file']; // Set the image path
-        $cms->getStory()->imageDelete($story['image_id'], $path, $id); // Delete image
+require_once APP_ROOT . '/src/security/guard.php';
+
+is_admin($session->role);
+
+$storyId = (int) ($id ?? 0);
+if ($storyId <= 0) {
+    redirect('admin/stories/', ['failure' => 'Story not found']);
+}
+
+// Load story (use your real getter; keep false if you need drafts/unpublished)
+$story = $cms->getStory()->get($storyId, false);
+if (!$story || !isset($story['id'])) {
+    redirect('admin/stories/', ['failure' => 'Story not found']);
+}
+
+// Ownership guard (Uber bypass)
+$sessionId = (int) ($_SESSION['id'] ?? 0);
+$ownerId = (int) ($story['member_id'] ?? 0);
+
+if ($sessionId !== 1 && $ownerId !== $sessionId) {
+    redirect('admin/stories/', ['failure' => 'Not allowed']);
+}
+
+// POST = actually delete
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // If story has an image, delete it first (matches your work-delete pattern)
+    if (!empty($story['image_id']) && !empty($story['image_file'])) {
+        $imageId = (int) $story['image_id'];
+        $path = APP_ROOT . '/public/uploads/' . basename((string) $story['image_file']);
+
+        $cms->getStory()->imageDelete($imageId, $path, $storyId);
     }
-    // if there are comments -- delete prior to deleting story
-    $comment = $cms->getComment()->getAll($story['id']);
-    if (isset($comment)) {
-        foreach ($comment as $item) {
-            $deleted = $cms->getComment()->delete($item['story_id']);
-        }
-    }
-    // Delete Story
-    $deleted = $cms->getStory()->delete($id); // Delete story
-    if ($deleted === true) {
-        // If deleted
-        redirect('admin/stories/', ['success' => 'Story deleted']); // Redirect
-    } else {
-        // Otherwise
-        throw new Exception('Unable to delete story'); // Throw an exception
-    }
+
+    // Delete comments (your Comment->delete currently deletes by story_id)
+    $cms->getComment()->delete($storyId);
+
+    // Delete story
+    $cms->getStory()->delete($storyId);
+
+    redirect('admin/stories/', ['success' => 'Story deleted']);
 }
 
-$data['story'] = $story; // Story data for template
+// GET = render confirm page
+$data = [];
+$data['story'] = $story;
 
-echo $twig->render('admin/story-delete.html', $data); // Render Twig template
+echo $twig->render('admin/story-delete.html', $data);
