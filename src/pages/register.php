@@ -3,7 +3,9 @@ declare(strict_types=1); // Use strict types
 use PhpBook\Validate\Validate; // Import Validate class
 
 require_once __DIR__ . '/../../config/recaptcha.php';
-
+// DEBUG: confirm DB in use
+$dbname = $cms->getDb()->runSQL('SELECT DATABASE() AS db')->fetch();
+error_log('[DB] connected=' . ($dbname['db'] ?? 'UNKNOWN'));
 $member = []; // Initialize member array
 $errors = [];
 $agegroups = [];
@@ -13,6 +15,8 @@ $data = [];
 $last_id = 0;
 $lastid = 0;
 $menuId = (int) ($menuId ?? 0);
+$confirm = [];
+
 if ($menuId <= 0) {
     // Fallback: choose a sensible default menu id for this member/website
     // (see Option B below for how to do this properly)
@@ -28,47 +32,10 @@ if ($_SERVER['REQUEST_METHOD'] != 'POST') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // If form was posted
-    // Get form data
-    $member1 = $cms->getMember()->get($_SESSION['id']);
-    $member['website'] = intval($_POST['website']); // Get current website
-    $member['forename'] = $_POST['forename']; // Get forename
-    $member['surname'] = $_POST['surname']; // Get surname
-    $member['password'] = $_POST['password']; // Get password
-    $confirm = $_POST['confirm']; // Get password confirmation
-    $member['email_master'] = $_POST['email'];
-    if ($_POST['website'] != 1) {
-        $member['email'] = $_POST['email'] . $_POST['website'];
-    } else {
-        $member['email'] = $_POST['email'];
-    }
-    $member['account_id'] = intval($_POST['lastid']);
-    $abc = $cms->getMember()->getPhotolimit(intval($_POST['plan']));
-    $member['photo_limit'] = $abc['photolimit'];
-    $member['agegroup'] = intval($_POST['agegroup']);
-    $member['plan'] = intval($_POST['plan']);
-    $member['pagelimit'] = intval(50);
-    $member['sorttype'] = $cms->getSorttype()->getDefaultIdForMenu($menuId);
-    $member['publik'] = 1;
-    $member['termsok'] = 0;
-    if ($member['plan'] != 3) {
-        $member['role'] = 'pending';
-    } else {
-        $member['role'] = 'family';
-    }
-    if ($_POST['website'] != 1) {
-        $valid = $cms->getMember()->getIdByEmail($_POST['email']);
-        if ($valid == 0) {
-            $errors['master'] =
-                'You must register with main theFocusOnLife website in order to register with this website.';
-        } else {
-            $errors['master'] = '';
-        }
-    }
     // -----------------------------
     // reCAPTCHA v3 verification
     // -----------------------------
-    $recaptchaToken = $_POST['g-recaptcha-response'] ?? '';
+    /*    $recaptchaToken = $_POST['g-recaptcha-response'] ?? '';
     // error_log('REGISTER recaptcha token: ' . substr($recaptchaToken, 0, 40));
 
     if (empty($recaptchaToken)) {
@@ -83,41 +50,117 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $errors['message'] = 'register failed security check. Please try again.';
         } // end verify_recaptcha_v3()
     } // end empty token check
+*/
+    // If form was posted
+    // Get form data
+
+    if ($_POST['website'] != 1) {
+        $valid = $cms->getMember()->getIdByEmail($_POST['email']);
+        if ($valid == 0) {
+            $errors['master'] =
+                'You must register with main theFocusOnLife website in order to register with this website.';
+        } else {
+            $errors['master'] = '';
+        }
+    }
+
+    $websiteId = (int) ($_POST['website'] ?? 0);
+    $emailBase = trim((string) ($_POST['email'] ?? ''));
+    $confirm = (string) ($_POST['confirm'] ?? '');
+    // TFOL rule: suffix email for non-main websites
+    $emailForLogin = $websiteId !== 1 ? $emailBase . $websiteId : $emailBase;
+
+    // photolimit from plan
+    $planId = (int) ($_POST['plan'] ?? 0);
+    $planRow = $cms->getMember()->getPhotolimit($planId);
+    $photoLimit = isset($planRow['photolimit']) ? (int) $planRow['photolimit'] : 0;
+
+    $params = [
+        'website' => $websiteId,
+        'forename' => trim((string) ($_POST['forename'] ?? '')),
+        'surname' => trim((string) ($_POST['surname'] ?? '')),
+        'password' => (string) ($_POST['password'] ?? ''),
+        'email' => $emailForLogin,
+        'email_master' => $emailBase,
+        'role' => 'admin',
+        'photo_limit' => $photoLimit,
+        'agegroup' => (int) ($_POST['agegroup'] ?? 0),
+        'plan' => (int) 1,
+        'pagelimit' => 50,
+        // If $menuId exists here, keep your current logic
+        'sorttype' => (int) $cms->getSorttype()->getDefaultIdForMenu($menuId),
+        'publik' => 1,
+        'termsok' => 0,
+        'status' => 'pending',
+    ];
+
     // Validate form data
-    $errors['forename'] = Validate::isText($member['forename'], 1, 254)
+    $errors['forename'] = Validate::isText($params['forename'], 1, 254)
         ? ''
         : 'Forename must be 1-254 characters';
-    $errors['surname'] = Validate::isText($member['surname'], 1, 254)
+    $errors['surname'] = Validate::isText($params['surname'], 1, 254)
         ? ''
         : 'Surname must be 1-254 characters';
-    $errors['email'] = Validate::isEmail($member['email']) ? '' : 'Please enter a valid email';
-    $errors['password'] = Validate::isPassword($member['password'])
+    $errors['email'] = Validate::isEmail($params['email_master'])
+        ? ''
+        : 'Please enter a valid email';
+
+    $errors['password'] = Validate::isPassword($params['password'])
         ? ''
         : 'Passwords must be at least 8 characters and have:<br>
                 A lowercase letter<br>An uppercase letter<br>A number
                 <br>And a special character';
-    $errors['confirm'] = ($member['password'] = $confirm) ? '' : 'Passwords do not match';
+    $errors['confirm'] = $params['password'] === $confirm ? '' : 'Passwords do not match';
+
     $invalid = implode($errors); // Join error messages
 
     if (!$invalid) {
         // If no errors
-        $result = $cms->getMember()->create($member); // Create member + store result
+        error_log(
+            '[REGISTER] website=' .
+                (int) ($params['website'] ?? 0) .
+                ' email_master=' .
+                var_export($params['email_master'] ?? null, true) .
+                ' email=' .
+                var_export($params['email'] ?? null, true),
+        );
+
+        $result = $cms->getMember()->create($params);
+
         if ($result === false) {
             // If result is false
             //$errors['email'] = 'Email address already used click Back refresh page re-enter appending Website ID shown below'; // Store a warning
-            if ($member['website'] > 1) {
-                redirect('register/3', [
-                    'failure' => 'Email address already used.  Append Website ID to email address.',
-                ]); // Redirect with error
-            } else {
-                redirect('register/3', [
+            if ($result === false) {
+                $w = (int) ($member['website'] ?? 1);
+                redirect('register/' . $w, [
                     'failure' =>
-                        'Email address already used.  Only one email address allowed on the Focus On Life website.',
-                ]); // Redirect with error
+                        'That email is already registered on the main site. Please log in instead.',
+                ]);
+                // Website 1: already registered
+                if ($w === 1) {
+                    redirect('register/' . $w, [
+                        'failure' =>
+                            'That email is already registered on the main site. Please log in instead.',
+                    ]);
+                }
+
+                // Website > 1: could be either already registered on that site OR your “append id” rule
+                redirect('register/' . $w, [
+                    'failure' =>
+                        'That email is already registered for this website. Please log in.',
+                ]);
             }
         } else {
             // Otherwise send to login
-            redirect('index/' . $member['website']);
+            // SUCCESS
+
+            $_SESSION['flash'] = [
+                'type' => 'success',
+                'message' => 'Hybrid backup completed successfully to BACKUP_A.',
+            ];
+            // Redirect to guest home (index/1)
+            header('Location: ' . $doc_root . 'index/' . (int) $params['website']);
+            exit();
         }
     }
 }
@@ -138,29 +181,15 @@ if (!$id) {
     $id = 1;
 }
 $website = $cms->getWebsite()->getById(intval($id));
-/*
-if (! $_SESSION['id']) {
-    $mem =1;
-} else {
-    $member = $cms->getMember()->get(intval($_SESSION['id']));
-    $men = $member['account_id'];
-}
-*/
-//get last id and increment by 1 for account_ID
-$lastid = $cms->getMember()->getLastId();
-$last_id = intval($lastid['id']);
-$last_id = $last_id + 1;
+
 $member = [];
 $data['success'] = $_GET['success'] ?? null; // Check for success message
 $data['failure'] = $_GET['failure'] ?? null; // Check for failure message
-//$data['navigation'] = $cms->getMenu()->getAll2($website['id'],$men);         // All menus for nav
-//$data['member']     = $member;                               // Member data
 $data['agegroups'] = $agegroups;
 $data['plans'] = $plans;
 $data['errors'] = $errors; // Error messages
 $data['website'] = $website; // $cms->getWebsite()->getById(intval($id));
-$data['lastid'] = $last_id;
 
 echo $twig->render('register.html', $data); // Render Twig template
-//echo $twig->render('plans.html', $data);
+
 exit();

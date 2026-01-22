@@ -148,173 +148,142 @@ class Member
     // Create a new member
     public function create(array $member): bool
     {
-        $member['password'] = password_hash($member['password'], PASSWORD_DEFAULT); // Hash password
+        $params = [
+            'website' => (int) ($member['website'] ?? 0),
+            'forename' => trim((string) ($member['forename'] ?? '')),
+            'surname' => trim((string) ($member['surname'] ?? '')),
+            'email' => trim((string) ($member['email'] ?? '')),
+            'email_master' => trim((string) ($member['email_master'] ?? '')),
+            'password' => (string) ($member['password'] ?? ''),
+            'role' => (string) ($member['role'] ?? 'admin'),
+            'status' => (string) ($member['status'] ?? 'pending'),
+            'photo_limit' => (int) ($member['photo_limit'] ?? 0),
+            'agegroup' => (int) ($member['agegroup'] ?? 0),
+            'plan' => (int) ($member['plan'] ?? 1),
+            'pagelimit' => (int) ($member['pagelimit'] ?? 50),
+            'sorttype' => (int) ($member['sorttype'] ?? 1),
+            'publik' => (int) ($member['publik'] ?? 1),
+            'termsok' => (int) ($member['termsok'] ?? 0),
+        ];
+
+        if ($params['website'] <= 0 || $params['email'] === '' || $params['password'] === '') {
+            return false;
+        }
+
+        $params['password'] = password_hash($params['password'], PASSWORD_DEFAULT);
+
+        $started = false;
 
         try {
-            // Try to add member
-            $sql = "INSERT INTO member (website, forename, surname, email, email_master, password, role, account_id, photo_limit, agegroup, plan, pagelimit,sorttype,  publik, termsok)
-                    VALUES (:website, :forename, :surname, :email, :email_master, :password, :role, :account_id, :photo_limit, :agegroup, :plan, :pagelimit, :sorttype, :publik, :termsok);"; // SQL to add member
+            $started = $this->db->beginTransaction();
+            if (!$started) {
+                throw new \RuntimeException('Failed to start transaction');
+            }
 
-            $this->db->runSQL($sql, $member); // Run SQL
-            return true; // Return true
+            $sql = "
+            INSERT INTO member
+                (website, forename, surname, email, email_master, password, role, status,
+                 photo_limit, agegroup, plan, pagelimit, sorttype, publik, termsok)
+            VALUES
+                (:website, :forename, :surname, :email, :email_master, :password, :role, :status,
+                 :photo_limit, :agegroup, :plan, :pagelimit, :sorttype, :publik, :termsok);
+        ";
+            $this->db->runSql($sql, $params);
+
+            $newId = (int) $this->db->lastInsertId();
+            if ($newId <= 0) {
+                throw new \RuntimeException('lastInsertId() returned 0');
+            }
+
+            $this->db->runSql(
+                'UPDATE member SET account_id = :account_id WHERE id = :id LIMIT 1;',
+                ['account_id' => $newId, 'id' => $newId],
+            );
+
+            if ($this->db->inTransaction()) {
+                $this->db->commit();
+            }
+
+            return true;
         } catch (\PDOException $e) {
-            // If PDOException thrown
-            if ($e->errorInfo[1] === 1062) {
-                // If error indicates duplicate entry
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+
+            if (isset($e->errorInfo[1]) && (int) $e->errorInfo[1] === 1062) {
                 return false;
-            } else {
-                throw $e;
-            } // Re-throw exception
+            }
+
+            throw $e;
+        } catch (\Throwable $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            throw $e;
         }
     }
 
     // Update an existing member
     public function update(array $member): bool
     {
-        unset($member['joined'], $member['picture']); // Remove joined and member from array
-        try {
-            $this->db->beginTransaction(); // Start                                                         // Try to update member
-            $sql = "UPDATE member
-                       SET website = :website, forename = :forename, surname = :surname, email = :email, email_master = :email_master, role = :role,
-                       account_id =:account_id, photo_limit = :photo_limit, agegroup = :agegroup, plan = :plan,
-                       pagelimit = :pagelimit,sorttype = :sorttype,  publik = :publik, termsok = :termsok
-                       WHERE id = :id;";
-            // SQL to update member
-            $this->db->runSQL($sql, $member);
-            $this->db->commit(); // Commit transaction
+        unset($member['joined'], $member['picture']);
 
-            return true; // Return true
-        } catch (\PDOException $e) {
-            // If PDOException thrown
-            if ($e->errorInfo[1] == 1062) {
-                // If a duplicate (email in use)
-                return false; // Return false
-            } else {
-                throw $e; // Any other error
-            }
-        } // Re-throw exception
-    }
+        // Whitelist fields that are actually updatable from the profile form
+        $params = [
+            'id' => (int) ($member['id'] ?? 0),
+            'forename' => (string) ($member['forename'] ?? ''),
+            'surname' => (string) ($member['surname'] ?? ''),
+            'email' => (string) ($member['email'] ?? ''),
+            'publik' => (int) ($member['publik'] ?? 0),
+            'termsok' => (int) ($member['termsok'] ?? 0),
+            'account_id' => (int) ($member['account_id'] ?? 0),
+            'photo_limit' => (int) ($member['photo_limit'] ?? 0),
+            'agegroup' => (int) ($member['agegroup'] ?? 0),
+            'plan' => (int) ($member['plan'] ?? 0),
+        ];
 
-    // Upload member profile image
-    /*  public function pictureCreate(int $id, string $filename, string $temporary, string $destination): bool
-    {
-        if ($temporary) {
-            // If image uploaded
-        // Crop and save file
-        //$file_size = (filesize($temporary)/ 1000000);
-        //var_dump_pre($file_size);
-
-         $image_data  = getimagesize($temporary);              // Get tempory image data
-        $orig_width  = $image_data[0];                        // Image width
-        $orig_height = $image_data[1];                        // Image length
-        // set cropping size for upload image
-
-            $new_width = 350;                          // Square -- may want to give it a fixed siz later on
-            $new_height = 350;
-
-        // var_dump_pre($temporary);
-        // var_dump_pre($image_data);
-        //     exit;     // for testing image data
-        $file_string = $destination;
-        $file_extension = pathinfo($file_string, PATHINFO_EXTENSION);
-        $file_extension = strtolower($file_extension);
-
-        if ($file_extension == "jpg" or $file_extension =="jpeg") {
-            $original_image = imagecreatefromjpeg($temporary);
-        } elseif ($file_extension == "png") {
-            $original_image = imagecreatefrompng($temporary);
-        } elseif ($file_extension == "gif") {
-            $original_image = imagecreatefromgif($temporary);
-        } elseif ($file_extension == "bmp") {
-            $original_image = imagecreatefrombmp($temporary);
-        } else {
-
+        if ($params['id'] <= 0) {
+            return false;
         }
-         // See if it failed
 
-    if(!$original_image)
-    {
-    // Create a black image
-        $im  = imagecreatetruecolor(150, 30);
-        $bgc = imagecolorallocate($im, 255, 255, 255);
-        $tc  = imagecolorallocate($im, 0, 0, 0);
+        $sql = "
+        UPDATE member
+           SET forename    = :forename,
+               surname     = :surname,
+               email       = :email,
+               publik      = :publik,
+               termsok     = :termsok,
+               account_id  = :account_id,
+               photo_limit = :photo_limit,
+               agegroup    = :agegroup,
+               plan        = :plan
+         WHERE id = :id
+         LIMIT 1;
+    ";
 
-    imagefilledrectangle($im, 0, 0, 150, 30, $bgc);
+        try {
+            $this->db->beginTransaction();
 
-    // Output an error message
-    imagestring($im, 1, 5, 5, 'Error loading ' . $temporary, $tc);
+            $stmt = $this->db->runSQL($sql, $params);
+
+            $this->db->commit();
+
+            // rowCount() can be 0 if user saved without changing anything — treat that as success
+            return $stmt !== false;
+        } catch (\PDOException $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+
+            if (isset($e->errorInfo[1]) && (int) $e->errorInfo[1] === 1062) {
+                // duplicate email
+                return false;
+            }
+
+            throw $e;
+        }
     }
 
-
-
-    $original_width = imagesx($original_image);
-    $original_height = imagesy($original_image);
-
-    // Calculate the new image dimensions
-    $scale_ratio = min($new_width / $original_width, $new_height / $original_height);
-    $width = intval($original_width * $scale_ratio);
-    $height = intval($original_height * $scale_ratio);
-    // Create a new blank image
-    $new_image = imagecreatetruecolor($width, $height);
-    // Resize the original image to fit the new image size
-    // Load the original image
-
-    //$source_image = imagecreatefromjpeg('path/to/small_image.jpg');
-
-    // Get the dimensions of the original image
-     $source_width = imagesx($new_image);
-    $source_height = imagesy($new_image);
-
-    // Create a new blank image with the desired dimensions
-
-        $target_width = 350;
-        $target_height = 350;
-
-    $target_image = imagecreatetruecolor($target_width, $target_height);
-
-
-    // Copy and resample the original image to the new image size
-    imagecopyresampled($target_image, $new_image, 0, 0, 0, 0, $target_width, $target_height, $source_width, $source_height);
-    $white = imagecolorallocate($new_image, 255,255, 255); // Set the background color to red
-    //imagefill($new_image, 0, 0, $white);
-    // Save the resized image to a file
-
-    //imagejpeg($target_image, 'path/to/large_image.jpg');
-
-    // Free up memory used by the image resources
-    //imagedestroy($source_image);
-    imagedestroy($target_image);
-
-    imagecopyresampled($new_image, $original_image, 0, 0, 0, 0, $width, $height, $original_width, $original_height);
-
-    // Set the crop coordinates
-    $crop_x = ($width - $new_width) / 2;
-    $crop_y = ($height - $new_height) / 2;
-
-    // Create a new cropped image
-    //$cropped_image = imagecrop($new_image, ['x' => $crop_x, 'y' => $crop_y, 'width' => $new_width, 'height' => $new_height]);
-
-
-
-    // Save the image to a file
-    $filename = $file_string;
-    $folder = UPLOADS;
-    $filepath = $filename;
-    imagejpeg($new_image, $filepath);
-
-    // Free up memory
-    imagedestroy($original_image);
-    imagedestroy($new_image);
-    imagedestroy($target_image);
-    $imageName = basename($filename);
-        $sql = "UPDATE member
-                   SET picture = :picture
-                 WHERE id = :id;";                                  // SQL to create picture
-        $this->db->runSQL($sql, ['id'=>$id, 'picture'=>$imageName]); // Run SQL pass in user id and filename
-        return true;                                                // Done return true
-    }
-    }
-*/
     // new code
     public function pictureCreate(
         int $id,

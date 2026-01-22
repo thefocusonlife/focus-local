@@ -73,6 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // -----------------------------
     // reCAPTCHA v3 verification
     // -----------------------------
+
     $recaptchaToken = $_POST['g-recaptcha-response'] ?? '';
     // error_log('LOGIN recaptcha token: ' . substr($recaptchaToken, 0, 40));
 
@@ -109,7 +110,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if (empty($member)) {
             $w = $cms->getWebsite()->getById($website_id);
             $errors['message'] = 'This email not valid for ' . $w['name'];
-        } elseif ($member && $member['role'] == 'suspended') {
+        } elseif ($member && $member['status'] == 'suspended') {
             // If member is suspended
             $errors['message'] = 'Account suspended'; // Store message
         } /*
@@ -118,7 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 }
                 */ elseif (
             $member &&
-            $member['role'] == 'pending'
+            $member['status'] == 'pending'
         ) {
             // If member is pending
             $errors['message'] =

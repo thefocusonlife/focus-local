@@ -108,10 +108,7 @@
 				<input type="hidden" name="photo_limit" value="150" id="photo_limit" class="form-control">
 				<div class="errors">{{ errors.photo_limit }}</div>
 			</div>
-			<div class="form-group">
-				<input type="hidden" name="lastid" value={{lastid}} id="lastid" readonly class="form-control">
-				<div class="errors">{{ errors.lastid}}</div>
-			</div>
+
 			<div class="form-group">
 				<input type="hidden" name="publik" value={{publik}} id="publik" readonly class="form-control">
 				<div class="errors">{{ errors.publik}}</div>
@@ -136,6 +133,7 @@ if (! forms.length)
 return;
 
 
+
 forms.forEach(function (form) {
 const action = form.getAttribute('data-recaptcha-action') || '';
 
@@ -143,6 +141,7 @@ form.addEventListener('submit', function (e) {
 const existing = form.querySelector('input[name="g-recaptcha-response"]');
 if (existing && existing.value) 
 return;
+
 
 
 e.preventDefault();

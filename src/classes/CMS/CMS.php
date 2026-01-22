@@ -232,5 +232,17 @@ class CMS
         }
         return $this->website; // Return website object
     } // Return website object
+    public function redirect(string $path, array $params = []): void
+    {
+        // Ensure path is relative (no leading slash required)
+        $url = DOC_ROOT . ltrim($path, '/');
+
+        if (!empty($params)) {
+            $url .= '?' . http_build_query($params);
+        }
+
+        header('Location: ' . $url);
+        exit();
+    }
 }
 ?>

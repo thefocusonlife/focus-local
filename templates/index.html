@@ -1,8 +1,14 @@
 {% extends 'layout.html' %}
 {% block content %}
-<main class="container grid" id="content">
-  {% if failure %}<div class="alert alert-danger">{{ failure }}</div>{% endif %}
-  {% if success %}<div  class="alert alert-success">{{ success }}</div>{% endif %} 
- {{ include('story-summaries.html') }}
-</main>
+
+	<main class="container grid" id="content">
+		{% if failure %}
+			<div class="alert alert-danger">{{ failure }}</div>
+		{% endif %}
+		{% if success %}
+			<div class="alert alert-success">{{ success }}</div>
+		{% endif %}
+
+		{{ include('story-summaries.html') }}
+	</main>
 {% endblock %}
