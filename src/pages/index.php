@@ -1,5 +1,8 @@
 <?php
 declare(strict_types=1);
+error_log(
+    '[INDEX] ' . ($_SERVER['REQUEST_METHOD'] ?? '?') . ' ' . ($_SERVER['REQUEST_URI'] ?? '?'),
+);
 
 // index/{websiteId}
 // $id is coming from menu-path.php routing
@@ -86,12 +89,40 @@ if ($websiteId > 1 && empty($_SESSION['id']) && empty($website['non_members'])) 
     $website = $cms->getWebsite()->getById(1);
 }
 
+// ------------------------------------------------------
+// TILE(1,1) MESSAGE OVERRIDE (TFOL UX)
+// If there is a one-time flash message (e.g., Registration),
+// show it in the TILE slot using the existing pink "failure"
+// styling. Otherwise show the normal QuickGuide text.
+// NOTE: This intentionally uses $data['failure'] so it lands
+// in tile(1,1) per index.html grid behavior.
+// ------------------------------------------------------
+if (!empty($_SESSION['flash_success'])) {
+    $data['failure'] = (string) $_SESSION['flash_success']; // pink tile
+    unset($_SESSION['flash_success']);
+} elseif (!empty($_SESSION['flash_failure'])) {
+    $data['failure'] = (string) $_SESSION['flash_failure']; // pink tile
+    unset($_SESSION['flash_failure']);
+} else {
+    // Normal behavior: QuickGuide text into success tile
+    $guidetext = $cms->getQuickguide()->getAll();
+    if (!empty($guidetext) && !empty($guidetext[0])) {
+        $data['success'] = implode('', $guidetext[0]);
+    }
+}
+
+/*
+// 4b) One-time flash alerts (do NOT collide with QuickGuide 'success')
+$data['flash_success'] = $_SESSION['flash_success'] ?? '';
+$data['flash_failure'] = $_SESSION['flash_failure'] ?? '';
+unset($_SESSION['flash_success'], $_SESSION['flash_failure']);
+
 // 5) Quickguide success message (your existing behavior)
 $guidetext = $cms->getQuickguide()->getAll();
 if (!empty($guidetext) && !empty($guidetext[0])) {
     $data['success'] = implode('', $guidetext[0]);
 }
-
+*/
 // 6) Stories
 $data['stories'] = $cms->getStory()->getAll3((int) $website['id'], true, null, null, 100);
 

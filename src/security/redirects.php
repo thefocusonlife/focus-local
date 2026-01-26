@@ -1,7 +1,17 @@
 <?php
+
 declare(strict_types=1);
 
 require_once __DIR__ . '/guard.php';
+
+function tfol_redirect(string $url, int $status = 303): void
+{
+    while (ob_get_level() > 0) {
+        ob_end_clean();
+    }
+    header('Location: ' . $url, true, $status);
+    exit();
+}
 
 /**
  * Redirect to safe public page (guest context)

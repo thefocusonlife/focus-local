@@ -173,6 +173,7 @@ class Member
         $params['password'] = password_hash($params['password'], PASSWORD_DEFAULT);
 
         $started = false;
+        error_log('[MEMBER create] ENTERED create()');
 
         try {
             $started = $this->db->beginTransaction();
@@ -206,6 +207,10 @@ class Member
 
             return true;
         } catch (\PDOException $e) {
+            error_log('[MEMBER CREATE ERROR]');
+            error_log('SQLSTATE=' . $e->getCode());
+            error_log('Message=' . $e->getMessage());
+            return false;
             if ($this->db->inTransaction()) {
                 $this->db->rollBack();
             }

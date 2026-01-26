@@ -1,47 +1,71 @@
 {% extends 'admin/layout.html' %}
 {% block content %}
 
-  <main> <!-- class="container" id="content"> 
-    <section class="header">
-      <h1>Stories</h1>
-      {% if success %}<div class="alert alert-success">{{ success }}</div>{% endif %}
-      {% if failure %}<div class="alert alert-danger">{{ failure }}</div>{% endif %}
-      {% if member.role != "family" %}
-      <p><a href="{{ doc_root }}admin/story/" class="btn btn-primary">Add new story</a></p>
-      {% endif %}
-    </section>
-  -->
-    
-  <table class="table">  
+	<main>
+		<!-- class="container" id="content">
+				    <section class="header">
+				      <h1>Stories</h1>
+				      {% if success %}<div class="alert alert-success">{{ success }}</div>{% endif %}
+				      {% if failure %}<div class="alert alert-danger">{{ failure }}</div>{% endif %}
+				      {% if member.role != "family" %}
+				      <p><a href="{{ doc_root }}admin/story/" class="btn btn-primary">Add new story</a></p>
+				      {% endif %}
+				    </section>
+				  -->
 
-      <tr>
-       <!-- <th>Image</th><th>Title</th><th>Member ID</th><th>Family ID</th><th class="created">Created</th><th>Menu</th><th>Order</th><th class="pub">Public</th><th class="edit">Edit Story</th><th class="del">Delete</th> -->
-       <th>Image</th><th>Title</th><th>Member ID</th><th>Family ID</th><th>Created</th><th>Menu</th><th>Order</th><th>Public</th><th>Edit Story</th><th>Delete</th>
-      </tr>
-      {% for story in stories %}
-      {% if (session.account_id == story.family_id or session.id == story.member_id or session.account_id == story.member_id) or session.id == 1 %}
-  
-      <tr>
-        <td>
-        {% if story.image_file %}
-          <img src="{{ doc_root }}uploads/{{ story.image_file}}" alt="{{ story.image_alt}}">
-        {% else %}
-          <img src="{{ doc_root }}uploads/blank.png" alt="">
-        {% endif %}
-        </td>
-        <td><strong>{{ story.title }}</strong></td>
-        <td>{{ story.member_id}}</td>
-        <td>{{ story.family_id }}</td>
-        <td>{{ story.created|date('M d Y') }}</td>
-        <td>{{ story.menu_id }}</td><td>{{ story.storyorder }}</td>
-        <td> {% if story.published  %} Yes {% else %} No {% endif %}</td>
-        <td><a href="{{ doc_root }}work/{{ story.id }}" class="btn btn-primary">edit </a></td>
-        <td><a href="{{ doc_root }}admin/story-delete/{{ story.id }}" class="btn btn-danger">delete</a></td>
-      </tr>
-      {% endif %}
-      
-      {% endfor %}
-    </table>
+		<table class="table">
 
-  </main>
+			<tr>
+				<!-- <th>Image</th><th>Title</th><th>Member ID</th><th>Family ID</th><th class="created">Created</th><th>Menu</th><th>Order</th><th class="pub">Public</th><th class="edit">Edit Story</th><th class="del">Delete</th> -->
+				<th>Image</th>
+				<th>Title</th>
+				<th>Member ID</th>
+				<th>Family ID</th>
+				<th>Created</th>
+				<th>Menu</th>
+				<th>Order</th>
+				<th>Public</th>
+				<th>Edit Story</th>
+				<th>Delete</th>
+			</tr>
+			{% for story in stories %}
+				{% if (session.account_id == story.family_id or session.id == story.member_id or session.account_id == story.member_id) or session.id == 1 %}
+
+					<tr>
+						<td>
+							{% if story.image_file %}
+								<img src="{{ doc_root }}uploads/{{ story.image_file}}" alt="{{ story.image_alt}}">
+							{% else %}
+								<img src="{{ doc_root }}uploads/blank.png" alt="">
+							{% endif %}
+						</td>
+						<td>
+							<strong>{{ story.title }}</strong>
+						</td>
+						<td>{{ story.member_id}}</td>
+						<td>{{ story.family_id }}</td>
+						<td>{{ story.created|date('M d Y') }}</td>
+						<td>{{ story.menu_id }}</td>
+						<td>{{ story.storyorder }}</td>
+						<td>
+							{% if story.published  %}
+								Yes
+							{% else %}
+								No
+							{% endif %}
+						</td>
+						<td>
+							<a href="{{ doc_root }}work/{{ story.id }}" class="btn btn-primary">edit
+							</a>
+						</td>
+						<td>
+							<a href="{{ doc_root }}admin/story-delete/{{ story.id }}" class="btn btn-danger">delete</a>
+						</td>
+					</tr>
+				{% endif %}
+
+			{% endfor %}
+		</table>
+
+	</main>
 {% endblock %}
