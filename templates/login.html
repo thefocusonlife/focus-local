@@ -14,60 +14,50 @@
 				<h1>Log in</h1>
 			</section>
 
-			<form method="post" action="{{ doc_root }}login/1" class="form-membership form-login" data-recaptcha-action="login">
-
-				{% if success %}
-					<div class="alert alert-success">{{ success }}</div>
-				{% endif %}
-				{% if errors.warning %}
-					<div class="alert alert-danger">{{ errors.warning|raw }}</div>
-				{% endif %}
-
+			<form method="post" action="" autocomplete="on" data-recaptcha-action="login">
 				{% if errors.message %}
 					<div class="alert alert-danger">{{ errors.message|raw }}</div>
 				{% endif %}
 
-
 				<div class="form-group">
-					<label for="email">Email
-					</label>
-					<input type="text" name="email" id="email" value="{{ email }}" class="form-control">
-					<div class="errors">{{ errors.email }}</div>
+				<input type="hidden" name="g-recaptcha-response" value="">
+				<input type="hidden" name="website" id="website" value="{{ website.id }}" readonly class="form-control">
+
+				<label for="login_email">Email</label>
+				<input id="login_email" name="email" type="email" autocomplete="username" required>
+
+				<div class="form-row">
+					<label for="login_password">Password</label>
+
+					<div class="password-wrap">
+						<input id="login_password" name="password" type="password" autocomplete="current-password" required>
+
+						<button type="button" class="pw-toggle" data-toggle-password="#login_password">👁</button>
+
+					</div>
 				</div>
-				<div class="form-group">
 
-					<input type="hidden" name="website" id="website" value="{{ website.id }}" readonly class="form-control">
-					<div class="errors">{{ errors.website }}</div>
-				</div>
-				<div class="form-group">
-					<label for="password">Password
-					</label>
-					<input type="password" name="password" id="password" class="form-control">
-					<div class="errors">{{ errors.password|raw }}</div>
-				</div>
+				<button type="submit" class="btn btn-primary">SIGN IN</button>
 
-				{# ⭐ Hidden reCAPTCHA v3 token #}
-				<input type="hidden" name="g-recaptcha-response">
+			</button>
 
-				<input type="submit" class="btn btn-primary" value="Log in"><br>
-				<p>
-					<a href="{{ doc_root }}password-lost/">Lost password?</a>
-				</p>
-			</form>
-		</main>
-		{# existing closing tags #}
-	</form>
+			<p class="small">
+				<a href="/focus-local/public/password-lost/{{ websiteId|default(1) }}">Lost password?</a>
 
-</main>{% endblock %}{% block body_end %}
-{{ parent() }}
 
-{% if recaptcha_site_key is defined and recaptcha_site_key %}
-	<script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}"></script>
-	<script>
-		document.addEventListener('DOMContentLoaded', function () {
+			</p>
+		</form>
+
+	</main>
+	{# existing closing tags #}
+</form></main>{% endblock %}{% block body_end %}{{ parent() }}{% if recaptcha_site_key is defined and recaptcha_site_key %}
+<script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}"></script>
+<script>
+	document.addEventListener('DOMContentLoaded', function () {
 const forms = document.querySelectorAll('form[data-recaptcha-action]');
-if (! forms.length) 
+if (! forms.length)
 return;
+
 
 
 forms.forEach(function (form) {
@@ -75,8 +65,9 @@ const action = form.getAttribute('data-recaptcha-action') || '';
 
 form.addEventListener('submit', function (e) {
 const existing = form.querySelector('input[name="g-recaptcha-response"]');
-if (existing && existing.value) 
+if (existing && existing.value)
 return;
+
 
 
 e.preventDefault();
@@ -104,5 +95,26 @@ form.submit();
 });
 });
 });
-	</script>
-{% endif %}{% endblock %}
+</script>
+<script>
+	document.addEventListener('click', (e) => {
+const btn = e.target.closest('[data-toggle-password]');
+if (! btn)
+return;
+
+
+
+const sel = btn.getAttribute('data-toggle-password');
+const input = document.querySelector(sel);
+if (! input)
+return;
+
+
+
+const isHidden = input.type === 'password';
+input.type = isHidden ? 'text' : 'password';
+
+btn.setAttribute('aria-pressed', String(isHidden));
+btn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+});
+</script>{% endif %}{% endblock %}

@@ -82,16 +82,29 @@
 
 
 						<div class="form-group">
-							<label for="password">Password:
-							</label><input type="password" name="password" id="password" class="form-control">
+							<label for="password">Password:</label>
+
+							<div class="password-wrap">
+								<input type="password" name="password" id="password" class="form-control" autocomplete="new-password" required>
+
+								<button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false" data-toggle-password="#password">👁</button>
+							</div>
+
 							<div class="errors">{{ errors.password|raw }}</div>
 						</div>
 
 						<div class="form-group">
-							<label for="confirm">Confirm Password:
-							</label><input type="password" name="confirm" id="confirm" class="form-control">
+							<label for="confirm">Confirm Password:</label>
+
+							<div class="password-wrap">
+								<input type="password" name="confirm" id="confirm" class="form-control" autocomplete="new-password" required>
+
+								<button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false" data-toggle-password="#confirm">👁</button>
+							</div>
+
 							<div class="errors">{{ errors.confirm }}</div>
 						</div>
+
 
 						<div class="form-group">
 							<label for="websitename">Website:
@@ -125,14 +138,15 @@
 			</main>
 		{% endblock %}
 		{% block body_end %}
-		{{ parent() }}
+			{{ parent() }}
 
-		{% if recaptcha_site_key is defined and recaptcha_site_key %}
-			<script>
-				document.addEventListener('DOMContentLoaded', function () {
+			{% if recaptcha_site_key is defined and recaptcha_site_key %}
+				<script>
+					document.addEventListener('DOMContentLoaded', function () {
 const forms = document.querySelectorAll('form[data-recaptcha-action]');
 if (! forms.length) 
 return;
+
 
 
 forms.forEach(function (form) {
@@ -157,6 +171,7 @@ if (btn)
 btn.disabled = true;
 
 
+
 if (typeof grecaptcha === 'undefined') {
 form.submit(); // server fails closed
 return;
@@ -178,56 +193,36 @@ form.dataset.recaptchaSubmitting = '0';
 if (btn) 
 btn.disabled = false;
 
+
+
 form.submit();
 });
 });
 });
 });
 });
-			</script>
+				</script>
+				<script>
+					document.addEventListener('click', (e) => {
+const btn = e.target.closest('[data-toggle-password]');
+if (! btn) 
+return;
 
-			document.addEventListener('DOMContentLoaded', function () {
-			const forms = document.querySelectorAll('form[data-recaptcha-action]');
-			if (! forms.length)
-			return;
-			
-			
-			
-			forms.forEach(function (form) {
-			const action = form.getAttribute('data-recaptcha-action') || '';
-			
-			form.addEventListener('submit', function (e) {
-			const existing = form.querySelector('input[name="g-recaptcha-response"]');
-			if (existing && existing.value)
-			return;
-			
-			
-			
-			e.preventDefault();
-			
-			if (typeof grecaptcha === 'undefined') {
-			form.submit(); // server will fail closed
-			return;
-			}
-			
-			grecaptcha.ready(function () {
-			grecaptcha.execute('{{ recaptcha_site_key }}', {action: action}).then(function (token) {
-			let field = form.querySelector('input[name="g-recaptcha-response"]');
-			if (! field) {
-			field = document.createElement('input');
-			field.type = 'hidden';
-			field.name = 'g-recaptcha-response';
-			form.appendChild(field);
-			}
-			field.value = token || '';
-			form.submit();
-			}).catch(function () {
-			form.submit();
-			});
-			});
-			});
-			});
-			});
-		</script>
-	{% endif %}
-{% endblock %}
+
+
+const sel = btn.getAttribute('data-toggle-password');
+const input = document.querySelector(sel);
+if (! input) 
+return;
+
+
+
+const isHidden = input.type === 'password';
+input.type = isHidden ? 'text' : 'password';
+
+btn.setAttribute('aria-pressed', String(isHidden));
+btn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+});
+				</script>
+			{% endif %}
+		{% endblock %}

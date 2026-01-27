@@ -33,11 +33,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $id = $cms->getMember()->getIdByEmail($email); // Get member id
         if ($id) {
             // If id found
-            $token = $cms->getToken()->create($id, 'password_reset'); // Token
-            $linkstring = DOMAIN . DOC_ROOT . 'password-reset/?token=' . $token; // Link
-            $replace = '\\';
-            $with = '/';
-            $link = str_replace($replace, $with, $linkstring);
+            $token = $cms->getToken()->create($id, 'password_reset');
+
+            // Use website 1 for public reset flow (no Member->getById dependency)
+            $websiteId = 1;
+
+            $link =
+                rtrim(DOMAIN, '/') .
+                rtrim(DOC_ROOT, '/') .
+                '/password-reset/' .
+                $websiteId .
+                '?token=' .
+                urlencode($token);
 
             $subject = 'Reset Password Link'; // Email subject
             $body = 'To reset password click: <a href="' . $link . '">' . $link . '</a>'; // Email body

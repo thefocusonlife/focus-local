@@ -113,14 +113,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         } elseif ($member && $member['status'] == 'suspended') {
             // If member is suspended
             $errors['message'] = 'Account suspended'; // Store message
-        } /*
-                elseif ($member['website'] != 1 AND $website_id == 1) {
-                    $errors['message'] = "Must use a registered theFocusOnLife email.";
-                }
-                */ elseif (
-            $member &&
-            $member['status'] == 'pending'
-        ) {
+        } elseif ($member && $member['status'] == 'pending') {
             // If member is pending
             $errors['message'] =
                 'Membership pending. Use Contact Us to inquire about your registration.'; // Store message
@@ -160,7 +153,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 }
 
 // Website context for this page
-$$websiteId = (int) ($id ?? ($_SESSION['website'] ?? 1));
+//$$websiteId = (int) ($id ?? ($_SESSION['website'] ?? 1));
+$websiteId = (int) ($id ?? ($_SESSION['website'] ?? 1));
 $website = $cms->getWebsite()->getById($websiteId);
 
 if (empty($website) || empty($website['id'])) {
