@@ -1,30 +1,113 @@
 {% extends 'admin/layout.html' %}
 {% block content %}
 
-  <main> <!-- class="container" id="content"> -->
-   
-    <section class="header">
-      <h1>Admin</h1>
-    </section>
-    <table class="admin">
-  
+	<main>
+		<!-- class="container" id="content"> -->
 
-    {% if(session.id !=1) %}
-      <tr><th></th><th>Count</th><th class="create">Create</th><th class="view">View</th></tr>
-      <tr><td><strong>Menus</strong></td><td>{{ menu_count }}</td><td><a href="{{ doc_root}}admin/menu/0" class="btn btn-primary">Add</a></td><td><a href="{{ doc_root}}admin/menus/" class="btn btn-primary">View</a></td></tr>
-      <tr><td><strong>Stories</strong></td><td>{{ story_count }}</td><td><a href="{{ doc_root}}work/" class="btn btn-primary">Add</a></td><td><a href="{{ doc_root}}admin/stories/" class="btn btn-primary">View</a></td></tr>
-      <tr><td><strong>Members</strong></td><td>{{ member_count }}</td><td></td><td><a href="{{ doc_root}}admin/members/" class="btn btn-primary">View</a></td></tr>
-    </table>
-    {% else %}
-    <table class="admin">
-      <tr><th></th><th>Count</th><th class="create">Create</th><th class="view">View</th></tr>
-      <tr><td><strong>Menus</strong></td><td>{{ menu_count }}</td><td><a href="{{ doc_root}}admin/menu/0" class="btn btn-primary">Add</a></td><td><a href="{{ doc_root}}admin/menus/" class="btn btn-primary">View</a></td></tr>
-      <tr><td><strong>Stories</strong></td><td>{{ story_count }}</td><td><a href="{{ doc_root}}work/" class="btn btn-primary">Add</a></td><td><a href="{{ doc_root}}admin/stories/"  class="btn btn-primary">View</a></td></tr>
-      <tr><td><strong>Members</strong></td><td>{{ member_count }}</td><td></td><td><a href="{{ doc_root}}admin/members/" class="btn btn-primary">View</a></td></tr>
-      <tr><td><strong>Websites</strong></td><td>{{ website_count }}</td><td><a href ="{{ doc_root}}admin/website/" class="btn btn-primary">Add</a></td><td><a href ="{{ doc_root}}admin/websites/" class="btn btn-primary">View</a></td></tr>
-    </table>
-    {% endif %}
-   
-  </main>
+		<section class="header">
+			<h1>Admin</h1>
+		</section>
+		<table class="admin">
+
+			{% if(session.id !=1) %}
+				<tr>
+					<th></th>
+					<th>Count</th>
+					<th class="create">Create</th>
+					<th class="view">View</th>
+				</tr>
+				<tr>
+					<td>
+						<strong>Menus</strong>
+					</td>
+					<td>{{ menu_count }}</td>
+					<td>
+						<a href="{{ doc_root}}admin/menu/0" class="btn btn-primary">Add</a>
+					</td>
+					<td>
+						<a href="{{ doc_root}}admin/menus/" class="btn btn-primary">View</a>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<strong>Stories</strong>
+					</td>
+					<td>{{ story_count }}</td>
+					<td>
+						<a href="{{ doc_root}}work/" class="btn btn-primary">Add</a>
+					</td>
+					<td>
+						<a href="{{ doc_root}}admin/stories/" class="btn btn-primary">View</a>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<strong>Members</strong>
+					</td>
+					<td>{{ member_count }}</td>
+					<td></td>
+					<td>
+						<a href="{{ doc_root}}admin/members/" class="btn btn-primary">View</a>
+					</td>
+				</tr>
+			</table>
+		{% else %}
+			<table class="admin">
+				<tr>
+					<th></th>
+					<th>Count</th>
+					<th class="create">Create</th>
+					<th class="view">View</th>
+				</tr>
+				<tr>
+					<td>
+						<strong>Menus</strong>
+					</td>
+					<td>{{ menu_count }}</td>
+					<td>
+						<a href="{{ doc_root}}admin/menu/0" class="btn btn-primary">Add</a>
+					</td>
+					<td>
+						<a href="{{ doc_root}}admin/menus/" class="btn btn-primary">View</a>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<strong>Stories</strong>
+					</td>
+					<td>{{ story_count }}</td>
+					<td>
+						<a href="{{ doc_root}}work/" class="btn btn-primary">Add</a>
+					</td>
+					<td>
+						<a href="{{ doc_root}}admin/stories/" class="btn btn-primary">View</a>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<strong>Members</strong>
+					</td>
+					<td>{{ member_count }}</td>
+					<td></td>
+					<td>
+						<a href="{{ doc_root}}admin/members/" class="btn btn-primary">View</a>
+					</td>
+				</tr>
+				<tr>
+					<td>
+						<strong>Websites</strong>
+					</td>
+					<td>{{ website_count }}</td>
+					<td>
+						<a href="{{ doc_root}}admin/website/" class="btn btn-primary">Add</a>
+					</td>
+					<td>
+						<a href="{{ doc_root}}admin/websites/" class="btn btn-primary">View</a>
+					</td>
+				</tr>
+			</table>
+		{% endif %}
+
+	</main>
 
 {% endblock %}
