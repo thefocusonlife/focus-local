@@ -35,12 +35,6 @@ $errors = [
 $to_id = $id;
 $from_id = $cms->getSession()->id;
 
-//user's id from session                                     // Use strict types
-if (!$id) {
-    // If no valid id
-    // include APP_ROOT . '/src/pages/page-not-found.php';      // Page not found
-}
-
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // If form was posted
     $note['to_id'] = intval($_POST['to_member']); // Get to member id
@@ -87,7 +81,7 @@ if (!$from_member) {
 $notes = $cms->getNewnote()->get($from_id);
 // $notes2 = $cms->getNewnote()->get($to_id);
 
-$notetype = $cms->getNotetype()->get(1);
+$notetype = 1;
 
 $to_membername = $to_member['forename'] . ' ' . $to_member['surname'];
 $from_membername = $from_member['forename'] . ' ' . $from_member['surname'];
@@ -96,9 +90,9 @@ $data['to_member'] = $to_member['id'];
 $data['from_member'] = $from_member['id'];
 $data['to_membername'] = $to_membername;
 $data['from_membername'] = $from_membername;
-$data['noteid'] = $notetype['id'];
-$data['request'] = '.';
-$data['description'] = $notetype['description'];
+//$data['noteid'] = $notetype['id'];
+$data['request'] = 'Follow Request';
+$data['description'] = 'Request to Follow';
 $data['to_family_id'] = $to_member['account_id'];
 $data['family_id'] = $from_member['account_id'];
 $data['allow'] = $note['allow'];

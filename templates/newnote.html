@@ -1,83 +1,89 @@
 {% extends 'layout.html' %}
-{% block title %}Create Notification{% endblock %}
-{% block description %}Notification{% endblock %}
+{% block title %}Create Notification
+{% endblock %}
+{% block description %}Notification
+{% endblock %}
 
 {% block content %}
-<main> <!-- class="container" id="content"> -->
+	<main>
+		<!-- class="container" id="content"> -->
 
-  <section class="header">
-    <h1>Follow Request</h1>
-  </section>
-  
-  <form method="post" action="{{ doc_root }}admin/note/{{ to_member }}" class="form-membership">
-    {% if errors %}<div class="alert alert-danger">Please correct errors</div>{% endif %}
+		<section class="header">
+			<h1>Follow Request</h1>
+		</section>
 
-    <div class="form-group">
-   
-       <input type="hidden" name="to_member" id="to_member" class="form-control"
-     value="{{ to_member }}" readonly>
-     <span class="errors">{{ errors.to_member }}</span>
-   </div>
-      
-    </div>
-    <div class="form-group">
-      <label for="to_membername">To Member Name: </label><input type="text" name="to_membername" value="{{ to_membername }}" id="to_membername" class="form-control" readonly>
-      <div class="errors">{{ errors.to_membername }}</div>
-    </div>
-    <div class="form-group">
-      <!--<label for="from_member.acount_id">Follow ID:<br></label> -->
-      Follow ID: <br>
-      <input type="hidden" name="to_family_id" value={{ to_family_id }} id="to_family_id class="form-control" readonly>
-      <span class="errors">{{ errors.account_id }}</span>
-    </div>
-    <div class="form-group">
-     
-       <input type="hidden" name="from_member" id="from_member" class="form-control"
-     value="{{ from_member }}" readonly>
-     <span class="errors">{{ errors.from_member.id }}</span>
-   </div>
-      
-    </div>
-    <div class="form-group">
-      <label for="from_membername">From Member Name: </label><input type="text" name="from_membername" value="{{ from_membername }}" id="from_membername" class="form-control" readonly>
-      <div class="errors">{{ errors.from_member.name }}</div>
-    </div>
-    <div class="form-group">
-      <!--<label for="from_member.acount_id">Follow ID:<br></label> -->
-      From Follow ID: <br>
-      <input type="hidden" name="family_id" value={{ family_id }} id="family_id class="form-control" readonly>
-      <span class="errors">{{ errors.account_id }}</span>
-    </div>
-     <div class="form-group">
-      <input type="hidden" name="noteid" value="{{ noteid }}" id="noteid" class="form-control" readonly>
-      <span class="errors">{{ errors.noteid }}</span>
-    </div>
-    <div class="form-group">
+		<form method="post" action="{{ doc_root }}admin/note/{{ to_member }}" class="form-membership">
+			{% if errors %}
+				<div class="alert alert-danger">Please correct errors</div>
+			{% endif %}
 
-      <div class="form-group">
-        <label for="description">Note Type: </label>
-        <input type="" name="description" value="{{ description }}" id="description" class="form-control" readonly>
-        <span class="errors">{{ errors.description }}</span>
-      </div>
-      <div class="form-group">
-    <div class="form-group">
-      <label for="request">Message: </label>
-      <textarea name="request" id="request" value={{request}} class="form-control"></textarea>
-      <span class="errors">{{ errors.request }}</span>
-    </div>
-   
-    <div class="form-group">
-      <!--<label for="from_member.acount_id">Follow ID:<br></label> -->
-      <input type="hidden" name="allow" value={{allow}} id="allow" class="form-control" readonly>
-      <span class="errors">{{ errors.allow }}</span>
-    </div>
-    <div class="form-group">
-      <!--<label for="from_member.acount_id">Follow ID:<br></label> -->
-      <input type="hidden" name="website" value={{website.id}} id="website" class="form-control" readonly>
-      <span class="errors">{{ errors.website }}</span>
-    </div>
-    <input type="submit" class="btn btn-primary" value="submit">
-  </form>
+			<div class="form-group">
 
-</main>
-{% endblock %}
+				<input type="hidden" name="to_member" id="to_member" class="form-control" value="{{ to_member }}" readonly>
+				<span class="errors">{{ errors.to_member }}</span>
+			</div>
+
+		</div>
+		<div class="form-group">
+			<label for="to_membername">To Member Name:
+			</label><input type="text" name="to_membername" value="{{ to_membername }}" id="to_membername" class="form-control" readonly>
+			<div class="errors">{{ errors.to_membername }}</div>
+		</div>
+		<div
+			class="form-group">
+			<!--<label for="from_member.acount_id">Follow ID:<br></label> -->
+			Follow ID:
+			<br>
+			<input type="text" name="to_family_id" readonly value={{ to_family_id }} id="to_family_id class=" form-control" readonly>
+																      <span class=" errors">{{ errors.account_id }}</span>
+	</div>
+	<div class="form-group">
+
+		<input type="hidden" name="from_member" id="from_member" class="form-control" value="{{ from_member }}" readonly>
+		<span class="errors">{{ errors.from_member.id }}</span>
+	</div>
+
+</div>
+<div class="form-group">
+	<label for="from_membername">From Member Name:
+	</label><input type="text" name="from_membername" value="{{ from_membername }}" id="from_membername" class="form-control" readonly>
+	<div class="errors">{{ errors.from_member.name }}</div>
+</div>
+<div
+	class="form-group">
+	<!--<label for="from_member.account_id">Follow ID:<br></label> -->
+	From Follow ID:
+	<br>
+	<input type="text" name="family_id" value={{ family_id }} id="family_id class=" form-control" readonly>
+								      <span class=" errors">{{ errors.account_id }}</span></div><div class="form-group">
+<input type="hidden" name="noteid" value="{{ noteid }}" id="noteid" class="form-control" readonly>
+<span class="errors">{{ errors.noteid }}</span></div><div class="form-group">
+
+<div class="form-group">
+	<label for="description">Note Type:
+	</label>
+	<input type="" name="description" value="{{ description }}" id="description" class="form-control" readonly>
+	<span class="errors">{{ errors.description }}</span>
+</div>
+<div class="form-group">
+	<div class="form-group">
+		<label for="request">Message:
+		</label>
+		<textarea name="request" id="request" value={{request}} class="form-control"></textarea>
+		<span class="errors">{{ errors.request }}</span>
+	</div>
+
+	<div
+		class="form-group">
+		<!--<label for="from_member.acount_id">Follow ID:<br></label> -->
+		<input type="hidden" name="allow" value={{allow}} id="allow" class="form-control" readonly>
+		<span class="errors">{{ errors.allow }}</span>
+	</div>
+	<div
+		class="form-group">
+		<!--<label for="from_member.acount_id">Follow ID:<br></label> -->
+		<input type="hidden" name="website" value={{website.id}} id="website" class="form-control" readonly>
+		<span class="errors">{{ errors.website }}</span>
+	</div>
+	<input type="submit" class="btn btn-primary" value="submit">
+</form></main>{% endblock %}

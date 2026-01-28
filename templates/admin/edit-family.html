@@ -1,30 +1,35 @@
 {% extends 'admin/layout.html' %}
 {% block content %}
-  <main> <!-- class="container" id="content">  -->
-    <form action="{{ doc_root }}admin/edit-family/{{ member.id }}" method="POST" class="narrow">
-      <h1>Edit Follow</h1>
-      <p>Member name: {{ member.forename }} {{ member.surname }}
-      </p>Current Family Id: {{member.account_id}} 
-      
-      <!-- input account_id dropdown here --> 
+	<main>
+		<!-- class="container" id="content">  -->
+		<form action="{{ doc_root }}admin/edit-family/{{ member.id }}" method="POST" class="narrow">
+			<h1>Edit Follow</h1>
+			<p>Member name:
+				{{ member.forename }}
+				{{ member.surname }}
+			</p>Current Family Id:
+			{{member.account_id}}
 
-  <div class="form-group">
-            <label for="family_id">Family: </label>
+			<!-- input account_id dropdown here -->
 
-            <select name="family_id" id="family_id">
-              {% for family in families %}
-              <option value="{{ family.to_family_id }}"
-              {% if family.id == member.account_id %} selected{% endif %}>
-              {{family.to_family_id}} {{ family.to_name }} </option>
-              {% endfor %}
-            </select>
-            <span class="errors">{{ errors.family }}</span>
-          </div>
-          <input type="submit" value="Update family" class="btn 
-    btn-primary" /> 
- 
-    </form>
-  
-    </form>
-  </main>
+			<div class="form-group">
+				<label for="family_id">Family:
+				</label>
+
+				<select name="family_id" id="family_id">
+					{% for family in families %}
+						<option value="{{ family.to_family_id }}" {% if family.to_family_id == member.account_id %} selected {% endif %}>
+							{{ family.to_family_id }}
+							{{ family.to_name }}
+						</option>
+					{% endfor %}
+				</select>
+
+				<span class="errors">{{ errors.family }}</span>
+			</div>
+			<input type="submit" value="Update family" class="btn
+						    btn-primary"/>
+
+		</form>
+	</main>
 {% endblock %}

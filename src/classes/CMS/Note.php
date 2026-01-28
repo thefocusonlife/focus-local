@@ -45,7 +45,7 @@ class Note
         $arguments = [$id];
         $sql = "SELECT id, website, note_type, from_id, from_name, to_id, to_name, family_id, to_family_id, request, allow, request_date, reply_date
             FROM note
-            WHERE (to_id = :id)                 
+            WHERE (to_id = :id)
             ORDER BY request_date DESC; "; // SQL to get all notes for a to_id Descinding
         return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return all follows
     }
@@ -71,7 +71,7 @@ class Note
     // Get details of all follows
     public function getAll(int $id): array
     {
-        $arguments = [$id];
+        $arguments = [];
 
         $sql = "SELECT id, website, note_type, from_id, from_name, to_id, to_name, family_id, to_family_id, request, allow, request_date, reply_date
         FROM note
@@ -136,7 +136,7 @@ class Note
     {
         try {
             // Try to delete note
-            $sql = "DELETE FROM note 
+            $sql = "DELETE FROM note
              WHERE id = :id;"; // SQL to delete note
             $this->db->runSQL($sql, [$id]); // Delete note
             return true; // It worked, return true
