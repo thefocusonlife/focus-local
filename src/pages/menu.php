@@ -19,7 +19,9 @@ if (!$menu) {
 }
 
 // Website context
-$websiteId = (int) ($_SESSION['website'] ?? (int) ($menu['website'] ?? 1));
+//$websiteId = (int) ($_SESSION['website'] ?? (int) ($menu['website'] ?? 1));
+//reversed for using account_id as canonical grid population.
+$websiteId = (int) ($menu['website'] ?? (int) ($_SESSION['website'] ?? 1));
 $website = $cms->getWebsite()->getById($websiteId);
 if (!$website) {
     $websiteId = 1;
