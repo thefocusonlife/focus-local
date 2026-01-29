@@ -1,143 +1,58 @@
 <?php
 declare(strict_types=1);
 
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
+if (!defined('APP_ROOT')) {
+    define('APP_ROOT', dirname(__DIR__));
 }
-if (($_SESSION['id'] ?? 0) <= 0) {
-    // guest
-    if (!isset($_SESSION['pagelimit'])) {
-        $_SESSION['pagelimit'] = 100;
+
+require_once APP_ROOT . '/src/bootstrap.php';
+
+// ------------------------------------------------------------
+// Debug toggle
+// ------------------------------------------------------------
+define('TFOL_ROUTE_DEBUG', false);
+
+$trace = substr(bin2hex(random_bytes(4)), 0, 8);
+
+function route_log(string $trace, string $msg): void
+{
+    if (!TFOL_ROUTE_DEBUG) {
+        return;
     }
+    error_log("[$trace] $msg");
 }
 
-$uri = $_SERVER['REQUEST_URI'] ?? '';
+// ------------------------------------------------------------
+// Resolve request path → parts
+// ------------------------------------------------------------
+$uri = $_SERVER['REQUEST_URI'] ?? '/';
+$path = mb_strtolower($uri);
+$path = parse_url($path, PHP_URL_PATH) ?: '/';
 
-if (defined('DEV') && DEV) {
-    error_log(
-        '[INDEX] ' .
-            date('c') .
-            ' method=' .
-            ($_SERVER['REQUEST_METHOD'] ?? '') .
-            ' uri=' .
-            ($_SERVER['REQUEST_URI'] ?? '') .
-            ' host=' .
-            ($_SERVER['HTTP_HOST'] ?? '') .
-            ' sid=' .
-            (session_id() ?: 'NONE') .
-            ' user=' .
-            ($_SESSION['id'] ?? 'NULL'),
-    );
+$docRoot = DOC_ROOT;
+if ($docRoot !== '' && str_starts_with($path, $docRoot)) {
+    $path = substr($path, strlen($docRoot));
 }
 
-if (defined('DEV') && DEV) {
-    $rid = bin2hex(random_bytes(3));
-    $_SESSION['__rid'] = $rid;
-
-    error_log(
-        '[ROUTER] rid=' .
-            $rid .
-            ' method=' .
-            ($_SERVER['REQUEST_METHOD'] ?? '') .
-            ' uri=' .
-            ($_SERVER['REQUEST_URI'] ?? '') .
-            ' host=' .
-            ($_SERVER['HTTP_HOST'] ?? '') .
-            ' sess_id=' .
-            (session_id() ?: 'NONE') .
-            ' user=' .
-            ($_SESSION['id'] ?? 'NULL'),
-    );
-}
-
-// Required session defaults (prevents undefined index warnings)
-$_SESSION['website'] = (int) ($_SESSION['website'] ?? 1);
-$_SESSION['id'] = (int) ($_SESSION['id'] ?? 0);
-$_SESSION['role'] = (string) ($_SESSION['role'] ?? 'guest');
-$_SESSION['account_id'] = (int) ($_SESSION['account_id'] ?? 0);
-
-file_put_contents(
-    '/tmp/tfol-route.log',
-    date('c') . ' URI=' . ($_SERVER['REQUEST_URI'] ?? '') . "\n",
-    FILE_APPEND,
-);
-file_put_contents(
-    '/tmp/tfol-route.log',
-    date('c') .
-        ' SESSION id=' .
-        var_export($_SESSION['id'] ?? null, true) .
-        ' role=' .
-        var_export($_SESSION['role'] ?? null, true) .
-        ' website=' .
-        var_export($_SESSION['website'] ?? null, true) .
-        "\n",
-    FILE_APPEND,
-);
-
-require_once '../src/bootstrap.php';
-require_once dirname(__DIR__) . '/src/services/ImageCapabilities.php';
-
-$uriPath = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH) ?? '';
-
-// If the request targets an existing file, serve it directly (let Apache handle it)
-$fullPath = realpath(__DIR__ . $uriPath); // might not resolve depending on docroot layout
-
-// Simple bypass for common static directories under /public/
-if (preg_match('#^' . preg_quote(DOC_ROOT, '#') . '(img|css|js|uploads)/#', $uriPath)) {
-    return false; // for PHP built-in server; harmless otherwise
-}
-
-// get path for website and menus                             // Setup file
-//$id = 2;
-// Normalize path: strip query string, strip DOC_ROOT, trim leading/trailing slashes
-$path = mb_strtolower($uriPath);
-$path = preg_replace('#^' . preg_quote(DOC_ROOT, '#') . '#', '', $path);
 $path = trim($path, '/');
+$parts = $path === '' ? [] : explode('/', $path);
 
-$parts = $path === '' ? [''] : explode('/', $path);
+$page = $parts[0] ?? 'index';
+$id = (int) ($parts[1] ?? 0);
 
-if ($parts[0] != 'admin') {
-    // If an admin page
-    $page = $parts[0] ?: 'index'; // Page name (or use index)
-    if (!isset($parts[1]) && $parts[0] === '') {
-        $page = 'index';
-        $id = (int) ($_SESSION['website'] ?? 1);
-        if ($id <= 0) {
-            $id = 1;
-        }
+route_log($trace, "REQUEST uri=$uri path=$path page=$page id=$id parts=" . json_encode($parts));
 
-        $php_page = APP_ROOT . '/src/pages/' . $page . '.php';
-        include $php_page;
-        exit();
-    }
+// ------------------------------------------------------------
+// Dispatch
+// ------------------------------------------------------------
+$php_page = APP_ROOT . '/src/pages/' . $page . '.php';
 
-    // Special-case: Guide uses /guide and /guide/<slug> (slug is not numeric)
-    if ($parts[0] === 'guide') {
-        $page = 'guide';
-        // Pass slug via $parts[1] (can be empty for /guide)
-        include APP_ROOT . '/src/pages/guide.php';
-        exit();
-    }
-
-    $id = $parts[1] ?? 1;
-    // Get ID (or use null)
-} else {
-    // If not an admin page
-    $page = 'admin/' . ($parts[1] ?? '');
-    if (isset($parts[2])) {
-        // Page name
-        $id = intval($parts[2]) ?? 1; // Get ID
-    }
+if (!is_file($php_page)) {
+    route_log($trace, "404: missing php_page=$php_page");
+    include APP_ROOT . '/src/pages/page-not-found.php';
+    exit();
 }
 
-if (isset($id)) {
-    $id = filter_var($id, FILTER_VALIDATE_INT); // Validate ID
-}
-$php_page = APP_ROOT . '/src/pages/' . $page . '.php'; // Path to PHP page
-
-if (!file_exists($php_page)) {
-    // If page not in array
-    $php_page = APP_ROOT . '/src/pages/page-not-found.php'; // Include page not found
-}
-//var_dump_pre($php_page);
+route_log($trace, "DISPATCH php_page=$php_page");
 include $php_page;
+exit();

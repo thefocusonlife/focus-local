@@ -1,28 +1,37 @@
 <?php
 declare(strict_types=1); // Use strict types
 use PhpBook\Validate\Validate; // Import Validate namespace
-include APP_ROOT . '/src/pages/menu-path.php';
+require_once __DIR__ . '/../security/redirects.php';
+
 // get path for website and menus
+include APP_ROOT . '/src/pages/menu-path.php';
 
-if (!empty($parts[1])) {
-    $id = intval($parts[1]); // If valid id
-    $story = $cms->getStory()->get($id, false); // Get story data
-    if (!$story) {
-        // If story empty
-        // Redirect
-    }
-}
-if (!$id) {
-    // If no valid id
-    include APP_ROOT . '/src/pages/page-not-found.php'; // Page not found
+// Always derive storyId safely
+$storyId = (int) ($parts[1] ?? 0);
+
+if ($storyId <= 0) {
+    http_response_code(404);
+    $failure = 'Sorry! We cannot find that page.';
+    include __DIR__ . '/page-not-found.php';
+    return;
 }
 
-$story = $cms->getStory()->get($id, false); // Get story data
+// Fetch story (true = include private? depends on your method)
+$story = $cms->getStory()->get($storyId, true);
 
-if (!$story) {
-    // If story array is empty
-    include APP_ROOT . '/src/pages/page-not-found.php'; // Page not found
+if (!$story || !is_array($story)) {
+    http_response_code(404);
+    $failure = 'Sorry! We cannot find that page.';
+    include __DIR__ . '/page-not-found.php';
+    return;
 }
+
+// Safe website id for later calls
+$websiteId = (int) ($_SESSION['website'] ?? 1);
+if ($websiteId <= 0) {
+    $websiteId = 1;
+}
+$website = $cms->getWebsite()->getById($websiteId);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // If form submitted
