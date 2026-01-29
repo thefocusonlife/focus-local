@@ -225,6 +225,10 @@ class Story
                   AND (a.website = :website)";
         "
                   AND (a.website = :website);";
+
+        $role = (string) ($_SESSION['role'] ?? 'guest');
+        $viewerId = (int) ($_SESSION['id'] ?? 0);
+
         if ($_SESSION['role'] == 'admin') {
             $sql .= ' AND (a.published = 0 or a.published = 1)';
         } elseif ($_SESSION['id'] == $member) {

@@ -5,6 +5,10 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
+$_SESSION['id'] = (int) ($_SESSION['id'] ?? 0);
+$_SESSION['role'] = (string) ($_SESSION['role'] ?? 'guest');
+$_SESSION['website'] = (int) ($_SESSION['website'] ?? 1);
+
 require_once APP_ROOT . '/src/security/guard.php';
 include APP_ROOT . '/src/pages/menu-path.php';
 
@@ -18,8 +22,13 @@ $parts = explode('/', $path); // Split into array at /
 $ownerId = (int) ($parts[1] ?? 0);
 
 // Load the “owner” member record (the one we’re following)
-$ownerMember = $cms->getMember()->get($id);
+$ownerId = (int) ($parts[1] ?? 0);
+if ($ownerId <= 0) {
+    include APP_ROOT . '/src/pages/page-not-found.php';
+    exit();
+}
 
+$ownerMember = $cms->getMember()->get($ownerId);
 if (!$ownerMember || empty($ownerMember['id'])) {
     include APP_ROOT . '/src/pages/page-not-found.php';
     exit();
