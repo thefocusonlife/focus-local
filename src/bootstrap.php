@@ -29,6 +29,11 @@ if (DEV === false) {
 $cms = new CMS($dsn, $username, $password);
 unset($dsn, $username, $password);
 
+// Ensure a website is always defined for fresh sessions (guest or logged-in)
+if (!isset($_SESSION['website']) || (int) $_SESSION['website'] <= 0) {
+    $_SESSION['website'] = 1; // default website (TFOL 1)
+}
+
 $twig_options['cache'] = APP_ROOT . '/var/cache';
 $twig_options['debug'] = DEV;
 

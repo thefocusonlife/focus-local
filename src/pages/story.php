@@ -66,11 +66,14 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 $website = $cms->getWebsite()->getById(intval($story['website']));
 
-if (empty($_SESSION) or $_SESSION['id'] == 2) {
-    if ($website['id'] > 1 and $website['non_members'] == 0) {
+$viewerId = (int) ($_SESSION['id'] ?? 0); // 0 = not logged in / unknown
+$isGuestOrAnon = $viewerId === 0 || $viewerId === 2;
+
+if ($isGuestOrAnon) {
+    if ((int) ($website['id'] ?? 0) > 1 && (int) ($website['non_members'] ?? 0) === 0) {
         redirect('index/99999', [
             'failure' => 'You must register as a member to access GET FOCUSED websites.
-        Click the "Register" link on top of this page to see pricing.',
+Click the "Register" link on top of this page to see pricing.',
         ]);
         exit();
     }

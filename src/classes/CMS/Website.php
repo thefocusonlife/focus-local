@@ -20,12 +20,13 @@ class Website
     // Get individual website by id
     public function get(int $id): array
     {
-        $arguments = [$id];
-        $sql = "SELECT id, uber_id, sorttype, name, image_file, alt, non_members
-                FROM website
-                WHERE id = :id;"; // SQL to get follow
-        return $this->db->runSQL($sql, $arguments)->fetch(); // Return follow
+        $sql = 'SELECT * FROM website WHERE id = :id';
+        $stmt = $this->db->runSql($sql, ['id' => $id]);
+        $row = $stmt->fetch();
+
+        return is_array($row) ? $row : [];
     }
+
     public function getById(int $id)
     {
         $arguments = [$id];

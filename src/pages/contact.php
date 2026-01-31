@@ -50,7 +50,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 $data['navigation'] = $cms->getMenu()->getAll2(1, 1); // All categories for nav
 
 // The following values are only created if the user has submitted the form
-$data['website'] = 1;
+//$data['website'] = 1;
+$data['website'] = $cms->getWebsite()->getById(1);
 $data['from'] = $from; // From email
 $data['message'] = $message; // Message
 $data['errors'] = $errors; // Error messages
