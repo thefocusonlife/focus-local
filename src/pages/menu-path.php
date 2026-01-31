@@ -12,15 +12,28 @@ if ($websiteId <= 0) {
     $websiteId = 1;
 }
 
+$path = trim($path, '/'); // important: normalizes /admin/index/ and /admin/index
+$parts = explode('/', $path);
+
 $parts = $path === '' ? [] : explode('/', $path);
 
 // ✅ Alias: /admin -> /admin/index
-if (($parts[0] ?? '') === 'admin' && empty($parts[1])) {
-    $parts[1] = 'index';
+if (($parts[0] ?? '') === 'admin') {
+    $page = 'admin/' . ($parts[1] ?? 'index'); // admin/index, admin/website, etc
+    $id = (int) ($parts[2] ?? 0); // optional
+} else {
+    $page = $parts[0] ?? 'index';
+    $id = (int) ($parts[1] ?? 0);
 }
-
-// then normal parsing
-$page = $parts[0] ?? 'index';
+error_log(
+    '[menu-path] uri=' .
+        $_SERVER['REQUEST_URI'] .
+        ' path=' .
+        $path .
+        ' parts=' .
+        json_encode($parts),
+);
+error_log('[menu-path] page=' . ($page ?? 'NULL') . ' id=' . ($id ?? 'NULL'));
 
 // Admin routes: /admin/<page>/<id>
 if ($page === 'admin') {

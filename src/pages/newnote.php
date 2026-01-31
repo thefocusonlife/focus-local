@@ -1,7 +1,124 @@
 <?php
-
 declare(strict_types=1);
-use PhpBook\Validate\Validate;
+use PhpBook\Validate\Validate; // Import Validate namespace
+
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
+}
+
+require_once APP_ROOT . '/src/security/guard.php';
+
+// --------------------------
+// newnote.php GUARD PATTERN
+// --------------------------
+
+// Parse route: /newnote/{targetId}
+// Use your existing menu-path parsing style:
+$path = mb_strtolower($_SERVER['REQUEST_URI'] ?? '');
+$path = strtok($path, '?'); // strip query string
+$path = substr($path, strlen(DOC_ROOT)); // remove DOC_ROOT prefix
+$parts = explode('/', trim($path, '/'));
+
+$targetId = (int) ($parts[1] ?? 0);
+
+// Viewer must be logged in
+$viewerId = (int) ($_SESSION['id'] ?? 0);
+if ($viewerId <= 0) {
+    $_SESSION['redirect_after_login'] = $_SERVER['REQUEST_URI'] ?? '';
+    header('Location: ' . DOC_ROOT . '/login');
+    exit();
+}
+
+// Session website (canonical TFOL key appears to be session.website from your logs)
+$sessionWebsiteId = (int) ($_SESSION['website'] ?? 0);
+
+// Viewer website from member session
+$viewerWebsiteId = (int) ($_SESSION['website'] ?? 0);
+
+// Basic sanity
+if ($targetId <= 0 || $sessionWebsiteId <= 0 || $viewerWebsiteId <= 0) {
+    include APP_ROOT . '/src/pages/page-not-found.php';
+    exit();
+}
+
+// Sanity: viewer must belong to current website session
+if ($viewerWebsiteId !== $sessionWebsiteId) {
+    // safest: force clean login
+    $_SESSION = [];
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_destroy();
+    }
+    header('Location: ' . DOC_ROOT . '/login');
+    exit();
+}
+
+// Load target member (the person being requested)
+$targetMember = $cms->getMember()->get($targetId);
+if (!$targetMember || empty($targetMember['id'])) {
+    include APP_ROOT . '/src/pages/page-not-found.php';
+    exit();
+}
+
+$targetWebsiteId = (int) ($targetMember['website'] ?? 0);
+if ($targetWebsiteId <= 0) {
+    include APP_ROOT . '/src/pages/page-not-found.php';
+    exit();
+}
+
+// ------------------------------------------------------------------
+// Require intent token for ALL loads (same-website and cross-website)
+// Blocks address-bar reuse by any non-originating member.
+// ------------------------------------------------------------------
+
+$k = (string) ($_GET['k'] ?? '');
+
+if ($k === '') {
+    include APP_ROOT . '/src/pages/page-not-found.php';
+    exit();
+}
+
+if (!isset($_SESSION['newnote_intents']) || !is_array($_SESSION['newnote_intents'])) {
+    include APP_ROOT . '/src/pages/page-not-found.php';
+    exit();
+}
+
+$intent = $_SESSION['newnote_intents'][$k] ?? null;
+
+$ok =
+    is_array($intent) &&
+    (int) ($intent['viewer_id'] ?? 0) === (int) $viewerId &&
+    (int) ($intent['target_id'] ?? 0) === (int) $targetId &&
+    (int) ($intent['target_website'] ?? 0) === (int) $targetWebsiteId &&
+    (int) ($intent['exp'] ?? 0) >= time();
+
+if (!$ok) {
+    include APP_ROOT . '/src/pages/page-not-found.php';
+    exit();
+}
+
+// burn token (one-time use)
+unset($_SESSION['newnote_intents'][$k]);
+
+// Prevent request-to-self
+if ($targetId === $viewerId) {
+    header('Location: ' . DOC_ROOT . '/member/' . $viewerId);
+    exit();
+}
+
+// Optional: On POST, overwrite spoofable fields (recommended)
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $_POST['viewer_id'] = $viewerId; // who is making request
+    $_POST['target_id'] = $targetId; // who request is for
+    $_POST['website'] = $sessionWebsiteId; // website scope, if stored
+}
+
+// OPTIONAL (recommended): hard-stop any spoofed viewerId in POST.
+// If your form includes viewer_id or sender_id, ignore it and overwrite.
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $_POST['viewer_id'] = $viewerId; // authoritative
+    $_POST['owner_id'] = $ownerId; // authoritative
+}
+
 // Initialize variables needed for the HTML page
 
 $note = [
@@ -32,7 +149,7 @@ $errors = [
     'reply_date' => '',
 ];
 
-$to_id = $id;
+$to_id = (int) $id;
 $from_id = $cms->getSession()->id;
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -86,17 +203,29 @@ $notetype = 1;
 $to_membername = $to_member['forename'] . ' ' . $to_member['surname'];
 $from_membername = $from_member['forename'] . ' ' . $from_member['surname'];
 
-$data['to_member'] = $to_member['id'];
-$data['from_member'] = $from_member['id'];
+// Authoritative IDs (session + validated target)
+$data['to_member'] = (int) ($targetMember['id'] ?? $targetId); // target
+$data['from_member'] = (int) $_SESSION['id']; // viewer (session ONLY)
+
+// Display names (assumes $to_membername / $from_membername already built from $targetMember + $fromMember)
 $data['to_membername'] = $to_membername;
 $data['from_membername'] = $from_membername;
-//$data['noteid'] = $notetype['id'];
+
+// Static fields
 $data['request'] = 'Follow Request';
 $data['description'] = 'Request to Follow';
-$data['to_family_id'] = $to_member['account_id'];
-$data['family_id'] = $from_member['account_id'];
-$data['allow'] = $note['allow'];
-$data['success'] = $_GET['Request Sent'] ?? ''; // Success message if present
-$data['website'] = $cms->getWebsite()->getById($from_member['website']);
+
+// Family/account IDs (authoritative)
+$data['to_family_id'] = (int) ($targetMember['account_id'] ?? 0);
+$data['family_id'] = (int) ($from_member['account_id'] ?? 0);
+
+// Allow flag (safe default)
+$data['allow'] = (int) ($note['allow'] ?? 0);
+
+// Success message (fix key)
+$data['success'] = $_GET['success'] ?? '';
+
+// Website scope comes from session website (NOT from $from_member)
+$data['website'] = $cms->getWebsite()->getById((int) $_SESSION['website']);
 
 echo $twig->render('newnote.html', $data); // Render Twig template

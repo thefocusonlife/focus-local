@@ -35,10 +35,16 @@ if ($docRoot !== '' && str_starts_with($path, $docRoot)) {
 }
 
 $path = trim($path, '/');
-$parts = $path === '' ? [] : explode('/', $path);
+$parts = explode('/', $path);
 
-$page = $parts[0] ?? 'index';
-$id = (int) ($parts[1] ?? 0);
+// admin routes: /admin/<page>/<id
+if (($parts[0] ?? '') === 'admin') {
+    $page = 'admin/' . ($parts[1] ?? 'index');
+    $id = $parts[2] ?? null;
+} else {
+    $page = $parts[0] ?? 'index';
+    $id = $parts[1] ?? null;
+}
 
 route_log($trace, "REQUEST uri=$uri path=$path page=$page id=$id parts=" . json_encode($parts));
 
