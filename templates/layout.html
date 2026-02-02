@@ -78,6 +78,10 @@ tinymce.init({selector: 'textarea.tinymce', branding: false, plugins: 'anchor au
 						<span class="icon-menu"></span>
 						<span class="hidden">Menu</span>
 					</button>
+					<!-- DEBUG nav: count={{ navigation|default([])|length }}
+										     sid={{ session.id|default('NULL') }}
+										     wid={{ session.website|default('NULL') }} -->
+
 
 					<ul id="menu">
 						{% for link in navigation %}

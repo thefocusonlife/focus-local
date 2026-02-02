@@ -19,6 +19,25 @@ class Menu
         return $this->db->runSQL($sql, [$id])->fetch(); // Return menu data
     }
 
+    public function getBySlug(int $websiteId, int $accountId, string $slug): ?array
+    {
+        $sql = "SELECT id, master_id, website, name, description, navigation, account_id, seo_name, position
+            FROM menu
+            WHERE website = :website
+              AND account_id = :account_id
+              AND seo_name = :slug
+            LIMIT 1";
+        $row = $this->db
+            ->runSQL($sql, [
+                'website' => $websiteId,
+                'account_id' => $accountId,
+                'slug' => $slug,
+            ])
+            ->fetch();
+
+        return $row ?: null;
+    }
+
     // Get all menus
     public function getAll(): array
     {

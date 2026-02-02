@@ -290,10 +290,12 @@ class Story
         $member = null,
         $limit = 300,
         $sorttypeId = null,
+        $crossWebsite = false,
     ): array {
         $arguments['menu'] = $arguments['menu1'] = $menu; // Menu id
         $arguments['member'] = $arguments['member1'] = $member; // Author id
         $arguments['website'] = $website;
+        $arguments['crossWebsite'] = $crossWebsite ? 1 : 0; // (optional; see below)
 
         //$arguments = array($website);
         // Setup file
@@ -344,7 +346,7 @@ LEFT JOIN image AS i ON a.image_id    = i.id
 
 WHERE (a.menu_id = :menu OR :menu1 is null)
 AND (a.member_id   = :member   OR :member1   is null)
-AND (a.website = :website)
+AND (:crossWebsite = 1 OR a.website = :website)
 AND (m.publik = 1)";
         $sessionRole = (string) ($_SESSION['role'] ?? 'guest');
         $sessionMemberId = (int) ($_SESSION['id'] ?? 0);

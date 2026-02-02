@@ -7,16 +7,44 @@ if (!$id) {
     exit();
 }
 
+$sessionId = (int) ($_SESSION['id'] ?? 0);
+$sessionWebsiteId = (int) ($_SESSION['website'] ?? 0);
+
+// Current website context (prefer $website['id'] if you already loaded it)
+$websiteId = (int) ($website['id'] ?? $sessionWebsiteId);
+
+// Menu owner for navigation + slug lookups
+$isGuest = empty($_SESSION) || $sessionId === 2;
+$menuOwnerId = $isGuest ? 1 : $sessionId;
+
+// Resolve menu (website-specific row) based on route
+$menuId = (int) ($id ?? 0);
+
 // Resolve menu
-if (($parts[2] ?? '') === 'get-focused') {
-    $menu = $cms->getMenu()->get(50);
+$maybeSlugOrId = (string) ($parts[2] ?? '');
+$menu = null;
+
+// If route uses a slug in the {id} position (legacy), resolve by slug.
+if ($maybeSlugOrId !== '' && !ctype_digit($maybeSlugOrId)) {
+    // Use current website + the menu owner you're already using for navigation
+    $menu = $cms->getMenu()->getBySlug((int) $website['id'], (int) $menuOwnerId, $maybeSlugOrId);
+
+    // Optional fallback: if website-specific menu isn't present, try website 1 owner 1
+    if (!$menu) {
+        $menu = $cms->getMenu()->getBySlug(1, 1, $maybeSlugOrId);
+    }
 } else {
-    $menu = $cms->getMenu()->get((int) $id);
+    $menuId = (int) ($id ?? 0);
+    $menu = $cms->getMenu()->get($menuId);
 }
+
 if (!$menu) {
     include APP_ROOT . '/src/pages/page-not-found.php';
     exit();
 }
+
+// Canonical menu id (global category)
+$canonicalMenuId = (int) ($menu['master_id'] ?? $menu['id']);
 
 // Website context
 //$websiteId = (int) ($_SESSION['website'] ?? (int) ($menu['website'] ?? 1));
@@ -60,8 +88,8 @@ $data['menu'] = $menu;
 $data['section'] = (int) $menu['id'];
 
 // ---- Menu-scoped sort wiring ----
-// ---- Menu-scoped sort wiring ----
-$menuId = (int) $menu['id'];
+$menuId = (int) ($menu['id'] ?? 0);
+$canonicalMenuId = (int) ($menu['master_id'] ?? $menuId);
 
 // Prefer menu-scoped session sort if present, then session global, then member setting
 $preferred =
@@ -79,16 +107,15 @@ $storyAccountFilter = $menuAccountId > 0 ? $menuAccountId : null;
 $pageLimit = (int) ($_SESSION['pagelimit'] ?? ($member['pagelimit'] ?? 100));
 
 // Stories
-$data['stories'] = $cms
-    ->getStory()
-    ->getAll3(
-        (int) $website['id'],
-        true,
-        $menuId,
-        $storyAccountFilter,
-        $pageLimit,
-        $resolvedSorttypeId,
-    );
+$data['stories'] = $cms->getStory()->getAll3(
+    (int) $website['id'],
+    true,
+    $canonicalMenuId,
+    $storyAccountFilter,
+    $pageLimit,
+    $resolvedSorttypeId,
+    true, // crossWebsite
+);
 $data['sort_menu_id'] = (int) $menuId;
 
 echo $twig->render('menu.html', $data);
