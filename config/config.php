@@ -203,6 +203,12 @@ if (!defined('IMAGE_JPEG_QUALITY')) {
 if (!defined('IMAGE_WEBP_QUALITY')) {
     define('IMAGE_WEBP_QUALITY', IMAGE_QUALITY);
 }
+// ------------------------------------------------------------
+// TFOL Global Defaults
+// ------------------------------------------------------------
+define('TFOL_DEFAULT_WEBSITE_ID', 1);
+define('TFOL_DEFAULT_ACCOUNT_ID', 1); // UberAdmin
+define('TFOL_DEFAULT_SORTTYPE_ID', 2); // Newest
 
 // Optional legacy aliases if you have older code somewhere:
 // (uncomment ONLY if you find references)

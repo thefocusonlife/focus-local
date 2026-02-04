@@ -129,14 +129,6 @@ $data['stories'] = $cms->getStory()->getAll3((int) $website['id'], true, null, n
 // 7) Navigation (guest account_id = 0)
 $data['navigation'] = $cms->getMenu()->getAll2((int) $website['id'], $menuOwnerId);
 
-// 8) Data for template
-$data['website'] = $website;
-if ($member) {
-    $data['member'] = $member;
-}
-// 7) Navigation (guest account_id = 0)
-$data['navigation'] = $cms->getMenu()->getAll2((int) $website['id'], $menuOwnerId);
-
 // 7.5) Default Sort target for global pages (Focus menu id=2)
 if (empty($data['sort_menu_id'])) {
     $data['sort_menu_id'] = 2;
@@ -146,6 +138,14 @@ if (empty($data['sort_menu_id'])) {
 $data['website'] = $website;
 if ($member) {
     $data['member'] = $member;
+}
+if (defined('TFOL_ROUTE_DEBUG') && TFOL_ROUTE_DEBUG) {
+    $data['_debug'] = [
+        'uri' => $_SERVER['REQUEST_URI'] ?? '',
+        'get' => $_GET ?? [],
+        'post' => $_POST ?? [],
+        'session' => $_SESSION ?? [],
+    ];
 }
 
 echo $twig->render('index.html', $data);

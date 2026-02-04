@@ -79,8 +79,8 @@ tinymce.init({selector: 'textarea.tinymce', branding: false, plugins: 'anchor au
 						<span class="hidden">Menu</span>
 					</button>
 					<!-- DEBUG nav: count={{ navigation|default([])|length }}
-										     sid={{ session.id|default('NULL') }}
-										     wid={{ session.website|default('NULL') }} -->
+																									     sid={{ session.id|default('NULL') }}
+																									     wid={{ session.website|default('NULL') }} -->
 
 
 					<ul id="menu">
@@ -105,6 +105,43 @@ tinymce.init({selector: 'textarea.tinymce', branding: false, plugins: 'anchor au
 			{# Optional: keep this only if you truly need it; right now it’s a half-open form in your file #}
 			{% block header_extra %}{% endblock %}
 		</body>
+		{% if _debug is defined %}
+			<div style="margin:1rem 0; padding:0.75rem; border:1px solid #ccc; font-size:0.9rem;">
+				<div>
+					<strong>DEBUG</strong>
+				</div>
+
+				<div>
+					<strong>URI</strong>
+				</div>
+				<pre style="white-space:pre-wrap;">{{ _debug.uri }}</pre>
+
+				<div>
+					<strong>SESSION</strong>
+				</div>
+				<pre style="white-space:pre-wrap;">{{ _debug.session|json_encode(constant('JSON_PRETTY_PRINT')) }}</pre>
+
+				<div>
+					<strong>GET</strong>
+				</div>
+				<pre style="white-space:pre-wrap;">{{ _debug.get|json_encode(constant('JSON_PRETTY_PRINT')) }}</pre>
+
+				{% if _debug.post is defined and _debug.post %}
+					<div>
+						<strong>POST</strong>
+					</div>
+					<pre style="white-space:pre-wrap;">{{ _debug.post|json_encode(constant('JSON_PRETTY_PRINT')) }}</pre>
+				{% endif %}
+			</div>
+		{% endif %}
+		{% if _debug_sort is defined %}
+			<div>
+				<strong>SORT</strong>
+			</div>
+			<pre style="white-space:pre-wrap;">{{ _debug_sort|json_encode(constant('JSON_PRETTY_PRINT')) }}</pre>
+		{% endif %}
+
+
 	</body>
 </html></header><main id="content"> {% block content %}{% endblock %}
 </main>

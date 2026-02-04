@@ -54,29 +54,41 @@ class Sorttype // Define Session class
     {
         // menu_sorttype mapping removed; pick a safe default
 
-        // Prefer 1 if it exists
-        $row = $this->db->runSql('SELECT id FROM sorttype WHERE id = 1 LIMIT 1;')->fetch();
-        if ($row && isset($row['id'])) {
-            return 1;
-        }
-
-        // Otherwise prefer 2 if it exists
+        // Prefer 2 (Newest) if it exists
         $row = $this->db->runSql('SELECT id FROM sorttype WHERE id = 2 LIMIT 1;')->fetch();
         if ($row && isset($row['id'])) {
             return 2;
         }
 
+        // Otherwise prefer 1 (Random) if it exists
+        $row = $this->db->runSql('SELECT id FROM sorttype WHERE id = 1 LIMIT 1;')->fetch();
+        if ($row && isset($row['id'])) {
+            return 1;
+        }
+
         // Otherwise fall back to the lowest id available
         $row = $this->db->runSql('SELECT id FROM sorttype ORDER BY id ASC LIMIT 1;')->fetch();
-        return $row && isset($row['id']) ? (int) $row['id'] : 1;
+        return $row && isset($row['id']) ? (int) $row['id'] : 2;
     }
 
-    public function resolveForMenu(int $menuId, int $preferredSorttypeId): int
+    public function resolveForMenu(int $menuId, int $preferredSorttypeId = 0): int
     {
+        // 1) READ session override (authoritative)
+        $websiteId = (int) ($_SESSION['website'] ?? 0);
+        $key = $websiteId . ':' . $menuId;
+
+        $override = (int) ($_SESSION['sort_override_by_menu'][$key] ?? 0);
+
+        if ($override > 0 && $this->isAllowedForMenu($menuId, $override)) {
+            return $override;
+        }
+
+        // 2) Incoming / preferred (POST hint)
         if ($preferredSorttypeId > 0 && $this->isAllowedForMenu($menuId, $preferredSorttypeId)) {
             return $preferredSorttypeId;
         }
 
-        return $this->getDefaultIdForMenu($menuId);
+        // 3) Menu default
+        return (int) $this->getDefaultIdForMenu($menuId);
     }
 }

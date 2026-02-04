@@ -27,6 +27,26 @@ class Story
         $this->db = $db; // Add ref to Database object
     }
 
+    private function orderByForSorttype(?int $sorttypeId): string
+    {
+        $id = (int) ($sorttypeId ?? 0);
+
+        switch ($id) {
+            case 1:
+                return 'ORDER BY RAND()';
+            case 2:
+                return 'ORDER BY a.created DESC, a.id DESC';
+            case 3:
+                return 'ORDER BY a.created ASC, a.id ASC';
+            case 4:
+                return 'ORDER BY a.title ASC, a.id ASC';
+            case 5:
+                return 'ORDER BY a.title DESC, a.id DESC';
+            default:
+                return 'ORDER BY a.created DESC, a.id DESC';
+        }
+    }
+
     // Get individual story
     public function get(int $id, bool $published)
     {
@@ -72,8 +92,13 @@ class Story
     }
 
     // Get summaries of stories - published only
-    public function getAll($published = null, $menu = null, $member = null, $limit = 300): array
-    {
+    public function getAll(
+        $published = null,
+        $menu = null,
+        $member = null,
+        $limit = 300,
+        ?int $sorttypeId = null,
+    ): array {
         // Setup file
         $path = mb_strtolower($_SERVER['REQUEST_URI']); // Get path in lowercase
         $path = substr($path, strlen(DOC_ROOT)); // Remove up to DOC_ROOT
@@ -131,56 +156,23 @@ class Story
         }
         // JUST FOR TESTING
 
-        if (empty($effectiveSorttype)) {
-            if (empty($parts[2])) {
-                $sql .= " ORDER BY a.landscape, RAND()
-                LIMIT :limit;";
-
-                //$sql .= " ORDER BY a.menu_id ASC, a.storyorder,a.landscape DESC
-                //                LIMIT :limit;";
-            }
-        } elseif ($effectiveSorttype == 1) {
-            $sql .= " ORDER BY  a.landscape DESC, RAND()
-                    LIMIT :limit;"; //landscape Random
-        } elseif ($effectiveSorttype == 2) {
-            $sql .= " ORDER BY  a.landscape DESC, a.created DESC
-                    LIMIT :limit;"; //recent landscape first
-        } elseif ($effectiveSorttype == 3) {
-            $sql .= " ORDER BY  a.landscape DESC, a.created ASC
-                    LIMIT :limit;"; //oldest landscape first
-        } elseif ($effectiveSorttype == 4) {
-            $sql .= " ORDER BY  a.landscape ASC, a.created DESC
-                    LIMIT :limit;"; //recent portrait first
-        } elseif ($effectiveSorttype == 5) {
-            $sql .= " ORDER BY   a.landscape ASC, a.created ASC
-                    LIMIT :limit;"; //oldest portrait first random
-        } elseif ($effectiveSorttype == 6) {
-            $sql .= " ORDER BY  a.landscape ASC, RAND()
-                            LIMIT :limit;"; //portrait first random
-        } elseif ($effectiveSorttype == 7) {
-            $sql .= " ORDER BY  a.title ASC
-                                LIMIT :limit;"; //alphabetical
-        } elseif ($effectiveSorttype == 8) {
-            $sql .= " ORDER BY  RAND()
-                                LIMIT :limit;"; //mixed portrait and landscape random
-        } elseif ($effectiveSorttype == 9) {
-            $sql .= " ORDER BY   a.created DESC
-                                LIMIT :limit;"; //mixed portrait and oldest
-        } elseif ($effectiveSorttype == 10) {
-            $sql .= " ORDER BY  a.storyorder,a.landscape DESC
-                                 LIMIT :limit;";
-        } else {
-            $sql .= " ORDER BY  a.storyorder,a.landscape DESC
-                                LIMIT :limit;";
-        }
+        $sorttypeId = $sorttypeId ?? null;
+        $orderBy = $this->orderByForSorttype($sorttypeId);
+        $sql .= " $orderBy LIMIT :limit";
 
         return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return data
         // SQL for story summary
     }
 
     // Get summaries of stories - Published and not-published
-    public function getAll2($website, $published, $menu = null, $member = null, $limit = 150): array
-    {
+    public function getAll2(
+        $website,
+        $published,
+        $menu = null,
+        $member = null,
+        $limit = 150,
+        ?int $sorttypeId = null,
+    ): array {
         // Setup file
         // Validate ID
 
@@ -236,48 +228,10 @@ class Story
         } else {
             $sql .= ' AND (a.published = 1)';
         }
-        if (empty($effectiveSorttype)) {
-            if (empty($parts[2])) {
-                $sql .= " ORDER BY a.landscape, RAND()
-                    LIMIT :limit;";
 
-                //$sql .= " ORDER BY a.menu_id ASC, a.storyorder,a.landscape DESC
-                //                LIMIT :limit;";
-            }
-        } elseif ($effectiveSorttype == 1) {
-            $sql .= " ORDER BY  a.landscape DESC, RAND()
-                        LIMIT :limit;"; //landscape Random
-        } elseif ($effectiveSorttype == 2) {
-            $sql .= " ORDER BY  a.landscape DESC, a.created DESC
-                        LIMIT :limit;"; //recent landscape first
-        } elseif ($effectiveSorttype == 3) {
-            $sql .= " ORDER BY  a.landscape DESC, a.created ASC
-                        LIMIT :limit;"; //oldest landscape first
-        } elseif ($effectiveSorttype == 4) {
-            $sql .= " ORDER BY  a.landscape ASC, a.created DESC
-                        LIMIT :limit;"; //recent portrait first
-        } elseif ($effectiveSorttype == 5) {
-            $sql .= " ORDER BY   a.landscape ASC, a.created ASC
-                        LIMIT :limit;"; //oldest portrait first random
-        } elseif ($effectiveSorttype == 6) {
-            $sql .= " ORDER BY  a.landscape ASC, RAND()
-                                LIMIT :limit;"; //portrait first random
-        } elseif ($effectiveSorttype == 7) {
-            $sql .= " ORDER BY  a.title ASC
-                                    LIMIT :limit;"; //alphabetical
-        } elseif ($effectiveSorttype == 8) {
-            $sql .= " ORDER BY  RAND()
-                                    LIMIT :limit;"; //mixed portrait and landscape random
-        } elseif ($effectiveSorttype == 9) {
-            $sql .= " ORDER BY   a.created DESC
-                                    LIMIT :limit;"; //mixed portrait and oldest
-        } elseif ($effectiveSorttype == 10) {
-            $sql .= " ORDER BY  a.storyorder,a.landscape DESC
-                            LIMIT :limit;";
-        } else {
-            $sql .= " ORDER BY  a.storyorder,a.landscape DESC
-                                    LIMIT :limit;";
-        }
+        $sorttypeId = $sorttypeId ?? null;
+        $orderBy = $this->orderByForSorttype($sorttypeId);
+        $sql .= " $orderBy LIMIT :limit";
 
         return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return data
         // SQL for story summary
@@ -350,7 +304,7 @@ AND (:crossWebsite = 1 OR a.website = :website)
 AND (m.publik = 1)";
         $sessionRole = (string) ($_SESSION['role'] ?? 'guest');
         $sessionMemberId = (int) ($_SESSION['id'] ?? 0);
-        $sessionSorttype = (int) ($_SESSION['sorttype'] ?? 0);
+        $sessionSorttype = (int) ($_SESSION['sorttype'] ?? TFOL_DEFAULT_SORTTYPE_ID);
         $effectiveSorttype = (int) ($sorttypeId ?? $sessionSorttype);
         $sessionSorttype = $effectiveSorttype; // <-- one-liner to honor menu-scoped sort
 
@@ -361,36 +315,14 @@ AND (m.publik = 1)";
         } else {
             $sql .= ' AND (a.published = 1)';
         }
-        $effectiveSorttype = (int) ($sorttypeId ?? ($_SESSION['sorttype'] ?? 0));
+        $effectiveSorttype =
+            (int) ($sorttypeId ?? ($_SESSION['sorttype'] ?? TFOL_DEFAULT_SORTTYPE_ID));
 
-        if ($sessionSorttype <= 0) {
-            if (empty($parts[2])) {
-                $sql .= " ORDER BY RAND()
-                  LIMIT :limit;";
-            } else {
-                // pick your default order for slug routes
-                $sql .= " ORDER BY a.storyorder DESC
-                  LIMIT :limit;";
-            }
-        } elseif ($sessionSorttype === 1) {
-            $sql .= " ORDER BY RAND()
-              LIMIT :limit;";
-        } elseif ($sessionSorttype === 2) {
-            $sql .= " ORDER BY a.storyorder DESC
-              LIMIT :limit;";
-        } elseif ($sessionSorttype === 3) {
-            $sql .= " ORDER BY a.storyorder ASC
-              LIMIT :limit;";
-        } elseif ($sessionSorttype === 4) {
-            $sql .= " ORDER BY a.title ASC
-              LIMIT :limit;";
-        } elseif ($sessionSorttype === 5) {
-            $sql .= " ORDER BY a.title DESC
-              LIMIT :limit;";
-        } else {
-            $sql .= " ORDER BY a.storyorder DESC
-              LIMIT :limit;";
-        }
+        $sorttypeId = (int) ($sorttypeId ?? TFOL_DEFAULT_SORTTYPE_ID);
+
+        $orderBy = $this->orderByForSorttype($sorttypeId);
+        $sql .= " $orderBy LIMIT :limit";
+
         foreach (array_keys($arguments) as $k) {
             if (!str_contains($sql, ':' . $k)) {
                 unset($arguments[$k]);

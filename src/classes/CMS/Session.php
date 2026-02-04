@@ -40,7 +40,7 @@ class Session // Define Session class
         $this->landscape = $_SESSION['landscape'] ?? true;
         $this->follow_id = $_SESSION['follow_id'] ?? 0; // set follow_id property of this
         $this->pagelimit = $_SESSION['pagelimit'] ?? 200;
-        $this->sorttype = $_SESSION['sorttype'] ?? 1;
+        $this->sorttype = $_SESSION['sorttype'] ?? 2;
         $this->website = $_SESSION['website'] ?? $id;
     }
 
@@ -62,7 +62,7 @@ class Session // Define Session class
             $_SESSION['landscape'] = true;
             $_SESSION['follow_id'] = (int) ($member['account_id'] ?? 0);
             $_SESSION['pagelimit'] = (int) ($member['pagelimit'] ?? 200);
-            $_SESSION['sorttype'] = (int) ($member['sorttype'] ?? 1);
+            $_SESSION['sorttype'] = (int) ($member['sorttype'] ?? TFOL_DEFAULT_SORTTYPE_ID);
             $_SESSION['website'] = (int) ($member['website'] ?? ($website ?? 1));
 
             return; // ✅ stop here — authenticated session created
@@ -76,7 +76,8 @@ class Session // Define Session class
         $_SESSION['landscape'] = true;
         $_SESSION['follow_id'] = 0;
         $_SESSION['pagelimit'] = 200;
-        $_SESSION['sorttype'] = 1;
+        $_SESSION['sorttype'] = (int) ($_SESSION['sorttype'] ?? TFOL_DEFAULT_SORTTYPE_ID);
+
         $_SESSION['website'] = (int) ($website ?? 1);
     }
 
@@ -151,7 +152,7 @@ class Session // Define Session class
         $_SESSION['landscape'] = $_SESSION['landscape'] ?? true;
         $_SESSION['follow_id'] = 0;
         $_SESSION['pagelimit'] = $_SESSION['pagelimit'] ?? 200;
-        $_SESSION['sorttype'] = $_SESSION['sorttype'] ?? 1;
+        $_SESSION['sorttype'] = $_SESSION['sorttype'] ?? TFOL_DEFAULT_SORTTYPE_ID;
 
         // Website context
         if ($websiteId !== null && $websiteId > 0) {

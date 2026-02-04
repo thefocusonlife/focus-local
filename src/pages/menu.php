@@ -66,9 +66,30 @@ if (!empty($_SESSION['id'])) {
     $accountId = (int) ($member['account_id'] ?? 0);
 }
 
-// Viewer vs menu-owner (accountId is being used as "menu owner member id" for shared menus)
+// Viewer vs menu-owner (account_id is used as "menu owner member id" for shared menus)
 $viewerId = (int) ($_SESSION['id'] ?? 0);
-$menuOwnerId = (int) ($accountId > 0 ? $accountId : $viewerId);
+$memAccountId = 0; // <-- always define it
+
+if ($viewerId > 0) {
+    // Logged-in: menus belong to the viewer, unless attached to an account owner
+    $memAccountId = (int) ($member['account_id'] ?? 0); // adjust if your member array differs
+    $menuOwnerId = $memAccountId > 0 ? $memAccountId : $viewerId;
+} else {
+    // Guest: show UberAdmin menus
+    $menuOwnerId = 1; // uber admin member id
+}
+
+// Navigation
+$data['navigation'] = $cms->getMenu()->getAll2((int) $website['id'], $menuOwnerId);
+
+// Optional debug
+if (defined('TFOL_ROUTE_DEBUG') && TFOL_ROUTE_DEBUG) {
+    $data['_debug_nav_owner'] = [
+        'viewerId' => $viewerId,
+        'memAccountId' => $memAccountId,
+        'menuOwnerId' => $menuOwnerId,
+    ];
+}
 
 // Only owners should get owner-visibility; everyone else sees public visibility
 $visibilityViewerId = $viewerId > 0 && $viewerId === $menuOwnerId ? $viewerId : null;
@@ -80,9 +101,6 @@ if ($member) {
     $data['member'] = $member;
 }
 
-// Navigation (use accountId, not $_SESSION['account_id'])
-$data['navigation'] = $cms->getMenu()->getAll2((int) $website['id'], $menuOwnerId);
-
 // Current menu
 $data['menu'] = $menu;
 $data['section'] = (int) $menu['id'];
@@ -91,12 +109,18 @@ $data['section'] = (int) $menu['id'];
 $menuId = (int) ($menu['id'] ?? 0);
 $canonicalMenuId = (int) ($menu['master_id'] ?? $menuId);
 
-// Prefer menu-scoped session sort if present, then session global, then member setting
-$preferred =
-    (int) ($_SESSION['sorttype_by_menu'][$menuId] ??
-        (null ?? ($_SESSION['sorttype'] ?? (null ?? ($member['sorttype'] ?? 0)))));
+$memberSorttypeId = is_array($member) && isset($member['sorttype']) ? (int) $member['sorttype'] : 0;
 
-$resolvedSorttypeId = (int) $cms->getSorttype()->resolveForMenu($menuId, $preferred);
+// Prefer menu-scoped session sort if present, then session global, then member setting
+$websiteId = (int) ($website['id'] ?? ($_SESSION['website'] ?? 0));
+$key = $websiteId . ':' . $menuId;
+
+// Preferred sort comes from the same key the resolver uses
+$preferredSorttypeId =
+    (int) ($_SESSION['sort_override_by_menu'][$key] ??
+        ($_SESSION['sorttype'] ?? $memberSorttypeId));
+
+$resolvedSorttypeId = (int) $cms->getSorttype()->resolveForMenu($menuId, $preferredSorttypeId);
 $data['active_sorttype_id'] = $resolvedSorttypeId;
 
 // ---- Story account filter: only apply viewer filter for member-owned menus ----
@@ -106,16 +130,89 @@ $storyAccountFilter = $menuAccountId > 0 ? $menuAccountId : null;
 // ---- Page limit (member or guest default) ----
 $pageLimit = (int) ($_SESSION['pagelimit'] ?? ($member['pagelimit'] ?? 100));
 
-// Stories
-$data['stories'] = $cms->getStory()->getAll3(
-    (int) $website['id'],
-    true,
-    $canonicalMenuId,
-    $storyAccountFilter,
-    $pageLimit,
-    $resolvedSorttypeId,
-    true, // crossWebsite
+$menuId = (int) ($menu['id'] ?? 0);
+$masterMenuId = (int) ($menu['master_id'] ?? 0);
+
+// Stories live on website 1
+$storyMenuId = $masterMenuId > 0 ? $masterMenuId : $menuId;
+$crossWebsite = true;
+
+// Sort defaults/overrides are per LOCAL menu row
+$resolvedSorttypeId = (int) $cms->getSorttype()->resolveForMenu($menuId, 0);
+if (defined('TFOL_ROUTE_DEBUG') && TFOL_ROUTE_DEBUG) {
+    $data['_debug_sort'] = [
+        'menuId' => $menuId ?? null,
+        'preferredSorttypeId' => $preferredSorttypeId ?? null,
+        'resolvedSorttypeId' => $sorttypeId ?? null,
+    ];
+}
+
+file_put_contents(
+    '/tmp/tfol-menu-call.log',
+    sprintf(
+        "%s menuId=%d masterId=%d storyMenuId=%d cross=%s sort=%d uri=%s\n",
+        date('c'),
+        $menuId,
+        $masterMenuId,
+        $storyMenuId,
+        $crossWebsite ? '1' : '0',
+        $resolvedSorttypeId,
+        $_SERVER['REQUEST_URI'] ?? '',
+    ),
+    FILE_APPEND,
 );
+// ------------------------------------------------------------
+// Sort selection (menu-based)
+// Priority: menu-scoped session -> global session -> member pref -> 0
+// ------------------------------------------------------------
+$websiteId = (int) ($website['id'] ?? ($_SESSION['website'] ?? 0));
+$key = $websiteId . ':' . $menuId;
+
+// Preferred sort comes from the same key the resolver uses
+$websiteId = (int) ($_SESSION['website'] ?? 0);
+$key = $websiteId . ':' . $menuId;
+
+// Only allow per-menu override to influence menu grids
+$preferredSorttypeId = (int) ($_SESSION['sort_override_by_menu'][$key] ?? 0);
+
+$resolvedSorttypeId = (int) $cms->getSorttype()->resolveForMenu($menuId, $preferredSorttypeId);
+$data['active_sorttype_id'] = $resolvedSorttypeId;
+
+// Optional: debug panel support
+if (defined('TFOL_ROUTE_DEBUG') && TFOL_ROUTE_DEBUG) {
+    $data['_debug_sort'] = [
+        'menuId' => $menuId,
+        'preferredSorttypeId' => $preferredSorttypeId,
+        'resolvedSorttypeId' => $resolvedSorttypeId,
+    ];
+}
+
+$viewerId = (int) ($_SESSION['id'] ?? 0);
+$memberFilter = $viewerId > 0 ? $viewerId : null;
+
+$published = $published ?? 1;
+$crossWebsite = false;
+
+$data['stories'] = $cms->getStory()->getAll3(
+    $websiteId,
+    $published,
+    $menuId,
+    $memberFilter,
+    300,
+    $resolvedSorttypeId, // <-- THIS is the point
+    $crossWebsite,
+);
+//$menuOwnerId = 1; // guest
+$data['navigation'] = $cms->getMenu()->getAll2((int) $website['id'], $menuOwnerId);
+
 $data['sort_menu_id'] = (int) $menuId;
+if (defined('TFOL_ROUTE_DEBUG') && TFOL_ROUTE_DEBUG) {
+    $data['_debug'] = [
+        'uri' => $_SERVER['REQUEST_URI'] ?? '',
+        'get' => $_GET ?? [],
+        'post' => $_POST ?? [],
+        'session' => $_SESSION ?? [],
+    ];
+}
 
 echo $twig->render('menu.html', $data);

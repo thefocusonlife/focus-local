@@ -62,14 +62,19 @@ if ($isLoggedIn) {
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $pagelimitVal = (int) ($_POST['pagelimit'] ?? 100);
 
-    $menuId = (int) ($_POST['menu_id'] ?? ($_GET['menu_id'] ?? 0));
-    if ($menuId <= 0) {
-        redirect('page-not-found/');
-        exit();
+    $websiteId = (int) ($_SESSION['website'] ?? 0);
+    $menuId = (int) ($_POST['menu_id'] ?? 0);
+    $selectedSorttypeId = (int) ($_POST['sorttype_id'] ?? 0);
+    $key = $websiteId . ':' . $menuId;
+
+    if ($menuId > 0 && $selectedSorttypeId > 0) {
+        $_SESSION['sort_override_by_menu'][$key] = $selectedSorttypeId;
     }
 
     $incomingSorttype = (int) ($_POST['sorttype'] ?? 0);
     $resolvedSorttype = $cms->getSorttype()->resolveForMenu($menuId, $incomingSorttype);
+    $key = ((int) $_SESSION['website']) . ':' . $menuId;
+    $_SESSION['sort_override_by_menu'][$key] = $resolvedSorttype;
 
     if ($isLoggedIn && $member) {
         // Member: persist preferences to member record (your current behavior)
@@ -79,21 +84,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $cms->getMember()->updateSorttype((int) $cms->getSession()->id, (int) $sorttypeId);
 
         $cms->getSession()->create($member, (int) $member['website']);
-        // Always reflect choice into session (so grids/refresh use it immediately)
-        $_SESSION['sorttype'] = $resolvedSorttype;
-        $_SESSION['sorttype_by_menu'] = $_SESSION['sorttype_by_menu'] ?? [];
-        $_SESSION['sorttype_by_menu'][$menuId] = $resolvedSorttype;
 
         // If pagelimit is member-only, still ok to set session for convenience:
         $_SESSION['pagelimit'] = (int) ($member['pagelimit'] ?? 100);
     } else {
         // Guest: session-only preferences
         $_SESSION['pagelimit'] = $pagelimitVal;
-        $_SESSION['sorttype'] = $resolvedSorttype;
-
-        // If you want menu-scoped guest sort (recommended):
-        $_SESSION['sorttype_by_menu'] = $_SESSION['sorttype_by_menu'] ?? [];
-        $_SESSION['sorttype_by_menu'][$menuId] = $resolvedSorttype;
     }
 
     $returnTo = (string) ($_POST['return_to'] ?? '');
@@ -127,15 +123,7 @@ if ($websiteId <= 0) {
 $pagelimit = $cms->getPagelimit()->getAll();
 $sorttype = $cms->getSorttype()->getByMenu($menuId);
 
-$activeSorttypeId = $cms
-    ->getSorttype()
-    ->resolveForMenu(
-        $menuId,
-        (int) ($isLoggedIn && $member
-            ? $member['sorttype'] ??
-                ($_SESSION['sorttype_by_menu'][$menuId] ?? ($_SESSION['sorttype'] ?? 0))
-            : $_SESSION['sorttype_by_menu'][$menuId] ?? ($_SESSION['sorttype'] ?? 0)),
-    );
+$activeSorttypeId = (int) $cms->getSorttype()->resolveForMenu($menuId, 0);
 
 $data['member'] = $member; // null for guests is OK if your Twig checks it
 $data['pagelimit'] = $pagelimit;
