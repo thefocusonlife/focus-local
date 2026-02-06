@@ -76,9 +76,28 @@ $data['failure'] = $_GET['failure'] ?? null;
 $data['member'] = $viewer; // viewer identity (who is logged in)
 $data['website'] = $website; // resolved website (owner’s website)
 $data['follow_owner'] = $ownerMember; // optional: lets template show “Following X”
+$data['current_path'] = "member/$ownerId"; // or viewerId if that’s your route
+$data['current_menu_id'] = null;
 
-$resolvedSorttype = (int) ($viewer['sorttype'] ?? 9);
-$data['sorttype'] = $cms->getSorttype()->get($resolvedSorttype);
+// ------------------------------------------------------------
+// Sort preference (member page = "no menu selected" => global override)
+// Precedence: session global override -> viewer preference -> website default -> fallback
+// ------------------------------------------------------------
+$preferredSorttypeId = (int) ($_SESSION['sort_override_global'][$websiteId] ?? 0);
+
+if ($preferredSorttypeId > 0) {
+    $resolvedSorttypeId = $preferredSorttypeId;
+} else {
+    $resolvedSorttypeId = (int) ($viewer['sorttype'] ?? 0);
+    if ($resolvedSorttypeId <= 0) {
+        $resolvedSorttypeId = (int) ($website['sorttype'] ?? 0);
+    }
+    if ($resolvedSorttypeId <= 0) {
+        $resolvedSorttypeId = 1; // final fallback (Newest if that's your id=1)
+    }
+}
+
+$data['sorttype'] = $cms->getSorttype()->get($resolvedSorttypeId);
 
 // Navigation (menus) based on owner + owner website
 $data['navigation'] = $cms->getMenu()->getAll2($websiteId, $ownerId);

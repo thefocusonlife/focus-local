@@ -75,11 +75,10 @@ class Sorttype // Define Session class
     {
         // 1) READ session override (authoritative)
         $websiteId = (int) ($_SESSION['website'] ?? 0);
-        $key = $websiteId . ':' . $menuId;
 
-        $override = (int) ($_SESSION['sort_override_by_menu'][$key] ?? 0);
+        $override = (int) ($_SESSION['sort_override'][$websiteId][$menuId] ?? 0);
 
-        if ($override > 0 && $this->isAllowedForMenu($menuId, $override)) {
+        if ($override > 0) {
             return $override;
         }
 

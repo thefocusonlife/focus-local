@@ -11,7 +11,25 @@ use PhpBook\Validate\Validate;
 $errors = [];
 
 // Menu id comes primarily from the route: /sort/{menuId}
+file_put_contents(
+    '/tmp/tfol-sort-hit.log',
+    date('c') .
+        ' URI=' .
+        ($_SERVER['REQUEST_URI'] ?? '') .
+        ' id=' .
+        var_export($id ?? null, true) .
+        "\n",
+    FILE_APPEND,
+);
+
+$return = (string) ($_GET['return'] ?? '');
+if ($return !== '' && str_starts_with($return, 'http')) {
+    $return = '';
+}
+
 $menuId = (int) ($id ?? 0);
+
+file_put_contents('/tmp/tfol-sort-hit.log', date('c') . ' menuId=' . $menuId . "\n", FILE_APPEND);
 
 // Fallbacks for POST/GET/session (legacy support)
 if ($menuId <= 0) {
@@ -59,57 +77,70 @@ if ($isLoggedIn) {
 }
 
 /* ---------- POST: update settings ---------- */
+// ------------------------------------------------------------
+// Handle POST (save + redirect)
+// ------------------------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $pagelimitVal = (int) ($_POST['pagelimit'] ?? 100);
+    // Always define inputs
+    $menuId = (int) ($_POST['menu_id'] ?? ($_GET['menu_id'] ?? 0));
+
+    // Accept either field name (use whichever your form currently posts)
+    $chosenSorttypeId = (int) ($_POST['sorttype_id'] ?? ($_POST['sorttype'] ?? 0));
+
+    // 1) Pull return from POST first, then GET
+    $returnUrl = (string) ($_POST['return'] ?? ($_GET['return'] ?? ''));
+
+    // 2) Normalize / validate (internal only, relative route)
+    $returnUrl = trim($returnUrl);
+
+    // Disallow full URLs (open redirect)
+    if ($returnUrl !== '' && preg_match('~^[a-z]+://~i', $returnUrl)) {
+        $returnUrl = '';
+    }
+
+    // Optional: strip leading doc_root if someone passes full internal path
+    $returnUrl = preg_replace('~^' . preg_quote(DOC_ROOT, '~') . '~', '', $returnUrl);
+
+    // 3) Fallback should be index (your expectation)
+    if ($returnUrl === '') {
+        $returnUrl = 'index/' . (int) ($_SESSION['website'] ?? 1);
+    }
 
     $websiteId = (int) ($_SESSION['website'] ?? 0);
-    $menuId = (int) ($_POST['menu_id'] ?? 0);
-    $selectedSorttypeId = (int) ($_POST['sorttype_id'] ?? 0);
-    $key = $websiteId . ':' . $menuId;
 
-    if ($menuId > 0 && $selectedSorttypeId > 0) {
-        $_SESSION['sort_override_by_menu'][$key] = $selectedSorttypeId;
+    if ($chosenSorttypeId > 0) {
+        if ($menuId > 0) {
+            $key = $websiteId . ':' . $menuId;
+            $_SESSION['sort_override_by_menu'][$key] = $chosenSorttypeId;
+        } else {
+            $_SESSION['sort_override_global'][$websiteId] = $chosenSorttypeId;
+        }
     }
 
-    $incomingSorttype = (int) ($_POST['sorttype'] ?? 0);
-    $resolvedSorttype = $cms->getSorttype()->resolveForMenu($menuId, $incomingSorttype);
-    $key = ((int) $_SESSION['website']) . ':' . $menuId;
-    $_SESSION['sort_override_by_menu'][$key] = $resolvedSorttype;
+    // Persist sort override
+    $websiteId = (int) ($_SESSION['website'] ?? 1);
 
-    if ($isLoggedIn && $member) {
-        // Member: persist preferences to member record (your current behavior)
-        $member['pagelimit'] = $pagelimitVal;
-        $member['sorttype'] = $resolvedSorttype;
+    if ($chosenSorttypeId > 0) {
+        // Always persist a website-global override (used by index)
+        $_SESSION['sort_override_global'][$websiteId] = $chosenSorttypeId;
 
-        $cms->getMember()->updateSorttype((int) $cms->getSession()->id, (int) $sorttypeId);
-
-        $cms->getSession()->create($member, (int) $member['website']);
-
-        // If pagelimit is member-only, still ok to set session for convenience:
-        $_SESSION['pagelimit'] = (int) ($member['pagelimit'] ?? 100);
-    } else {
-        // Guest: session-only preferences
-        $_SESSION['pagelimit'] = $pagelimitVal;
+        // Additionally persist a menu-scoped override when applicable
+        if ($menuId > 0) {
+            $_SESSION['sort_override'][$websiteId][$menuId] = $chosenSorttypeId;
+        }
     }
 
-    $returnTo = (string) ($_POST['return_to'] ?? '');
-    if ($returnTo !== '' && str_starts_with($returnTo, '/')) {
-        header('Location: ' . $returnTo);
-        exit();
-    }
-    // Redirect target after saving
-    $websiteId = (int) ($website['id'] ?? ($_SESSION['website'] ?? 1));
+    // Optional: prevent leakage between tabs
+    unset($_SESSION['return_to']);
 
-    if (!$isLoggedIn) {
-        // Guest: go back to website home grid
-        redirect('index/' . $websiteId);
-        exit();
-    }
+    error_log(
+        "SORT SUBMIT: website={$websiteId} menu={$menuId} chosen={$chosenSorttypeId} redirect={$returnUrl}",
+    );
 
-    // Member: keep your existing behavior (menu-scoped grid)
-    redirect('menu/' . $menuId . '/');
+    redirect($returnUrl);
     exit();
 }
+
 $websiteId = (int) ($_SESSION['website'] ?? ($_SESSION['menu_website'] ?? 0));
 if ($isLoggedIn && $member) {
     $websiteId = (int) ($member['website'] ?? $websiteId);
@@ -135,5 +166,6 @@ $data['menu_id'] = $menuId;
 $data['website'] = $cms->getWebsite()->getById($websiteId);
 $data['return_to'] = $_SERVER['HTTP_REFERER'] ?? 'menu/' . $menuId . '/';
 $data['sort_menu_id'] = (int) $menuId;
+$data['return'] = $return;
 
 echo $twig->render('sort.html', $data);

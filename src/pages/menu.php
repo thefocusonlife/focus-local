@@ -112,14 +112,15 @@ $canonicalMenuId = (int) ($menu['master_id'] ?? $menuId);
 $memberSorttypeId = is_array($member) && isset($member['sorttype']) ? (int) $member['sorttype'] : 0;
 
 // Prefer menu-scoped session sort if present, then session global, then member setting
+// ------------------------------------------------------------
 $websiteId = (int) ($website['id'] ?? ($_SESSION['website'] ?? 0));
 $key = $websiteId . ':' . $menuId;
 
-// Preferred sort comes from the same key the resolver uses
-$preferredSorttypeId =
-    (int) ($_SESSION['sort_override_by_menu'][$key] ??
-        ($_SESSION['sorttype'] ?? $memberSorttypeId));
+// Preferred sort comes from the same session key that sort.php writes
+$websiteId = (int) ($_SESSION['website'] ?? 0);
 
+// Per-website, per-menu override
+$preferredSorttypeId = (int) ($_SESSION['sort_override'][$websiteId][$menuId] ?? 0);
 $resolvedSorttypeId = (int) $cms->getSorttype()->resolveForMenu($menuId, $preferredSorttypeId);
 $data['active_sorttype_id'] = $resolvedSorttypeId;
 
@@ -168,12 +169,11 @@ file_put_contents(
 $websiteId = (int) ($website['id'] ?? ($_SESSION['website'] ?? 0));
 $key = $websiteId . ':' . $menuId;
 
-// Preferred sort comes from the same key the resolver uses
+// Preferred sort comes from the same session key that sort.php writes
 $websiteId = (int) ($_SESSION['website'] ?? 0);
-$key = $websiteId . ':' . $menuId;
 
-// Only allow per-menu override to influence menu grids
-$preferredSorttypeId = (int) ($_SESSION['sort_override_by_menu'][$key] ?? 0);
+// Per-website, per-menu override
+$preferredSorttypeId = (int) ($_SESSION['sort_override'][$websiteId][$menuId] ?? 0);
 
 $resolvedSorttypeId = (int) $cms->getSorttype()->resolveForMenu($menuId, $preferredSorttypeId);
 $data['active_sorttype_id'] = $resolvedSorttypeId;
@@ -192,6 +192,9 @@ $memberFilter = $viewerId > 0 ? $viewerId : null;
 
 $published = $published ?? 1;
 $crossWebsite = false;
+error_log(
+    "MENU FETCH: website={$websiteId} menu={$menuId} viewer={$viewerId} preferred={$preferredSorttypeId} resolved={$resolvedSorttypeId}",
+);
 
 $data['stories'] = $cms->getStory()->getAll3(
     $websiteId,
@@ -204,7 +207,8 @@ $data['stories'] = $cms->getStory()->getAll3(
 );
 //$menuOwnerId = 1; // guest
 $data['navigation'] = $cms->getMenu()->getAll2((int) $website['id'], $menuOwnerId);
-
+$data['current_path'] = "menu/$menuId";
+$data['current_menu_id'] = $menuId;
 $data['sort_menu_id'] = (int) $menuId;
 if (defined('TFOL_ROUTE_DEBUG') && TFOL_ROUTE_DEBUG) {
     $data['_debug'] = [

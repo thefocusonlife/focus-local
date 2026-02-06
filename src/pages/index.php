@@ -124,7 +124,27 @@ if (!empty($guidetext) && !empty($guidetext[0])) {
 }
 */
 // 6) Stories
-$data['stories'] = $cms->getStory()->getAll3((int) $website['id'], true, null, null, 100);
+$websiteId = (int) ($_SESSION['website'] ?? ($website['id'] ?? 1));
+
+// Global (index) override: use for everyone (guest + member)
+$preferredSorttypeId = (int) ($_SESSION['sort_override_global'][$websiteId] ?? 0);
+
+// Pass this into your story query / resolver
+$sorttypeId = $preferredSorttypeId > 0 ? $preferredSorttypeId : null;
+error_log(
+    'INDEX SORT DEBUG: role=' .
+        ($_SESSION['role'] ?? 'NONE') .
+        ' website=' .
+        ($_SESSION['website'] ?? 'NONE') .
+        ' globalOverride=' .
+        ($_SESSION['sort_override_global'][$websiteId] ?? 'NONE') .
+        ' chosenSorttypeId=' .
+        ($sorttypeId ?? 'NULL'),
+);
+
+$data['stories'] = $cms
+    ->getStory()
+    ->getAll3((int) $website['id'], true, null, null, 100, $sorttypeId);
 
 // 7) Navigation (guest account_id = 0)
 $data['navigation'] = $cms->getMenu()->getAll2((int) $website['id'], $menuOwnerId);

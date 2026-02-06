@@ -4,6 +4,7 @@
 	<main>
 		<form action="{{ doc_root }}sort/{{ menu_id }}" method="POST" class="narrow">
 			<input type="hidden" name="menu_id" value="{{ menu_id }}">
+			<input type="hidden" name="return" value="{{ return|default('') }}">
 
 			<h1>Edit Page Sort</h1>
 
