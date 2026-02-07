@@ -1,67 +1,106 @@
 {% extends 'layout.html' %}
 {% block content %}
 
-  <main>  <!-- Class="container" id="content"> -->
-      <form action="{{ doc_root }}admin/menu/{{ menu.id }}" method="post" class="narrow">
-      <h1>Edit Menu</h1>
-      {% if errors.warning %}<div class="alert alert-danger">{{ errors.warning }}</div>{% endif %}
-      {% if menu.id >  0 %}
-      <div class="form-group">
-        <label for="id">  </label>
-        <input type="hidden" name="id" id="id" class="form-control"
-            value="{{ menu.id }}">
-        <span class="errors">{{ errors.id }}</span>
-      </div>
-      {% endif %}
-        <div class="form-group">
-        <label for="name">Name: </label>
-        <input type="text" name="name" id="name" class="form-control"
-            value="{{ menu.name }}">
-        <span class="errors">{{ errors.name }}</span>
-      </div>
-     
-      <div class="form-group">
-        <label for="description">Description: </label><br>
-        <textarea id="description" name="description" class="form-control">{{ menu.description }}</textarea>
-        <span class="errors">{{ errors.description}}</span><br>
-      </div>
-      
-    
-      <div class="form-group">
-        <label for="account_id">  </label>
-        <input type="hidden" name="account_id" id="account_id" class="form-control"
-            value="{{ menu.account_id }}">
-        <span class="errors">{{ errors.account_id }}</span>
-      </div>
-      
-      <div class="form-group">
-        <label for="position">Position</label>
-        <input type="number" name="position" id="position" class="form-control" 
-            value={{menu.position }}
-            >
-        <span class="errors">{{ errors.position }}</span>
-      </div>
+	<main>
+		<!-- Class="container" id="content"> -->
+		<form action="{{ doc_root }}admin/menu/{{ menu.id }}" method="post" class="narrow">
+			{% if menu.id is defined and menu.id %}
+				<input type="hidden" name="menu_id" value="{{ menu.id }}">
+			{% elseif data.menu_id is defined and data.menu_id %}
+				<input type="hidden" name="menu_id" value="{{ data.menu_id }}">
+			{% endif %}
 
-      
-      <div class="form-group">
-        <label for="account_id">Family ID</label>
-        <input type="number" name="account_id" id="account_id" class="form-control" 
-            value={{menu.account_id }}
-            >
-        <span class="errors">{{ errors.account_id }}</span>
-      </div>
-      
-      
-      
-        <div class="form-checkbox">
-        <input type="checkbox" name="navigation" id="navigation" class="form-check-input"
-         value="1" {% if menu.navigation %} checked {% endif %} >
-        <label for="navigation" class="form-check-label" for="navigation">Navigation</label>
-      </div>
 
-      
-      <input type="submit" name="create" value="save" class="btn btn-primary">
-  
-    </form>
-  </main>
-{% endblock %}
+			<h1>Edit Menu</h1>
+			{% if errors.warning %}
+				<div class="alert alert-danger">{{ errors.warning }}</div>
+			{% endif %}
+			{% if menu.id >  0 %}
+				<div class="form-group">
+					<label for="id"></label>
+					<input type="hidden" name="id" id="id" class="form-control" value="{{ menu.id }}">
+					<span class="errors">{{ errors.id }}</span>
+				</div>
+			{% endif %}
+			<div class="form-group">
+				<label for="name">Name:
+				</label>
+				<input type="text" name="name" id="name" class="form-control" value="{{ menu.name }}">
+				<span class="errors">{{ errors.name }}</span>
+			</div>
+
+			<div class="form-group">
+				<label for="description">Description:
+				</label><br>
+				<textarea id="description" name="description" class="form-control">{{ menu.description }}</textarea>
+				<span class="errors">{{ errors.description}}</span><br>
+			</div>
+
+<div class="form-group">
+  <label for="default_sorttype_id">Default Sort</label>
+
+  {% set sorttypes_list = sorttypes|default(data.sorttypes|default([])) %}
+
+{# Normalize the current menu default sort id #}
+{% set current_default = attribute(menu, 'default_sorttype_id')|default('') %}
+{% set current_default = (current_default is null) ? '' : (current_default ~ '') %}
+{% set sorttypes_list = sorttypes|default(data.sorttypes|default([])) %}
+
+<!-- DEBUG default_sorttype_id = '{{ menu.default_sorttype_id|default("MISSING") }}' -->
+<!-- DEBUG sorttypes_count = '{{ sorttypes_list|length }}' -->
+<!-- DEBUG first_sorttype = '{{ sorttypes_list|first ? (sorttypes_list|first|json_encode) : "NONE" }}' -->
+
+<select name="default_sorttype_id" id="default_sorttype_id" class="form-control">
+
+  <option value="" {% if current_default == '' %}selected="selected"{% endif %}>
+    --select default sort--
+  </option>
+
+  {% for st in sorttypes_list %}
+    {# Support either id/name OR sorttype_id/sorttype_name #}
+    {% set st_id = (attribute(st, 'id')|default(attribute(st, 'sorttype_id')|default(''))) ~ '' %}
+    {% set st_name = attribute(st, 'name')|default(attribute(st, 'sorttype_name')|default('')) %}
+
+    <option value="{{ st_id }}" {% if st_id == current_default %}selected="selected"{% endif %}>
+      {{ st_name }}
+    </option>
+  {% endfor %}
+
+</select>
+
+
+</div>
+
+
+
+
+		<div class="form-group">
+			<label for="account_id"></label>
+			<input type="hidden" name="account_id" id="account_id" class="form-control" value="{{ menu.account_id }}">
+			<span class="errors">{{ errors.account_id }}</span>
+		</div>
+
+		<div class="form-group">
+			<label for="position">Position</label>
+			<input type="number" name="position" id="position" class="form-control" value={{menu.position }}>
+			<span class="errors">{{ errors.position }}</span>
+		</div>
+
+
+		<div class="form-group">
+			<label for="account_id">Family ID</label>
+			<input type="number" name="account_id" id="account_id" class="form-control" value={{menu.account_id }}>
+			<span class="errors">{{ errors.account_id }}</span>
+		</div>
+
+
+		<div class="form-checkbox">
+			<input type="checkbox" name="navigation" id="navigation" class="form-check-input" value="1" {% if menu.navigation %} checked {% endif %}>
+			<label for="navigation" class="form-check-label" for="navigation">Navigation</label>
+		</div>
+
+
+		<input type="submit" name="create" value="save" class="btn btn-primary">
+
+	</form>
+</main>{% endblock %}

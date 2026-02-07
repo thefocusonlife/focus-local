@@ -50,6 +50,23 @@ class Sorttype // Define Session class
         return (bool) $row;
     }
 
+    public function exists(int $sorttypeId): bool
+    {
+        $sql = "
+        SELECT 1
+        FROM sorttype
+        WHERE id = :id
+        LIMIT 1
+    ";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            ':id' => $sorttypeId,
+        ]);
+
+        return (bool) $stmt->fetchColumn();
+    }
+
     public function getDefaultIdForMenu(int $menuId): int
     {
         // menu_sorttype mapping removed; pick a safe default

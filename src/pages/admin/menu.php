@@ -88,6 +88,36 @@ if (!$website) {
 }
 
 // ------------------------------------------------------------
+// Admin route: /admin/menu/{menuId}
+// ------------------------------------------------------------
+$menuId = 0;
+
+$path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/';
+$path = trim($path, '/');
+$parts = explode('/', $path);
+
+// If your app is under /focus-local/public, strip those segments if present
+// (only needed if your $parts includes 'focus-local' and 'public')
+if (!empty($parts[0]) && $parts[0] === 'focus-local') {
+    array_shift($parts); // focus-local
+}
+if (!empty($parts[0]) && $parts[0] === 'public') {
+    array_shift($parts); // public
+}
+
+// Now expect: ['admin', 'menu', '{id}']
+if (!empty($parts[0]) && $parts[0] === 'admin' && !empty($parts[1]) && $parts[1] === 'menu') {
+    if (!empty($parts[2]) && ctype_digit($parts[2])) {
+        $menuId = (int) $parts[2];
+    }
+}
+
+// Optional: also allow /admin/menu?id=9
+if ($menuId <= 0 && !empty($_GET['id']) && ctype_digit((string) $_GET['id'])) {
+    $menuId = (int) $_GET['id'];
+}
+
+// ------------------------------------------------------------
 // 3) POST handling (freeze website + other immutables)
 // ------------------------------------------------------------
 $errors = [];
@@ -128,17 +158,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Always required (already validated earlier)
     $menu['seo_name'] = create_seo_name($menu['name']);
+    // menuId from POST wins (edit submit)
+    if (!empty($_POST['menu_id']) && ctype_digit((string) $_POST['menu_id'])) {
+        $menuId = (int) $_POST['menu_id'];
+    }
+    $existing = null;
 
-    if ($isEdit && $existing) {
-        // ----- EDIT MODE -----
-        // Freeze immutable fields from existing record
+    if ($menuId > 0) {
+        $existing = $cms->getMenu()->get($menuId);
+    }
+    $isEdit = $menuId > 0;
+
+    if ($isEdit) {
+        // EDIT MODE
+        $menu = $existing; // baseline for template + for update
+        $data['menu'] = $menu;
+
+        // Freeze immutable fields (defensive)
         $menu['id'] = (int) $existing['id'];
         $menu['website'] = (int) $existing['website'];
         $menu['account_id'] = (int) $existing['account_id'];
     } else {
-        // ----- CREATE MODE -----
-        // Assign from current member context
-        // $menu['id'] = 0; // auto-increment
+        // CREATE MODE
+        $menu = [];
         $menu['website'] = (int) ($member['website'] ?? 1);
         $menu['account_id'] = (int) ($member['account_id'] ?? $viewerId);
     }
@@ -150,6 +192,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($menu['position'] <= 0) {
         $errors['position'] = 'Position must be 1 or greater.';
     }
+
+    $defaultSorttypeId = (int) ($_POST['default_sorttype_id'] ?? 0);
+    $menu['default_sorttype_id'] = $defaultSorttypeId;
+
+    if ($defaultSorttypeId <= 0) {
+        $errors['default_sorttype_id'] = 'Please select a default sort type.';
+    } elseif (!$cms->getSorttype()->exists($defaultSorttypeId)) {
+        $errors['default_sorttype_id'] = 'Invalid sort type selected.';
+    }
+
     $invalid = false;
     foreach ($errors as $msg) {
         if ($msg !== '') {
@@ -157,23 +209,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             break;
         }
     }
-    assert(
-        count(
-            array_diff(
-                [
-                    'id',
-                    'website',
-                    'name',
-                    'description',
-                    'navigation',
-                    'position',
-                    'seo_name',
-                    'account_id',
-                ],
-                array_keys($menu),
-            ),
-        ) === 0,
-    );
 
     if (!$invalid) {
         if ($isEdit) {
@@ -187,6 +222,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'account_id' => (int) $menu['account_id'],
                 'seo_name' => (string) $menu['seo_name'],
                 'position' => (int) $menu['position'],
+                'default_sorttype_id' => $defaultSorttypeId,
             ];
 
             $saved = $cms->getMenu()->create($createParams);
@@ -207,7 +243,20 @@ $data = [];
 $data['session'] = $_SESSION;
 $data['member'] = $member;
 $data['website'] = $website;
+$menu = $cms->getMenu()->get($menuId);
+
+if (!$menu) {
+    require __DIR__ . '/../page-not-found.php';
+    exit();
+}
+
 $data['menu'] = $menu;
+
+// ------------------------------------------------------------
+// Sorttypes for menu default selection
+// ------------------------------------------------------------
+$data['sorttypes'] = $cms->getSorttype()->getAll();
+
 $data['errors'] = $errors;
 $data['sort_menu_id'] = (int) $menuId;
 echo $twig->render('admin/menu.html', $data);

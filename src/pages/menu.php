@@ -42,6 +42,7 @@ if (!$menu) {
     include APP_ROOT . '/src/pages/page-not-found.php';
     exit();
 }
+$menuDefaultSorttypeId = (int) ($menu['default_sorttype_id'] ?? 0);
 
 // Canonical menu id (global category)
 $canonicalMenuId = (int) ($menu['master_id'] ?? $menu['id']);
@@ -121,7 +122,14 @@ $websiteId = (int) ($_SESSION['website'] ?? 0);
 
 // Per-website, per-menu override
 $preferredSorttypeId = (int) ($_SESSION['sort_override'][$websiteId][$menuId] ?? 0);
-$resolvedSorttypeId = (int) $cms->getSorttype()->resolveForMenu($menuId, $preferredSorttypeId);
+
+// Menu-level default (new)
+$menuDefaultSorttypeId = (int) ($menu['default_sorttype_id'] ?? 0);
+
+// Feed resolver: session override wins, else menu default
+$preferredIn = $preferredSorttypeId ?: $menuDefaultSorttypeId;
+
+$resolvedSorttypeId = (int) $cms->getSorttype()->resolveForMenu($menuId, $preferredIn);
 $data['active_sorttype_id'] = $resolvedSorttypeId;
 
 // ---- Story account filter: only apply viewer filter for member-owned menus ----
@@ -139,7 +147,11 @@ $storyMenuId = $masterMenuId > 0 ? $masterMenuId : $menuId;
 $crossWebsite = true;
 
 // Sort defaults/overrides are per LOCAL menu row
-$resolvedSorttypeId = (int) $cms->getSorttype()->resolveForMenu($menuId, 0);
+if ((int) $resolvedSorttypeId === 0) {
+    $resolvedSorttypeId = (int) $cms->getSorttype()->resolveForMenu($menuId, 0);
+    $data['active_sorttype_id'] = $resolvedSorttypeId;
+}
+
 if (defined('TFOL_ROUTE_DEBUG') && TFOL_ROUTE_DEBUG) {
     $data['_debug_sort'] = [
         'menuId' => $menuId ?? null,
@@ -172,8 +184,15 @@ $key = $websiteId . ':' . $menuId;
 // Preferred sort comes from the same session key that sort.php writes
 $websiteId = (int) ($_SESSION['website'] ?? 0);
 
-// Per-website, per-menu override
-$preferredSorttypeId = (int) ($_SESSION['sort_override'][$websiteId][$menuId] ?? 0);
+// Per-website, per-menu override--guard against empty sort_override
+$hasMenuOverride = isset($_SESSION['sort_override'][$websiteId][$menuId]);
+
+$preferredSorttypeId = $hasMenuOverride
+    ? (int) $_SESSION['sort_override'][$websiteId][$menuId]
+    : (int) ($menu['default_sorttype_id'] ?? 0);
+
+$resolvedSorttypeId = (int) $cms->getSorttype()->resolveForMenu($menuId, $preferredSorttypeId);
+$data['active_sorttype_id'] = $resolvedSorttypeId;
 
 $resolvedSorttypeId = (int) $cms->getSorttype()->resolveForMenu($menuId, $preferredSorttypeId);
 $data['active_sorttype_id'] = $resolvedSorttypeId;
@@ -209,6 +228,11 @@ $data['stories'] = $cms->getStory()->getAll3(
 $data['navigation'] = $cms->getMenu()->getAll2((int) $website['id'], $menuOwnerId);
 $data['current_path'] = "menu/$menuId";
 $data['current_menu_id'] = $menuId;
+// ------------------------------------------------------------
+// Sorttypes for menu default selection
+// ------------------------------------------------------------
+$data['sorttypes'] = $cms->getSorttype()->getAll();
+
 $data['sort_menu_id'] = (int) $menuId;
 if (defined('TFOL_ROUTE_DEBUG') && TFOL_ROUTE_DEBUG) {
     $data['_debug'] = [

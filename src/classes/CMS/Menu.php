@@ -13,7 +13,7 @@ class Menu
     // Get individual menu
     public function get(int $id)
     {
-        $sql = "SELECT id, website, name, description, navigation, account_id, seo_name, position
+        $sql = "SELECT id, default_sorttype_id, master_id, website, name, description, navigation, account_id, seo_name, position
                   FROM menu
                  WHERE id = :id;"; // SQL to get one menu
         return $this->db->runSQL($sql, [$id])->fetch(); // Return menu data
@@ -21,7 +21,7 @@ class Menu
 
     public function getBySlug(int $websiteId, int $accountId, string $slug): ?array
     {
-        $sql = "SELECT id, master_id, website, name, description, navigation, account_id, seo_name, position
+        $sql = "SELECT id, default_sorttype_id, master_id, website, name, description, navigation, account_id, seo_name, position
             FROM menu
             WHERE website = :website
               AND account_id = :account_id
@@ -113,8 +113,8 @@ class Menu
 
         try {
             // Try to create menu
-            $sql = "INSERT INTO menu (website, name, description, navigation, account_id, seo_name, position)
-            VALUES (:website, :name, :description, :navigation, :account_id, :seo_name, :position);";
+            $sql = "INSERT INTO menu (website, name, description, navigation, account_id, seo_name, position, default_sorttype_id)
+            VALUES (:website, :name, :description, :navigation, :account_id, :seo_name, :position, :default_sorttype_ID);";
 
             $params = [
                 'website' => $menu['website'],
@@ -124,6 +124,7 @@ class Menu
                 'account_id' => $menu['account_id'],
                 'seo_name' => $menu['seo_name'],
                 'position' => $menu['position'],
+                'default_sorttype_id' => $menu['default_sorttype_id'],
             ];
 
             $this->db->runSQL($sql, $params);
@@ -158,25 +159,77 @@ class Menu
         return $stmt->rowCount() === 1;
     }
 
-    // Update existing menu
-    public function update(array $menu): bool
+    public function update(array $menu)
     {
-        try {
-            // Try to update menu
-            $sql = "UPDATE menu
-                    SET  website = :website, name = :name, description = :description, navigation = :navigation, account_id = :account_id, seo_name = :seo_name, position = :position
-                    WHERE id = :id;"; // SQL to update menu
-            $this->db->runSQL($sql, $menu); // Update menu
-            return true; // It worked, return true
-        } catch (\PDOException $e) {
-            // If exception thrown
-            if ($e->errorInfo[1] === 1062) {
-                // If duplicate entry
-                return false; // Return false to indicate duplicate name
-            } else {
-                // If any other exception
-                throw $e; // Re-throw exception
+        // Optional: minimal required-key validation (consistent and readable)
+        foreach (['id', 'website', 'name'] as $k) {
+            if (!array_key_exists($k, $menu)) {
+                throw new \InvalidArgumentException("Missing menu field: {$k}");
             }
+        }
+
+        return $this->menu_update(
+            $menu['id'],
+            $menu['default_sorttype_id'] ?? null,
+            $menu['master_id'] ?? null,
+            $menu['website'] ?? null,
+            $menu['name'] ?? null,
+            $menu['description'] ?? null,
+            $menu['navigation'] ?? null,
+            $menu['account_id'] ?? null,
+            $menu['seo_name'] ?? null,
+            $menu['position'] ?? null,
+        );
+    }
+
+    public function menu_update(
+        $id,
+        $default_sorttype_id = null,
+        $master_id = null,
+        $website = null,
+        $name = null,
+        $description = null,
+        $navigation = null,
+        $account_id = null,
+        $seo_name = null,
+        $position = null,
+    ) {
+        try {
+            $sql = "UPDATE menu
+                SET website = :website,
+                    name = :name,
+                    description = :description,
+                    navigation = :navigation,
+                    account_id = :account_id,
+                    seo_name = :seo_name,
+                    position = :position,
+                    default_sorttype_id = :default_sorttype_id
+                WHERE id = :id";
+
+            $params = [
+                'id' => $id,
+                'website' => $website,
+                'name' => $name,
+                'description' => $description,
+                'navigation' => $navigation,
+                'account_id' => $account_id,
+                'seo_name' => $seo_name,
+                'position' => $position,
+                'default_sorttype_id' => $default_sorttype_id,
+            ];
+
+            $this->db->runSQL($sql, $params);
+            return true;
+        } catch (\PDOException $e) {
+            if (
+                !empty($e->errorInfo) &&
+                isset($e->errorInfo[1]) &&
+                (int) $e->errorInfo[1] === 1062
+            ) {
+                return false;
+            }
+
+            throw $e;
         }
     }
 
