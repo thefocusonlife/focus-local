@@ -3,9 +3,9 @@ declare(strict_types=1);
 
 $id = null;
 
-$path = mb_strtolower($_SERVER['REQUEST_URI']);
+$path = mb_strtolower(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/');
 $path = substr($path, strlen(DOC_ROOT));
-$path = trim($path, '/');
+//$path = trim($path, '/');
 
 $websiteId = (int) ($_SESSION['website'] ?? 1);
 if ($websiteId <= 0) {

@@ -47,6 +47,16 @@ $twig->addGlobal('request_uri', $_SERVER['REQUEST_URI'] ?? '');
 $session = $cms->getSession();
 $twig->addGlobal('session', $session);
 
+// ------------------------------------------------------------
+// Refresh link (return to current page, force new request)
+// ------------------------------------------------------------
+$uri = $_SERVER['REQUEST_URI'] ?? '/';
+
+$sep = strpos($uri, '?') !== false ? '&' : '?';
+$refreshHref = $uri . $sep . '_r=' . time();
+
+$data['refresh_href'] = $refreshHref;
+
 if (DEV === true) {
     try {
         $twig->addExtension(new \Twig\Extension\DebugExtension());

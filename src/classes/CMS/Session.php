@@ -16,7 +16,7 @@ class Session // Define Session class
 
     public function __construct()
     {
-        $path = mb_strtolower($_SERVER['REQUEST_URI']); // Get path in lowercase
+        $path = mb_strtolower(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/');
         $path = substr($path, strlen(DOC_ROOT)); // Remove up to DOC_ROOT
         $parts = explode('/', $path); // Split into array at /
 

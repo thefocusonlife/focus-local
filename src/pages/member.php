@@ -114,7 +114,11 @@ if ($viewerId === 1) {
 } elseif (!empty($parts[2]) && (int) $parts[2] === 1) {
     $data['stories'] = $cms->getStory()->getAll3($websiteId, true, null, null);
 } else {
-    $data['stories'] = $cms->getStory()->getAll2($websiteId, 0, null, $ownerId);
+    $sorttypeId = (int) ($_SESSION['sort_override_global'][$websiteId] ?? 0);
+
+    $data['stories'] = $cms
+        ->getStory()
+        ->getAll2($websiteId, 0, null, $ownerId, 150, $sorttypeId > 0 ? $sorttypeId : null);
 }
 
 // Default sort menu id (Focus menu id=2)

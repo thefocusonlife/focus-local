@@ -1,13 +1,13 @@
 <nav class="member-menu">{# ------------------------------------
-															       NAV STATE (single source of truth)
-																 ------------------------------------ #}
+																							       NAV STATE (single source of truth)
+																								 ------------------------------------ #}
 	{# Logged in if we have any real account identity #}{% set role = (session.role|default('guest')|lower) %}{% set is_logged_in = (role != 'guest') %}{% set is_admin = (role in ['admin','uber']) %}
 	{# DEBUG nav-utility disabled while testing main nav #}
 
 
 	{# -------------------------------
-																     Identity (always visible)
-																 ------------------------------- #}<span class="icon-user"> </span>
+																								     Identity (always visible)
+																								 ------------------------------- #}<span class="icon-user"> </span>
 	{% if is_logged_in %}
 		<a href="{{ doc_root }}member/{{ session.id }}">
 			{{ session.forename|default('Member') }}
@@ -20,8 +20,8 @@
 	/
 
 	{# -------------------------------
-																        Guest-only link
-															  -------------------------------- #}
+																								        Guest-only link
+																							  -------------------------------- #}
 	{% if not is_logged_in %}
 		<span class="icon-user"></span>
 		<a href="{{ doc_root }}login/{{ website.id|default(1) }}">Log in</a>
@@ -32,8 +32,8 @@
 	{% endif %}
 
 	{# -------------------------------
-																										       Member/Admin links
-																										       ------------------------------- #}
+																																		       Member/Admin links
+																																		       ------------------------------- #}
 	{% if is_logged_in %}
 		{% if is_admin %}
 			<span class="icon-user"></span>
@@ -68,13 +68,13 @@
 %}
 
 	{# -------------------------------
-																									   SORT (guest + member)
-																									   ------------------------------- #}
+																																	   SORT (guest + member)
+																																	   ------------------------------- #}
 
 	<span class="icon-user"></span>
 	{# -------------------------------
-			   SORT (guest + member)
-			   ------------------------------- #}
+											   SORT (guest + member)
+											   ------------------------------- #}
 
 	{% set sort_menu_id = resolved_sort_menu_id|default(0) %}
 	{% set return_path = current_path|default('') %}
@@ -86,16 +86,16 @@
 
 
 	{# -------------------------------
-																													       Utility links (always available)
-																													       ------------------------------- #}
+																																				       Utility links (always available)
+																																				       ------------------------------- #}
 	<span class="icon-user"></span>
-	<a href="{{ doc_root }}index/{{ website.id|default(1) }}">Refresh</a>
+	{# nav-utility.html #}
+	<a class="nav-link" href="{{ refresh_href }}">Refresh</a>
 	/
+
 	<span class="icon-user"></span>
 	<a href="javascript:history.back()">Back</a>
 	/
 	<span class="icon-user"></span>
 	<a href="{{ doc_root }}select-website/">Home</a>
-	/
-
-</nav>
+	/</nav>
