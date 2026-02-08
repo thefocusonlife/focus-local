@@ -6,9 +6,17 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 }
 
 require_once APP_ROOT . '/src/security/guard.php';
+include APP_ROOT . '/src/pages/menu-path.php'; // get path for website and menus
 
 is_admin($session->role);
-
+if (!empty($parts[2])) {
+    $id = intval($parts[2]); // If valid id
+    $story = $cms->getStory()->get($id, false); // Get story data
+    if (!$story) {
+        // If story empty
+        redirect('admin/stories/', ['failure' => 'Story not found']); // Redirect
+    }
+}
 $storyId = (int) ($id ?? 0);
 if ($storyId <= 0) {
     redirect('admin/stories/', ['failure' => 'Story not found']);
