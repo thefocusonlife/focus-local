@@ -42,10 +42,24 @@ if (!$menu) {
     include APP_ROOT . '/src/pages/page-not-found.php';
     exit();
 }
+
+$uiWebsiteId = (int) ($menu['website'] ?? 0);
+$menuAccountId = (int) ($menu['account_id'] ?? 0);
+$masterMenuId = (int) ($menu['master_id'] ?? 0);
+$menuId = (int) ($menu['id'] ?? 0);
+
+$storyMenuId = $masterMenuId > 0 ? $masterMenuId : $menuId;
+$storyWebsiteId = $menuAccountId === 1 ? 1 : $uiWebsiteId;
+
+// Keep session website aligned to the UI website (never the story source website)
+if ($uiWebsiteId > 0) {
+    $_SESSION['website'] = $uiWebsiteId;
+}
+
 $menuDefaultSorttypeId = (int) ($menu['default_sorttype_id'] ?? 0);
 
 // Canonical menu id (global category)
-$canonicalMenuId = (int) ($menu['master_id'] ?? $menu['id']);
+$canonicalMenuId = $masterMenuId > 0 ? $masterMenuId : $menuId;
 
 // Website context
 //$websiteId = (int) ($_SESSION['website'] ?? (int) ($menu['website'] ?? 1));
@@ -145,6 +159,27 @@ $masterMenuId = (int) ($menu['master_id'] ?? 0);
 // Stories live on website 1
 $storyMenuId = $masterMenuId > 0 ? $masterMenuId : $menuId;
 $crossWebsite = true;
+$uiWebsiteId = (int) ($menu['website'] ?? ($_SESSION['website'] ?? 0));
+$menuAccountId = (int) ($menu['account_id'] ?? 0);
+
+// UberAdmin menus always source stories from website 1
+$storyWebsiteId = $menuAccountId === 1 ? 1 : $uiWebsiteId;
+
+// DEBUG: menu / website / story resolution
+
+error_log(
+    sprintf(
+        'MENU DEBUG: menuId=%d uiWebsite=%d storyWebsite=%d menuWebsite=%d masterId=%d storyMenuId=%d account=%d sessionWebsite=%s',
+        $menuId,
+        $uiWebsiteId ?? -1,
+        $storyWebsiteId ?? -1,
+        (int) ($menu['website'] ?? 0),
+        $masterMenuId,
+        $storyMenuId,
+        (int) ($menu['account_id'] ?? 0),
+        $_SESSION['website'] ?? 'NULL',
+    ),
+);
 
 // Sort defaults/overrides are per LOCAL menu row
 if ((int) $resolvedSorttypeId === 0) {
@@ -216,12 +251,12 @@ error_log(
 );
 
 $data['stories'] = $cms->getStory()->getAll3(
-    $websiteId,
+    $storyWebsiteId, // source website for stories
     $published,
-    $menuId,
-    $memberFilter,
+    $storyMenuId, // source menu for stories
+    $storyAccountFilter, // <-- use menu/account owner, e.g. 1 for UberAdmin
     300,
-    $resolvedSorttypeId, // <-- THIS is the point
+    $resolvedSorttypeId,
     $crossWebsite,
 );
 //$menuOwnerId = 1; // guest
