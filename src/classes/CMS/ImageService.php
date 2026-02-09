@@ -294,14 +294,23 @@ class ImageService
     private function normalizeUploadsDir(string $dir): void
     {
         if (!is_dir($dir)) {
-            @mkdir($dir, 0775, true);
+            // If mkdir fails, you *do* want to fail later when saving the file,
+            // but mkdir warnings should not crash here.
+            try {
+                mkdir($dir, 0775, true);
+            } catch (\Throwable $e) {
+                error_log("[ImageService] mkdir failed: dir=$dir msg=" . $e->getMessage());
+            }
         }
 
-        // directory should be rwx for owner/group; and setgid so new files inherit group
-        @chmod($dir, 02775);
+        // Best-effort permissions. Never fatal.
+        $this->bestEffortChmod($dir, 02775); // or 0775 if you don’t need setgid
 
-        // best-effort: keep group consistent (won't always work, but harmless to try)
-        @chgrp($dir, 'geoff');
+        // Best-effort group, but only if configured (don’t hardcode 'geoff' for A2).
+        $group = $this->uploadsGroup(); // returns string|null
+        if ($group) {
+            $this->bestEffortChgrp($dir, $group);
+        }
     }
 
     private function normalizeUploadFile(string $path): void
@@ -310,11 +319,53 @@ class ImageService
             return;
         }
 
-        // Most important: make it group-writable so you can edit without sudo
-        @chmod($path, 0664);
+        $this->bestEffortChmod($path, 0664);
 
-        // best-effort group fix
-        @chgrp($path, 'geoff');
+        $group = $this->uploadsGroup();
+        if ($group) {
+            $this->bestEffortChgrp($path, $group);
+        }
+    }
+
+    private function bestEffortChmod(string $path, int $mode): void
+    {
+        try {
+            chmod($path, $mode);
+        } catch (\Throwable $e) {
+            error_log(
+                "[ImageService] chmod not permitted: path=$path mode=" .
+                    decoct($mode) .
+                    ' msg=' .
+                    $e->getMessage(),
+            );
+        }
+    }
+
+    private function bestEffortChgrp(string $path, string $group): void
+    {
+        try {
+            chgrp($path, $group);
+        } catch (\Throwable $e) {
+            error_log(
+                "[ImageService] chgrp not permitted: path=$path group=$group msg=" .
+                    $e->getMessage(),
+            );
+        }
+    }
+
+    /**
+     * Return the desired uploads group if configured, else null.
+     * On A2 this should likely be empty/unused.
+     */
+    private function uploadsGroup(): ?string
+    {
+        // Pick ONE config source you already use in TFOL:
+        // - getenv('TFOL_UPLOADS_GROUP')
+        // - $this->config['uploads_group']
+        // - etc.
+        $g = getenv('TFOL_UPLOADS_GROUP') ?: '';
+        $g = trim($g);
+        return $g !== '' ? $g : null;
     }
 
     private function autoOrientJpegIfPossible($img, string $tmpPath)

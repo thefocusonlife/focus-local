@@ -107,7 +107,18 @@ if (is_file($candidateDirIndex)) {
 }
 
 if (is_file($candidateFlat)) {
+    if (headers_sent($hsFile, $hsLine)) {
+        error_log("[HEADERS_SENT] before X-TFOL headers at $hsFile:$hsLine");
+    } else {
+        error_log('[HEADERS_OK] headers not sent yet');
+    }
+
     route_log($trace, "include=$candidateFlat");
+    header('X-TFOL-URI: ' . ($_SERVER['REQUEST_URI'] ?? ''));
+    header('X-TFOL-Candidate: ' . basename($candidateFlat));
+    header('X-TFOL-Page: ' . ($page ?? ''));
+    header('X-TFOL-Id: ' . (string) ($id ?? ''));
+
     require $candidateFlat;
     exit();
 }

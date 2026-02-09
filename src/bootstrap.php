@@ -9,7 +9,7 @@ if (!defined('APP_ROOT')) {
 if (defined('TFOL_BOOTSTRAPPED')) {
     return;
 }
-define('TFOL_BOOTSTRAPPED', true);
+define('TFOL_BOOTSTRAPPED', false);
 
 require APP_ROOT . '/src/functions.php';
 require APP_ROOT . '/config/config.php';
@@ -20,7 +20,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
-if (DEV === false) {
+if (DEV === true) {
     set_exception_handler('handle_exception');
     set_error_handler('handle_error');
     register_shutdown_function('handle_shutdown');
