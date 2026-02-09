@@ -47,7 +47,14 @@ class Session // Define Session class
     // Create new session
     public function create($member, $website)
     {
-        session_regenerate_id(true);
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
+
+        // Only regenerate when headers can still be sent
+        if (!headers_sent()) {
+            session_regenerate_id(true);
+        }
 
         // Logged-in session ONLY if member array + valid id + active status
         if (
