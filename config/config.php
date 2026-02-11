@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+define('A2_ENABLED', false);
+
 // In development or live? Development = true | Live = false
 define('DEV', true);
 define('DOMAIN', 'http://localhost'); // Domain (used to create links in emails)
