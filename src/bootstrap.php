@@ -9,7 +9,7 @@ if (!defined('APP_ROOT')) {
 if (defined('TFOL_BOOTSTRAPPED')) {
     return;
 }
-define('TFOL_BOOTSTRAPPED', false);
+define('TFOL_BOOTSTRAPPED', true);
 
 require APP_ROOT . '/src/functions.php';
 require APP_ROOT . '/config/config.php';

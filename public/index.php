@@ -18,6 +18,7 @@ if (!defined('APP_ROOT')) {
 }
 
 require_once APP_ROOT . '/src/bootstrap.php';
+require_once APP_ROOT . '/src/services/AnonIdService.php';
 
 $traceId = null;
 
@@ -25,6 +26,60 @@ if (defined('A2_ENABLED') && A2_ENABLED) {
     require_once APP_ROOT . '/src/RequestContext.php';
     $traceId = RequestContext::traceId();
 }
+/*
+    // 1) Determine logged-in user (whatever your A2 Blueprint does today)
+    $userId = isset($_SESSION['id']) ? (int) $_SESSION['id'] : null;
+    $anonSvc = new AnonIdService();
+    $existingAnonId = $anonSvc->getFromCookie($_COOKIE);
+    $anonId = $existingAnonId;
+    $minted = false;
+
+    if ($anonSvc->shouldMint($userId, $existingAnonId)) {
+        $anonId = $anonSvc->mint();
+        $minted = true;
+
+        $isHttps = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+        header($anonSvc->buildSetCookieHeader($anonId, $isHttps), false);
+    }
+
+    // 4) Instantiate RequestContext (pass both; do not override user context)
+    /* $ctx = new RequestContext(
+    userId: $userId,
+    anonId: $anonId, // may be null when logged in, by design above
+    requestId: $requestId, // whatever you already have
+    path: $_SERVER['REQUEST_URI'] ?? '/',
+);
+
+    // 5) Log only (minimal). No behavior changes.
+    // Log only — no behavior changes
+    if ($minted) {
+        error_log(
+            json_encode([
+                'event' => 'anon_id_minted',
+                'trace_id' => $traceId,
+                'path' => $_SERVER['REQUEST_URI'] ?? '',
+            ]),
+        );
+    } elseif ($anonId !== null && $userId === null) {
+        error_log(
+            json_encode([
+                'event' => 'anon_id_reused',
+                'trace_id' => $traceId,
+                'path' => $_SERVER['REQUEST_URI'] ?? '',
+            ]),
+        );
+    } elseif ($userId !== null) {
+        error_log(
+            json_encode([
+                'event' => 'anon_id_suppressed_logged_in',
+                'trace_id' => $traceId,
+                'path' => $_SERVER['REQUEST_URI'] ?? '',
+                'session_id' => $userId,
+            ]),
+        );
+    }
+*/
+// ... continue existing dispatch/controller handling unchanged
 
 // ------------------------------------------------------------
 // Debug toggle
@@ -44,6 +99,27 @@ function route_log(string $trace, string $msg): void
 // Parse request path
 // ------------------------------------------------------------
 $uriPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+// ------------------------------------------------------------
+// Normalize base path so both /focus-local/... and /focus-local/public/... route the same
+// ------------------------------------------------------------
+$scriptDir = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '')), '/'); // e.g. /focus-local/public
+$mountCandidates = array_unique([
+    $scriptDir,
+    preg_replace('#/public$#', '', $scriptDir), // e.g. /focus-local
+]);
+
+foreach ($mountCandidates as $base) {
+    if ($base !== '' && $base !== '/' && str_starts_with($uriPath, $base . '/')) {
+        $uriPath = substr($uriPath, strlen($base));
+        break;
+    }
+}
+
+if ($uriPath === '') {
+    $uriPath = '/';
+}
+
+route_log($trace, 'URI=' . ($_SERVER['REQUEST_URI'] ?? '') . " PATH=$uriPath");
 
 // Remove DOC_ROOT prefix if your app is in a subfolder like /focus-local/public
 // DOC_ROOT should be defined in config/bootstrap (as you already have)
@@ -93,6 +169,7 @@ if (count($parts) > 1) {
         $nestedFlat = $pageRoot . '/' . $nested . '.php';
 
         // Prefer nested routes over top-level ones
+
         if (is_file($nestedDirIndex)) {
             route_log($trace, "include=$nestedDirIndex");
             require $nestedDirIndex;
