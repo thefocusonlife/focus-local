@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-define('A2_ENABLED', false);
+define('A2_ENABLED', true);
 
 // In development or live? Development = true | Live = false
 define('DEV', true);

@@ -19,6 +19,13 @@ if (!defined('APP_ROOT')) {
 
 require_once APP_ROOT . '/src/bootstrap.php';
 
+$traceId = null;
+
+if (defined('A2_ENABLED') && A2_ENABLED) {
+    require_once APP_ROOT . '/src/RequestContext.php';
+    $traceId = RequestContext::traceId();
+}
+
 // ------------------------------------------------------------
 // Debug toggle
 // ------------------------------------------------------------
