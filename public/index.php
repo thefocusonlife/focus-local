@@ -1,5 +1,9 @@
 <?php
 declare(strict_types=1);
+// DEV MODE ERROR DISPLAY
+ini_set('display_errors', '1');
+ini_set('display_startup_errors', '1');
+error_reporting(E_ALL);
 
 /**
  * TFOL Front Controller Router
@@ -26,59 +30,59 @@ if (defined('A2_ENABLED') && A2_ENABLED) {
     require_once APP_ROOT . '/src/RequestContext.php';
     $traceId = RequestContext::traceId();
 }
-/*
-    // 1) Determine logged-in user (whatever your A2 Blueprint does today)
-    $userId = isset($_SESSION['id']) ? (int) $_SESSION['id'] : null;
-    $anonSvc = new AnonIdService();
-    $existingAnonId = $anonSvc->getFromCookie($_COOKIE);
-    $anonId = $existingAnonId;
-    $minted = false;
 
-    if ($anonSvc->shouldMint($userId, $existingAnonId)) {
-        $anonId = $anonSvc->mint();
-        $minted = true;
+// 1) Determine logged-in user (whatever your A2 Blueprint does today)
+$userId = isset($_SESSION['id']) ? (int) $_SESSION['id'] : null;
+$anonSvc = new AnonIdService();
+$existingAnonId = $anonSvc->getFromCookie($_COOKIE);
+$anonId = $existingAnonId;
+$minted = false;
 
-        $isHttps = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
-        header($anonSvc->buildSetCookieHeader($anonId, $isHttps), false);
-    }
+if ($anonSvc->shouldMint($userId, $existingAnonId)) {
+    $anonId = $anonSvc->mint();
+    $minted = true;
 
-    // 4) Instantiate RequestContext (pass both; do not override user context)
-    /* $ctx = new RequestContext(
+    $isHttps = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+    header($anonSvc->buildSetCookieHeader($anonId, $isHttps), false);
+}
+
+// 4) Instantiate RequestContext (pass both; do not override user context)
+/* $ctx = new RequestContext(
     userId: $userId,
     anonId: $anonId, // may be null when logged in, by design above
     requestId: $requestId, // whatever you already have
     path: $_SERVER['REQUEST_URI'] ?? '/',
-);
+);*/
 
-    // 5) Log only (minimal). No behavior changes.
-    // Log only — no behavior changes
-    if ($minted) {
-        error_log(
-            json_encode([
-                'event' => 'anon_id_minted',
-                'trace_id' => $traceId,
-                'path' => $_SERVER['REQUEST_URI'] ?? '',
-            ]),
-        );
-    } elseif ($anonId !== null && $userId === null) {
-        error_log(
-            json_encode([
-                'event' => 'anon_id_reused',
-                'trace_id' => $traceId,
-                'path' => $_SERVER['REQUEST_URI'] ?? '',
-            ]),
-        );
-    } elseif ($userId !== null) {
-        error_log(
-            json_encode([
-                'event' => 'anon_id_suppressed_logged_in',
-                'trace_id' => $traceId,
-                'path' => $_SERVER['REQUEST_URI'] ?? '',
-                'session_id' => $userId,
-            ]),
-        );
-    }
-*/
+// 5) Log only (minimal). No behavior changes.
+// Log only — no behavior changes
+if ($minted) {
+    error_log(
+        json_encode([
+            'event' => 'anon_id_minted',
+            'trace_id' => $traceId,
+            'path' => $_SERVER['REQUEST_URI'] ?? '',
+        ]),
+    );
+} elseif ($anonId !== null && $userId === null) {
+    error_log(
+        json_encode([
+            'event' => 'anon_id_reused',
+            'trace_id' => $traceId,
+            'path' => $_SERVER['REQUEST_URI'] ?? '',
+        ]),
+    );
+} elseif ($userId !== null) {
+    error_log(
+        json_encode([
+            'event' => 'anon_id_suppressed_logged_in',
+            'trace_id' => $traceId,
+            'path' => $_SERVER['REQUEST_URI'] ?? '',
+            'session_id' => $userId,
+        ]),
+    );
+}
+
 // ... continue existing dispatch/controller handling unchanged
 
 // ------------------------------------------------------------
