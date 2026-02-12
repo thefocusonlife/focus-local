@@ -180,7 +180,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $menu['account_id'] = (int) $existing['account_id'];
     } else {
         // CREATE MODE
-        $menu = [];
+        // $menu = [];
         $menu['website'] = (int) ($member['website'] ?? 1);
         $menu['account_id'] = (int) ($member['account_id'] ?? $viewerId);
     }
@@ -245,10 +245,10 @@ $data['member'] = $member;
 $data['website'] = $website;
 $menu = $cms->getMenu()->get($menuId);
 
-if (!$menu) {
+/*if (!$menu) {
     require __DIR__ . '/../page-not-found.php';
     exit();
-}
+}*/
 
 $data['menu'] = $menu;
 

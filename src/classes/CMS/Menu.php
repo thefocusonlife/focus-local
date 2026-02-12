@@ -114,7 +114,7 @@ class Menu
         try {
             // Try to create menu
             $sql = "INSERT INTO menu (website, name, description, navigation, account_id, seo_name, position, default_sorttype_id)
-            VALUES (:website, :name, :description, :navigation, :account_id, :seo_name, :position, :default_sorttype_ID);";
+        VALUES (:website, :name, :description, :navigation, :account_id, :seo_name, :position, :default_sorttype_id)";
 
             $params = [
                 'website' => $menu['website'],
