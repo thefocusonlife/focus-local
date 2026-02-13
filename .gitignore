@@ -35,4 +35,8 @@ vendor/
 # Debug logs
 temp/
 *.log
+# Application logs
+/logs/
+/logs/*
+!/logs/.gitkeep
 
