@@ -25,17 +25,27 @@ $maybeSlugOrId = (string) ($parts[2] ?? '');
 $menu = null;
 
 // If route uses a slug in the {id} position (legacy), resolve by slug.
+// Non-owner viewers may deep-link via slug from public grids.
+// Fall back to website+slug lookup (ignores account_id) to allow read-only viewing.
+
 if ($maybeSlugOrId !== '' && !ctype_digit($maybeSlugOrId)) {
-    // Use current website + the menu owner you're already using for navigation
     $menu = $cms->getMenu()->getBySlug((int) $website['id'], (int) $menuOwnerId, $maybeSlugOrId);
 
-    // Optional fallback: if website-specific menu isn't present, try website 1 owner 1
     if (!$menu) {
-        $menu = $cms->getMenu()->getBySlug(1, 1, $maybeSlugOrId);
+        $menu = $cms->getMenu()->getBySlugAnyAccount((int) $website['id'], $maybeSlugOrId);
+    }
+
+    if (!$menu) {
+        $menu = $cms->getMenu()->getBySlugAnyAccount(1, $maybeSlugOrId);
     }
 } else {
     $menuId = (int) ($id ?? 0);
     $menu = $cms->getMenu()->get($menuId);
+}
+
+if (!$menu) {
+    include APP_ROOT . '/src/pages/page-not-found.php';
+    exit();
 }
 
 if (!$menu) {

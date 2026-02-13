@@ -38,6 +38,29 @@ class Menu
         return $row ?: null;
     }
 
+    public function getBySlugAnyAccount(int $websiteId, string $slug): ?array
+    {
+        $sql = "SELECT id, default_sorttype_id, master_id, website, name, description, navigation,
+                   account_id, seo_name, position
+            FROM menu
+            WHERE website = :website
+              AND seo_name = :slug
+            ORDER BY
+              (account_id = 1) DESC,   -- prefer UberAdmin/shared menu if duplicates exist
+              navigation DESC,
+              position ASC,
+              id ASC
+            LIMIT 1";
+        $row = $this->db
+            ->runSQL($sql, [
+                'website' => $websiteId,
+                'slug' => $slug,
+            ])
+            ->fetch();
+
+        return $row ?: null;
+    }
+
     // Get all menus
     public function getAll(): array
     {
