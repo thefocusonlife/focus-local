@@ -1,14 +1,18 @@
 <footer>
 	<!-- Dev Only -->
 	{% if constant('DEV') %}
-		<div style="font-size:12px;opacity:.6">
-			trace_id:
-			{{ trace_id }}
-			|
-			    anon_id:
+		<div style="font-size:12px;opacity:.95">
+			anon_id:
 			{{ anon_id }}
+			| user:
+			{{ session.id ?? 'guest' }}
+			| website:
+			{{ session.website ?? 'n/a' }}
+			| uri:
+			{{ request_uri }}
 		</div>
 	{% endif %}
+
 
 	<!--   <div class="container">  -->
 	<a href="{{ doc_root }}contact/1">Contact us</a>
