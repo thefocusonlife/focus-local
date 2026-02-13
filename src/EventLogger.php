@@ -14,6 +14,7 @@ final class EventLogger
         string $eventVersion = '1.0.0',
     ): void {
         $traceId = $traceId ?: RequestContext::traceId();
+        $anonId = $anonId === null || $anonId === '' ? RequestContext::anonId() : $anonId;
 
         // enforce: at least one identity present (app-level, as you requested no DB constraints)
         if ($userId === null && ($anonId === null || $anonId === '')) {

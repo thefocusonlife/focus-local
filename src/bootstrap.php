@@ -11,14 +11,19 @@ if (defined('TFOL_BOOTSTRAPPED')) {
 }
 define('TFOL_BOOTSTRAPPED', true);
 
-require APP_ROOT . '/src/functions.php';
-require APP_ROOT . '/config/config.php';
-require APP_ROOT . '/vendor/autoload.php';
+require_once APP_ROOT . '/vendor/autoload.php';
+require_once APP_ROOT . '/config/config.php';
+require_once APP_ROOT . '/src/functions.php';
+require_once APP_ROOT . '/src/identity.php';
+require_once APP_ROOT . '/src/RequestContext.php';
 
 // Session (before any output)
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
+
+RequestContext::traceId();
+RequestContext::anonId();
 
 if (DEV === true) {
     set_exception_handler('handle_exception');
@@ -39,6 +44,10 @@ $twig_options['debug'] = DEV;
 
 $loader = new Twig\Loader\FilesystemLoader(APP_ROOT . '/templates');
 $twig = new Twig\Environment($loader, $twig_options);
+
+// Make sure RequestContext is loaded before this line (require_once RequestContext.php)
+$twig->addGlobal('trace_id', RequestContext::traceId());
+$twig->addGlobal('anon_id', RequestContext::anonId());
 
 $twig->addGlobal('doc_root', DOC_ROOT);
 $twig->addGlobal('request_uri', $_SERVER['REQUEST_URI'] ?? '');

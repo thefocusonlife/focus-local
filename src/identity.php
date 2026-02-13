@@ -18,13 +18,20 @@ function getAnonId(): string
 
     $anonId = 'anon_' . bin2hex(random_bytes(16));
 
-    setcookie('anon_id', $anonId, [
-        'expires' => time() + 60 * 60 * 24 * 365, // 1 year
-        'path' => '/',
-        'secure' => !empty($_SERVER['HTTPS']),
-        'httponly' => true,
-        'samesite' => 'Lax',
-    ]);
+    // IMPORTANT: This was the behavior that worked on localhost:
+    // secure cookie only when HTTPS is actually present.
+    if (!headers_sent()) {
+        setcookie('anon_id', $anonId, [
+            'expires' => time() + 60 * 60 * 24 * 365, // 1 year
+            'path' => '/',
+            'secure' => !empty($_SERVER['HTTPS']),
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+    }
+
+    // Make it available immediately in this same request
+    $_COOKIE['anon_id'] = $anonId;
 
     return $anonId;
 }
