@@ -5,6 +5,7 @@ use PhpBook\Validate\Validate; // Use Validate class
 
 require_once __DIR__ . '/../security/guard.php';
 require_once __DIR__ . '/../security/ownership.php';
+require_once __DIR__ . '/../security/redirects.php';
 
 $member = [];
 $temp = $_FILES['image']['tmp_name'] ?? ''; // Temporary image
@@ -71,15 +72,10 @@ if ($sessionMemberId <= 0) {
 }
 
 // If this page requires login (admin/work), fail fast
-if ($sessionMemberId <= 0) {
-    // Choose one behavior:
-    // 1) Redirect to login:
-    redirect('login', ['failure' => 'Please log in to add a story.']);
+// Treat 0 (no session) and 2 (guest account) as not logged in
+if ($sessionMemberId <= 0 || $sessionMemberId === 2) {
+    redirect('login', ['failure' => 'Please log in to add or edit stories.']);
     exit();
-
-    // OR 2) show not-found:
-    // include APP_ROOT . '/src/pages/page-not-found.php';
-    // exit;
 }
 
 if ($id > 0) {

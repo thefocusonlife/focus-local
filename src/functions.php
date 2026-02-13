@@ -20,12 +20,17 @@ function is_guest($role)
     }
 }
 
-function redirect(string $location, array $parameters = [], $response_code = 302)
+function redirect(string $location, array $parameters = [], int $response_code = 302): void
 {
-    $qs = $parameters ? '?' . http_build_query($parameters) : ''; // Create query string
-    $location = $location . $qs; // Create new path
-    header('Location: ' . DOC_ROOT . $location, $response_code); // Redirect to new page
-    exit(); // Stop code
+    $qs = $parameters ? '?' . http_build_query($parameters) : '';
+
+    // Normalize leading slash
+    $location = '/' . ltrim($location, '/');
+
+    $base = defined('DOC_ROOT') ? rtrim((string) DOC_ROOT, '/') : '';
+
+    header('Location: ' . $base . $location . $qs, true, $response_code);
+    exit();
 }
 
 function create_filename(string $filename, string $uploads): string
@@ -69,7 +74,7 @@ function handle_exception($e)
 {
     error_log($e); // Log the error
     http_response_code(500); // Set the http response code
-    echo "<h1>Sorry, a problem occurred</h1>   
+    echo "<h1>Sorry, a problem occurred</h1>
           The site's owners have been informed. Please try again later.";
 }
 

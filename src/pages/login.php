@@ -57,8 +57,19 @@ if ($role !== 'guest') {
 }
 
 // If form has not been submitted yet, load the website info
-if ($_SERVER['REQUEST_METHOD'] != 'POST') {
-    $website = $cms->getWebsite()->getById(intval($id));
+// Pick website context safely on GET
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    // $id comes from router (/login/{id}) but may be missing on /login
+    $websiteId = (int) ($id ?? 0);
+
+    if ($websiteId <= 0) {
+        $websiteId = (int) ($_SESSION['website'] ?? 1);
+    }
+    if ($websiteId <= 0) {
+        $websiteId = 1;
+    }
+
+    $website = $cms->getWebsite()->getById($websiteId);
 }
 
 $email = ''; // Initialize email variable
@@ -154,7 +165,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 // Website context for this page
 //$$websiteId = (int) ($id ?? ($_SESSION['website'] ?? 1));
-$websiteId = (int) ($id ?? ($_SESSION['website'] ?? 1));
+//$websiteId = (int) ($id ?? ($_SESSION['website'] ?? 1));
 $website = $cms->getWebsite()->getById($websiteId);
 
 if (empty($website) || empty($website['id'])) {
