@@ -23,12 +23,18 @@ if (!defined('APP_ROOT')) {
 
 require_once APP_ROOT . '/src/bootstrap.php';
 require_once APP_ROOT . '/src/services/AnonIdService.php';
+require_once APP_ROOT . '/src/Infrastructure/AppLogger.php';
+use App\Infrastructure\AppLogger;
 
 $traceId = null;
 
 if (defined('A2_ENABLED') && A2_ENABLED) {
     require_once APP_ROOT . '/src/RequestContext.php';
     $traceId = RequestContext::traceId();
+}
+
+if (empty($traceId)) {
+    $traceId = bin2hex(random_bytes(16));
 }
 
 // 1) Determine logged-in user (whatever your A2 Blueprint does today)
@@ -57,30 +63,21 @@ if ($anonSvc->shouldMint($userId, $existingAnonId)) {
 // 5) Log only (minimal). No behavior changes.
 // Log only — no behavior changes
 if ($minted) {
-    error_log(
-        json_encode([
-            'event' => 'anon_id_minted',
-            'trace_id' => $traceId,
-            'path' => $_SERVER['REQUEST_URI'] ?? '',
-        ]),
-    );
+    AppLogger::log('info', 'anon_id_minted', [
+        'trace_id' => $traceId,
+        'path' => $_SERVER['REQUEST_URI'] ?? '',
+    ]);
 } elseif ($anonId !== null && $userId === null) {
-    error_log(
-        json_encode([
-            'event' => 'anon_id_reused',
-            'trace_id' => $traceId,
-            'path' => $_SERVER['REQUEST_URI'] ?? '',
-        ]),
-    );
+    AppLogger::log('info', 'anon_id_reused', [
+        'trace_id' => $traceId,
+        'path' => $_SERVER['REQUEST_URI'] ?? '',
+    ]);
 } elseif ($userId !== null) {
-    error_log(
-        json_encode([
-            'event' => 'anon_id_suppressed_logged_in',
-            'trace_id' => $traceId,
-            'path' => $_SERVER['REQUEST_URI'] ?? '',
-            'session_id' => $userId,
-        ]),
-    );
+    AppLogger::log('info', 'anon_id_suppressed_logged_in', [
+        'trace_id' => $traceId,
+        'path' => $_SERVER['REQUEST_URI'] ?? '',
+        'session_id' => $userId,
+    ]);
 }
 
 // ... continue existing dispatch/controller handling unchanged
@@ -103,6 +100,16 @@ function route_log(string $trace, string $msg): void
 // Parse request path
 // ------------------------------------------------------------
 $uriPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
+
+AppLogger::log('info', 'request', [
+    'trace_id' => $traceId,
+    'website_id' => $_SESSION['website_id'] ?? 1,
+    'route' => $uriPath,
+    'controller' => 'front-controller', // will be improved later once dispatch resolves
+    'anon_id' => $anonId,
+    'member_id' => $userId, // your app uses $_SESSION['id']
+]);
+
 // ------------------------------------------------------------
 // Normalize base path so both /focus-local/... and /focus-local/public/... route the same
 // ------------------------------------------------------------
@@ -175,11 +182,36 @@ if (count($parts) > 1) {
         // Prefer nested routes over top-level ones
 
         if (is_file($nestedDirIndex)) {
+            AppLogger::log('info', 'dispatch', [
+                'trace_id' => $traceId,
+                'website_id' => $_SESSION['website_id'] ?? 1,
+                'route' => $uriPath,
+                'controller' => $nestedDirIndex,
+                'id' => $id ?? null,
+                'page' => $page,
+                'nested' => $nested,
+                'anon_id' => $anonId,
+                'member_id' => $userId,
+            ]);
+
             route_log($trace, "include=$nestedDirIndex");
             require $nestedDirIndex;
             exit();
         }
+
         if (is_file($nestedFlat)) {
+            AppLogger::log('info', 'dispatch', [
+                'trace_id' => $traceId,
+                'website_id' => $_SESSION['website_id'] ?? 1,
+                'route' => $uriPath,
+                'controller' => $nestedFlat,
+                'id' => $id ?? null,
+                'page' => $page,
+                'nested' => $nested,
+                'anon_id' => $anonId,
+                'member_id' => $userId,
+            ]);
+
             route_log($trace, "include=$nestedFlat");
             require $nestedFlat;
             exit();
@@ -187,26 +219,42 @@ if (count($parts) > 1) {
     }
 }
 
-// Now resolve the top-level route
+// ------------------------------------------------------------
+// Resolve top-level route
+// Prefer folder index: src/pages/<page>/index.php
+// Then flat page:      src/pages/<page>.php
+// ------------------------------------------------------------
+
 if (is_file($candidateDirIndex)) {
+    AppLogger::log('info', 'dispatch', [
+        'trace_id' => $traceId,
+        'website_id' => $_SESSION['website_id'] ?? 1,
+        'route' => $uriPath,
+        'controller' => $candidateDirIndex,
+        'page' => $page,
+        'id' => $id ?? null,
+        'anon_id' => $anonId,
+        'member_id' => $userId,
+    ]);
+
     route_log($trace, "include=$candidateDirIndex");
     require $candidateDirIndex;
     exit();
 }
 
 if (is_file($candidateFlat)) {
-    if (headers_sent($hsFile, $hsLine)) {
-        error_log("[HEADERS_SENT] before X-TFOL headers at $hsFile:$hsLine");
-    } else {
-        error_log('[HEADERS_OK] headers not sent yet');
-    }
+    AppLogger::log('info', 'dispatch', [
+        'trace_id' => $traceId,
+        'website_id' => $_SESSION['website_id'] ?? 1,
+        'route' => $uriPath,
+        'controller' => $candidateFlat,
+        'page' => $page,
+        'id' => $id ?? null,
+        'anon_id' => $anonId,
+        'member_id' => $userId,
+    ]);
 
     route_log($trace, "include=$candidateFlat");
-    header('X-TFOL-URI: ' . ($_SERVER['REQUEST_URI'] ?? ''));
-    header('X-TFOL-Candidate: ' . basename($candidateFlat));
-    header('X-TFOL-Page: ' . ($page ?? ''));
-    header('X-TFOL-Id: ' . (string) ($id ?? ''));
-
     require $candidateFlat;
     exit();
 }
@@ -214,14 +262,15 @@ if (is_file($candidateFlat)) {
 // ------------------------------------------------------------
 // Not found
 // ------------------------------------------------------------
-route_log(
-    $trace,
-    "NOT FOUND page=$page (dirIndex=" .
-        (is_file($candidateDirIndex) ? 'YES' : 'NO') .
-        ' flat=' .
-        (is_file($candidateFlat) ? 'YES' : 'NO') .
-        ')',
-);
+AppLogger::log('warn', 'route.not_found', [
+    'trace_id' => $traceId,
+    'website_id' => $_SESSION['website_id'] ?? 1,
+    'route' => $uriPath,
+    'page' => $page,
+    'id' => $id ?? null,
+    'anon_id' => $anonId,
+    'member_id' => $userId,
+]);
 
 require $pageRoot . '/page-not-found.php';
 exit();
