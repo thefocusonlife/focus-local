@@ -104,6 +104,10 @@ if (!empty($parts[0]) && $parts[0] === 'focus-local') {
 if (!empty($parts[0]) && $parts[0] === 'public') {
     array_shift($parts); // public
 }
+// Expected remaining path: admin/menu/{menuId}
+if (($parts[0] ?? '') === 'admin' && ($parts[1] ?? '') === 'menu') {
+    $menuId = (int) ($parts[2] ?? 0);
+}
 
 // Now expect: ['admin', 'menu', '{id}']
 if (!empty($parts[0]) && $parts[0] === 'admin' && !empty($parts[1]) && $parts[1] === 'menu') {
@@ -122,6 +126,19 @@ if ($menuId <= 0 && !empty($_GET['id']) && ctype_digit((string) $_GET['id'])) {
 // ------------------------------------------------------------
 $errors = [];
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Menu id: prefer POST values, fall back to route-derived $menuId
+    $postedMenuId = (int) ($_POST['id'] ?? ($_POST['menu_id'] ?? 0));
+    if ($postedMenuId > 0) {
+        $menuId = $postedMenuId;
+    }
+
+    if ($isEdit && $menuId <= 0) {
+        $errors['message'] = 'Missing menu id.';
+        // you can render an error, or treat as not found:
+        include APP_ROOT . '/src/pages/page-not-found.php';
+        exit();
+    }
+
     // Re-load existing menu for edit to prevent forged POST / session bleed
     $existing = null;
     if ($isEdit) {
@@ -143,15 +160,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    // Build $menu from POST (adjust keys to match your form fields)
+    // Build $menu from POST
     $menu = [
-        'id' => $menuId,
+        'id' => $menuId, // NOW guaranteed to be correct for edits
         'name' => trim((string) ($_POST['name'] ?? '')),
         'description' => trim((string) ($_POST['description'] ?? '')),
         'navigation' => isset($_POST['navigation']) ? 1 : 0,
         'position' => (int) ($_POST['position'] ?? 0),
-        // do NOT take website/account_id from session here; they get frozen below
+        // frozen fields below...
     ];
+
     // ------------------------------------------------------------
     // Finalize menu fields (EDIT vs CREATE)
     // ------------------------------------------------------------
@@ -209,13 +227,55 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             break;
         }
     }
+    // Force website context from session (server-truth)
+    $menu['website'] = (int) ($_SESSION['website_id'] ?? 0);
+
+    if (empty($menu['website'])) {
+        $errors['message'] = 'Missing website context.';
+        $invalid = true;
+    }
 
     if (!$invalid) {
+        \App\Infrastructure\AppLogger::log('info', 'menu.save.attempt', [
+            'trace_id' => $traceId ?? ($_SERVER['APP_TRACE_ID'] ?? ''),
+            'website_id' => $_SESSION['website_id'] ?? null,
+            'menu_id' => $menuId,
+            'is_edit' => $isEdit,
+            'post_keys' => array_keys($_POST),
+        ]);
+
+        $saved = false;
+        $affected = null; // for edit
+        $newId = null; // for create
+
         if ($isEdit) {
-            $saved = $cms->getMenu()->update($menu);
+            // IMPORTANT: update() should return affected rows (int)
+            // Ensure editable fields come from POST (protect against later overwrites)
+            if (isset($_POST['position']) && $_POST['position'] !== '') {
+                $menu['position'] = (int) $_POST['position'];
+            }
+            if (isset($_POST['navigation'])) {
+                $menu['navigation'] = 1;
+            } else {
+                $menu['navigation'] = 0;
+            }
+
+            $affected = (int) $cms->getMenu()->update($menu);
+            \App\Infrastructure\AppLogger::log('info', 'menu.save.field_check', [
+                'trace_id' => $traceId ?? ($_SERVER['APP_TRACE_ID'] ?? ''),
+                'menu_id' => $menu['id'] ?? null,
+                'position_post' => $_POST['position'] ?? null,
+                'position_menu' => $menu['position'] ?? null,
+                'default_sorttype_post' => $_POST['default_sorttype_id'] ?? null,
+                'default_sorttype_menu' => $menu['default_sorttype_id'] ?? null,
+            ]);
+
+            $affected = (int) $cms->getMenu()->update($menu);
+            $saved = $affected >= 0; // existence already verified earlier
         } else {
+            // Build create params from $menu + forced website
             $createParams = [
-                'website' => (int) $menu['website'],
+                'website' => (int) $menu['website'], // forced above
                 'name' => (string) $menu['name'],
                 'description' => (string) $menu['description'],
                 'navigation' => (int) $menu['navigation'],
@@ -225,14 +285,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'default_sorttype_id' => $defaultSorttypeId,
             ];
 
-            $saved = $cms->getMenu()->create($createParams);
+            // IMPORTANT: create() should return inserted id (int)
+            $newId = (int) $cms->getMenu()->create($createParams);
+            $saved = $newId > 0;
         }
+
+        \App\Infrastructure\AppLogger::log('info', 'menu.save.result', [
+            'trace_id' => $traceId ?? ($_SERVER['APP_TRACE_ID'] ?? ''),
+            'website_id' => $menu['website'] ?? null,
+            'is_edit' => $isEdit,
+            'menu_id' => (int) ($menu['id'] ?? ($menuId ?? 0)),
+            'saved' => $saved,
+            'rows_affected' => $affected ?? null, // null for create
+            'new_id' => $newId ?? null, // null for edit
+        ]);
 
         if ($saved) {
             redirect('admin/menus/', ['success' => 'Menu saved']);
         } else {
-            $errors['message'] = 'Save failed.';
+            $errors['message'] = $isEdit ? 'Save failed.' : 'Save failed (no id returned).';
         }
+    }
+    \App\Infrastructure\AppLogger::log('info', 'menu.save.result', [
+        'trace_id' => $traceId ?? ($_SERVER['APP_TRACE_ID'] ?? ''),
+        'website_id' => $menu['website'] ?? null,
+        'is_edit' => $isEdit,
+        'menu_id' => (int) ($menu['id'] ?? ($menuId ?? 0)),
+        'saved' => $saved,
+        'rows_affected' => $affected ?? null, // null for create
+        'new_id' => $newId ?? null, // null for edit
+    ]);
+
+    if ($saved) {
+        redirect('admin/menus/', ['success' => 'Menu saved']);
+    } else {
+        $errors['message'] = $isEdit ? 'Save failed.' : 'Save failed (no id returned).';
     }
 }
 

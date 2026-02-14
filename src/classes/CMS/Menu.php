@@ -130,14 +130,13 @@ class Menu
     }
 
     // Create new menu
-    public function create(array $menu): bool
+    public function create(array $menu): int
     {
-        //$menu['account_id'] = 1;
-
         try {
-            // Try to create menu
-            $sql = "INSERT INTO menu (website, name, description, navigation, account_id, seo_name, position, default_sorttype_id)
-        VALUES (:website, :name, :description, :navigation, :account_id, :seo_name, :position, :default_sorttype_id)";
+            $sql = "INSERT INTO menu
+            (website, name, description, navigation, account_id, seo_name, position, default_sorttype_id)
+            VALUES
+            (:website, :name, :description, :navigation, :account_id, :seo_name, :position, :default_sorttype_id)";
 
             $params = [
                 'website' => $menu['website'],
@@ -150,17 +149,14 @@ class Menu
                 'default_sorttype_id' => $menu['default_sorttype_id'],
             ];
 
-            $this->db->runSQL($sql, $params);
-            return true;
+            $this->db->runSql($sql, $params);
+
+            return (int) $this->db->lastInsertId();
         } catch (\PDOException $e) {
-            // If a exception was thrown
             if (($e->errorInfo[1] ?? null) === 1062) {
-                // If error indicates duplicate entry
-                return false; // Return false to indicate duplicate name
-            } else {
-                // Otherwise
-                throw $e; // Re-throw exception
+                return 0;
             }
+            throw $e;
         }
     }
 
@@ -182,9 +178,8 @@ class Menu
         return $stmt->rowCount() === 1;
     }
 
-    public function update(array $menu)
+    public function update(array $menu): int
     {
-        // Optional: minimal required-key validation (consistent and readable)
         foreach (['id', 'website', 'name'] as $k) {
             if (!array_key_exists($k, $menu)) {
                 throw new \InvalidArgumentException("Missing menu field: {$k}");
@@ -216,22 +211,23 @@ class Menu
         $account_id = null,
         $seo_name = null,
         $position = null,
-    ) {
+    ): int {
         try {
             $sql = "UPDATE menu
-                SET website = :website,
-                    name = :name,
-                    description = :description,
-                    navigation = :navigation,
-                    account_id = :account_id,
-                    seo_name = :seo_name,
-                    position = :position,
-                    default_sorttype_id = :default_sorttype_id
-                WHERE id = :id";
+            SET master_id = :master_id,
+                name = :name,
+                description = :description,
+                navigation = :navigation,
+                account_id = :account_id,
+                seo_name = :seo_name,
+                position = :position,
+                default_sorttype_id = :default_sorttype_id
+            WHERE id = :id AND website = :website";
 
             $params = [
                 'id' => $id,
                 'website' => $website,
+                'master_id' => $master_id,
                 'name' => $name,
                 'description' => $description,
                 'navigation' => $navigation,
@@ -241,17 +237,12 @@ class Menu
                 'default_sorttype_id' => $default_sorttype_id,
             ];
 
-            $this->db->runSQL($sql, $params);
-            return true;
+            $stmt = $this->db->runSql($sql, $params);
+            return (int) $stmt->rowCount();
         } catch (\PDOException $e) {
-            if (
-                !empty($e->errorInfo) &&
-                isset($e->errorInfo[1]) &&
-                (int) $e->errorInfo[1] === 1062
-            ) {
-                return false;
+            if ((int) ($e->errorInfo[1] ?? 0) === 1062) {
+                return 0;
             }
-
             throw $e;
         }
     }

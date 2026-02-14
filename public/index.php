@@ -106,6 +106,7 @@ AppLogger::log('info', 'request', [
     'website_id' => $_SESSION['website_id'] ?? 1,
     'route' => $uriPath,
     'controller' => 'front-controller', // will be improved later once dispatch resolves
+    'method' => $_SERVER['REQUEST_METHOD'] ?? 'GET',
     'anon_id' => $anonId,
     'member_id' => $userId, // your app uses $_SESSION['id']
 ]);
@@ -154,6 +155,10 @@ $id = (int) ($parts[1] ?? 0);
 // Normalize default home route
 if ($page === '') {
     $page = 'index';
+}
+// Website context capture (based on your routing convention)
+if (in_array($page, ['index', 'login', 'register'], true) && !empty($id)) {
+    $_SESSION['website_id'] = (int) $id;
 }
 
 route_log($trace, "uriPath=$uriPath base=$base path=$path page=$page id=$id");
