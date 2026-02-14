@@ -19,7 +19,7 @@ class Notetype // Define Notetype class
         $sql = "SELECT id, description
                   FROM notetype
                  WHERE id = :id;"; // SQL to get notetype
-        return $this->db->runSQL($sql, [$id])->fetch(); // Return notetype
+        return $this->db->runSql($sql, [$id])->fetch(); // Return notetype
     }
 
     // Get details of all notetypes
@@ -27,6 +27,6 @@ class Notetype // Define Notetype class
     {
         $sql = "SELECT id, description
                   FROM notetype;"; // SQL to get all notetypes
-        return $this->db->runSQL($sql)->fetchAll(); // Return all notetypes
+        return $this->db->runSql($sql)->fetchAll(); // Return all notetypes
     }
 }

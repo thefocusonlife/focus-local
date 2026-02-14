@@ -29,7 +29,7 @@ class Resize // Define Session class
         $sql = "SELECT id, forename, surname, role, account_id
                   FROM member
                  WHERE id = :id;"; // SQL to get member
-        return $this->db->runSQL($sql, [$id])->fetch(); // Return member
+        return $this->db->runSql($sql, [$id])->fetch(); // Return member
     }
 
     // Get details of all members
@@ -37,6 +37,6 @@ class Resize // Define Session class
     {
         $sql = "SELECT id, forename, surname, role, account_id
                   FROM member;"; // SQL to get all members
-        return $this->db->runSQL($sql)->fetchAll(); // Return all members
+        return $this->db->runSql($sql)->fetchAll(); // Return all members
     }
 }

@@ -341,7 +341,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     if ($imageId <= 0) {
                         $sql = 'INSERT INTO image (file, alt) VALUES (:file, :alt);';
-                        $cms->getDb()->runSQL($sql, [
+                        $cms->getDb()->runSql($sql, [
                             'file' => '',
                             'alt' => $alt,
                         ]);
@@ -350,7 +350,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $arguments['image_id'] = $imageId;
                     } else {
                         $sql = 'UPDATE image SET alt = :alt WHERE id = :id;';
-                        $cms->getDb()->runSQL($sql, [
+                        $cms->getDb()->runSql($sql, [
                             'alt' => $alt,
                             'id' => $imageId,
                         ]);
@@ -367,7 +367,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     // Update image row with final filename + alt
                     $sql = 'UPDATE image SET file = :file, alt = :alt WHERE id = :id;';
-                    $cms->getDb()->runSQL($sql, [
+                    $cms->getDb()->runSql($sql, [
                         'file' => $result['filename'],
                         'alt' => $alt,
                         'id' => $imageId,

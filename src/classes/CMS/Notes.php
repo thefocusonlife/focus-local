@@ -30,7 +30,7 @@ class Notes
         $sql = "SELECT id, website, note_type, from_id, from_name, to_id, to_name, family_id, to_family_id, request,allow, request_date, reply_date
         FROM note
         WHERE from_id = :id"; // SQL to get member
-        return $this->db->runSQL($sql, $arguments)->fetch(); // Return member
+        return $this->db->runSql($sql, $arguments)->fetch(); // Return member
     }
 
     // Get note by note_id (priary key)
@@ -40,7 +40,7 @@ class Notes
         $sql = "SELECT id, website, note_type, from_id, from_name, to_id, to_name, family_id, to_family_id, request,allow, request_date, reply_date
         FROM note
         WHERE id = :id"; // SQL to get member
-        return $this->db->runSQL($sql, $arguments)->fetch(); // Return member
+        return $this->db->runSql($sql, $arguments)->fetch(); // Return member
     }
 
     // Get details of all follows
@@ -53,7 +53,7 @@ class Notes
     WHERE (to_id = :id)
     ORDER BY request_date DESC; "; // SQL to all notes by to_id
 
-        return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return all follows
+        return $this->db->runSql($sql, $arguments)->fetchAll(); // Return all follows
     }
 
     // Get details of all follows
@@ -66,7 +66,7 @@ FROM note
 WHERE (from_id = :id)
 ORDER BY request_date DESC; "; // SQL to all notes by from_id
 
-        return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return all follows
+        return $this->db->runSql($sql, $arguments)->fetchAll(); // Return all follows
     }
 
     // Get details of all follows
@@ -79,14 +79,14 @@ FROM note
 WHERE (from_id = :id AND allow == 1)
 ORDER BY to_family_id DESC; "; // SQL to get all accepted follow requests by follow_id DESC (note: may want ASC)
 
-        return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return all follows
+        return $this->db->runSql($sql, $arguments)->fetchAll(); // Return all follows
     }
     // Get number of notifications
     public function count(): int
     {
-        $sql = "SELECT COUNT(id) FROM note                  
+        $sql = "SELECT COUNT(id) FROM note
             WHERE follow.f_id = $_SESSION[id];"; // SQL to count follows by Session_id
-        return $this->db->runSQL($sql)->fetchColumn(); // Return menu count
+        return $this->db->runSql($sql)->fetchColumn(); // Return menu count
     }
 
     // Get details of all follows
@@ -99,7 +99,7 @@ ORDER BY to_family_id DESC; "; // SQL to get all accepted follow requests by fol
         or to_id = :id2)
         ORDER BY request_date DESC;";
         // since id is unique - maybe this is a duplicate;
-        return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return all follows
+        return $this->db->runSql($sql, $arguments)->fetchAll(); // Return all follows
     }
     public function update(array $note): bool
     {
@@ -112,7 +112,7 @@ ORDER BY to_family_id DESC; "; // SQL to get all accepted follow requests by fol
                         family_id = :family_id, to_family_id = :to_family_id, request = :request, allow = :allow, request_date = :request_date, reply_date = :reply_date
                            WHERE id = :id;"; // SQL statement
 
-            $this->db->runSQL($sql, $note); // Update story
+            $this->db->runSql($sql, $note); // Update story
             $this->db->commit(); // Commit transaction
             return true; // Update worked
         } catch (\PDOException $e) {
@@ -140,7 +140,7 @@ ORDER BY to_family_id DESC; "; // SQL to get all accepted follow requests by fol
             $sql = "INSERT INTO note (website, note_type, from_id, from_name, to_id, to_name, family_id, to_family_id, allow, request)
          VALUES (:website, :note_type, :from_id, :from_name, :to_id, :to_name, :family_id, :to_family_id, :allow, :request);";
 
-            $this->db->runSQL($sql, $note);
+            $this->db->runSql($sql, $note);
             $this->db->commit(); // Commit transaction                        // Run SQL
             return true; // Return true
         } catch (\PDOException $e) {
@@ -159,9 +159,9 @@ ORDER BY to_family_id DESC; "; // SQL to get all accepted follow requests by fol
     {
         $sql = "SELECT id, website, note_type, from_id, from_name, to_id, to_name, Family_id, to_family request,allow, request_date, reply_date
         FROM note
-        WHERE to_id = :id                     
+        WHERE to_id = :id
         ORDER BY from_id DESC
         LIMIT 1;"; // Add GROUP BY clause
-        return $this->db->runSQL($sql, [$id])->fetch(); // Return story
+        return $this->db->runSql($sql, [$id])->fetch(); // Return story
     }
 }

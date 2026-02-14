@@ -33,7 +33,7 @@ class Website
         $sql = "SELECT id, uber_id, sorttype, name, image_file, alt, non_members
                 FROM website
                 WHERE id = :id"; // SQL to get note by primary index
-        return $this->db->runSQL($sql, $arguments)->fetch(); // Return member
+        return $this->db->runSql($sql, $arguments)->fetch(); // Return member
     }
     // Get details of all website records
     public function getAll(): array
@@ -41,14 +41,14 @@ class Website
         $sql = "SELECT id, uber_id, sorttype, name, image_file, alt, non_members
             FROM website
             ORDER BY id ASC;";
-        return $this->db->runSQL($sql)->fetchAll(); // Return all follows
+        return $this->db->runSql($sql)->fetchAll(); // Return all follows
     }
     // Get total number of members
     public function count(): int
     {
         $sql = "SELECT COUNT(id) FROM website
              WHERE 1;"; // SQL to count number of members
-        return $this->db->runSQL($sql)->fetchColumn(); // Run SQL and return count
+        return $this->db->runSql($sql)->fetchColumn(); // Run SQL and return count
     }
     public function update(array $website): bool
     {
@@ -60,7 +60,7 @@ class Website
                    SET id,sorttype, name, image_file, alt
                        WHERE id = :id;"; // SQL statement
             $arguments = $website;
-            $this->db->runSQL($sql)->rowCount(); //          // run sql
+            $this->db->runSql($sql)->rowCount(); //          // run sql
             $this->db->commit(); // Commit transaction
             return true; // Update worked
         } catch (\PDOException $e) {
@@ -85,7 +85,7 @@ class Website
             $this->db->beginTransaction(); // Start
             $sql = "INSERT INTO website (sorttype, name, image_file, alt)
          VALUES (:sorttype, :name, :image_file, :alt);";
-            $this->db->runSQL($sql, $website); // SQL to add new website record
+            $this->db->runSql($sql, $website); // SQL to add new website record
             $this->db->commit(); // Commit ransaction
             return true; // Return true
         } catch (\PDOException $e) {
@@ -107,7 +107,7 @@ class Website
             // Try to delete website
             $sql = "DELETE FROM website
              WHERE id = :id;"; // SQL to delete website
-            $this->db->runSQL($sql, [$id]); // Delete website
+            $this->db->runSql($sql, [$id]); // Delete website
             return true; // It worked, return true
         } catch (\PDOException $e) {
             // If exception was thrown

@@ -20,7 +20,7 @@ class Token
         $arguments['purpose'] = $purpose; // Purpose
         $sql = "INSERT INTO token (token, member_id, expires, purpose)
                     VALUES (:token, :member_id, :expires, :purpose);"; // SQL to add token to database
-        $this->db->runSQL($sql, $arguments); // Run SQL statement
+        $this->db->runSql($sql, $arguments); // Run SQL statement
         return $arguments['token']; // Return new token
     }
 
@@ -32,6 +32,6 @@ class Token
                  WHERE token = :token AND purpose = :purpose
                    AND expires > NOW();";
         // SQL to check if token is valid and
-        return $this->db->runSQL($sql, ['token' => $token, 'purpose' => $purpose])->fetchColumn(); // Run SQL and return
+        return $this->db->runSql($sql, ['token' => $token, 'purpose' => $purpose])->fetchColumn(); // Run SQL and return
     }
 }

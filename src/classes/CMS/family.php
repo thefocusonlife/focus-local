@@ -23,7 +23,7 @@ class Family // Define Session class
         $sql = "SELECT id,website, forename, surname, role, status,account_id
                   FROM member
                  WHERE id = :id;"; // SQL to get member
-        return $this->db->runSQL($sql, [$id])->fetch(); // Return member
+        return $this->db->runSql($sql, [$id])->fetch(); // Return member
     }
 
     // Get details of all members
@@ -31,7 +31,7 @@ class Family // Define Session class
     {
         $sql = "SELECT id, website, forename, surname, role, status, account_id
                   FROM member;"; // SQL to get all members
-        return $this->db->runSQL($sql)->fetchAll(); // Return all members
+        return $this->db->runSql($sql)->fetchAll(); // Return all members
     }
     public function getByAllowed(array $id): array
     {
@@ -41,6 +41,6 @@ class Family // Define Session class
                 WHERE m.id = :id
                 AND n.allow = 1"; // SQL to get all members
 
-        return $this->db->runSQL($sql, $id)->fetchAll(); // Return all members
+        return $this->db->runSql($sql, $id)->fetchAll(); // Return all members
     }
 }

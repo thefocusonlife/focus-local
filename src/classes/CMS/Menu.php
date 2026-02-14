@@ -16,7 +16,7 @@ class Menu
         $sql = "SELECT id, default_sorttype_id, master_id, website, name, description, navigation, account_id, seo_name, position
                   FROM menu
                  WHERE id = :id;"; // SQL to get one menu
-        return $this->db->runSQL($sql, [$id])->fetch(); // Return menu data
+        return $this->db->runSql($sql, [$id])->fetch(); // Return menu data
     }
 
     public function getBySlug(int $websiteId, int $accountId, string $slug): ?array
@@ -28,7 +28,7 @@ class Menu
               AND seo_name = :slug
             LIMIT 1";
         $row = $this->db
-            ->runSQL($sql, [
+            ->runSql($sql, [
                 'website' => $websiteId,
                 'account_id' => $accountId,
                 'slug' => $slug,
@@ -52,7 +52,7 @@ class Menu
               id ASC
             LIMIT 1";
         $row = $this->db
-            ->runSQL($sql, [
+            ->runSql($sql, [
                 'website' => $websiteId,
                 'slug' => $slug,
             ])
@@ -68,7 +68,7 @@ class Menu
                   FROM menu
 
                   ORDER BY account_id ASC, position ASC;"; // SQL to get all menus
-        return $this->db->runSQL($sql)->fetchAll(); // Return all menus
+        return $this->db->runSql($sql)->fetchAll(); // Return all menus
     }
     public function getAll2(?int $website, ?int $account_id): array
     {
@@ -83,14 +83,34 @@ class Menu
              WHERE website = :website AND account_id = :account_id
              ORDER BY website, account_id ASC, position ASC;";
 
-        return $this->db->runSQL($sql, $arguments)->fetchAll();
+        return $this->db->runSql($sql, $arguments)->fetchAll();
+    }
+
+    public function getForWebsite(int $menuId, int $websiteId): ?array
+    {
+        if ($menuId <= 0 || $websiteId <= 0) {
+            return null;
+        }
+
+        $sql = "SELECT *
+            FROM menu
+            WHERE id = :id AND website = :website
+            LIMIT 1";
+
+        $stmt = $this->db->runSql($sql, [
+            'id' => $menuId,
+            'website' => $websiteId,
+        ]);
+
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
+        return $row ?: null;
     }
 
     public function getAllByWebsite(int $websiteId): array
     {
         $websiteId = (int) $websiteId;
         if ($websiteId <= 0) {
-            $websiteId = 1;
+            return [];
         }
 
         $sql = "SELECT id, website, name, navigation, account_id, seo_name, position
@@ -98,24 +118,25 @@ class Menu
              WHERE website = :website
              ORDER BY account_id ASC, position ASC;";
 
-        return $this->db->runSQL($sql, ['website' => $websiteId])->fetchAll();
+        return $this->db->runSql($sql, ['website' => $websiteId])->fetchAll();
     }
 
     public function getFirstForWebsite(int $websiteId): ?int
     {
+        $websiteId = (int) $websiteId;
+        if ($websiteId <= 0) {
+            return null;
+        }
+
         $sql = "
         SELECT id
         FROM menu
-        WHERE website_id = :website_id
+        WHERE website = :website
         ORDER BY id ASC
         LIMIT 1
     ";
 
-        $row = $this->db
-            ->runSQL($sql, [
-                'website_id' => $websiteId,
-            ])
-            ->fetch();
+        $row = $this->db->runSql($sql, ['website' => $websiteId])->fetch();
 
         return $row ? (int) $row['id'] : null;
     }
@@ -126,7 +147,7 @@ class Menu
     {
         $sql = "SELECT COUNT(id) FROM menu
                 WHERE menu.account_id = $_SESSION[id];"; // SQL to count menus
-        return $this->db->runSQL($sql)->fetchColumn(); // Return menu count
+        return $this->db->runSql($sql)->fetchColumn(); // Return menu count
     }
 
     // Create new menu
@@ -170,7 +191,7 @@ class Menu
              WHERE id = :id
              LIMIT 1;";
 
-        $stmt = $this->db->runSQL($sql, [
+        $stmt = $this->db->runSql($sql, [
             'account_id' => $accountId,
             'id' => $menuId,
         ]);
@@ -254,7 +275,7 @@ class Menu
             // Try to delete menu
             $sql = "DELETE FROM menu
                  WHERE id = :id;"; // SQL to delete menu
-            $this->db->runSQL($sql, [$id]); // Delete menu
+            $this->db->runSql($sql, [$id]); // Delete menu
             return true; // It worked, return true
         } catch (\PDOException $e) {
             // If exception was thrown

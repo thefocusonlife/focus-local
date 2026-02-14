@@ -16,7 +16,7 @@ class Member
         $sql = "SELECT id, website, forename, surname, email, email_master, joined, picture, role, status, account_id, photo_limit, agegroup, plan, pagelimit,sorttype,  publik, termsok
                   FROM member
                  WHERE id = :id;"; // SQL to get member
-        return $this->db->runSQL($sql, [$id])->fetch(); // Return member
+        return $this->db->runSql($sql, [$id])->fetch(); // Return member
     }
 
     // Get details of all members
@@ -24,7 +24,7 @@ class Member
     {
         $sql = "SELECT id, website, forename, surname, email, email_master, joined, picture, role, status, account_id, photo_limit, agegroup, plan, pagelimit,sorttype,  publik, termsok
                   FROM member;"; // SQL to get all members
-        return $this->db->runSQL($sql)->fetchAll(); // Return all members
+        return $this->db->runSql($sql)->fetchAll(); // Return all members
     }
     // Get details of all members by website
     public function getAll2(int $id): array
@@ -33,7 +33,7 @@ class Member
         $sql = "SELECT id, website, forename, surname, email, email_master, joined, picture, role, status, account_id, photo_limit, agegroup, plan, pagelimit,sorttype,  publik, termsok
                   FROM member
                   WHERE website = :id;"; // SQL to get all members
-        return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return all members
+        return $this->db->runSql($sql, $arguments)->fetchAll(); // Return all members
     }
     public function getAll3(int $id): array
     {
@@ -41,7 +41,7 @@ class Member
         $sql = "SELECT id, website, forename, surname, email, email_master, joined, picture, role, status, account_id, photo_limit, agegroup, plan, pagelimit,sorttype,  publik, termsok
                   FROM member
                   WHERE account_id = :id;"; // SQL to get all members
-        return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return all members
+        return $this->db->runSql($sql, $arguments)->fetchAll(); // Return all members
     }
 
     // Get individual member data using their emailDESC
@@ -50,7 +50,7 @@ class Member
         $sql = "SELECT id
                   FROM member
                  WHERE email = :email;"; // SQL query to get member id
-        return $this->db->runSQL($sql, [$email])->fetchColumn(); // Run SQL and return member id
+        return $this->db->runSql($sql, [$email])->fetchColumn(); // Run SQL and return member id
     }
 
     //get last id
@@ -59,7 +59,7 @@ class Member
         $sql = "SELECT id
                   FROM member
                   ORDER BY id DESC;"; // SQL to get all members
-        return $this->db->runSQL($sql)->fetch(); // Return all members
+        return $this->db->runSql($sql)->fetch(); // Return all members
     }
 
     // Login: returns member data if authenticated, false if not
@@ -72,7 +72,7 @@ class Member
                  WHERE email = :email
                  AND website = :website;"; // SQL to collect member data
 
-        $member = $this->db->runSQL($sql, $arguments)->fetch(); // Run SQL
+        $member = $this->db->runSql($sql, $arguments)->fetch(); // Run SQL
         if (!$member) {
             // If no member found
             return false; // Return false
@@ -98,7 +98,7 @@ class Member
               FROM member
              WHERE email = :email;"; // SQL to collect member data
 
-        $member = $this->db->runSQL($sql, $arguments)->fetch(); // Run SQL
+        $member = $this->db->runSql($sql, $arguments)->fetch(); // Run SQL
         if (!$member) {
             // If no member found
             return false; // Return false
@@ -142,7 +142,7 @@ class Member
     {
         $sql = "SELECT COUNT(id) FROM member
                 WHERE member.account_id = $_SESSION[id];"; // SQL to count number of members
-        return $this->db->runSQL($sql)->fetchColumn(); // Run SQL and return count
+        return $this->db->runSql($sql)->fetchColumn(); // Run SQL and return count
     }
 
     // Create a new member
@@ -269,7 +269,7 @@ class Member
         try {
             $this->db->beginTransaction();
 
-            $stmt = $this->db->runSQL($sql, $params);
+            $stmt = $this->db->runSql($sql, $params);
 
             $this->db->commit();
 
@@ -393,7 +393,7 @@ class Member
         $sql = "UPDATE member
                SET picture = :picture
              WHERE id = :id;";
-        $this->db->runSQL($sql, ['id' => $id, 'picture' => $imageName]);
+        $this->db->runSql($sql, ['id' => $id, 'picture' => $imageName]);
 
         // Success
         return true;
@@ -411,7 +411,7 @@ class Member
         $sql = "UPDATE member
                    SET picture = null
                  WHERE id = :id;"; // SQL to set picture to null
-        $this->db->runSQL($sql, ['id' => $member['id']]); // Run SQL
+        $this->db->runSql($sql, ['id' => $member['id']]); // Run SQL
         return true; // Return true
     }
 
@@ -422,7 +422,7 @@ class Member
         $sql = 'UPDATE member
                    SET password = :password
                  WHERE id = :id'; // SQL to update password
-        $this->db->runSQL($sql, ['id' => $id, 'password' => $hash]); // Run SQL
+        $this->db->runSql($sql, ['id' => $id, 'password' => $hash]); // Run SQL
         return true; // Return true
     }
 
@@ -431,7 +431,7 @@ class Member
     {
         $sql = "SELECT age, agegroup
                   FROM agegroup;"; // SQL to get all agegroup records
-        return $this->db->runSQL($sql)->fetchAll(); // Return all agegroup records
+        return $this->db->runSql($sql)->fetchAll(); // Return all agegroup records
     }
 
     // Get Plans
@@ -440,7 +440,7 @@ class Member
         $sql = "SELECT id, active, name, description, photolimit, monthly, annual
                   FROM plan
                   WHERE active = 1;"; // SQL to get all plan records
-        return $this->db->runSQL($sql)->fetchAll(); // Return all plan records
+        return $this->db->runSql($sql)->fetchAll(); // Return all plan records
     }
 
     // Get photolimit
@@ -450,7 +450,7 @@ class Member
                   FROM plan
                   WHERE id = :id
                   AND active = 1;"; // SQL to get photolimit
-        return $this->db->runSQL($sql, [$id])->fetch(); // plan photolimit   /
+        return $this->db->runSql($sql, [$id])->fetch(); // plan photolimit   /
     }
 
     // Get Follow
@@ -458,6 +458,6 @@ class Member
     {
         $sql = "SELECT to_id, to_account_id, from_id, from_account_id, status, request_date, response_date
                   FROM follow;"; // SQL to get all plan records
-        return $this->db->runSQL($sql)->fetchAll(); // Return all plan records
+        return $this->db->runSql($sql)->fetchAll(); // Return all plan records
     }
 }

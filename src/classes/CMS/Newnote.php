@@ -28,7 +28,7 @@ class newnote
         $sql = "SELECT id, website, note_type, from_id, from_name, to_id, to_name, family_id, to_family_id, request, request_date, reply_date
                   FROM note
                  WHERE from_id = :id;"; // SQL to get follow
-        return $this->db->runSQL($sql, [$id])->fetch(); // Return follow
+        return $this->db->runSql($sql, [$id])->fetch(); // Return follow
     }
 
     // Get details of all notes
@@ -37,14 +37,14 @@ class newnote
         $sql = "SELECT id, website, note_type, from_id, from_name, to_id, to_name, family_id, to_family_id, request, request_date, reply_date
             FROM note
             WHERE 1";
-        return $this->db->runSQL($sql)->fetchAll(); // Return all follows
+        return $this->db->runSql($sql)->fetchAll(); // Return all follows
     }
     // Get number of notifications
     public function count(): int
     {
         $sql = "SELECT COUNT(id) FROM note
                 WHERE follow.f_id = $_SESSION[id];"; // SQL to count follows
-        return $this->db->runSQL($sql)->fetchColumn(); // Return menu count
+        return $this->db->runSql($sql)->fetchColumn(); // Return menu count
     }
     // Create a new note
     public function create(array $note): bool
@@ -58,7 +58,7 @@ class newnote
             $sql = "INSERT INTO note (website, note_type, from_id, from_name, to_id, to_name, family_id, to_family_id, allow, request)
          VALUES (:website, :note_type, :from_id, :from_name, :to_id, :to_name, :family_id, :to_family_id, :allow, :request);";
 
-            $this->db->runSQL($sql, $note); // Run SQL
+            $this->db->runSql($sql, $note); // Run SQL
 
             $this->db->commit(); // Commit transaction
             return true; // Return true

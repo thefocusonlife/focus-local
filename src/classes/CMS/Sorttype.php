@@ -21,7 +21,7 @@ class Sorttype // Define Session class
         $sql = "SELECT id, name, sorttype, filter
                   FROM sorttype
                  WHERE id = :id;"; // SQL to get sorttype
-        return $this->db->runSQL($sql, [$id])->fetch(); // Return sorttype
+        return $this->db->runSql($sql, [$id])->fetch(); // Return sorttype
     }
 
     // Get details of all sorttypes
@@ -29,7 +29,7 @@ class Sorttype // Define Session class
     {
         $sql = "SELECT id, name, sorttype, filter
                   FROM sorttype;"; // SQL to get all sorttypes
-        return $this->db->runSQL($sql)->fetchAll(); // Return all sorttypes
+        return $this->db->runSql($sql)->fetchAll(); // Return all sorttypes
     }
 
     // Get allowed sorttypes for a specific menu (menu-scoped)
@@ -46,7 +46,7 @@ class Sorttype // Define Session class
               FROM sorttype
              WHERE id = :id
              LIMIT 1;";
-        $row = $this->db->runSQL($sql, ['id' => $sorttypeId])->fetch();
+        $row = $this->db->runSql($sql, ['id' => $sorttypeId])->fetch();
         return (bool) $row;
     }
 

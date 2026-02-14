@@ -17,17 +17,17 @@ class Comment // Define Comment class
         $sql = "SELECT c.id, c.website, c.comment, c.posted, c.story_id,
                CONCAT(m.forename, ' ', m.surname) AS author, m.picture
                  FROM comment AS c
-                 JOIN member  AS m ON c.member_id = m.id 
+                 JOIN member  AS m ON c.member_id = m.id
                 WHERE c.story_id = :id;"; // SQL statement
-        return $this->db->runSQL($sql, ['id' => $id])->fetchAll(); // Execute query
+        return $this->db->runSql($sql, ['id' => $id])->fetchAll(); // Execute query
     }
 
     // Create story comment
     public function create(array $comment): bool
     {
-        $sql = "INSERT INTO comment (website,comment, story_id, member_id) 
+        $sql = "INSERT INTO comment (website,comment, story_id, member_id)
                 VALUES (:website, :comment, :story_id, :member_id);"; // SQL statement
-        $this->db->runSQL($sql, $comment); // Execute query
+        $this->db->runSql($sql, $comment); // Execute query
         return true;
     }
     // Delete comment
@@ -35,6 +35,6 @@ class Comment // Define Comment class
     {
         //: bool
         $sql = 'DELETE FROM comment WHERE story_id = :id;'; // SQL statement
-        $this->db->runSQL($sql, [$id]); // Delete comment
+        $this->db->runSql($sql, [$id]); // Delete comment
     }
 }

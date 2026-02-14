@@ -77,7 +77,7 @@ class Story
         }
 
         $sql .= 'GROUP BY 1;'; // Add GROUP BY clause
-        return $this->db->runSQL($sql, [$id])->fetch(); // Return story
+        return $this->db->runSql($sql, [$id])->fetch(); // Return story
     }
 
     /**
@@ -161,7 +161,7 @@ class Story
         $orderBy = $this->orderByForSorttype($sorttypeId);
         $sql .= " $orderBy LIMIT :limit";
 
-        return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return data
+        return $this->db->runSql($sql, $arguments)->fetchAll(); // Return data
         // SQL for story summary
     }
 
@@ -234,7 +234,7 @@ class Story
         $orderBy = $this->orderByForSorttype($sorttypeId);
         $sql .= " $orderBy LIMIT :limit";
 
-        return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return data
+        return $this->db->runSql($sql, $arguments)->fetchAll(); // Return data
         // SQL for story summary
     }
     // Get summaries of stories - Published by website
@@ -331,7 +331,7 @@ AND (m.publik = 1)";
             }
         }
 
-        return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return data
+        return $this->db->runSql($sql, $arguments)->fetchAll(); // Return data
         // SQL for story summary
     }
 
@@ -347,7 +347,7 @@ AND (m.publik = 1)";
                   OR story.published = 1 AND  story.content LIKE :term3
                   OR story.published = 1 AND story.keyword LIKE :term4;";
         // SQL to count matches
-        return $this->db->runSQL($sql, $arguments)->fetchColumn(); // Return number of matches
+        return $this->db->runSql($sql, $arguments)->fetchColumn(); // Return number of matches
     }
 
     // Get number of search matches
@@ -376,7 +376,7 @@ AND (m.publik = 1)";
                 */
 
         // SQL to count matches
-        return $this->db->runSQL($sql, $arguments)->fetchColumn(); // Return number of matches
+        return $this->db->runSql($sql, $arguments)->fetchColumn(); // Return number of matches
     }
 
     // Get story summaries of search matches
@@ -415,7 +415,7 @@ AND (m.publik = 1)";
                   ORDER BY a.id DESC
                   LIMIT :show
                   OFFSET :from;"; // SQL to get story summaries
-        return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return story summaries
+        return $this->db->runSql($sql, $arguments)->fetchAll(); // Return story summaries
     }
 
     // Get story summaries of search matches with + connector
@@ -466,7 +466,7 @@ AND (m.publik = 1)";
                      LIMIT :show
                      OFFSET :from;";
         // SQL to get story summaries
-        return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return story summaries
+        return $this->db->runSql($sql, $arguments)->fetchAll(); // Return story summaries
     }
 
     //Get Story Order
@@ -477,7 +477,7 @@ AND (m.publik = 1)";
                  WHERE a.member_id = :id
                  ORDER BY a.storyorder DESC, a.member_id
                  LIMIT 1;"; // Add GROUP BY clause
-        return $this->db->runSQL($sql, [$id])->fetch(); // Return story
+        return $this->db->runSql($sql, [$id])->fetch(); // Return story
     }
 
     // get families
@@ -486,7 +486,7 @@ AND (m.publik = 1)";
         $sql = "SELECT DISTINCT m2.id, CONCAT (m2.forename,' ',m2.surname) AS family
                 FROM member as m
                 JOIN member as m2 ON m2.id = m.account_id;";
-        return $this->db->runSQL($sql, [$id])->fetch(); // Return story
+        return $this->db->runSql($sql, [$id])->fetch(); // Return story
     }
 
     // ADMIN METHODS
@@ -495,7 +495,7 @@ AND (m.publik = 1)";
     {
         $sql = "SELECT COUNT(id) FROM story
                 WHERE story.member_id = $_SESSION[id];";
-        return $this->db->runSQL($sql)->fetchColumn(); // Return count from result set
+        return $this->db->runSql($sql)->fetchColumn(); // Return count from result set
     }
 
     // Get total story count used by member
@@ -508,7 +508,7 @@ AND (m.publik = 1)";
             FROM story
             WHERE member_id = $id;";
 
-        return $this->db->runSQL($sql)->fetchColumn();
+        return $this->db->runSql($sql)->fetchColumn();
     }
 
     // Save new story (DB only)
@@ -521,7 +521,7 @@ AND (m.publik = 1)";
             VALUES (:website, :title, :summary, :content, :menu_id, :member_id, :family_id, :image_id,
              :published, :seo_title, :storyorder, :landscape, :allow_comment, :keyword, :blog);";
 
-        $this->db->runSQL($sql, $story);
+        $this->db->runSql($sql, $story);
         return true;
     }
 
@@ -560,7 +560,7 @@ AND (m.publik = 1)";
                    blog = :blog
              WHERE id = :id;";
 
-        $this->db->runSQL($sql, $story)->rowCount();
+        $this->db->runSql($sql, $story)->rowCount();
         return true;
     }
 
@@ -568,7 +568,7 @@ AND (m.publik = 1)";
     public function delete(int $id): bool
     {
         $sql = 'DELETE FROM story WHERE id = :id;'; // SQL statement
-        $this->db->runSQL($sql, [$id]); // Delete story
+        $this->db->runSql($sql, [$id]); // Delete story
         return true; // Return true
     }
 
@@ -579,13 +579,13 @@ AND (m.publik = 1)";
         $sql = "UPDATE story
                SET image_id = NULL
              WHERE id = :story_id";
-        $this->db->runSQL($sql, ['story_id' => $story_id]);
+        $this->db->runSql($sql, ['story_id' => $story_id]);
 
         // 2. Delete the image row itself
 
         $sql = "DELETE FROM image
              WHERE id = :id";
-        $this->db->runSQL($sql, ['id' => $image_id]);
+        $this->db->runSql($sql, ['id' => $image_id]);
 
         // 3. Delete the physical file
         if ($path && file_exists($path)) {
@@ -601,7 +601,7 @@ AND (m.publik = 1)";
         $sql = "UPDATE image
                SET alt = :alt
              WHERE id = :image_id";
-        $this->db->runSQL($sql, [
+        $this->db->runSql($sql, [
             'alt' => $alt,
             'image_id' => $image_id,
         ]);

@@ -24,7 +24,7 @@ class Follow
         $sql = "SELECT f_id, from_id, to_id, from_account_id, to_account_id, status, request_date
                   FROM follow
                  WHERE f_id = :id;"; // SQL to get follow
-        return $this->db->runSQL($sql, [$id])->fetch(); // Return follow
+        return $this->db->runSql($sql, [$id])->fetch(); // Return follow
     }
 
     // Get details of all follows
@@ -33,13 +33,13 @@ class Follow
         $sql = "SELECT f_id, from_id, to_id, from_account_id, to_account_id, status, request_date
                   FROM follow
                   WHERE 1;"; // SQL to get all follows
-        return $this->db->runSQL($sql)->fetchAll(); // Return all follows
+        return $this->db->runSql($sql)->fetchAll(); // Return all follows
     }
     // Get number of follows
     public function count(): int
     {
         $sql = "SELECT COUNT(f_id) FROM follow
                 WHERE follow.f_id = $_SESSION[id];"; // SQL to count follows
-        return $this->db->runSQL($sql)->fetchColumn(); // Return menu count
+        return $this->db->runSql($sql)->fetchColumn(); // Return menu count
     }
 }

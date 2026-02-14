@@ -29,7 +29,7 @@ class Note
         $sql = "SELECT id, website, note_type, from_id, from_name, to_id, to_name, family_id, to_family_id, request,allow, request_date, reply_date
                   FROM note
                  WHERE from_id = :id;"; // SQL to get follow
-        return $this->db->runSQL($sql, $id)->fetch(); // Return follow
+        return $this->db->runSql($sql, $id)->fetch(); // Return follow
     }
     public function getById(int $id)
     {
@@ -37,7 +37,7 @@ class Note
         $sql = "SELECT id, website, note_type, from_id, from_name, to_id, to_name, family_id, to_family_id,  request,allow, request_date, reply_date
                 FROM note
                 WHERE id = :id"; // SQL to get note by primary index
-        return $this->db->runSQL($sql, $arguments)->fetch(); // Return member
+        return $this->db->runSql($sql, $arguments)->fetch(); // Return member
     }
     // Get details of all follows
     public function getAllTo(int $id): array
@@ -47,7 +47,7 @@ class Note
             FROM note
             WHERE (to_id = :id)
             ORDER BY request_date DESC; "; // SQL to get all notes for a to_id Descinding
-        return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return all follows
+        return $this->db->runSql($sql, $arguments)->fetchAll(); // Return all follows
     }
     // Get details of all follows
     public function getAllFrom(int $id): array
@@ -58,7 +58,7 @@ class Note
         FROM note
         WHERE (from_id = :id)
         ORDER BY request_date DESC; "; // SQL to get all notes for a from_id  Descending
-        return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return all follows
+        return $this->db->runSql($sql, $arguments)->fetchAll(); // Return all follows
     }
 
     // Get number of notifications
@@ -66,7 +66,7 @@ class Note
     {
         $sql = "SELECT COUNT(id) FROM note
                 WHERE follow.f_id = $_SESSION[id];"; // SQL to count follows by Session_id
-        return $this->db->runSQL($sql)->fetchColumn(); // Return menu count
+        return $this->db->runSql($sql)->fetchColumn(); // Return menu count
     }
     // Get details of all follows
     public function getAll(int $id): array
@@ -76,7 +76,7 @@ class Note
         $sql = "SELECT id, website, note_type, from_id, from_name, to_id, to_name, family_id, to_family_id, request, allow, request_date, reply_date
         FROM note
         WHERE 1";
-        return $this->db->runSQL($sql, $arguments)->fetchAll(); // Return all follows
+        return $this->db->runSql($sql, $arguments)->fetchAll(); // Return all follows
     }
 
     public function update(array $note): bool
@@ -91,7 +91,7 @@ class Note
                        WHERE id = :id;"; // SQL statement
 
             $arguments = $note;
-            $this->db->runSQL($sql, $arguments)->rowCount(); // Update Note
+            $this->db->runSql($sql, $arguments)->rowCount(); // Update Note
             $this->db->commit(); // Commit transaction
             return true; // Update worked
         } catch (\PDOException $e) {
@@ -117,7 +117,7 @@ class Note
             $this->db->beginTransaction(); // Start
             $sql = "INSERT INTO note (website, note_type, from_id, from_name, to_id, to_name, family_id, to_family_id, allow, request)
          VALUES (:website, :note_type, :from_id, :from_name, :to_id, :to_name, :family_id, :to_family_id, :allow, :request);";
-            $this->db->runSQL($sql, $note); // SQL to add new note
+            $this->db->runSql($sql, $note); // SQL to add new note
             $this->db->commit(); // Commit ransaction
             return true; // Return true
         } catch (\PDOException $e) {
@@ -138,7 +138,7 @@ class Note
             // Try to delete note
             $sql = "DELETE FROM note
              WHERE id = :id;"; // SQL to delete note
-            $this->db->runSQL($sql, [$id]); // Delete note
+            $this->db->runSql($sql, [$id]); // Delete note
             return true; // It worked, return true
         } catch (\PDOException $e) {
             // If exception was thrown

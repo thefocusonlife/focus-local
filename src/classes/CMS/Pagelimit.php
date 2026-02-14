@@ -20,7 +20,7 @@ class Pagelimit // Define Session class
         $sql = "SELECT id, name, amount
                   FROM pagelimit
                  WHERE id = :id;"; // SQL to get pagelimit
-        return $this->db->runSQL($sql, [$id])->fetch(); // Return pagelimit
+        return $this->db->runSql($sql, [$id])->fetch(); // Return pagelimit
     }
 
     // Get details of all sorttypes
@@ -29,6 +29,6 @@ class Pagelimit // Define Session class
         $sql = "SELECT id, name, amount
                   FROM pagelimit;"; // SQL to get all pagelimits
 
-        return $this->db->runSQL($sql)->fetchAll(); // Return all pagelimits
+        return $this->db->runSql($sql)->fetchAll(); // Return all pagelimits
     }
 }

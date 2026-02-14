@@ -161,19 +161,19 @@ class CMS
     {
         // menu_sorttype mapping removed; pick a safe default
         // Prefer 1 if present
-        $row = $this->db->runSQL('SELECT 1 FROM sorttype WHERE id = 1 LIMIT 1;')->fetch();
+        $row = $this->db->runSql('SELECT 1 FROM sorttype WHERE id = 1 LIMIT 1;')->fetch();
         if ($row) {
             return 1;
         }
 
         // Next, prefer 9 if present (your old fallback)
-        $row = $this->db->runSQL('SELECT 1 FROM sorttype WHERE id = 9 LIMIT 1;')->fetch();
+        $row = $this->db->runSql('SELECT 1 FROM sorttype WHERE id = 9 LIMIT 1;')->fetch();
         if ($row) {
             return 9;
         }
 
         // Ultimate fallback: smallest id available
-        $row = $this->db->runSQL('SELECT id FROM sorttype ORDER BY id ASC LIMIT 1;')->fetch();
+        $row = $this->db->runSql('SELECT id FROM sorttype ORDER BY id ASC LIMIT 1;')->fetch();
         return $row && isset($row['id']) ? (int) $row['id'] : 1;
     }
 
