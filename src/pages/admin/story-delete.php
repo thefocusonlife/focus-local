@@ -23,7 +23,9 @@ if ($storyId <= 0) {
 }
 
 // Load story (use your real getter; keep false if you need drafts/unpublished)
-$story = $cms->getStory()->get($storyId, false);
+$websiteId = (int) ($_SESSION['website'] ?? 0);
+$story = $cms->getStory()->getForWebsite($storyId, $websiteId, false);
+
 if (!$story || !isset($story['id'])) {
     redirect('admin/stories/', ['failure' => 'Story not found']);
 }
@@ -50,7 +52,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $cms->getComment()->delete($storyId);
 
     // Delete story
-    $cms->getStory()->delete($storyId);
+    $cms->getStory()->deleteForWebsite($storyId, $websiteId);
 
     redirect('admin/stories/', ['success' => 'Story deleted']);
 }

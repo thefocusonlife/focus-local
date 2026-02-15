@@ -1,6 +1,19 @@
 <?php
 declare(strict_types=1);
 include APP_ROOT . '/src/pages/menu-path.php'; // menu-path include
+require_once APP_ROOT . '/src/tenancy/website_context.php';
+
+[$websiteId, $website] = resolveWebsiteId(
+    $cms,
+    $parts ?? [],
+    $_SESSION,
+    $_COOKIE,
+    $_GET,
+    null,
+    1, // default to 1 for public pages (adjust if you prefer 0 + redirect)
+    'tfol_tid',
+    true,
+);
 
 // Resolve website id safely
 $websiteId = (int) ($id ?? 0);

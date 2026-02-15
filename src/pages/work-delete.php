@@ -22,8 +22,20 @@ if ($storyId <= 0) {
 }
 
 // Load story (false = include unpublished/drafts? keep your existing behavior)
-$story = $cms->getStory()->get($storyId, false);
+$websiteId = (int) ($_SESSION['website'] ?? 0);
+if ($websiteId <= 0) {
+    include APP_ROOT . '/src/pages/page-not-found.php';
+    exit();
+}
+
+$story = $cms->getStory()->getForWebsite($storyId, (int) $_SESSION['website']);
+
 if (!$story || !isset($story['id'])) {
+    include APP_ROOT . '/src/pages/page-not-found.php';
+    exit();
+}
+
+if ((int) ($story['website'] ?? 0) !== $websiteId) {
     include APP_ROOT . '/src/pages/page-not-found.php';
     exit();
 }
@@ -64,7 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // 3) Delete story
-    $cms->getStory()->delete($storyId);
+    $cms->getStory()->deleteForWebsite($storyId, (int) $_SESSION['website']);
 
     redirect('member/' . $sessionId . '/', ['success' => 'Story deleted']);
 }

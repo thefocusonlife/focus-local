@@ -72,18 +72,25 @@ class Menu
     }
     public function getAll2(?int $website, ?int $account_id): array
     {
-        $website = (int) ($website ?? 1);
+        $website = (int) ($website ?? 0);
         $account_id = (int) ($account_id ?? 0);
 
-        $arguments['website'] = $website;
-        $arguments['account_id'] = $account_id;
+        if ($website <= 0 || $account_id <= 0) {
+            return [];
+        }
 
         $sql = "SELECT id, website, name, navigation, account_id, seo_name, position
               FROM menu
-             WHERE website = :website AND account_id = :account_id
+             WHERE website = :website
+               AND account_id = :account_id
              ORDER BY website, account_id ASC, position ASC;";
 
-        return $this->db->runSql($sql, $arguments)->fetchAll();
+        return $this->db
+            ->runSql($sql, [
+                'website' => $website,
+                'account_id' => $account_id,
+            ])
+            ->fetchAll();
     }
 
     public function getForWebsite(int $menuId, int $websiteId): ?array
@@ -92,17 +99,20 @@ class Menu
             return null;
         }
 
-        $sql = "SELECT *
-            FROM menu
-            WHERE id = :id AND website = :website
-            LIMIT 1";
+        $sql = "SELECT id, default_sorttype_id, master_id, website, name, description, navigation,
+                   account_id, seo_name, position
+              FROM menu
+             WHERE id = :id
+               AND website = :website
+             LIMIT 1";
 
-        $stmt = $this->db->runSql($sql, [
-            'id' => $menuId,
-            'website' => $websiteId,
-        ]);
+        $row = $this->db
+            ->runSql($sql, [
+                'id' => $menuId,
+                'website' => $websiteId,
+            ])
+            ->fetch();
 
-        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
         return $row ?: null;
     }
 
@@ -269,23 +279,28 @@ class Menu
     }
 
     // Delete existing menu
-    public function delete(int $id): bool
+    public function deleteForWebsite(int $id, int $websiteId): bool
     {
+        if ($id <= 0 || $websiteId <= 0) {
+            return false;
+        }
+
         try {
-            // Try to delete menu
             $sql = "DELETE FROM menu
-                 WHERE id = :id;"; // SQL to delete menu
-            $this->db->runSql($sql, [$id]); // Delete menu
-            return true; // It worked, return true
+                WHERE id = :id
+                  AND website = :website
+                LIMIT 1";
+            $stmt = $this->db->runSql($sql, [
+                'id' => $id,
+                'website' => $websiteId,
+            ]);
+
+            return $stmt->rowCount() === 1;
         } catch (\PDOException $e) {
-            // If exception was thrown
-            if ($e->errorInfo[1] === 1451) {
-                // If error is integrity constraint
-                return false; // Return false indicating stories exist in this menu
-            } else {
-                // If any other exception
-                throw $e; // Re-throw exception
+            if (($e->errorInfo[1] ?? null) === 1451) {
+                return false;
             }
+            throw $e;
         }
     }
 }

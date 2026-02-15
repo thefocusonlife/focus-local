@@ -10,8 +10,13 @@ if (!$id) {
 $sessionId = (int) ($_SESSION['id'] ?? 0);
 $sessionWebsiteId = (int) ($_SESSION['website'] ?? 0);
 
-// Current website context (prefer $website['id'] if you already loaded it)
+// Prefer already-loaded $website['id'] else session
 $websiteId = (int) ($website['id'] ?? $sessionWebsiteId);
+
+if ($websiteId <= 0) {
+    include APP_ROOT . '/src/pages/page-not-found.php';
+    exit();
+}
 
 // Menu owner for navigation + slug lookups
 $isGuest = empty($_SESSION) || $sessionId === 2;
@@ -29,18 +34,14 @@ $menu = null;
 // Fall back to website+slug lookup (ignores account_id) to allow read-only viewing.
 
 if ($maybeSlugOrId !== '' && !ctype_digit($maybeSlugOrId)) {
-    $menu = $cms->getMenu()->getBySlug((int) $website['id'], (int) $menuOwnerId, $maybeSlugOrId);
+    $menu = $cms->getMenu()->getBySlug($websiteId, (int) $menuOwnerId, $maybeSlugOrId);
 
     if (!$menu) {
-        $menu = $cms->getMenu()->getBySlugAnyAccount((int) $website['id'], $maybeSlugOrId);
-    }
-
-    if (!$menu) {
-        $menu = $cms->getMenu()->getBySlugAnyAccount(1, $maybeSlugOrId);
+        $menu = $cms->getMenu()->getBySlugAnyAccount($websiteId, $maybeSlugOrId);
     }
 } else {
     $menuId = (int) ($id ?? 0);
-    $menu = $cms->getMenu()->get($menuId);
+    $menu = $cms->getMenu()->getForWebsite($menuId, $websiteId);
 }
 
 if (!$menu) {
@@ -61,11 +62,6 @@ $menuId = (int) ($menu['id'] ?? 0);
 $storyMenuId = $masterMenuId > 0 ? $masterMenuId : $menuId;
 $storyWebsiteId = $menuAccountId === 1 ? 1 : $uiWebsiteId;
 
-// Keep session website aligned to the UI website (never the story source website)
-if ($uiWebsiteId > 0) {
-    $_SESSION['website'] = $uiWebsiteId;
-}
-
 $menuDefaultSorttypeId = (int) ($menu['default_sorttype_id'] ?? 0);
 
 // Canonical menu id (global category)
@@ -77,10 +73,9 @@ $canonicalMenuId = $masterMenuId > 0 ? $masterMenuId : $menuId;
 $websiteId = (int) ($menu['website'] ?? (int) ($_SESSION['website'] ?? 1));
 $website = $cms->getWebsite()->getById($websiteId);
 if (!$website) {
-    $websiteId = 1;
-    $website = $cms->getWebsite()->getById(1);
+    include APP_ROOT . '/src/pages/page-not-found.php';
+    exit();
 }
-$_SESSION['website'] = (int) $website['id']; // safe for guests
 
 // Logged-in member (read-only)
 $member = null;

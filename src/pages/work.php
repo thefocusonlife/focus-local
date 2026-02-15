@@ -78,6 +78,18 @@ if ($sessionMemberId <= 0 || $sessionMemberId === 2) {
     exit();
 }
 
+$websiteId = (int) ($_SESSION['website'] ?? 0);
+if ($websiteId <= 0) {
+    include APP_ROOT . '/src/pages/page-not-found.php';
+    exit();
+}
+
+$website = $cms->getWebsite()->getById($websiteId);
+if (!$website) {
+    include APP_ROOT . '/src/pages/page-not-found.php';
+    exit();
+}
+
 if ($id > 0) {
     $story = $cms->getStory()->get($id, false);
 
@@ -112,6 +124,21 @@ if ($id > 0) {
     $story['member_id'] = $sessionMemberId;
 }
 
+$storyWebsiteId = (int) ($story['website'] ?? 0);
+
+if ($storyWebsiteId > 0 && $storyWebsiteId !== (int) $websiteId) {
+    // Switch tenant context to the story's website
+    $_SESSION['website'] = $storyWebsiteId;
+
+    // Persist cookie (matches website_context.php signature)
+    require_once APP_ROOT . '/src/tenancy/website_context.php';
+    setWebsiteCookie('tfol_tid', $storyWebsiteId);
+
+    // Update locals
+    $websiteId = $storyWebsiteId;
+    $website = $cms->getWebsite()->getById($websiteId) ?: [];
+}
+
 //user's id from session
 //if ($id === 0) {
 if ($sessionMemberId === 0) {
@@ -141,7 +168,7 @@ if ($story['id'] == false) {
     $photocount = intval($cms->getStory()->used($story['member_id']));
 }
 
-$website = $cms->getwebsite()->getById($_SESSION['website']) ?? 1;
+$story['website'] = (int) ($_SESSION['website'] ?? 0);
 
 if (empty($_SESSION) or $_SESSION['id'] == 2) {
     if ($website['id'] > 1 and $website['non_members'] == 0) {
@@ -160,7 +187,7 @@ if ($story['storyorder'] < 1) {
         $storyorder = intval($story['storyorder']);
     }
 }
-$website = $cms->getwebsite()->getById($_SESSION['website']) ?? 1;
+$story['website'] = (int) ($_SESSION['website'] ?? 0);
 
 if (empty($storyorder)) {
     $story['storyorder'] = 1;

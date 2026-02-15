@@ -24,6 +24,8 @@ if (!defined('APP_ROOT')) {
 require_once APP_ROOT . '/src/bootstrap.php';
 require_once APP_ROOT . '/src/services/AnonIdService.php';
 require_once APP_ROOT . '/src/Infrastructure/AppLogger.php';
+require_once APP_ROOT . '/src/lib/debug.php';
+
 use App\Infrastructure\AppLogger;
 
 $traceId = null;
@@ -95,7 +97,7 @@ function route_log(string $trace, string $msg): void
         error_log("[$trace] $msg");
     }
 }
-
+$logWebsiteId = (int) ($_SESSION['website'] ?? ($_SESSION['website_id'] ?? 0));
 // ------------------------------------------------------------
 // Parse request path
 // ------------------------------------------------------------
@@ -103,7 +105,7 @@ $uriPath = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 
 AppLogger::log('info', 'request', [
     'trace_id' => $traceId,
-    'website_id' => $_SESSION['website_id'] ?? 1,
+    'website_id' => $logWebsiteId,
     'route' => $uriPath,
     'controller' => 'front-controller', // will be improved later once dispatch resolves
     'method' => $_SERVER['REQUEST_METHOD'] ?? 'GET',
@@ -159,6 +161,7 @@ if ($page === '') {
 // Website context capture (based on your routing convention)
 if (in_array($page, ['index', 'login', 'register'], true) && !empty($id)) {
     $_SESSION['website_id'] = (int) $id;
+    $_SESSION['website'] = $id; // <-- IMPORTANT: bridge for legacy controllers
 }
 
 route_log($trace, "uriPath=$uriPath base=$base path=$path page=$page id=$id");
@@ -189,7 +192,7 @@ if (count($parts) > 1) {
         if (is_file($nestedDirIndex)) {
             AppLogger::log('info', 'dispatch', [
                 'trace_id' => $traceId,
-                'website_id' => $_SESSION['website_id'] ?? 1,
+                'website_id' => $logWebsiteId,
                 'route' => $uriPath,
                 'controller' => $nestedDirIndex,
                 'id' => $id ?? null,
@@ -207,7 +210,7 @@ if (count($parts) > 1) {
         if (is_file($nestedFlat)) {
             AppLogger::log('info', 'dispatch', [
                 'trace_id' => $traceId,
-                'website_id' => $_SESSION['website_id'] ?? 1,
+                'website_id' => $logWebsiteId,
                 'route' => $uriPath,
                 'controller' => $nestedFlat,
                 'id' => $id ?? null,
@@ -233,7 +236,7 @@ if (count($parts) > 1) {
 if (is_file($candidateDirIndex)) {
     AppLogger::log('info', 'dispatch', [
         'trace_id' => $traceId,
-        'website_id' => $_SESSION['website_id'] ?? 1,
+        'website_id' => $logWebsiteId,
         'route' => $uriPath,
         'controller' => $candidateDirIndex,
         'page' => $page,
@@ -250,7 +253,7 @@ if (is_file($candidateDirIndex)) {
 if (is_file($candidateFlat)) {
     AppLogger::log('info', 'dispatch', [
         'trace_id' => $traceId,
-        'website_id' => $_SESSION['website_id'] ?? 1,
+        'website_id' => $logWebsiteId,
         'route' => $uriPath,
         'controller' => $candidateFlat,
         'page' => $page,
@@ -269,7 +272,7 @@ if (is_file($candidateFlat)) {
 // ------------------------------------------------------------
 AppLogger::log('warn', 'route.not_found', [
     'trace_id' => $traceId,
-    'website_id' => $_SESSION['website_id'] ?? 1,
+    'website_id' => $logWebsiteId,
     'route' => $uriPath,
     'page' => $page,
     'id' => $id ?? null,

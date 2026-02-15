@@ -110,7 +110,8 @@ $data['navigation'] = $cms->getMenu()->getAll2($websiteId, $ownerId);
 //  - else => ownerId stories (follow)
 // ------------------------------------------------------------
 if ($viewerId === 1) {
-    $data['stories'] = $cms->getStory()->getAll(true, null, null); // Uber only
+    $websiteId = (int) ($_SESSION['website'] ?? 0);
+    $data['stories'] = $cms->getStory()->getAll($websiteId, null, null);
 } elseif (!empty($parts[2]) && (int) $parts[2] === 1) {
     $data['stories'] = $cms->getStory()->getAll3($websiteId, true, null, null);
 } else {

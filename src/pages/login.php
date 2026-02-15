@@ -1,53 +1,39 @@
 <?php
-declare(strict_types=1); // Use strict types
-use PhpBook\Validate\Validate; // Import Validate class
+declare(strict_types=1);
+
+use PhpBook\Validate\Validate;
 
 require_once __DIR__ . '/../../config/recaptcha.php';
+require_once APP_ROOT . '/src/security/redirects.php';
+require_once APP_ROOT . '/src/tenancy/website_context.php';
+
+// (Optional, if you created it already)
+//require_once APP_ROOT . '/src/lib/debug.php';
 
 // ----------------------------
-// Resolve website context
+// Tenant context (website)
 // ----------------------------
-$websiteId = (int) ($parts[1] ?? 0);
+[$websiteId, $website] = resolveWebsiteId(
+    cms: $cms,
+    parts: $parts,
+    session: $_SESSION,
+    cookie: $_COOKIE,
+    get: $_GET,
+    email: null, // only allow email override on POST
+    defaultWebsiteId: 0, // force redirect if missing
+    cookieName: 'tfol_tid',
+    persist: true,
+);
+
 if ($websiteId <= 0) {
-    $websiteId = (int) ($_SESSION['website'] ?? 1);
-}
-$_SESSION['website'] = $websiteId;
-
-// Fetch website using the method that works in select-website.php
-$website = $cms->getWebsite()->get($websiteId);
-
-// Fail fast if invalid
-if (empty($website) || empty($website['id'])) {
-    error_log('[LOGIN REDIRECT] line=' . __LINE__ . ' to=' . $target);
-
-    // Resolve website id from route, then session fallback
-    $websiteId = (int) ($parts[1] ?? 0);
-    if ($websiteId <= 0) {
-        $websiteId = (int) ($_SESSION['website'] ?? 1);
-    }
-    if ($websiteId <= 0) {
-        $websiteId = 1;
-    }
-    $_SESSION['website'] = $websiteId;
-
-    // Fetch website using the method you know works (select-website.php uses get())
-    $website = $cms->getWebsite()->get($websiteId);
-
-    // Fail fast (once)
-    if (empty($website) || empty($website['id'])) {
-        redirect('index/1', ['failure' => 'Website not found.']);
-        exit();
-    }
-
+    redirect('index/1', ['failure' => 'Website context missing.']);
     exit();
 }
 
-// Guest context for login page navigation menus
-$mem = 0;
-
-$role = $_SESSION['role'] ?? 'guest';
-
-// Only redirect away from login if the user is truly logged in (non-guest role)
+// ----------------------------
+// Redirect away if already logged in
+// ----------------------------
+$role = (string) ($_SESSION['role'] ?? 'guest');
 if ($role !== 'guest') {
     $sid = (int) ($_SESSION['id'] ?? 0);
     if ($sid > 0) {
@@ -56,88 +42,99 @@ if ($role !== 'guest') {
     }
 }
 
-// If form has not been submitted yet, load the website info
-// Pick website context safely on GET
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    // $id comes from router (/login/{id}) but may be missing on /login
-    $websiteId = (int) ($id ?? 0);
+// ----------------------------
+// Init view vars
+// ----------------------------
+$email = '';
+$errors = [];
+$success = $_GET['success'] ?? null;
 
-    if ($websiteId <= 0) {
-        $websiteId = (int) ($_SESSION['website'] ?? 1);
+// ----------------------------
+// POST handler
+// ----------------------------
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $email = (string) ($_POST['email'] ?? '');
+    $password = (string) ($_POST['password'] ?? '');
+    // --- Website-email suffix routing (e.g. user@gmail.com16) ---
+    $emailWebsiteId = extractWebsiteIdFromWebsiteEmail($email);
+
+    if ($emailWebsiteId !== null && $emailWebsiteId !== (int) $websiteId) {
+        // Validate target website exists
+        $targetWebsite = $cms->getWebsite()->getById($emailWebsiteId);
+        if (empty($targetWebsite) || empty($targetWebsite['id'])) {
+            $errors['message'] = 'Website not found for that login email.';
+        } else {
+            // Switch tenant context NOW (before login2)
+            $websiteId = (int) $targetWebsite['id'];
+            $website = $targetWebsite;
+
+            $_SESSION['website'] = $websiteId;
+            setWebsiteCookie('tfol_tid', $websiteId);
+
+            // If you have any tenant-specific initialization beyond $website,
+            // do it here (DB schema switch, config, etc.)
+            // TenantContext::init($websiteId);
+        }
     }
-    if ($websiteId <= 0) {
-        $websiteId = 1;
+
+    // Never trust posted website; allow mismatch if we re-resolved via email suffix
+    $postedWebsiteId = (int) ($_POST['website'] ?? 0);
+    if (
+        $postedWebsiteId > 0 &&
+        $postedWebsiteId !== (int) $website['id'] &&
+        $emailWebsiteId === null
+    ) {
+        $errors['message'] = 'Invalid website context.';
     }
 
-    $website = $cms->getWebsite()->getById($websiteId);
-}
-
-$email = ''; // Initialize email variable
-$errors = []; // Initialize errors
-$success = $_GET['success'] ?? null; // Get success message
-
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // If form submitted
-    $email = $_POST['email']; // Get email address
-    $password = $_POST['password']; // Get password
-    $website_id = intval($_POST['website']);
     // -----------------------------
-    // reCAPTCHA v3 verification
+    // reCAPTCHA v3 verification (fail-fast)
     // -----------------------------
+    if (empty($errors['message'])) {
+        $recaptchaToken = (string) ($_POST['g-recaptcha-response'] ?? '');
+        if ($recaptchaToken === '') {
+            $errors['message'] =
+                'Security check token missing. Please refresh the page and try again.';
+        } else {
+            $secretKey = (string) ($config['recaptcha_secret_key'] ?? '');
+            if (!verify_recaptcha_v3($recaptchaToken, 'login', $secretKey, 0.1)) {
+                $errors['message'] = 'Login failed security check. Please try again.';
+            }
+        }
+    }
 
-    $recaptchaToken = $_POST['g-recaptcha-response'] ?? '';
-    // error_log('LOGIN recaptcha token: ' . substr($recaptchaToken, 0, 40));
+    // Validate email/password (only if security passed)
+    if (empty($errors['message'])) {
+        $errors['email'] = Validate::isEmail($email) ? '' : 'Please enter a valid email address';
 
-    if (empty($recaptchaToken)) {
-        // Front-end didn't provide a token at all
-        $errors['warning'] = 'Security check token missing. Please refresh the page and try again.';
-    } else {
-        $secretKey = $config['recaptcha_secret_key'] ?? '';
-
-        // Use a slightly lower threshold for login to reduce false negatives
-        if (!verify_recaptcha_v3($recaptchaToken, 'login', $secretKey, 0.1)) {
-            // reCAPTCHA failed – do NOT attempt login
-            $errors['message'] = 'Login failed security check. Please try again.';
-        } // end verify_recaptcha_v3()
-    } // end empty token check
-
-    // Validate email and password
-    $errors['email'] = Validate::isEmail($email) ? '' : 'Please enter a valid email address';
-
-    $errors['password'] = Validate::isPassword($password)
-        ? ''
-        : 'Passwords must be at least 8 characters and have:<br>
+        $errors['password'] = Validate::isPassword($password)
+            ? ''
+            : 'Passwords must be at least 8 characters and have:<br>
                 A lowercase letter<br>An uppercase letter<br>A number
                 <br>And a special character';
 
-    $invalid = implode($errors);
+        $invalid = implode($errors);
+        if ($invalid) {
+            $errors['message'] = 'Please try again.';
+        }
+    }
 
-    if ($invalid) {
-        // If data is not valid
-        $errors['message'] = 'Please try again.'; // Store error message
-    } else {
-        $member = $cms->getMember()->login2($email, $password); // Get member details
+    // Attempt login
+    if (empty($errors['message'])) {
+        $member = $cms->getMember()->login2($email, $password);
 
         if (empty($member)) {
-            $w = $cms->getWebsite()->getById($website_id);
-            $errors['message'] = 'This email not valid for ' . $w['name'];
-        } elseif ($member && $member['status'] == 'suspended') {
-            // If member is suspended
-            $errors['message'] = 'Account suspended'; // Store message
-        } elseif ($member && $member['status'] == 'pending') {
-            // If member is pending
+            $errors['message'] = 'Invalid email or password.';
+        } elseif (($member['status'] ?? '') === 'suspended') {
+            $errors['message'] = 'Account suspended';
+        } elseif (($member['status'] ?? '') === 'pending') {
             $errors['message'] =
-                'Membership pending. Use Contact Us to inquire about your registration.'; // Store message
-        } elseif ($member) {
-            // Get website for this member (or fallback to 1)
-            $websiteId = isset($member['website'])
-                ? (int) $member['website']
-                : (int) ($_SESSION['website'] ?? 1);
-
-            $website = $cms->getWebsite()->getById($websiteId);
-
-            if (empty($website) || empty($website['id'])) {
-                $errors['message'] = 'Website not found.';
+                'Membership pending. Use Contact Us to inquire about your registration.';
+        } else {
+            // Enforce tenant membership (no fallback)
+            $memberWebsiteId = (int) ($member['website'] ?? 0);
+            if ($memberWebsiteId <= 0 || $memberWebsiteId !== (int) $website['id']) {
+                $errors['message'] = 'This email not valid for ' . (string) $website['name'];
             } else {
                 // ✅ SUCCESS: create session
                 $cms->getSession()->create($member, (int) $website['id']);
@@ -146,51 +143,32 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $returnTo = $_SESSION['return_to'] ?? '';
                 unset($_SESSION['return_to']);
 
-                // Allow only local absolute paths to avoid open redirects
                 if (is_string($returnTo) && $returnTo !== '' && str_starts_with($returnTo, '/')) {
-                    redirect(ltrim($returnTo, '/')); // your redirect() likely expects no leading slash
+                    redirect(ltrim($returnTo, '/'));
                     exit();
                 }
 
-                // Safe fallback: member home OR index/{website}
-                // If you prefer member home as default, keep this:
                 redirect('member/' . (int) $member['id']);
-                // Alternative safer “always works” fallback:
-                // redirect('index/' . (int) $website['id']);
                 exit();
             }
         }
     }
 }
 
-// Website context for this page
-//$$websiteId = (int) ($id ?? ($_SESSION['website'] ?? 1));
-//$websiteId = (int) ($id ?? ($_SESSION['website'] ?? 1));
-$website = $cms->getWebsite()->getById($websiteId);
-
-if (empty($website) || empty($website['id'])) {
-    redirect('index/1', ['failure' => 'Website not found.']);
-    exit();
-}
-
-// Session/member context for navigation
+// ----------------------------
+// Navigation context
+// ----------------------------
 $sessionId = (int) ($_SESSION['id'] ?? 0);
 
 if ($sessionId === 2 || $sessionId === 0) {
-    // Guest-ish: no member row
-    $member = 0;
-    $mem = 1; // safest default account_id for menus; adjust if your public menus use a different account
+    $memberRow = null;
+    $mem = 1; // default account id for public menus (UberAdmin/shared)
 } else {
-    $member = $cms->getMember()->get($sessionId);
-    if (!$member) {
-        // session is stale; treat as guest
-        $member = 0;
-        $mem = 1;
-    } else {
-        $mem = (int) $member['account_id'];
-    }
+    $memberRow = $cms->getMember()->get($sessionId);
+    $mem = $memberRow ? (int) ($memberRow['account_id'] ?? 1) : 1;
 }
 
+$data = [];
 $data['navigation'] = $cms->getMenu()->getAll2((int) $website['id'], (int) $mem);
 $data['success'] = $success;
 $data['email'] = $email;

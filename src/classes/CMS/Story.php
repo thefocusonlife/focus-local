@@ -67,7 +67,8 @@ class Story
                           FROM comment
                          WHERE comment.story_id = a.id) AS comments
                   FROM story    AS a
-                  JOIN menu   AS c ON a.menu_id = c.id
+                  LEFT JOIN menu AS c ON a.menu_id = c.id and c.website = a.website
+
                   JOIN member     AS m ON a.member_id   = m.id
                   LEFT JOIN image AS i ON a.image_id    = i.id
                  WHERE a.id = :id "; // SQL statement
@@ -78,6 +79,49 @@ class Story
 
         $sql .= 'GROUP BY 1;'; // Add GROUP BY clause
         return $this->db->runSql($sql, [$id])->fetch(); // Return story
+    }
+
+    public function getForWebsite(int $id, int $websiteId, bool $published): ?array
+    {
+        if ($id <= 0 || $websiteId <= 0) {
+            return null;
+        }
+
+        $sql = "SELECT a.id, a.website, a.title, a.summary, a.content, a.created, a.menu_id, a.member_id,
+                   a.family_id, a.published, a.seo_title, a.storyorder, a.landscape, a.allow_comment,
+                   a.keyword, a.blog,
+                   c.name AS menu,
+                   c.seo_name AS seo_menu,
+                   m.forename, m.surname,
+                   CONCAT(m.forename, ' ', m.surname) AS author,
+                   i.id   AS image_id,
+                   i.file AS image_file,
+                   i.alt  AS image_alt,
+                   (SELECT COUNT(story_id) FROM likes   WHERE likes.story_id   = a.id) AS likes,
+                   (SELECT COUNT(story_id) FROM comment WHERE comment.story_id = a.id) AS comments
+              FROM story AS a
+              LEFT JOIN menu AS c ON a.menu_id = c.id and c.website = a.website
+
+              JOIN member AS m ON a.member_id = m.id
+              LEFT JOIN image AS i ON a.image_id = i.id
+             WHERE a.id = :id
+               AND a.website = :website ";
+
+        if ($published) {
+            $sql .= 'AND a.published = 1 ';
+        }
+
+        $sql .= "GROUP BY a.id
+             LIMIT 1;";
+
+        $row = $this->db
+            ->runSql($sql, [
+                'id' => $id,
+                'website' => $websiteId,
+            ])
+            ->fetch();
+
+        return $row ?: null;
     }
 
     /**
@@ -91,78 +135,80 @@ class Story
         return $row ?: null;
     }
 
-    // Get summaries of stories - published only
     public function getAll(
-        $published = null,
-        $menu = null,
-        $member = null,
-        $limit = 300,
+        int $websiteId,
+        ?int $menu = null,
+        ?int $member = null,
+        int $limit = 300,
         ?int $sorttypeId = null,
     ): array {
-        // Setup file
-        $path = mb_strtolower(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/');
-        $path = substr($path, strlen(DOC_ROOT)); // Remove up to DOC_ROOT
-        $path = trim($path, '/');
-        $parts = explode('/', $path); // Split into array at /
-
-        if ($parts[0] != 'admin') {
-            // If an admin page
-            $page = $parts[0] ?: 'index'; // Page name (or use index)
-            $id = $parts[1] ?? null; // Get ID (or use null)
-        } else {
-            // If not an admin page
-            $page = 'admin/' . ($parts[1] ?? ''); // Page name
-            $id = $parts[2] ?? null; // Get ID
+        $websiteId = (int) $websiteId;
+        if ($websiteId <= 0) {
+            return [];
         }
-        // Validate ID
 
-        //$php_page = APP_ROOT . '/src/pages/' . $page . '.php';       // Path to PHP page
+        $menu = $menu !== null ? (int) $menu : null;
+        $member = $member !== null ? (int) $member : null;
 
-        $arguments['menu'] = $arguments['menu1'] = $menu; // Menu id
-        $arguments['member'] = $arguments['member1'] = $member; // Author id
-        if (empty($_SESSION['pagelimit'])) {
-            $arguments['limit'] = $limit;
-        } else {
-            $arguments['limit'] = $_SESSION['pagelimit'];
+        // Enforce a sane limit (and allow session override if you still want it)
+        $limitIn = (int) ($_SESSION['pagelimit'] ?? 0);
+        if ($limitIn > 0) {
+            $limit = $limitIn;
         }
-        $sql = "SELECT a.id, a.website, a.title, a.summary, a.created, a.family_id, a.menu_id, a.member_id, a.family_id, a.published,
-         a.seo_title, a.storyorder,a.landscape, a.allow_comment, keyword, a.blog,
-         c.name AS menu,
-         c.seo_name AS seo_menu,
-         m.forename, m.surname,
-         CONCAT(m.forename, ' ', m.surname) AS author,
-         m.account_id,
-         i.file     AS image_file,
-         i.alt      AS image_alt,
-         (SELECT COUNT(story_id)
-            FROM likes
-           WHERE likes.story_id = a.id) AS likes,
-         (SELECT COUNT(story_id)
-            FROM comment
-            WHERE comment.story_id = a.id) AS comments
-            FROM story      AS a
-            JOIN menu       AS c ON a.menu_id = c.id
-            JOIN member     AS m ON a.member_id   = m.id
-            LEFT JOIN image AS i ON a.image_id    = i.id
-            WHERE (a.menu_id = :menu OR :menu1 is null)
-            AND (a.member_id   = :member   OR :member1   is null)";
-        "
-            AND (a.website = :website);";
-        if ($_SESSION['role'] == 'admin') {
-            $sql .= ' AND (a.published = 0 or a.published = 1)';
-        } elseif ($_SESSION['id'] == $member) {
-            $sql .= ' AND (a.published = 0 or a.published = 1)';
-        } else {
-            $sql .= ' AND (a.published = 1)';
-        }
-        // JUST FOR TESTING
+        $limit = max(1, min($limit, 500)); // hard cap
 
-        $sorttypeId = $sorttypeId ?? null;
+        $args = [
+            'website' => $websiteId,
+            'menu' => $menu,
+            'menu1' => $menu,
+            'member' => $member,
+            'member1' => $member,
+            'limit' => $limit,
+        ];
+
+        $sql = "SELECT a.id, a.website, a.title, a.summary, a.created, a.family_id, a.menu_id, a.member_id,
+                   a.published, a.seo_title, a.storyorder, a.landscape, a.allow_comment, a.keyword, a.blog,
+                   c.name AS menu,
+                   c.seo_name AS seo_menu,
+                   m.forename, m.surname,
+                   CONCAT(m.forename, ' ', m.surname) AS author,
+                   m.account_id,
+                   i.file AS image_file,
+                   i.alt  AS image_alt,
+                   (SELECT COUNT(story_id) FROM likes   WHERE likes.story_id   = a.id) AS likes,
+                   (SELECT COUNT(story_id) FROM comment WHERE comment.story_id = a.id) AS comments
+              FROM story AS a
+              LEFT JOIN menu   AS c ON a.menu_id = c.id AND c.website = a.website
+              JOIN member AS m ON a.member_id = m.id
+              LEFT JOIN image  AS i ON a.image_id = i.id
+             WHERE a.website = :website
+               AND (:menu1   IS NULL OR a.menu_id   = :menu)
+               AND (:member1 IS NULL OR a.member_id = :member)";
+
+        // Visibility rules: admin can see all; author can see own drafts; others published only
+        $role = (string) ($_SESSION['role'] ?? 'guest');
+        $viewerId = (int) ($_SESSION['id'] ?? 0);
+
+        if ($role === 'admin') {
+            $sql .= ' AND (a.published IN (0,1))';
+        } elseif ($member !== null && $viewerId > 0 && $viewerId === $member) {
+            // Viewer is the author being filtered; allow drafts
+            $sql .= ' AND (a.published IN (0,1))';
+        } else {
+            $sql .= ' AND a.published = 1';
+        }
+
         $orderBy = $this->orderByForSorttype($sorttypeId);
-        $sql .= " $orderBy LIMIT :limit";
+        $sql .= " {$orderBy} LIMIT :limit";
 
-        return $this->db->runSql($sql, $arguments)->fetchAll(); // Return data
-        // SQL for story summary
+        // Drop unused args to avoid driver complaints (optional but nice)
+        foreach (array_keys($args) as $k) {
+            if (!str_contains($sql, ':' . $k)) {
+                unset($args[$k]);
+            }
+        }
+
+        return $this->db->runSql($sql, $args)->fetchAll();
     }
 
     // Get summaries of stories - Published and not-published
@@ -174,69 +220,66 @@ class Story
         $limit = 150,
         ?int $sorttypeId = null,
     ): array {
-        // Setup file
-        // Validate ID
+        $arguments = [
+            'menu' => $menu,
+            'menu1' => $menu,
+            'member' => $member,
+            'member1' => $member,
+            'website' => $website,
+        ];
 
-        //$php_page = APP_ROOT . '/src/pages/' . $page . '.php';       // Path to PHP page
-
-        $arguments['menu'] = $arguments['menu1'] = $menu; // Menu id
-        $arguments['member'] = $arguments['member1'] = $member; // Author id
-        $arguments['website'] = $website;
         if (empty($_SESSION['pagelimit'])) {
-            $arguments['limit'] = $limit;
+            $arguments['limit'] = (int) $limit;
         } else {
-            if ($_SESSION['id'] == 1) {
-                $arguments['limit'] = 150; // manually toggle here for managing UberAdmin stories
-                //$arguments['limit'] = $_SESSION['pagelimit'];
+            if ((int) ($_SESSION['id'] ?? 0) === 1) {
+                $arguments['limit'] = 150; // UberAdmin management view
             } else {
-                $arguments['limit'] = $_SESSION['pagelimit'];
+                $arguments['limit'] = (int) $_SESSION['pagelimit'];
             }
         }
 
-        $sql = "SELECT a.id, a.website, a.title, a.summary, a.created, a.family_id, a.menu_id, a.member_id, a.family_id, a.published,
-                       a.seo_title, a.storyorder,a.landscape, a.allow_comment, keyword, a.blog,
-                       c.name AS menu,
-                       c.seo_name AS seo_menu,
-                       m.forename, m.surname,
-                       CONCAT(m.forename, ' ', m.surname) AS author,
-                       m.account_id,
-                       i.file     AS image_file,
-                       i.alt      AS image_alt,
-                       (SELECT COUNT(story_id)
-                          FROM likes
-                         WHERE likes.story_id = a.id) AS likes,
-                       (SELECT COUNT(story_id)
-                          FROM comment
-                         WHERE comment.story_id = a.id) AS comments
-
-                  FROM story    AS a
-                  JOIN menu   AS c ON a.menu_id = c.id
-                  JOIN member     AS m ON a.member_id   = m.id
-                  LEFT JOIN image AS i ON a.image_id    = i.id
-                  WHERE (a.menu_id = :menu OR :menu1 is null)
-                  AND (a.member_id   = :member   OR :member1   is null)
-                  AND (a.website = :website)";
-        "
-                  AND (a.website = :website);";
+        $sql = "SELECT a.id, a.website, a.title, a.summary, a.created, a.family_id, a.menu_id, a.member_id,
+                   a.published, a.seo_title, a.storyorder, a.landscape, a.allow_comment, a.keyword, a.blog,
+                   c.name AS menu,
+                   c.seo_name AS seo_menu,
+                   m.forename, m.surname,
+                   CONCAT(m.forename, ' ', m.surname) AS author,
+                   m.account_id,
+                   i.file AS image_file,
+                   i.alt  AS image_alt,
+                   (SELECT COUNT(story_id) FROM likes   WHERE likes.story_id   = a.id) AS likes,
+                   (SELECT COUNT(story_id) FROM comment WHERE comment.story_id = a.id) AS comments
+              FROM story AS a
+              LEFT JOIN menu   AS c ON a.menu_id = c.id AND c.website = a.website
+              JOIN member AS m ON a.member_id = m.id
+              LEFT JOIN image  AS i ON a.image_id = i.id
+             WHERE (:menu1 IS NULL OR a.menu_id = :menu)
+               AND (:member1 IS NULL OR a.member_id = :member)
+               AND a.website = :website";
 
         $role = (string) ($_SESSION['role'] ?? 'guest');
         $viewerId = (int) ($_SESSION['id'] ?? 0);
 
-        if ($_SESSION['role'] == 'admin') {
-            $sql .= ' AND (a.published = 0 or a.published = 1)';
-        } elseif ($_SESSION['id'] == $member) {
-            $sql .= ' AND (a.published = 0 or a.published = 1)';
+        if ($role === 'admin') {
+            $sql .= ' AND (a.published IN (0,1))';
+        } elseif ($viewerId > 0 && $member !== null && $viewerId === (int) $member) {
+            $sql .= ' AND (a.published IN (0,1))';
         } else {
-            $sql .= ' AND (a.published = 1)';
+            $sql .= ' AND a.published = 1';
         }
 
-        $sorttypeId = $sorttypeId ?? null;
         $orderBy = $this->orderByForSorttype($sorttypeId);
-        $sql .= " $orderBy LIMIT :limit";
+        $sql .= " {$orderBy} LIMIT :limit";
 
-        return $this->db->runSql($sql, $arguments)->fetchAll(); // Return data
-        // SQL for story summary
+        foreach (array_keys($arguments) as $k) {
+            if (!str_contains($sql, ':' . $k)) {
+                unset($arguments[$k]);
+            }
+        }
+
+        return $this->db->runSql($sql, $arguments)->fetchAll();
     }
+
     // Get summaries of stories - Published by website
     public function getAll3(
         $website,
@@ -296,7 +339,8 @@ i.alt      AS image_alt,
   WHERE comment.story_id = a.id) AS comments
 
 FROM story    AS a
-JOIN menu   AS c ON a.menu_id = c.id
+LEFT JOIN menu AS c ON a.menu_id = c.id and c.website = a.website
+
 JOIN member     AS m ON a.member_id   = m.id
 LEFT JOIN image AS i ON a.image_id    = i.id
 
@@ -562,6 +606,25 @@ AND (m.publik = 1)";
 
         $this->db->runSql($sql, $story)->rowCount();
         return true;
+    }
+
+    public function deleteForWebsite(int $id, int $websiteId): bool
+    {
+        if ($id <= 0 || $websiteId <= 0) {
+            return false;
+        }
+
+        $sql = "DELETE FROM story
+            WHERE id = :id
+              AND website = :website
+            LIMIT 1;";
+
+        $stmt = $this->db->runSql($sql, [
+            'id' => $id,
+            'website' => $websiteId,
+        ]);
+
+        return $stmt->rowCount() === 1;
     }
 
     // Delete story
