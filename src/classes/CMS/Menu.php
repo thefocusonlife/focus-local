@@ -303,4 +303,26 @@ class Menu
             throw $e;
         }
     }
+
+    public function getNextPositionForAccount(int $websiteId, int $accountId, int $step = 5): int
+    {
+        if ($websiteId <= 0 || $accountId <= 0) {
+            return 0;
+        }
+
+        $sql = "SELECT COALESCE(MAX(position), 0) AS max_pos
+            FROM menu
+            WHERE website = :website
+              AND account_id = :account_id";
+
+        $row = $this->db
+            ->runSql($sql, [
+                'website' => $websiteId,
+                'account_id' => $accountId,
+            ])
+            ->fetch();
+
+        $max = (int) ($row['max_pos'] ?? 0);
+        return $max + $step;
+    }
 }

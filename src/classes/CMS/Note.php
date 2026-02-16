@@ -151,4 +151,59 @@ class Note
             }
         }
     }
+
+    /**
+     * Returns the list of allowed "Family/Account" ids (to_family_id) that this member
+     * is approved to follow (one-sided outgoing follows).
+     *
+     * Each row: ['account_id' => int, 'account_name' => string]
+     */
+    public function getAllowedFollowAccounts(
+        int $websiteId,
+        int $memberId,
+        int $noteTypeFollow = 1,
+    ): array {
+        if ($websiteId <= 0 || $memberId <= 0) {
+            return [];
+        }
+
+        $sql = "SELECT DISTINCT
+              n.to_family_id AS account_id,
+              n.to_name      AS account_name
+            FROM note n
+            WHERE n.website   = :website
+              AND n.note_type = :note_type_follow
+              AND n.from_id   = :member_id
+              AND n.allow     = 1
+              AND n.to_family_id > 0
+            ORDER BY n.to_name";
+
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute([
+            ':website' => $websiteId,
+            ':note_type_follow' => $noteTypeFollow,
+            ':member_id' => $memberId,
+        ]);
+
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        if (!is_array($rows)) {
+            return [];
+        }
+
+        // Normalize types
+        foreach ($rows as &$r) {
+            $r['account_id'] = (int) ($r['account_id'] ?? 0);
+            $r['account_name'] = (string) ($r['account_name'] ?? '');
+        }
+        unset($r);
+
+        // Drop any junk rows (extra defensive)
+        $rows = array_values(
+            array_filter($rows, static function ($r) {
+                return !empty($r['account_id']) && $r['account_id'] > 0;
+            }),
+        );
+
+        return $rows;
+    }
 }

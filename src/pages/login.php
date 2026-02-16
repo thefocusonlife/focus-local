@@ -122,6 +122,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Attempt login
     if (empty($errors['message'])) {
         $member = $cms->getMember()->login2($email, $password);
+        error_log(
+            '[LOGIN2 RESULT] id=' .
+                (int) ($member['id'] ?? 0) .
+                ' account_id=' .
+                (int) ($member['account_id'] ?? 0) .
+                ' website=' .
+                (int) ($member['website'] ?? 0),
+        );
 
         if (empty($member)) {
             $errors['message'] = 'Invalid email or password.';
@@ -137,7 +145,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $errors['message'] = 'This email not valid for ' . (string) $website['name'];
             } else {
                 // ✅ SUCCESS: create session
+                $dbMember = $cms->getMember()->get((int) ($member['id'] ?? 0));
+                error_log(
+                    '[DB MEMBER CHECK] id=' .
+                        (int) ($dbMember['id'] ?? 0) .
+                        ' account_id=' .
+                        (int) ($dbMember['account_id'] ?? 0) .
+                        ' website=' .
+                        (int) ($dbMember['website'] ?? 0),
+                );
+
                 $cms->getSession()->create($member, (int) $website['id']);
+
+                // hard-assert the important bits (defensive)
+                $_SESSION['id'] = (int) $member['id'];
+                $_SESSION['account_id'] = (int) ($member['account_id'] ?? $member['id']);
+                $_SESSION['follow_id'] = (int) $_SESSION['account_id'];
+                $_SESSION['website'] = (int) $member['website'];
+                error_log(
+                    '[LOGIN AFTER CREATE] id=' .
+                        ($_SESSION['id'] ?? 'NULL') .
+                        ' account_id=' .
+                        ($_SESSION['account_id'] ?? 'NULL') .
+                        ' website=' .
+                        ($_SESSION['website'] ?? 'NULL'),
+                );
 
                 // Redirect to intended deep-link if present (and safe), else safe fallback
                 $returnTo = $_SESSION['return_to'] ?? '';
@@ -169,11 +201,21 @@ if ($sessionId === 2 || $sessionId === 0) {
 }
 
 $data = [];
-$data['navigation'] = $cms->getMenu()->getAll2((int) $website['id'], (int) $mem);
+$data['navigation'] = $cms->getMenu()->getAll2((int) $website['id'], 1);
 $data['success'] = $success;
 $data['email'] = $email;
 $data['errors'] = $errors;
 $data['recaptcha_site_key'] = $config['recaptcha_site_key'] ?? '';
 $data['website'] = $website;
+error_log(
+    '[LOGIN BEFORE RENDER] id=' .
+        ($_SESSION['id'] ?? 'NULL') .
+        ' account_id=' .
+        ($_SESSION['account_id'] ?? 'NULL') .
+        ' website=' .
+        ($_SESSION['website'] ?? 'NULL') .
+        ' mem=' .
+        ($mem ?? 'NULL'),
+);
 
 echo $twig->render('login.html', $data);

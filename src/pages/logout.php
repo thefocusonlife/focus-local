@@ -11,12 +11,6 @@ if ($websiteId <= 0) {
     $websiteId = 1;
 }
 
-// HARD logout: destroy session state
-$cms->getSession()->delete(); // should unset + destroy + clear cookie (or equivalent)
-
-// Recreate a clean guest session in the same website context
-$cms->getSession()->create(0, $websiteId);
-
-// Redirect back to the same website index
+$cms->getSession()->resetToGuest($websiteId, true);
 redirect('index/' . $websiteId);
 exit();

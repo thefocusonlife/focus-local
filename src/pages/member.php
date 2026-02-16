@@ -37,37 +37,48 @@ if (!$viewer || empty($viewer['id'])) {
 }
 
 // ------------------------------------------------------------
-// Follow logic: ownerId = account_id (if set) else viewerId
+// Follow logic: ownerId = viewer.account_id (family context)
+// BUT: do NOT change tenant/website based on owner.
+// Tenant is session-selected (or resolved elsewhere), not follow-selected.
 // ------------------------------------------------------------
+
+// Tenant context (single source of truth)
+$websiteId = (int) ($_SESSION['website'] ?? 0);
+if ($websiteId <= 0) {
+    $websiteId = (int) ($viewer['website'] ?? 0);
+}
+if ($websiteId <= 0) {
+    $websiteId = 1;
+}
+
+// Follow/owner context (used for content), default to self
 $ownerId = (int) ($viewer['account_id'] ?? 0);
 if ($ownerId <= 0) {
     $ownerId = $viewerId;
 }
 
-// Load the “owner” member record (the one we’re following)
 $ownerMember = $cms->getMember()->get($ownerId);
 if (!$ownerMember || empty($ownerMember['id'])) {
-    // If account_id is stale/bad, fall back to self
     $ownerId = $viewerId;
     $ownerMember = $viewer;
 }
 
-// Website scope: use owner’s website for menus + stories.
-// (Keeps follow consistent: you follow their content + nav.)
-$websiteId = (int) ($ownerMember['website'] ?? 0);
-if ($websiteId <= 0) {
-    $websiteId = (int) ($_SESSION['website'] ?? 1);
-    if ($websiteId <= 0) {
-        $websiteId = 1;
-    }
+// HARD TENANT GUARD: never allow follow to switch websites here
+if ((int) ($ownerMember['website'] ?? 0) !== $websiteId) {
+    // If the follow points cross-tenant, ignore it for this page
+    $ownerId = $viewerId;
+    $ownerMember = $viewer;
 }
 
+// Load website from tenant context
 $website = $cms->getWebsite()->getById($websiteId);
 if (!$website || !isset($website['id'])) {
     $websiteId = 1;
+    $_SESSION['website'] = 1;
     $website = $cms->getWebsite()->getById(1);
+} else {
+    $_SESSION['website'] = $websiteId; // keep consistent
 }
-$_SESSION['website'] = $websiteId;
 
 // ------------------------------------------------------------
 // Page data for template
@@ -76,8 +87,9 @@ $data['failure'] = $_GET['failure'] ?? null;
 $data['member'] = $viewer; // viewer identity (who is logged in)
 $data['website'] = $website; // resolved website (owner’s website)
 $data['follow_owner'] = $ownerMember; // optional: lets template show “Following X”
-$data['current_path'] = "member/$ownerId"; // or viewerId if that’s your route
+$data['current_path'] = "member/$viewerId"; // or viewerId if that’s your route
 $data['current_menu_id'] = null;
+$data['follow_owner'] = $ownerMember;
 
 // ------------------------------------------------------------
 // Sort preference (member page = "no menu selected" => global override)
