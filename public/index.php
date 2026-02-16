@@ -149,6 +149,34 @@ $path = trim((string) $path, '/');
 // Split into segments
 $parts = $path === '' ? [] : explode('/', $path);
 
+/// ------------------------------------------------------------
+// Canonicalize "menu slug" URLs:
+// Accept /menu/{id}/{anything...} and ignore the trailing slug/subpath.
+// Optionally 301 redirect the browser to the canonical /menu/{id} URL.
+// ------------------------------------------------------------
+if (($parts[0] ?? '') === 'menu' && isset($parts[1]) && ctype_digit((string) $parts[1])) {
+    $menuId = (int) $parts[1];
+
+    if (count($parts) > 2) {
+        $ignoredTail = implode('/', array_slice($parts, 2));
+
+        // Build canonical URL using the actual script mount (e.g. /focus-local/public)
+        $mountBase = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '')), '/');
+        $canonical = $mountBase . '/menu/' . $menuId;
+
+        route_log($trace, "menu_canonicalize: ignored_tail=$ignoredTail -> redirect=$canonical");
+
+        // OPTIONAL: uncomment these 2 lines if you want the browser URL cleaned up
+        //  header('Location: ' . $canonical, true, 301);
+        //  exit();
+
+        // If you prefer NO redirect today, comment out the header/exit above and let it fall through:
+        // $parts = ['menu', (string)$menuId];
+        // $path  = 'menu/' . $menuId;
+        // $uriPath = '/' . $path;
+    }
+}
+
 // Standard TFOL pattern: first segment is the page route
 // e.g. /story/123 => $page='story', $id=123
 $page = $parts[0] ?? '';

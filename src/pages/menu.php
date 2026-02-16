@@ -25,28 +25,52 @@ $menuOwnerId = $isGuest ? 1 : $sessionId;
 // Resolve menu (website-specific row) based on route
 $menuId = (int) ($id ?? 0);
 
-// Resolve menu
-$maybeSlugOrId = (string) ($parts[2] ?? '');
+// IMPORTANT:
+// - For canonical routes: /menu/{id}/{optional-slug}
+//   -> $parts[1] is the id, $parts[2] is a redundant slug tail to IGNORE.
+// - For legacy routes: /menu/{slug}
+//   -> $parts[1] is the slug, $id will be 0 (non-numeric).
+
+$idOrSlugSegment = (string) ($parts[1] ?? ''); // <-- legacy slug would be here
+$tailSlug = (string) ($parts[2] ?? ''); // <-- redundant; IGNORE for id-based routes
+
 $menu = null;
 
-// If route uses a slug in the {id} position (legacy), resolve by slug.
-// Non-owner viewers may deep-link via slug from public grids.
-// Fall back to website+slug lookup (ignores account_id) to allow read-only viewing.
+// ------------------------------------------------------------
+// 1) Legacy slug route only: /menu/{slug} where the {id} segment is NOT numeric
+// ------------------------------------------------------------
+if ($menuId <= 0 && $idOrSlugSegment !== '' && !ctype_digit($idOrSlugSegment)) {
+    // slug is in the {id} position (legacy)
+    $maybeSlug = $idOrSlugSegment;
 
-if ($maybeSlugOrId !== '' && !ctype_digit($maybeSlugOrId)) {
-    $menu = $cms->getMenu()->getBySlug($websiteId, (int) $menuOwnerId, $maybeSlugOrId);
+    $menu = $cms->getMenu()->getBySlug($websiteId, (int) $menuOwnerId, $maybeSlug);
 
     if (!$menu) {
-        $menu = $cms->getMenu()->getBySlugAnyAccount($websiteId, $maybeSlugOrId);
+        $menu = $cms->getMenu()->getBySlugAnyAccount($websiteId, $maybeSlug);
     }
-} else {
-    $menuId = (int) ($id ?? 0);
-    $menu = $cms->getMenu()->getForWebsite($menuId, $websiteId);
 }
+// ------------------------------------------------------------
+// 2) Normal route: /menu/{id} OR /menu/{id}/{anything}
+// ------------------------------------------------------------
+else {
+    // Ignore $tailSlug completely; it is decorative
+    $menuId = (int) ($id ?? 0);
 
-if (!$menu) {
-    include APP_ROOT . '/src/pages/page-not-found.php';
-    exit();
+    // If websiteId can be wrong (common when entering via deep-link),
+    // derive website from the menuId FIRST, then do the website-specific fetch.
+    // Use whatever "get by id" method you have (examples below).
+    //$menuAny = $cms->getMenu()->getById($menuId) ?? ($cms->getMenu()->get($menuId) ?? null);
+    $menuAny = $cms->getMenu()->get($menuId) ?? null;
+    if ($menuAny) {
+        $derivedWebsiteId = (int) ($menuAny['website_id'] ?? ($menuAny['website'] ?? 0));
+        if ($derivedWebsiteId > 0) {
+            $websiteId = $derivedWebsiteId;
+            $_SESSION['website'] = $websiteId;
+            $_SESSION['website_id'] = $websiteId;
+        }
+    }
+
+    $menu = $cms->getMenu()->getForWebsite($menuId, $websiteId);
 }
 
 if (!$menu) {
