@@ -187,6 +187,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // ------------------------------------------------------------
 // 5) GET load (or defaults)
 // ------------------------------------------------------------
+// ------------------------------------------------------------
+// Route param fix for nested admin route:
+// /admin/menu/{id} arrives with $id=0 because front-controller sets $id from $parts[1].
+// For this page, the numeric id is actually $parts[2].
+// ------------------------------------------------------------
+if ((int) ($id ?? 0) <= 0) {
+    $p0 = (string) ($parts[0] ?? '');
+    $p1 = (string) ($parts[1] ?? '');
+    $p2 = (string) ($parts[2] ?? '');
+
+    if ($p0 === 'admin' && $p1 === 'menu' && $p2 !== '' && ctype_digit($p2)) {
+        $menuId = (int) $p2; // normalize so the rest of the file works unchanged
+    }
+}
 if ($menu === null) {
     if ($menuId > 0) {
         $menu = $cms->getMenu()->getForWebsite($menuId, $menuWebsiteId);
