@@ -156,9 +156,15 @@ if (empty($data['sort_menu_id'])) {
 
 // 8) Data for template
 $data['website'] = $website;
+
+// Ensure splash + partials can preserve deep-linked website context
+$data['websiteId'] = (int) ($id ?? 0);
+$data['id'] = $data['websiteId'];
+
 if ($member) {
     $data['member'] = $member;
 }
+
 if (defined('TFOL_ROUTE_DEBUG') && TFOL_ROUTE_DEBUG) {
     $data['_debug'] = [
         'uri' => $_SERVER['REQUEST_URI'] ?? '',

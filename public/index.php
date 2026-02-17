@@ -111,6 +111,7 @@ AppLogger::log('info', 'request', [
     'method' => $_SERVER['REQUEST_METHOD'] ?? 'GET',
     'anon_id' => $anonId,
     'member_id' => $userId, // your app uses $_SESSION['id']
+    'referrer' => $_SERVER['HTTP_REFERER'] ?? '',
 ]);
 
 // ------------------------------------------------------------

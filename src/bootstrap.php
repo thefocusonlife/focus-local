@@ -56,6 +56,9 @@ $twig->addGlobal('request_uri', $_SERVER['REQUEST_URI'] ?? '');
 $session = $cms->getSession();
 $twig->addGlobal('session', $session);
 
+$twig->addGlobal('id', $id ?? null);
+$twig->addGlobal('websiteId', $id ?? null);
+
 // ------------------------------------------------------------
 // Refresh link (return to current page, force new request)
 // ------------------------------------------------------------
