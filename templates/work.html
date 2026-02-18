@@ -11,7 +11,7 @@
 	<body oncontextmenu="return true;">
 		<!---  <main class="story container" id="content"> -->
 		<!-- WORK.HTML LOADED -->
-		<input type="hidden" name="csrf_token" value="{{ csrf_token }}"> {% if story.blog ==3 %}
+		<input type="hidden" name="csrf" value="{{ csrf_token }}"> {% if story.blog ==3 %}
 			<main class="blog container">
 			{% endif %}
 			{% if story.blog == 2 %}

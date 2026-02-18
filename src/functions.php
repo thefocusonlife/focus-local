@@ -1,15 +1,11 @@
 <?php
 // UTILITY FUNCTIONS
 
-function is_admin($role)
+function is_admin($role): bool
 {
-    if ($role == 'admin' or $role == 'uber') {
-    } else {
-        // If role is not admin
-        header('Location: ' . DOC_ROOT); // Send to home page
-        exit(); // Stop code running
-    }
+    return $role === 'admin' || $role === 'uber';
 }
+
 function is_guest($role)
 {
     if ($role == 'guest') {
@@ -102,4 +98,36 @@ function var_dump_pre($mixed = null)
     var_dump($mixed);
     echo '</pre>';
     return null;
+}
+
+/**
+ * Generate a CSRF token and store it in session
+ */
+function generate_csrf_token(): string
+{
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
+
+    $token = bin2hex(random_bytes(32));
+    $_SESSION['csrf_token'] = $token;
+
+    return $token;
+}
+
+/**
+ * Verify CSRF token from form against session
+ */
+function verify_csrf(string $token): bool
+{
+    if (session_status() !== PHP_SESSION_ACTIVE) {
+        session_start();
+    }
+
+    $valid = isset($_SESSION['csrf_token']) && hash_equals($_SESSION['csrf_token'], $token);
+
+    // Invalidate the token after checking so it can't be reused
+    unset($_SESSION['csrf_token']);
+
+    return $valid;
 }

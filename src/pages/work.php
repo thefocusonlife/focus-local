@@ -197,17 +197,6 @@ if (empty($storyorder)) {
     }
 }
 
-// ---- CSRF (simple session token) ----
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
-}
-
-if (empty($_SESSION['csrf_token'])) {
-    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
-}
-
-$csrfToken = (string) $_SESSION['csrf_token'];
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Form submitted
     error_log(
@@ -247,8 +236,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Only handle save when the Save button was used
     if (isset($_POST['update'])) {
         // ---- CSRF validation ----
-        $posted = (string) ($_POST['csrf_token'] ?? '');
-        if ($posted === '' || !hash_equals($csrfToken, $posted)) {
+        $posted = (string) ($_POST['csrf'] ?? '');
+
+        if ($posted === '' || !verify_csrf($posted)) {
             $errors['warning'] =
                 'Security check failed (CSRF). Please reload the page and try again.';
             // Do NOT process the save
@@ -470,7 +460,8 @@ if ($websiteId <= 0) {
 }
 
 $data['website'] = $cms->getWebsite()->getById($websiteId) ?: [];
-$data['csrf_token'] = $csrfToken;
+$data['csrf_token'] = generate_csrf_token();
+
 // Image panel UI state (default minimized)
 $data['image_panel_minimized'] = (bool) ($_SESSION['ui']['image_panel_minimized'] ?? true);
 
