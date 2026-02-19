@@ -1,19 +1,31 @@
 {% extends 'admin/layout.html' %}
 {% block content %}
 
-<main> <!-- class="container" id="content">
+<main> <class="container" id="content">
   <section class="header">
     <h1>Menus</h1>
-    {% if success %}<div class="alert alert-success">{{ success }}</div>{% endif %}
-    {% if failure %}<div class="alert alert-danger">{{ failure }}</div>{% endif %}
+
+    {% if flash_failure %}
+  <div class="alert alert-danger">
+    {{ flash_failure }}
+  </div>
+{% endif %}
+
+{% if flash_success %}
+  <div class="alert alert-success">
+    {{ flash_success }}
+  </div>
+{% endif %}
+
+
     <p><a href="{{ doc_root }}admin/menu" class="btn btn-primary">Add new menu</a></p>
   </section>
---> 
+
   <table class="menus">
     <tr>
       <th>Name</th><th><th></th></th><th><th></th><th></th><th></th><th></th> </th><th></th><th>Family Id</th>
       <th> </th><th></th><th></th>
-      <th class="edit">Edit Family</th><th> </th> 
+      <th class="edit">Edit Family</th><th> </th>
       <th class="edit">Edit Menu </th>
       <th> </th>
       <th class="del">Delete Menu</th>
@@ -30,7 +42,7 @@
              class ="btn btn-primary">edit</a></td><td> </td>
       <td><a href="{{ doc_root }}admin/menu/{{ menu.id }}"
              class="btn btn-primary">edit</a></td>
-      <td>       </td>       
+      <td>       </td>
       <td><a href="{{ doc_root }}admin/menu-delete/{{ menu.id }}"
              class="btn btn-danger">delete</a></td>
     </tr>
