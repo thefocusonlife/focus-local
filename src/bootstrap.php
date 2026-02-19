@@ -16,6 +16,7 @@ require_once APP_ROOT . '/config/config.php';
 require_once APP_ROOT . '/src/functions.php';
 require_once APP_ROOT . '/src/identity.php';
 require_once APP_ROOT . '/src/RequestContext.php';
+require_once APP_ROOT . '/src/Exceptions/ForeignKeyConstraintException.php';
 
 // Session (before any output)
 if (session_status() !== PHP_SESSION_ACTIVE) {

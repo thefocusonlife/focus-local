@@ -1,6 +1,6 @@
 <?php
 namespace PhpBook\CMS; // Namespace declaration
-
+use PhpBook\CMS\Exceptions\ForeignKeyConstraintException;
 class Menu
 {
     protected $db; // Holds ref to Database object
@@ -279,27 +279,42 @@ class Menu
     }
 
     // Delete existing menu
-    public function deleteForWebsite(int $id, int $websiteId): bool
+    /**
+     * @throws ForeignKeyConstraintException when menu is referenced (e.g., stories exist)
+     */
+    public function deleteForWebsite(int $menuId, int $websiteId): int
     {
-        if ($id <= 0 || $websiteId <= 0) {
-            return false;
-        }
+        $sql = 'DELETE FROM menu
+            WHERE id = :id AND website = :website';
 
         try {
-            $sql = "DELETE FROM menu
-                WHERE id = :id
-                  AND website = :website
-                LIMIT 1";
-            $stmt = $this->db->runSql($sql, [
-                'id' => $id,
-                'website' => $websiteId,
+            $stmt = $this->db->prepare($sql);
+            $stmt->execute([
+                ':id' => $menuId,
+                ':website' => $websiteId,
             ]);
 
-            return $stmt->rowCount() === 1;
+            return (int) $stmt->rowCount(); // 0 or 1
         } catch (\PDOException $e) {
-            if (($e->errorInfo[1] ?? null) === 1451) {
-                return false;
+            $sqlState = (string) ($e->getCode() ?? '');
+            $driverCode = (int) ($e->errorInfo[1] ?? 0);
+            $errMsg = (string) ($e->getMessage() ?? '');
+
+            // Detect MySQL/MariaDB FK constraint failure in multiple ways
+            $isFkError =
+                ($sqlState === '23000' && $driverCode === 1451) || // classic
+                ($sqlState === '23000' && stripos($errMsg, 'foreign key') !== false) ||
+                stripos($errMsg, 'constraint fails') !== false;
+
+            if ($isFkError) {
+                throw new ForeignKeyConstraintException(
+                    'Menu has dependent rows and cannot be deleted',
+                    0,
+                    $e,
+                );
             }
+
+            // If not FK, rethrow so higher logic can handle or surface an error
             throw $e;
         }
     }
