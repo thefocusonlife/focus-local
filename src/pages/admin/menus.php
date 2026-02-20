@@ -1,8 +1,8 @@
 <?php
 declare(strict_types=1);
 
-require_once __DIR__ . '/../security/guard.php';
-guardMember();
+require_once APP_ROOT . '/src/security/guard.php';
+guardPublic();
 
 error_log('MENU-DELETE SESSION ID: ' . session_id());
 

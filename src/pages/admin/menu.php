@@ -3,9 +3,6 @@ declare(strict_types=1);
 
 use PhpBook\Validate\Validate;
 
-require_once __DIR__ . '/../security/guard.php';
-guardAdmin();
-
 include APP_ROOT . '/src/pages/menu-path.php';
 
 // Load flash failure if set

@@ -2,7 +2,7 @@
 
 include APP_ROOT . '/src/pages/menu-path.php';
 
-require_once __DIR__ . '/../security/guard.php';
+require_once APP_ROOT . '/src/security/guard.php';
 guardMember();
 
 is_admin($session->role); // Check if admin
