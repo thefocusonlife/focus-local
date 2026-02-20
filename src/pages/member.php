@@ -7,7 +7,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 
 require_once APP_ROOT . '/src/security/guard.php';
 include APP_ROOT . '/src/pages/menu-path.php';
-
+guardMember();
 $errors = [];
 $data = [];
 

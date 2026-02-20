@@ -7,7 +7,8 @@ file_put_contents(
 );
 
 use PhpBook\Validate\Validate;
-
+require_once APP_ROOT . '/src/security/guard.php';
+guardPublic();
 $errors = [];
 
 // Menu id comes primarily from the route: /sort/{menuId}

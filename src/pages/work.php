@@ -215,11 +215,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     );
 
     // ---- WRITE BOUNDARY (must be first meaningful enforcement) ----
-    guard([
-        'requireLogin' => true,
-        'allowedRoles' => ['member', 'admin'],
-        'allowUber' => true,
-    ]);
+    guardAdmin();
 
     $role = (string) ($_SESSION['role'] ?? 'guest');
     $isUber = $role === 'uber';

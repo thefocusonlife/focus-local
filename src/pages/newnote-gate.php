@@ -6,7 +6,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 }
 
 require_once APP_ROOT . '/src/security/guard.php';
-
+guardMember();
 // ------------------------------------------------------------
 // newnote-gate.php
 // Creates a one-time intent token, then redirects to newnote.

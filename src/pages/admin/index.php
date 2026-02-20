@@ -4,13 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../../security/guard.php';
 
 // Admin boundary: require login + allow admin, allow uber too
-guard([
-    'requireLogin' => true,
-    'allowedRoles' => ['admin'], // admin allowed
-    'allowUber' => true, // uber bypass allowed
-    'loginPath' => DOC_ROOT . 'login', // if DOC_ROOT is available here; else '/login'
-    // 'fallbackPath' => '/index/1', // optional: override default fallback
-]);
+guardAdmin();
 
 // Website context (validate)
 $websiteId = (int) ($_SESSION['website'] ?? 0);

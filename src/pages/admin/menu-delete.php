@@ -10,8 +10,30 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
+function publicSafePath(): string
+{
+    $websiteId = (int) ($_SESSION['website'] ?? 1);
+    if ($websiteId <= 0) {
+        $websiteId = 1;
+    }
+    return 'index/' . $websiteId; // or 'menu/' if that's your public-safe route
+}
+
+function logDeny(string $reason, array $ctx = []): void
+{
+    // Keep it simple and consistent with Week 3 mindset
+    $row = [
+        'ts' => date('c'),
+        'event' => 'DENY',
+        'reason' => $reason,
+        'member_id' => $_SESSION['id'] ?? null,
+        'role' => $_SESSION['role'] ?? 'guest',
+        'website' => $_SESSION['website'] ?? null,
+        'path' => $_SERVER['REQUEST_URI'] ?? '',
+        'ip' => $_SERVER['REMOTE_ADDR'] ?? '',
+        'ctx' => $ctx,
+    ];
+    error_log(json_encode($row, JSON_UNESCAPED_SLASHES));
 }
 
 $data = $data ?? []; // ensure array exists
@@ -28,17 +50,9 @@ if (!empty($_SESSION['flash_success'])) {
     unset($_SESSION['flash_success']);
 }
 
-// Must be logged in
-if (!isset($_SESSION['id']) || !$_SESSION['id']) {
-    redirect('login/', ['failure' => 'Please log in to continue']);
-    exit();
-}
+require_once APP_ROOT . '/src/security/guard.php';
 
-// Must be admin or uber
-if (!is_admin($_SESSION['role'])) {
-    redirect('admin/menus/', ['failure' => 'Not allowed']);
-    exit();
-}
+guardAdmin();
 
 // ------------------------------------------------------------
 // 2) Extract menuId from route parts
@@ -57,7 +71,12 @@ if ($menuId <= 0) {
 }
 
 if ($menuId <= 0) {
-    redirect('admin/menus/', ['failure' => 'Menu not found']);
+    logDeny('menu_delete_not_found_or_cross_tenant', [
+        'menu_id' => $menuId,
+        'website_id' => $websiteId,
+    ]);
+    $_SESSION['flash_failure'] = 'Access denied.';
+    redirect(publicSafePath(), ['failure' => 'Access denied']);
     exit();
 }
 
@@ -72,8 +91,38 @@ if ($websiteId <= 0) {
 }
 
 $menu = $cms->getMenu()->getForWebsite($menuId, $websiteId);
+
 if (!$menu || !isset($menu['id'])) {
-    redirect('admin/menus/', ['failure' => 'Menu not found']);
+    // Treat as a security denial to avoid cross-tenant enumeration
+    $_SESSION['flash_failure'] = 'Access denied.';
+    // If you have your central security log, call it; otherwise error_log is fine.
+    error_log(
+        json_encode(
+            [
+                'ts' => date('c'),
+                'event' => 'DENY',
+                'reason' => 'menu_delete_not_found_or_cross_tenant',
+                'menu_id' => $menuId,
+                'website' => $websiteId,
+                'member_id' => $_SESSION['member_id'] ?? ($_SESSION['id'] ?? null),
+                'role' => $_SESSION['role'] ?? 'guest',
+                'path' => $_SERVER['REQUEST_URI'] ?? '',
+                'ip' => $_SERVER['REMOTE_ADDR'] ?? '',
+            ],
+            JSON_UNESCAPED_SLASHES,
+        ),
+    );
+
+    // IMPORTANT: redirect to a public-safe page, not admin
+    $sessionWebsiteId = (int) ($_SESSION['website'] ?? 1);
+    if ($sessionWebsiteId <= 0) {
+        $sessionWebsiteId = 1;
+    }
+
+    $_SESSION['flash_failure'] = 'Access denied.';
+    error_log('DENY cross-tenant ...'); // keep your log
+
+    redirect('index/' . $sessionWebsiteId);
     exit();
 }
 
@@ -84,13 +133,22 @@ if (!$menu || !isset($menu['id'])) {
 $sessionId = (int) ($_SESSION['id'] ?? 0);
 
 // UberAdmin bypass
-if ($sessionId !== 1) {
+$role = (string) ($_SESSION['role'] ?? 'guest');
+$uberBypass = $role === 'uber'; // or use your helper if you have one
+
+if (!$uberBypass) {
     $member = $cms->getMember()->get($sessionId);
     $memberId = (int) ($member['id'] ?? 0);
     $menuCreatedBy = (int) ($menu['account_id'] ?? 0);
 
     if ($menuCreatedBy !== $memberId) {
-        redirect('admin/menus/', ['failure' => 'Not allowed']);
+        $_SESSION['flash_failure'] = 'Access denied.';
+        logDeny('menu_delete_not_owner', [
+            'menu_id' => $menuId,
+            'created_by' => $menuCreatedBy,
+            'member_id' => $memberId,
+        ]);
+        redirect(publicSafePath(), ['failure' => 'Access denied']);
         exit();
     }
 }
@@ -100,32 +158,26 @@ if ($sessionId !== 1) {
 // ------------------------------------------------------------
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // CSRF protection optional but recommended if you have a helper.
-    if (isset($_POST['csrf']) && function_exists('verify_csrf') && !verify_csrf($_POST['csrf'])) {
-        redirect('admin/menus/', ['failure' => 'Invalid request']);
+    // Fail closed: CSRF must exist and verify helper must be available
+    if (!function_exists('verify_csrf')) {
+        $_SESSION['flash_failure'] = 'Invalid request (CSRF unavailable).';
+        redirect('admin/menus/');
         exit();
     }
-    /*
-    try {
-        $rowsDeleted = $cms->getMenu()->deleteForWebsite($menuId, $websiteId);
-        if ($rowsDeleted > 0) {
-            redirect('admin/menus/', ['success' => 'Menu deleted']);
-            exit();
-        }
-        redirect('admin/menus/', ['success' => 'Menu was already deleted']);
+
+    $token = (string) ($_POST['csrf'] ?? '');
+    if ($token === '' || !verify_csrf($token)) {
+        $_SESSION['flash_failure'] = 'Invalid request. Please try again.';
+        redirect('admin/menus/');
         exit();
-    } catch (\Throwable $e) {
-        error_log('Caught exception class: ' . get_class($e));
-        error_log('Exception message: ' . $e->getMessage());
-        die('DEBUG: exception caught — check error.log for details.');
     }
-}
-*/
 
     try {
+        error_log('MENU DELETE EXECUTING: menuId=' . $menuId . ' csrf=' . ($_POST['csrf'] ?? ''));
         $rowsDeleted = $cms->getMenu()->deleteForWebsite($menuId, $websiteId);
 
         if ($rowsDeleted > 0) {
+            $_SESSION['flash_success'] = 'Menu deleted.';
             redirect('admin/menus/', ['success' => 'Menu deleted']);
             exit();
         }
@@ -163,6 +215,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         header('Location: ' . DOC_ROOT . 'admin/menus/');
         exit();
     } catch (\PDOException $e) {
+        $_SESSION['flash_failure'] = $e;
         redirect('admin/menus/', ['failure' => 'Database error during delete']);
         exit();
     }
@@ -175,5 +228,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $data = [];
 $data['menu'] = $menu;
 $data['website'] = $cms->getWebsite()->getById($websiteId);
-
+$data['csrf_token'] = generate_csrf_token();
 echo $twig->render('admin/menu-delete.html', $data);

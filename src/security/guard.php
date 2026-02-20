@@ -13,7 +13,7 @@ function guard(array $options = []): void
     $requireLogin = $options['requireLogin'] ?? true;
     $allowedRoles = $options['allowedRoles'] ?? null;
     $allowUber = $options['allowUber'] ?? true;
-    $loginPath = (string) ($options['loginPath'] ?? '/login');
+    $loginPath = (string) ($options['loginPath'] ?? 'login/');
     $fallbackPath = $options['fallbackPath'] ?? null;
     $rememberReturnTo = $options['rememberReturnTo'] ?? true;
 
@@ -27,10 +27,26 @@ function guard(array $options = []): void
     if ($requireLogin && empty($_SESSION['member_id'])) {
         redirectToLogin($loginPath, $rememberReturnTo);
     }
+    $timeoutSeconds = (int) ($options['timeoutSeconds'] ?? 0);
+    if ($timeoutSeconds > 0) {
+        $now = time();
+        $last = (int) ($_SESSION['last_activity'] ?? 0);
 
+        if ($last > 0 && $now - $last > $timeoutSeconds) {
+            // expire session
+            $_SESSION = [];
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                session_destroy();
+            }
+            redirectToLogin($loginPath, false);
+        }
+
+        $_SESSION['last_activity'] = $now;
+    }
     // ---- Role check ----
     if ($allowedRoles !== null) {
-        $role = (string) ($_SESSION['role'] ?? 'guest');
+        $role = strtolower(trim((string) ($_SESSION['role'] ?? 'guest')));
+        $_SESSION['role'] = $role;
 
         if ($allowUber && $role === 'uber') {
             return;
@@ -42,7 +58,33 @@ function guard(array $options = []): void
         }
     }
 }
+function guardPublic(): void
+{
+    guard([
+        'requireLogin' => false,
+    ]);
+}
+function guardAdmin(): void
+{
+    guard([
+        'requireLogin' => true,
+        'allowedRoles' => ['admin', 'uber'],
+        'loginPath' => 'login/',
+        'fallbackPath' => 'index/' . (int) ($_SESSION['website'] ?? 1),
+        'timeoutSeconds' => 1800,
+    ]);
+}
 
+function guardMember(): void
+{
+    guard([
+        'requireLogin' => true,
+        'allowedRoles' => ['member', 'admin', 'uber'],
+        'loginPath' => 'login/',
+        'fallbackPath' => 'index/' . (int) ($_SESSION['website'] ?? 1),
+        'timeoutSeconds' => 1800,
+    ]);
+}
 /**
  * Canonical redirect to login (header-safe)
  */
@@ -53,6 +95,18 @@ function redirectToLogin(string $loginPath = '/login', bool $rememberReturnTo = 
         if ($returnTo !== '') {
             $_SESSION['return_to'] = $returnTo;
         }
+    }
+
+    // Normalize to app-root path if caller passed a relative path like 'login/'
+    // DOC_ROOT in TFOL typically looks like '/focus-local/public/' (or similar)
+    if (!str_starts_with($loginPath, '/') && defined('DOC_ROOT')) {
+        $loginPath = rtrim(DOC_ROOT, '/') . '/' . ltrim($loginPath, '/');
+    }
+
+    // If caller passed '/login' but app is mounted under DOC_ROOT, fix that too
+    if (str_starts_with($loginPath, '/login') && defined('DOC_ROOT') && DOC_ROOT !== '/') {
+        // Convert '/login' -> '{DOC_ROOT}login/'
+        $loginPath = rtrim(DOC_ROOT, '/') . '/login/';
     }
 
     if (headers_sent()) {
@@ -77,23 +131,41 @@ function redirectToLogin(string $loginPath = '/login', bool $rememberReturnTo = 
 function denyAccess(?string $fallbackPath = null, int $statusCode = 403): void
 {
     if ($fallbackPath === null || $fallbackPath === '') {
-        // Prefer the same session key everywhere
         $websiteId = (int) ($_SESSION['website'] ?? 1);
         if ($websiteId <= 0) {
             $websiteId = 1;
         }
-        $fallbackPath = '/index/' . $websiteId;
+        $fallbackPath = 'index/' . $websiteId; // NOTE: TFOL-style relative path
+    } else {
+        // Normalize leading slash paths to TFOL relative paths if needed
+        $fallbackPath = ltrim($fallbackPath, '/');
     }
 
     if ($statusCode > 0) {
         http_response_code($statusCode);
     }
 
-    if (headers_sent()) {
-        echo '<script>window.location.href=' . json_encode($fallbackPath) . ';</script>';
+    // Prefer TFOL redirect helper if available (handles DOC_ROOT correctly)
+    if (function_exists('redirect')) {
+        $_SESSION['flash_failure'] = $_SESSION['flash_failure'] ?? 'Access denied.';
+        redirect($fallbackPath);
         exit();
     }
 
-    header('Location: ' . $fallbackPath);
+    // Fallback: raw header with DOC_ROOT normalization
+    $target = $fallbackPath;
+
+    if (defined('DOC_ROOT')) {
+        $target = rtrim(DOC_ROOT, '/') . '/' . ltrim($fallbackPath, '/');
+    } elseif (!str_starts_with($target, '/')) {
+        $target = '/' . $target;
+    }
+
+    if (headers_sent()) {
+        echo '<script>window.location.href=' . json_encode($target) . ';</script>';
+        exit();
+    }
+
+    header('Location: ' . $target);
     exit();
 }

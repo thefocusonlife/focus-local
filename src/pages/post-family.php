@@ -1,4 +1,6 @@
 <?php
+require_once APP_ROOT . '/src/security/guard.php';
+guardMember();
 include APP_ROOT . '/src/pages/menu-path.php'; // menu-path includeinclude
 //is_admin($session->role);                                          // Check if admin
 //if (!$id) {                                                        // If no id

@@ -8,6 +8,8 @@ use PhpBook\Validate\Validate; // Import Validate class
 
 require_once __DIR__ . '/../security/redirects.php';
 require_once __DIR__ . '/../../config/recaptcha.php';
+require_once APP_ROOT . '/src/security/guard.php';
+guardPublic();
 
 $doc_root = $config['doc_root'] ?? '/focus-local/public/';
 error_log(

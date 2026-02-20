@@ -5,6 +5,18 @@ use PhpBook\Validate\Validate;
 
 include APP_ROOT . '/src/pages/menu-path.php';
 
+// Load flash failure if set
+if (!empty($_SESSION['flash_failure'])) {
+    $data['flash_failure'] = $_SESSION['flash_failure'];
+    unset($_SESSION['flash_failure']);
+}
+
+// Load flash success if set
+if (!empty($_SESSION['flash_success'])) {
+    $data['flash_success'] = $_SESSION['flash_success'];
+    unset($_SESSION['flash_success']);
+}
+
 // ------------------------------------------------------------
 // 0) Auth + role
 // ------------------------------------------------------------
@@ -145,6 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             // 0 rows affected = OK (no-change save)
             if ($affected >= 0) {
+                $_SESSION['flash_success'] = 'Menu saved.';
                 redirect('admin/menus/', ['success' => 'Menu saved']);
                 exit();
             }
@@ -164,6 +177,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $newId = (int) $cms->getMenu()->create($createParams);
             if ($newId > 0) {
+                $_SESSION['flash_success'] = 'Menu created.';
                 redirect('admin/menus/', ['success' => 'Menu created']);
                 exit();
             }

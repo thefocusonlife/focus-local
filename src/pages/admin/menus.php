@@ -25,7 +25,9 @@ error_log('MENUS PAGE SESSION CONTENTS: ' . print_r($_SESSION, true));
 
 require_once APP_ROOT . '/src/security/guard.php';
 
-is_admin($session->role);
+require_once APP_ROOT . '/src/security/guard.php';
+
+guardAdmin();
 
 $websiteId = (int) ($_SESSION['website'] ?? 1);
 if ($websiteId <= 0) {

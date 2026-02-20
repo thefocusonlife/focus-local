@@ -55,7 +55,9 @@ tinymce.init({selector: 'textarea.tinymce', branding: false, plugins: 'anchor au
   '/login','/logout','/register',
   '/admin','/work','/member',
   '/password-lost','/password-reset',
-  '/menu','/story'
+  '/menu','/story',
+  '/index',
+  '/select-website'
 ] %}
 
 		{% set disableSplash = session.nosplash|default(false) %}
@@ -87,8 +89,8 @@ tinymce.init({selector: 'textarea.tinymce', branding: false, plugins: 'anchor au
 						<span class="hidden">Menu</span>
 					</button>
 					<!-- DEBUG nav: count={{ navigation|default([])|length }}
-																																			     sid={{ session.id|default('NULL') }}
-																																			     wid={{ session.website|default('NULL') }} -->
+																																																		     sid={{ session.id|default('NULL') }}
+																																																		     wid={{ session.website|default('NULL') }} -->
 
 
 					<ul id="menu">
