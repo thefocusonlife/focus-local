@@ -2,6 +2,8 @@
 declare(strict_types=1);
 use PhpBook\CMS\Exceptions\ForeignKeyConstraintException;
 
+require_once __DIR__ . '/../security/guard.php';
+guardAdmin();
 // ------------------------------------------------------------
 // 1) Session + Auth Enforcement
 // ------------------------------------------------------------

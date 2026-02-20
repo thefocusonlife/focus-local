@@ -1,5 +1,8 @@
 <?php
 declare(strict_types=1);
+require_once APP_ROOT . '/src/security/guard.php';
+guardPublic();
+
 $terms[] = null;
 
 $data['term'] = filter_input(INPUT_GET, 'term');

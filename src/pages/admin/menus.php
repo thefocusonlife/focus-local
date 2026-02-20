@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/../security/guard.php';
+guardMember();
+
 error_log('MENU-DELETE SESSION ID: ' . session_id());
 
 if (session_status() !== PHP_SESSION_ACTIVE) {

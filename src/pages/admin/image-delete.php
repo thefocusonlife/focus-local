@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 include APP_ROOT . '/src/pages/menu-path.php';
+require_once __DIR__ . '/../security/guard.php';
+guardMember();
+
 is_admin($session->role); // Check if admin
 $story = [];
 $id = intval($parts[2]);

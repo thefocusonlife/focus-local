@@ -1,7 +1,8 @@
 <?php
 declare(strict_types=1); // Use strict types
 use PhpBook\Validate\Validate; // Import Validate class
-
+require_once APP_ROOT . '/src/security/guard.php';
+guardPublic();
 $error = false; // Error message
 $sent = false; // Has email been sent
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {

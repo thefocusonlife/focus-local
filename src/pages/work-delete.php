@@ -6,6 +6,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 }
 
 require_once APP_ROOT . '/src/security/guard.php';
+guardAdmin();
 
 // Must be logged in (member/admin). If you have a specific helper, use it.
 // Otherwise, at least require a session id.

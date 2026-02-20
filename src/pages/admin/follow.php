@@ -9,6 +9,8 @@ require_once APP_ROOT . '/src/security/guard.php';
 require_once APP_ROOT . '/src/security/redirects.php'; // if you have it
 include APP_ROOT . '/src/pages/menu-path.php'; // if follow uses $id routing
 
+guardMember();
+
 // ---- Basic boundary: must be logged in (member/admin/uber), not guest ----
 if (empty($_SESSION['id']) || ($_SESSION['role'] ?? 'guest') === 'guest') {
     // keep it consistent with your site patterns:

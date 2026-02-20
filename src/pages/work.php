@@ -6,6 +6,7 @@ use PhpBook\Validate\Validate; // Use Validate class
 require_once __DIR__ . '/../security/guard.php';
 require_once __DIR__ . '/../security/ownership.php';
 require_once __DIR__ . '/../security/redirects.php';
+guardMember();
 
 $member = [];
 $temp = $_FILES['image']['tmp_name'] ?? ''; // Temporary image
@@ -215,7 +216,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     );
 
     // ---- WRITE BOUNDARY (must be first meaningful enforcement) ----
-    guardAdmin();
 
     $role = (string) ($_SESSION['role'] ?? 'guest');
     $isUber = $role === 'uber';

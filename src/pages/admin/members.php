@@ -6,7 +6,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 }
 
 require_once APP_ROOT . '/src/security/guard.php';
-
+guardMember();
 // Use the existing runtime guard you already have
 is_admin($session->role);
 

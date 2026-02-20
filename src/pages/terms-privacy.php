@@ -1,6 +1,7 @@
 <?php
 // src/pages/terms-privacy.php
-
+require_once APP_ROOT . '/src/security/guard.php';
+guardPublic();
 // 1. Navigation menu (same pattern as login.php)
 $mem = $_SESSION['id'] ?? 0;
 $data['navigation'] = $cms->getMenu()->getAll2($_SESSION['website'], $mem);

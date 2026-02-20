@@ -2,8 +2,12 @@
 
 declare(strict_types=1);
 use PhpBook\Validate\Validate;
+
+require_once __DIR__ . '/../security/guard.php';
+guardMember();
+
 /*$note = [
-    
+
     'note_type'   => 1,
     'to_id'       => 0,
     'to_name'     => '',
@@ -11,7 +15,7 @@ use PhpBook\Validate\Validate;
     'from_name'   => '',
     // 'family_id'   => 0,
     'request'     => 'Request to follow.',
-    'allow'       => 0    
+    'allow'       => 0
 ];                                                       // Story data
 */
 $errors = [

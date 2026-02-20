@@ -1,4 +1,8 @@
 <?php
+
+require_once __DIR__ . '/../security/guard.php';
+guardMember();
+
 if (!empty($parts[2])) {
     $id = intval($parts[2]);
 }

@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 include APP_ROOT . '/src/pages/menu-path.php';
+require_once APP_ROOT . '/src/security/guard.php';
+guardAdmin();
 
 if (!$id) {
     include APP_ROOT . '/src/pages/page-not-found.php';

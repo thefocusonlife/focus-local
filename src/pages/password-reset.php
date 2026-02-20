@@ -2,7 +2,8 @@
 declare(strict_types=1); // Use strict types
 
 use PhpBook\Validate\Validate; // Import class
-
+require_once APP_ROOT . '/src/security/guard.php';
+guardPublic();
 $errors = []; // Initialize array
 
 $token = $_GET['token'] ?? ''; // Get token
@@ -25,8 +26,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Validate passwords and check they match
     $errors['password'] = Validate::isPassword($password)
         ? ''
-        : 'Passwords must be at least 8 characters and have:<br> 
-                A lowercase letter<br>An uppercase letter<br>A number 
+        : 'Passwords must be at least 8 characters and have:<br>
+                A lowercase letter<br>An uppercase letter<br>A number
                 <br>And a special character'; // Invalid password
 
     $errors['confirm'] = $password === $confirm ? '' : 'Passwords do not match'; // Password does not match

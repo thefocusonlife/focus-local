@@ -1,5 +1,7 @@
 <?php
-// is_admin($session->role);                              // Check if admin
+
+require_once __DIR__ . '/../security/guard.php';
+guardMember();
 $note = []; // Initialize note array
 $deleted = null; // Did note delete
 $id = intval($parts[2]);

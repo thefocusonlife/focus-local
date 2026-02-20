@@ -6,6 +6,7 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 }
 
 require_once APP_ROOT . '/src/security/guard.php';
+guardAdmin();
 is_admin($session->role);
 
 $data = [];

@@ -4,7 +4,8 @@ declare(strict_types=1);
 use PhpBook\Validate\Validate;
 
 include APP_ROOT . '/src/pages/menu-path.php'; // ensures $menuId is available (same as sort.php)
-
+require_once APP_ROOT . '/src/security/guard.php';
+guardMember();
 $id = (int) ($_SESSION['id'] ?? 0);
 if ($id === 0) {
     redirect('login/');

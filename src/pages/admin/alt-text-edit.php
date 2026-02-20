@@ -2,6 +2,9 @@
 use PhpBook\Validate\Validate; // Import Validate namespace
 is_admin($session->role); // Check if admin
 
+require_once __DIR__ . '/../security/guard.php';
+guardMember();
+
 $story = []; // Initialize story array
 $errors = []; // Initialize error message
 

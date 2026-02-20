@@ -1,11 +1,12 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/../security/guard.php';
+guardMember();
+
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
-
-require_once APP_ROOT . '/src/security/guard.php';
 
 is_admin($session->role);
 

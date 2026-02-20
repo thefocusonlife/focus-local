@@ -1,6 +1,9 @@
 <?php
-//echo "admin/stories -2";
+
 include APP_ROOT . '/src/pages/menu-path.php';
+
+require_once __DIR__ . '/../security/guard.php';
+guardMember();
 
 is_admin($session->role); // Check if admin
 $member = $cms->getMember()->get($_SESSION['id']);

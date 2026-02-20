@@ -2,6 +2,10 @@
 
 declare(strict_types=1);
 use PhpBook\Validate\Validate;
+
+require_once __DIR__ . '/../security/guard.php';
+guardMember();
+
 // Initialize variables needed for the HTML page
 
 $note = [

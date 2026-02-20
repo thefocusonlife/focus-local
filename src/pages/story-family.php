@@ -2,6 +2,9 @@
 declare(strict_types=1); // Use strict types
 use PhpBook\Validate\Validate; // Import Validate namespace
 
+require_once APP_ROOT . '/src/security/guard.php';
+guardPublic();
+
 $families = [];
 $story = [];
 

@@ -1,6 +1,9 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/../security/guard.php';
+guardMember();
+
 // admin/edit-family/{id}
 // $id comes from routing: the member id whose family link is being edited.
 
