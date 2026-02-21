@@ -52,10 +52,6 @@ if (!empty($_SESSION['flash_success'])) {
     unset($_SESSION['flash_success']);
 }
 
-require_once APP_ROOT . '/src/security/guard.php';
-
-guardAdmin();
-
 // ------------------------------------------------------------
 // 2) Extract menuId from route parts
 // ------------------------------------------------------------
