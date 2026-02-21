@@ -6,7 +6,7 @@ use PhpBook\Validate\Validate; // Import Validate class
 // POST allowlist enforced; role/status/account/website are server-controlled.
 // Verified via DevTools Edit&Resend and cURL POST-body injection (Jan 2026).
 
-require_once __DIR__ . '/../security/redirects.php';
+require_once APP_ROOT . '/src/security/redirects.php';
 require_once __DIR__ . '/../../config/recaptcha.php';
 require_once APP_ROOT . '/src/security/guard.php';
 guardPublic();

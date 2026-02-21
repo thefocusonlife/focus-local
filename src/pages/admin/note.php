@@ -3,7 +3,7 @@
 declare(strict_types=1);
 use PhpBook\Validate\Validate;
 
-require_once __DIR__ . '/../security/guard.php';
+require_once APP_ROOT . '/src/security/guard.php';
 guardMember();
 
 /*$note = [

@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../security/guard.php';
+require_once APP_ROOT . '/src/security/guard.php';
 guardMember();
 $note = []; // Initialize note array
 $deleted = null; // Did note delete

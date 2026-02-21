@@ -3,9 +3,9 @@
 declare(strict_types=1); // Use strict types
 use PhpBook\Validate\Validate; // Use Validate class
 
-require_once __DIR__ . '/../security/guard.php';
-require_once __DIR__ . '/../security/ownership.php';
-require_once __DIR__ . '/../security/redirects.php';
+require_once APP_ROOT . '/src/security/guard.php';
+require_once APP_ROOT . '/src/security/ownership.php';
+require_once APP_ROOT . '/src/security/redirects.php';
 guardMember();
 
 $member = [];

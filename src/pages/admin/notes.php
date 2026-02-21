@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . '/../security/guard.php';
+require_once APP_ROOT . '/src/security/guard.php';
 guardMember();
 
 if (!empty($parts[2])) {

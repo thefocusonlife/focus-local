@@ -2,7 +2,7 @@
 declare(strict_types=1); // Use strict types
 use PhpBook\Validate\Validate; // Import Validate namespace
 
-require_once __DIR__ . '/../security/redirects.php';
+require_once APP_ROOT . '/src/security/redirects.php';
 require_once APP_ROOT . '/src/security/guard.php';
 guardPublic();
 

@@ -2,7 +2,7 @@
 declare(strict_types=1); // Use strict types
 use PhpBook\Validate\Validate; // Import validate class
 
-require __DIR__ . '/../../config/recaptcha.php'; // ⭐ reCAPTCHA helper
+require_once APP_ROOT . '/config/recaptcha.php'; // ⭐ reCAPTCHA helper
 
 $from = ''; // Initialize: from
 $subject = '';
