@@ -17,6 +17,17 @@ if ($websiteId <= 0) {
 }
 
 $data = [];
+
+if (!empty($_SESSION['flash_failure'])) {
+    $data['flash_failure'] = $_SESSION['flash_failure'];
+    unset($_SESSION['flash_failure']);
+}
+
+if (!empty($_SESSION['flash_success'])) {
+    $data['flash_success'] = $_SESSION['flash_success'];
+    unset($_SESSION['flash_success']);
+}
+
 $data['success'] = $_GET['success'] ?? null;
 $data['failure'] = $_GET['failure'] ?? null;
 $data['members'] = $cms->getMember()->getAll2($websiteId);

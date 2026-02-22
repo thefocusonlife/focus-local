@@ -31,6 +31,7 @@ if (!$isPost) {
     ($targetId = (int) ($parts[2] ?? 0)) or $_GET['id'];
     $data['member'] = $cms->getMember()->get($targetId);
     $data['website'] = $cms->getWebsite()->getById($_SESSION['website']);
+    $data['csrf_token'] = generate_csrf_token();
     echo $twig->render('admin/edit-role.html', $data);
     exit();
 }
@@ -39,6 +40,18 @@ if (!$isPost) {
 // POST: update role
 // ---------------------------
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    if (!function_exists('verify_csrf')) {
+        $_SESSION['flash_failure'] = 'Invalid request (CSRF unavailable).';
+        redirect('admin/members/');
+        exit();
+    }
+
+    $token = (string) ($_POST['csrf'] ?? '');
+    if ($token === '' || !verify_csrf($token)) {
+        $_SESSION['flash_failure'] = 'Invalid request. Please try again.';
+        redirect('admin/members/');
+        exit();
+    }
     // 1) Parse inputs safely
     $role = trim((string) ($_POST['role'] ?? ''));
 
@@ -92,5 +105,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // 7) Update
     $cms->getMember()->updateRole($targetId, $role);
 }
-redirect('admin/members', ['success' => 'Role updated.']);
+$_SESSION['flash_success'] = 'Role updated.';
+redirect('admin/members/'); // note trailing slash
 exit();

@@ -5,6 +5,7 @@
 
 		<section class="header">
 			<h1>Members</h1>
+
 			{% if flash_failure %}
 				<div class="alert alert-danger">
 					{{ flash_failure }}
@@ -47,8 +48,17 @@
 						<td>{{member.account_id}}</td>
 						<td>{{member.website}}</td>
 						<td>
-							<a href="{{ doc_root }}admin/edit-role/{{ member.id }}" class="btn btn-primary">Edit Role
-							</a>
+							{% if session.id == 1 %}
+
+								<a href="{{ doc_root }}admin/edit-role/{{ member.id }}" class="btn btn-primary">
+									Edit role
+								</a>
+							{% else %}
+
+								<a class="btn btn-secondary disabled" href="#" tabindex="-1" aria-disabled="true">
+									Edit role
+								</a>
+							{% endif %}
 						</td>
 
 						<td>
@@ -64,5 +74,4 @@
 				{% endif %}
 			{% endfor %}
 		</table>
-
 	{% endblock %}
