@@ -4,6 +4,7 @@
 		<!-- class="container" id="content">  -->
 		<form action="{{ doc_root }}admin/edit-family/{{ member.id }}" method="POST" class="narrow">
 			<h1>Edit Follow</h1>
+			<input type="hidden" name="csrf" value="{{ csrf_token }}">
 			<p>Member name:
 				{{ member.forename }}
 				{{ member.surname }}
@@ -26,7 +27,7 @@
 			<span class="errors">{{ errors.family }}</span>
 		</div>
 		<input type="submit" value="Update family" class="btn
-																	    btn-primary"/>
+																											    btn-primary"/>
 
 	</form>
 </main>{% endblock %}

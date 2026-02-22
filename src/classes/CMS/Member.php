@@ -460,4 +460,26 @@ class Member
                   FROM follow;"; // SQL to get all plan records
         return $this->db->runSql($sql)->fetchAll(); // Return all plan records
     }
+    public function updateAccountIdForWebsite(int $memberId, int $websiteId, int $accountId): bool
+    {
+        $sql = 'UPDATE member
+            SET account_id = :aid
+            WHERE id = :id AND website = :wid
+            LIMIT 1';
+
+        $params = [
+            'aid' => $accountId,
+            'id' => $memberId,
+            'wid' => $websiteId,
+        ];
+
+        $stmt = $this->db->runSql($sql, $params);
+
+        // If your wrapper returns false/null on failure, fail closed
+        if (!$stmt instanceof \PDOStatement) {
+            return false;
+        }
+
+        return $stmt->rowCount() === 1;
+    }
 }

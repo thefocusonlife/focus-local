@@ -1,19 +1,82 @@
 <?php
 declare(strict_types=1);
 
-require_once APP_ROOT . '/src/security/guard.php';
-guardMember();
-
-// admin/edit-family/{id}
-// $id comes from routing: the member id whose family link is being edited.
-
-$sessionMemberId = (int) ($_SESSION['id'] ?? 0);
-if ($sessionMemberId <= 0) {
-    redirect('login');
+if (session_status() !== PHP_SESSION_ACTIVE) {
+    session_start();
 }
 
-$role = (string) ($_SESSION['role'] ?? ''); // keep if you later want uber override
+require_once APP_ROOT . '/src/bootstrap.php';
+
+require_once APP_ROOT . '/src/security/guard.php';
+require_once APP_ROOT . '/src/security/redirects.php';
+include APP_ROOT . '/src/pages/menu-path.php';
+
+guardMember();
+
+/**
+ * Public-safe fallback route (avoid leaking admin pages on deny)
+ */
+function publicSafePath(): string
+{
+    $websiteId = (int) ($_SESSION['website'] ?? 1);
+    if ($websiteId <= 0) {
+        $websiteId = 1;
+    }
+    return 'index/' . $websiteId;
+}
+
+function logDeny(string $reason, array $ctx = []): void
+{
+    $row = [
+        'ts' => date('c'),
+        'event' => 'DENY',
+        'reason' => $reason,
+        'member_id' => $_SESSION['id'] ?? ($_SESSION['member_id'] ?? null),
+        'role' => $_SESSION['role'] ?? 'guest',
+        'website' => $_SESSION['website'] ?? null,
+        'path' => $_SERVER['REQUEST_URI'] ?? '',
+        'ip' => $_SERVER['REMOTE_ADDR'] ?? '',
+        'ctx' => $ctx,
+    ];
+    error_log(json_encode($row, JSON_UNESCAPED_SLASHES));
+}
+
+// Flash
+$data = [];
+if (!empty($_SESSION['flash_failure'])) {
+    $data['flash_failure'] = $_SESSION['flash_failure'];
+    unset($_SESSION['flash_failure']);
+}
+if (!empty($_SESSION['flash_success'])) {
+    $data['flash_success'] = $_SESSION['flash_success'];
+    unset($_SESSION['flash_success']);
+}
+
+// Session basics
+$sessionMemberId = (int) ($_SESSION['id'] ?? ($_SESSION['member_id'] ?? 0));
+if ($sessionMemberId <= 0) {
+    redirect('login');
+    exit();
+}
+
+$role = (string) ($_SESSION['role'] ?? '');
 $websiteId = (int) ($_SESSION['website'] ?? 0);
+
+if ($websiteId <= 0) {
+    logDeny('missing_website', []);
+    $_SESSION['flash_failure'] = 'Access denied.';
+    redirect(publicSafePath(), ['failure' => 'Access denied']);
+    exit();
+}
+
+$website = $cms->getWebsite()->getById($websiteId);
+if (!$website) {
+    logDeny('invalid_website', ['website_id' => $websiteId]);
+    $_SESSION['flash_failure'] = 'Access denied.';
+    redirect(publicSafePath(), ['failure' => 'Access denied']);
+    exit();
+}
+
 // ------------------------------------------------------------
 // Route fallback: derive $id if router didn't inject it
 // URL expected: /admin/edit-family/{id}
@@ -52,37 +115,58 @@ if (!isset($id) || (int) $id <= 0) {
 $targetMemberId = (int) ($id ?? 0);
 if ($targetMemberId <= 0) {
     redirect('page-not-found/');
+    exit();
 }
 
-// OWNER-ONLY hardening (if you want uber override, add: && $role !== 'uber')
+// OWNER-ONLY hardening (if you want uber override: && $role !== 'uber')
 if ($targetMemberId !== $sessionMemberId) {
-    redirect('page-not-found/');
+    logDeny('not_owner', ['target_member_id' => $targetMemberId]);
+    $_SESSION['flash_failure'] = 'Access denied.';
+    redirect(publicSafePath());
+    exit();
 }
 
-// Load target member for BOTH GET and POST
+// ------------------------------------------------------------
+// Tenant-scoped fetch (prefer a website-scoped method if available)
+// ------------------------------------------------------------
+
+// If you have/added this Week 3 method, use it:
+/*$websiteId = (int) ($_SESSION['website'] ?? 0);
+$memberId = (int) ($_POST['member_id'] ?? 0);
+
+$cms->getMember()->get($memberId);
+if (!$member) {
+    $_SESSION['flash_failure'] = 'Access denied.';
+    redirect(publicSafePath());
+    exit();
+}*/
+// Fallback if your model doesn't have it yet:
 $targetMember = $cms->getMember()->get($targetMemberId);
+
 if (!$targetMember || !isset($targetMember['id'])) {
     redirect('page-not-found/');
+    exit();
 }
 
-// Website scope guard (optional but recommended even for owner-only)
 if ((int) ($targetMember['website'] ?? 0) !== $websiteId) {
+    logDeny('cross_tenant_member_fetch', [
+        'target_member_id' => $targetMemberId,
+        'member_website' => (int) ($targetMember['website'] ?? 0),
+        'session_website' => $websiteId,
+    ]);
     redirect('page-not-found/');
+    exit();
 }
 
 // ------------------------------------------------------------
 // Allowed Family/Account IDs for dropdown (tamper-proof)
-// - Always include Personal Family = member.id
-// - Always include Current Family = member.account_id
-// - Plus approved outgoing follows from note table
 // ------------------------------------------------------------
-
 $personalFamilyId = (int) ($targetMember['id'] ?? 0); // ALWAYS allow
 $currentFamilyId = (int) ($targetMember['account_id'] ?? 0); // ALWAYS allow
 
 $displayName = trim(($targetMember['forename'] ?? '') . ' ' . ($targetMember['surname'] ?? ''));
 
-// Build allowed set
+// Allowed set
 $allowedAccountIds = [];
 if ($personalFamilyId > 0) {
     $allowedAccountIds[$personalFamilyId] = true;
@@ -91,10 +175,9 @@ if ($currentFamilyId > 0) {
     $allowedAccountIds[$currentFamilyId] = true;
 }
 
-// Build dropdown options (dedupe by id at end)
 $accountOptions = [];
 
-// Personal family option (lets user revert back to "self family")
+// Personal
 if ($personalFamilyId > 0) {
     $accountOptions[] = [
         'account_id' => $personalFamilyId,
@@ -102,7 +185,7 @@ if ($personalFamilyId > 0) {
     ];
 }
 
-// Current family option (where they are now; may equal personal)
+// Current
 if ($currentFamilyId > 0) {
     $accountOptions[] = [
         'account_id' => $currentFamilyId,
@@ -112,11 +195,9 @@ if ($currentFamilyId > 0) {
 
 // Approved outgoing follows (one-sided)
 $followAccounts = [];
-if ($websiteId > 0) {
-    $followAccounts = $cms->getNote()->getAllowedFollowAccounts($websiteId, $targetMemberId, 1);
-    if (!is_array($followAccounts)) {
-        $followAccounts = [];
-    }
+$followAccounts = $cms->getNote()->getAllowedFollowAccounts($websiteId, $targetMemberId, 1);
+if (!is_array($followAccounts)) {
+    $followAccounts = [];
 }
 
 foreach ($followAccounts as $row) {
@@ -132,46 +213,66 @@ foreach ($followAccounts as $row) {
     ];
 }
 
-// Deduplicate options by account_id
+// Deduplicate options
 $tmp = [];
 foreach ($accountOptions as $opt) {
     $tmp[(int) $opt['account_id']] = $opt;
 }
 $accountOptions = array_values($tmp);
 
+// ------------------------------------------------------------
+// POST: validate CSRF + tenant-scoped write
+// ------------------------------------------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Fail closed: CSRF must exist and verify helper must be available
+    if (!function_exists('verify_csrf') || !function_exists('generate_csrf_token')) {
+        $_SESSION['flash_failure'] = 'Invalid request (CSRF unavailable).';
+        redirect('admin/members/');
+        exit();
+    }
+
+    $token = (string) ($_POST['csrf'] ?? '');
+    if ($token === '' || !verify_csrf($token)) {
+        $_SESSION['flash_failure'] = 'Invalid request. Please try again.';
+        redirect('admin/members/');
+        exit();
+    }
+
     $accountId = (int) ($_POST['account_id'] ?? 0);
     if ($accountId <= 0 || !isset($allowedAccountIds[$accountId])) {
+        logDeny('tampered_account_id', [
+            'target_member_id' => $targetMemberId,
+            'posted_account_id' => $accountId,
+        ]);
         redirect('page-not-found/');
+        exit();
     }
 
-    $update = $targetMember;
-    $update['account_id'] = $accountId;
+    // Week 3 requirement: tenant-scoped write (WHERE id AND website)
+    // Prefer: $cms->getMember()->updateAccountIdForWebsite($targetMemberId, $websiteId, $accountId);
+    $ok = $cms->getMember()->updateAccountIdForWebsite($targetMemberId, $websiteId, $accountId);
 
-    $cms->getMember()->update($update);
-    // If editing own record, keep session in sync
-    if ($targetMemberId === (int) ($_SESSION['id'] ?? 0)) {
-        $_SESSION['account_id'] = (int) $accountId;
-        $_SESSION['follow_id'] = (int) $accountId; // your app uses follow_id similarly
+    if ($ok !== true) {
+        $_SESSION['flash_failure'] = 'Update failed.';
+        redirect('admin/members/');
+        exit();
     }
 
-    redirect('admin/members/', ['success' => 'Family updated']);
+    // Keep session in sync (editing own record)
+    $_SESSION['account_id'] = (int) $accountId;
+    $_SESSION['follow_id'] = (int) $accountId;
+
+    $_SESSION['flash_success'] = 'Family updated.';
+    redirect('admin/members/');
+    exit();
 }
 
-// -------------------------
+// ------------------------------------------------------------
 // GET: render
-// -------------------------
-$data = [];
+// ------------------------------------------------------------
 $data['member'] = $targetMember;
-$data['website'] = $cms->getWebsite()->getById($websiteId);
-
-// Add a "self" row for the dropdown so current member always appears
-$selfRow = [
-    'to_family_id' => $targetMemberId,
-    'to_name' => trim(($targetMember['forename'] ?? '') . ' ' . ($targetMember['surname'] ?? '')),
-];
-
+$data['website'] = $website;
 $data['account_options'] = $accountOptions;
 $data['selected_account_id'] = (int) ($targetMember['account_id'] ?? $targetMemberId);
-
+$data['csrf_token'] = generate_csrf_token();
 echo $twig->render('admin/edit-family.html', $data);
