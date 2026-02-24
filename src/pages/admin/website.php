@@ -1,24 +1,40 @@
 <?php
-// Part A: Setup
 use PhpBook\Validate\Validate; // Import Validate namespace
-is_admin($session->role); // Check if admin
 
-// Initialize variables that the PHP code needs
-$member = [];
-$temp = $_FILES['image_file']['tmp_name'] ?? ''; // Temporary image
-$destination = '';
-$image = ''; // Where to save file
-$saved = null; // Did story save
+is_admin($session->role); // Keep for now
 
-// Initialize variables needed for the HTML page
+// ------------------------------------------------------------
+// A) Uber-only (Week 2 hardening can wait; but keep basic gate)
+// IMPORTANT: do NOT reuse $id for session user id
+// ------------------------------------------------------------
+$sessionUserId = (int) ($cms->getSession()->id ?? 0);
+if ($sessionUserId !== 1) {
+    redirect('index/');
+    exit();
+}
+
+// ------------------------------------------------------------
+// B) Route website id (0=create, >0=edit)
+// Use $id if router provides it; fallback to $parts[2] (admin/website/{id})
+// ------------------------------------------------------------
+$routeWebsiteId = isset($id) ? (int) $id : 0;
+if ($routeWebsiteId <= 0 && isset($parts[2]) && ctype_digit((string) $parts[2])) {
+    $routeWebsiteId = (int) $parts[2];
+}
+
+// ------------------------------------------------------------
+// C) Defaults for template (CREATE mode)
+// ------------------------------------------------------------
 $website = [
-    'id' => $_SESSION['id'], //$id,
-    'uber_id' => $_SESSION['id'],
+    'id' => $routeWebsiteId,
+    'uber_id' => null, // create default
+    'sorttype' => 2,
     'name' => '',
     'image_file' => '',
     'alt' => '',
     'non_members' => 0,
-]; // Story data
+    'blog' => 0,
+];
 
 $errors = [
     'warning' => '',
@@ -28,109 +44,133 @@ $errors = [
     'non_members' => 0,
 ];
 
-if ($id) {
-    // If valid id
-    $image = $cms->getWebsite()->get($id, false); // Get website data
+// Sorttypes always needed for dropdown
+$sorttypes = $cms->getSorttype()->getAllSorttypes();
 
-    if (!$image) {
-        // If website empty
-        redirect('admin/websites/', ['failure' => 'Website not found']); // Redirect
+// ------------------------------------------------------------
+// D) GET: load existing row if editing
+// ------------------------------------------------------------
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    if ($routeWebsiteId > 0) {
+        $existing = $cms->getWebsite()->get($routeWebsiteId);
+        if (!$existing) {
+            redirect('admin/websites/', ['failure' => 'Website not found']);
+            exit();
+        }
+        $website = array_merge($website, $existing);
     }
-    $saved_image = $image['image_file'] ? true : false; // Has an image been uploaded
+
+    $data = [
+        'website' => $website,
+        'errors' => $errors,
+        'sorttypes' => $sorttypes,
+    ];
+
+    echo $twig->render('admin/website.html', $data);
+    exit();
 }
 
-$id = $cms->getSession()->id;
-//user's id from session
-if ($id != 1) {
-    redirect('index/'); // must be Uber Admin to run this program.
+// ============================================================
+// E) POST: update vs create (your block, fixed id usage)
+// ============================================================
+
+$postId = (int) ($_POST['website_id'] ?? 0);
+$isUpdate = $postId > 0;
+
+// Deep-link safety (basic): route id must match posted id
+// Create: route=0 post=0 ok. Update: route=4 post=4 ok.
+if ($routeWebsiteId !== $postId) {
+    redirect('admin/websites/', ['failure' => 'Invalid request.']);
+    exit();
 }
 
-// Part B: Get and validate form data
+// Load existing row on update (prevents wiping image_file)
+$existing = [];
+if ($isUpdate) {
+    $existing = $cms->getWebsite()->get($postId);
+    if (!$existing) {
+        redirect('admin/websites/', ['failure' => 'Website not found']);
+        exit();
+    }
+}
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // If form submitted
-    // If file bigger than limit in php.ini or .htaccess store error message
-    $website['id'] = $_POST['website_id'];
+// Build $website from POST (start from existing if update)
+$website = $isUpdate
+    ? $existing
+    : [
+        'id' => 0,
+        'uber_id' => null,
+        'sorttype' => 2,
+        'name' => '',
+        'image_file' => '',
+        'alt' => '',
+        'non_members' => 0,
+        'blog' => 0,
+    ];
 
-    $website['name'] = $_POST['name']; // Get name
-    $website['uber_id'] = $website['id'];
-    //$website['image_file']      = $_POST['image_file'];      // Get image_file
-    $website['alt'] = $_POST['alt']; // Get alt
-    $errors['image_file'] = $_FILES['image_file']['error'] === 1 ? 'File too big ' : '';
+$website['id'] = $postId;
+$website['name'] = trim((string) ($_POST['name'] ?? ''));
+$website['sorttype'] = (int) ($_POST['sorttype'] ?? $website['sorttype']);
+$website['non_members'] = isset($_POST['non_members']) ? 1 : 0;
+$website['blog'] = isset($_POST['blog']) ? 1 : 0;
 
-    // If image was uploaded, get image data and validate
+// alt (template may hide it)
+$website['alt'] = trim((string) ($_POST['alt'] ?? ($website['alt'] ?? '')));
 
-    if ($temp and $_FILES['image_file']['error'] == 0) {
-        // Check file
+// Upload handling (Twig uses name="image")
+$tmp = $_FILES['image']['tmp_name'] ?? '';
+$fileErr = (int) ($_FILES['image']['error'] ?? UPLOAD_ERR_NO_FILE);
+$hasUpload = $fileErr === UPLOAD_ERR_OK && $tmp && is_uploaded_file($tmp);
 
-        // Validate image data
-        $errors['image_file'] = in_array(mime_content_type($temp), MEDIA_TYPES)
-            ? ''
-            : 'Wrong file type. '; // Validate file type
+$uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/focus-local/public/img/';
 
-        $extension = strtolower(pathinfo($_FILES['image_file']['name'], PATHINFO_EXTENSION)); // File extension in lowercase
+if ($hasUpload) {
+    $ext = strtolower(pathinfo((string) ($_FILES['image']['name'] ?? ''), PATHINFO_EXTENSION));
+    if (!in_array($ext, FILE_EXTENSIONS, true)) {
+        $errors['image_file'] = 'Wrong file extension.';
+    } else {
+        $website['image_file'] = create_filename((string) $_FILES['image']['name'], $uploadDir);
+        $destination = $uploadDir . $website['image_file'];
 
-        $errors['image_file'] = in_array($extension, FILE_EXTENSIONS)
-            ? ''
-            : 'Wrong file extension. '; // Validate file extension
-        $errors['image_file'] .= $_FILES['image_file']['size'] <= MAX_SIZE ? '' : ' Resize. '; // Validate file size
-        $errors['alt'] = Validate::isText($website['alt'], 1, 254)
-            ? ''
-            : 'Alt text can be 1-1000 characters.'; // Alt text
-
-        if ($errors['image_file'] === '' and $errors['alt'] === '') {
-            // If valid
-            $website['image_file'] = create_filename($_FILES['image_file']['name'], UPLOADS); // Path
-            $destination = UPLOADS . $website['image_file']; // Destination
+        if (!move_uploaded_file($tmp, $destination)) {
+            $errors['image_file'] = 'Upload failed.';
         }
     }
-
-    $purifier = new HTMLPurifier(); // Create Purifier
-    $purifier->config->set('HTML.Allowed', 'p,br,strong,em,b,i,a[href],img[src|alt]'); // Permitted tags$purifier->config->set('HTML.Allowed', 'p,br,strong,em,b,i,a[href],img[src|alt]'); // Permitted tags
-    /*
-disabling purify during development only to create guides and documentation
-$story['content']     = $purifier->purify($story['content']); // Purify content
-*/
-    // Check if all data was valid and create error messages if it is invalid
-    $errors['name'] = Validate::isText($website['name'], 1, 80)
-        ? ''
-        : 'Name should be 1 - 80 characters.'; // Validate title
-    $errors['image_file'] = Validate::isText($website['image_file'], 1, 80)
-        ? ''
-        : 'Summary should be 0 - 254 characters.'; // Validate summary
-    $errors['alt'] = Validate::isText($website['alt'], 1, 80)
-        ? ''
-        : 'Alt should be 1 - 80 characters.'; // Validate content
-    // Part C: Check if data is valid, if so update database
-
-    /*      if ($invalid) { 
- 
-        ($website);                                                  // If invalid data
-        $errors['warning'] = 'Please correct form errors';              // Store error
-    } else {  
- */ // Otherwise
-    $arguments = $website;
-    if ($arguments['id'] > 0) {
-        // If id exists update
-        $saved = $cms->getWebsite()->update($arguments, $temp, $destination); // Update story
-    } else {
-        // No id create
-        unset($arguments['id']);
-
-        $saved = $cms->getWebsite()->create($arguments, $temp, $destination); // Create story
-    }
-
-    if ($saved == true) {
-        // If updated
-        redirect('admin/websites/', ['success' => 'Story saved']); // Redirect
-    } else {
-        // Otherwise
-        $errors['warning'] = 'Website name already in use'; // Store message
+} else {
+    // Create requires image_file because DB column is NOT NULL
+    if (!$isUpdate && ($website['image_file'] ?? '') === '') {
+        $errors['image_file'] = 'Please upload an image.';
     }
 }
 
-// $website['image_file'] = $saved_image ? $website['image_file'] : ''; // Remove image if new website
+// Minimal validation for now
+$errors['name'] = Validate::isText($website['name'], 1, 254)
+    ? ''
+    : 'Name should be 1–254 characters.';
 
-$data['website'] = $website; // Story data for template
-$data['errors'] = $errors; // Error data for template
-echo $twig->render('admin/website.html', $data); // Render Twig templateFile too big.
+if (!empty($errors['name']) || !empty($errors['image_file'])) {
+    $errors['warning'] = 'Please correct form errors.';
+
+    $data = [
+        'website' => $website,
+        'errors' => $errors,
+        'sorttypes' => $sorttypes,
+    ];
+
+    echo $twig->render('admin/website.html', $data);
+    exit();
+}
+
+// SAVE split (single update block / single create block)
+if ($isUpdate) {
+    $cms->getWebsite()->update($website);
+    redirect('admin/websites/', ['success' => 'Website saved']);
+    exit();
+}
+
+// Create
+unset($website['id']); // safety
+error_log(print_r($website, true));
+$cms->getWebsite()->create($website);
+redirect('admin/websites/', ['success' => 'Website created']);
+exit();
