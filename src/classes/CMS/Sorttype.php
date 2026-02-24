@@ -23,7 +23,16 @@ class Sorttype // Define Session class
                  WHERE id = :id;"; // SQL to get sorttype
         return $this->db->runSql($sql, [$id])->fetch(); // Return sorttype
     }
+    public function getAllSorttypes(): array
+    {
+        $sql = 'SELECT id, name
+            FROM sorttype
+            ORDER BY id ASC;';
+        $rows = $this->db->runSql($sql)->fetchAll();
 
+        // Always return an array
+        return is_array($rows) ? $rows : [];
+    }
     // Get details of all sorttypes
     public function getAll(): array
     {
