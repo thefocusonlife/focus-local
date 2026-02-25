@@ -339,12 +339,14 @@ i.alt      AS image_alt,
   WHERE comment.story_id = a.id) AS comments
 
 FROM story    AS a
+JOIN website  AS w ON w.id = a.website
 LEFT JOIN menu AS c ON a.menu_id = c.id and c.website = a.website
 
 JOIN member     AS m ON a.member_id   = m.id
 LEFT JOIN image AS i ON a.image_id    = i.id
 
-WHERE (a.menu_id = :menu OR :menu1 is null)
+WHERE w.is_active = 1
+AND (a.menu_id = :menu OR :menu1 is null)
 AND (a.member_id   = :member   OR :member1   is null)
 AND (:crossWebsite = 1 OR a.website = :website)
 AND (m.publik = 1)";

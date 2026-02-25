@@ -21,7 +21,17 @@ $routeWebsiteId = isset($id) ? (int) $id : 0;
 if ($routeWebsiteId <= 0 && isset($parts[2]) && ctype_digit((string) $parts[2])) {
     $routeWebsiteId = (int) $parts[2];
 }
+// Load flash failure if set
+if (!empty($_SESSION['flash_failure'])) {
+    $data['flash_failure'] = $_SESSION['flash_failure'];
+    unset($_SESSION['flash_failure']);
+}
 
+// Load flash success if set
+if (!empty($_SESSION['flash_success'])) {
+    $data['flash_success'] = $_SESSION['flash_success'];
+    unset($_SESSION['flash_success']);
+}
 // ------------------------------------------------------------
 // C) Defaults for template (CREATE mode)
 // ------------------------------------------------------------
@@ -64,6 +74,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         'website' => $website,
         'errors' => $errors,
         'sorttypes' => $sorttypes,
+        'csrf_token' => generate_csrf_token(),
     ];
 
     echo $twig->render('admin/website.html', $data);
@@ -73,6 +84,13 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 // ============================================================
 // E) POST: update vs create (your block, fixed id usage)
 // ============================================================
+
+$posted = (string) ($_POST['csrf'] ?? '');
+
+if ($posted === '' || !verify_csrf($posted)) {
+    redirect('admin/websites/', ['failure' => 'Security check failed (CSRF).']);
+    exit();
+}
 
 $postId = (int) ($_POST['website_id'] ?? 0);
 $isUpdate = $postId > 0;
@@ -155,6 +173,7 @@ if (!empty($errors['name']) || !empty($errors['image_file'])) {
         'website' => $website,
         'errors' => $errors,
         'sorttypes' => $sorttypes,
+        'csrf_token' => generate_csrf_token(),
     ];
 
     echo $twig->render('admin/website.html', $data);

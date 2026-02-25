@@ -49,7 +49,7 @@ Click the "Register" link on top of this page to see pricing.',
     exit();
 }
 
-$websites = $cms->getWebsite()->getAll();
+$websites = $cms->getWebsite()->getAllActive();
 $data['source'] = 'select-website';
 $data['websites'] = $websites;
 

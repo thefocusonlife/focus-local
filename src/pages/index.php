@@ -146,8 +146,9 @@ $data['stories'] = $cms
     ->getStory()
     ->getAll3((int) $website['id'], true, null, null, 100, $sorttypeId);
 
-// 7) Navigation (guest account_id = 0)
-$data['navigation'] = $cms->getMenu()->getAll2((int) $website['id'], $menuOwnerId);
+// 7) Navigation (guest account_id = 1)
+//$data['navigation'] = $cms->getMenu()->getAll2((int) $website['id'],$menuOwnerId);
+$data['navigation'] = $cms->getMenu()->getAll2((int) $website['id'], 1);
 
 // 7.5) Default Sort target for global pages (Focus menu id=2)
 if (empty($data['sort_menu_id'])) {
