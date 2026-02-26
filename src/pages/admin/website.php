@@ -190,6 +190,32 @@ if ($isUpdate) {
 // Create
 unset($website['id']); // safety
 error_log(print_r($website, true));
-$cms->getWebsite()->create($website);
-redirect('admin/websites/', ['success' => 'Website created']);
+
+$ok = $cms->getWebsite()->create($website);
+
+if ($ok) {
+    $newWebsiteId = (int) $cms->getWebsite()->getLastCreatedId();
+    error_log('New website id: ' . $newWebsiteId);
+
+    if ($newWebsiteId > 1) {
+        try {
+            $stmt = $cms
+                ->getDb()
+                ->runSql('CALL CopyUberMenusToWebsite(:wid)', ['wid' => $newWebsiteId]);
+            $status = $stmt->fetch(\PDO::FETCH_ASSOC) ?: null;
+            $stmt->closeCursor();
+            error_log('Menu copy status: ' . json_encode($status));
+        } catch (\PDOException $e) {
+            error_log('Menu copy failed: ' . $e->getMessage());
+            error_log('SQLSTATE: ' . ($e->errorInfo[0] ?? ''));
+            error_log('Driver code: ' . ($e->errorInfo[1] ?? ''));
+            error_log('Driver msg: ' . ($e->errorInfo[2] ?? ''));
+        }
+    }
+
+    redirect('admin/websites/', ['success' => 'Website created']);
+    exit();
+}
+
+redirect('admin/websites/', ['error' => 'Website already exists']);
 exit();

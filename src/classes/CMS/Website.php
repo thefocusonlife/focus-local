@@ -96,7 +96,7 @@ class Website
             $this->db->beginTransaction();
 
             $sql = "INSERT INTO website (uber_id, sorttype, name, image_file, alt, non_members, blog)
-                    VALUES (:uber_id, :sorttype, :name, :image_file, :alt, :non_members, :blog)";
+                VALUES (:uber_id, :sorttype, :name, :image_file, :alt, :non_members, :blog)";
 
             $this->db->runSql($sql, [
                 'uber_id' => $website['uber_id'] ?? null,
@@ -108,6 +108,9 @@ class Website
                 'blog' => (int) ($website['blog'] ?? 0),
             ]);
 
+            // if $this->db is PDO or extends PDO:
+            $this->lastCreatedId = (int) $this->db->lastInsertId();
+
             $this->db->commit();
             return true;
         } catch (\PDOException $e) {
@@ -117,6 +120,13 @@ class Website
             }
             throw $e;
         }
+    }
+
+    private int $lastCreatedId = 0;
+
+    public function getLastCreatedId(): int
+    {
+        return $this->lastCreatedId;
     }
 
     public function setActive(int $id, int $active): int
