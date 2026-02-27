@@ -4,8 +4,12 @@
 {% block content %}
 	<form action="{{ doc_root }}/admin/website/{{ website.id }}" method="POST" enctype="multipart/form-data">
 
-		{% if failure %}
-			<div class="alert alert-success">{{ failure }}</div>
+		{% if flash_failure %}
+			<div class="alert alert-danger">{{ flash_failure }}</div>
+		{% endif %}
+
+		{% if flash_success %}
+			<div class="alert alert-success">{{ flash_success }}</div>
 		{% endif %}
 
 		<body
@@ -88,8 +92,7 @@
 					<label for="blog" class="form-check-label">Blog</label>
 				</div>
 
-				<input type="submit" name="update" value="save" class="btn btn-primary">
-			</section>
+				<input type="submit" name="update" value="save" class="btn btn-primary"></section>
 		</body>
-	</body>
-</div></body></main></form>{% endblock %}
+	</main>
+</form>{% endblock %}

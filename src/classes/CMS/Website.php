@@ -89,8 +89,8 @@ class Website
         }
     }
 
-    // ✅ keep bool return for now to match your controller today
-    public function create(array $website): bool
+    // ✅ create returns inserted id (int). -1 optional for duplicate
+    public function create(array $website): int
     {
         try {
             $this->db->beginTransaction();
@@ -108,20 +108,17 @@ class Website
                 'blog' => (int) ($website['blog'] ?? 0),
             ]);
 
-            // if $this->db is PDO or extends PDO:
-            $this->lastCreatedId = (int) $this->db->lastInsertId();
-
+            $newId = (int) $this->db->lastInsertId();
             $this->db->commit();
-            return true;
+            return $newId;
         } catch (\PDOException $e) {
             $this->db->rollBack();
             if (($e->errorInfo[1] ?? null) === 1062) {
-                return false;
+                return -1; // duplicate indicator
             }
             throw $e;
         }
     }
-
     private int $lastCreatedId = 0;
 
     public function getLastCreatedId(): int

@@ -3,13 +3,24 @@ use PhpBook\Validate\Validate; // Import Validate namespace
 
 is_admin($session->role); // Keep for now
 
-// ------------------------------------------------------------
-// A) Uber-only (Week 2 hardening can wait; but keep basic gate)
-// IMPORTANT: do NOT reuse $id for session user id
-// ------------------------------------------------------------
 $sessionUserId = (int) ($cms->getSession()->id ?? 0);
+$sessionRole = (string) ($cms->getSession()->role ?? 'guest');
+
 if ($sessionUserId !== 1) {
-    redirect('index/');
+    error_log(
+        sprintf(
+            '[DENY][admin/website] uid=%d role=%s routeWebsiteId=%s ip=%s',
+            $sessionUserId,
+            $sessionRole,
+            (string) ($id ?? ''),
+            $_SERVER['REMOTE_ADDR'] ?? '',
+        ),
+    );
+    // Ensure flash exists even if redirect() doesn't set it
+    $_SESSION['flash_failure'] = 'Access denied.';
+
+    // Also send query fallback in case index page only reads $_GET['failure']
+    redirect('index/', ['failure' => 'Access denied.']);
     exit();
 }
 
@@ -70,12 +81,12 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         $website = array_merge($website, $existing);
     }
 
-    $data = [
+    $data = array_merge($data, [
         'website' => $website,
         'errors' => $errors,
         'sorttypes' => $sorttypes,
         'csrf_token' => generate_csrf_token(),
-    ];
+    ]);
 
     echo $twig->render('admin/website.html', $data);
     exit();
@@ -133,7 +144,7 @@ $website['non_members'] = isset($_POST['non_members']) ? 1 : 0;
 $website['blog'] = isset($_POST['blog']) ? 1 : 0;
 
 // alt (template may hide it)
-$website['alt'] = trim((string) ($_POST['alt'] ?? ($website['alt'] ?? '')));
+$website['alt'] = trim((string) ($_POST['image_alt'] ?? ($website['alt'] ?? '')));
 
 // Upload handling (Twig uses name="image")
 $tmp = $_FILES['image']['tmp_name'] ?? '';
@@ -142,6 +153,11 @@ $hasUpload = $fileErr === UPLOAD_ERR_OK && $tmp && is_uploaded_file($tmp);
 
 $uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/focus-local/public/img/';
 
+$tmp = $_FILES['image']['tmp_name'] ?? '';
+$fileErr = (int) ($_FILES['image']['error'] ?? UPLOAD_ERR_NO_FILE);
+$hasUpload = $fileErr === UPLOAD_ERR_OK && $tmp && is_uploaded_file($tmp);
+
+$pendingMove = null; // ['tmp' => ..., 'dest' => ...]
 if ($hasUpload) {
     $ext = strtolower(pathinfo((string) ($_FILES['image']['name'] ?? ''), PATHINFO_EXTENSION));
     if (!in_array($ext, FILE_EXTENSIONS, true)) {
@@ -149,13 +165,9 @@ if ($hasUpload) {
     } else {
         $website['image_file'] = create_filename((string) $_FILES['image']['name'], $uploadDir);
         $destination = $uploadDir . $website['image_file'];
-
-        if (!move_uploaded_file($tmp, $destination)) {
-            $errors['image_file'] = 'Upload failed.';
-        }
+        $pendingMove = ['tmp' => $tmp, 'dest' => $destination];
     }
 } else {
-    // Create requires image_file because DB column is NOT NULL
     if (!$isUpdate && ($website['image_file'] ?? '') === '') {
         $errors['image_file'] = 'Please upload an image.';
     }
@@ -169,47 +181,51 @@ $errors['name'] = Validate::isText($website['name'], 1, 254)
 if (!empty($errors['name']) || !empty($errors['image_file'])) {
     $errors['warning'] = 'Please correct form errors.';
 
-    $data = [
+    $data = array_merge($data, [
         'website' => $website,
         'errors' => $errors,
         'sorttypes' => $sorttypes,
         'csrf_token' => generate_csrf_token(),
-    ];
+    ]);
 
     echo $twig->render('admin/website.html', $data);
     exit();
 }
-
+// ...after validation passes...
+if ($pendingMove) {
+    if (!move_uploaded_file($pendingMove['tmp'], $pendingMove['dest'])) {
+        redirect('admin/websites/', ['failure' => 'Upload failed.']);
+        exit();
+    }
+}
 // SAVE split (single update block / single create block)
 if ($isUpdate) {
-    $cms->getWebsite()->update($website);
+    $affected = $cms->getWebsite()->update($website);
+
+    if ($affected === 0) {
+        redirect('admin/websites/', ['success' => 'No changes to save']);
+        exit();
+    }
+
     redirect('admin/websites/', ['success' => 'Website saved']);
     exit();
 }
 
 // Create
 unset($website['id']); // safety
-error_log(print_r($website, true));
 
-$ok = $cms->getWebsite()->create($website);
+$newWebsiteId = (int) $cms->getWebsite()->create($website);
 
-if ($ok) {
-    $newWebsiteId = (int) $cms->getWebsite()->getLastCreatedId();
-    error_log('New website id: ' . $newWebsiteId);
-
+if ($newWebsiteId > 0) {
     if ($newWebsiteId > 1) {
         try {
             $stmt = $cms
                 ->getDb()
                 ->runSql('CALL CopyUberMenusToWebsite(:wid)', ['wid' => $newWebsiteId]);
-            $status = $stmt->fetch(\PDO::FETCH_ASSOC) ?: null;
             $stmt->closeCursor();
-            error_log('Menu copy status: ' . json_encode($status));
         } catch (\PDOException $e) {
-            error_log('Menu copy failed: ' . $e->getMessage());
-            error_log('SQLSTATE: ' . ($e->errorInfo[0] ?? ''));
-            error_log('Driver code: ' . ($e->errorInfo[1] ?? ''));
-            error_log('Driver msg: ' . ($e->errorInfo[2] ?? ''));
+            error_log('Menu copy failed for wid=' . $newWebsiteId . ' :: ' . $e->getMessage());
+            // Decide if this should block creation; Week 3 usually = creation stands, log the failure.
         }
     }
 
@@ -217,5 +233,10 @@ if ($ok) {
     exit();
 }
 
-redirect('admin/websites/', ['error' => 'Website already exists']);
+if ($newWebsiteId === -1) {
+    redirect('admin/websites/', ['failure' => 'Website already exists']);
+    exit();
+}
+
+redirect('admin/websites/', ['failure' => 'Create failed']);
 exit();
