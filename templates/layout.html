@@ -89,8 +89,8 @@ tinymce.init({selector: 'textarea.tinymce', branding: false, plugins: 'anchor au
 						<span class="hidden">Menu</span>
 					</button>
 					<!-- DEBUG nav: count={{ navigation|default([])|length }}
-																																																		     sid={{ session.id|default('NULL') }}
-																																																		     wid={{ session.website|default('NULL') }} -->
+																																																												     sid={{ session.id|default('NULL') }}
+																																																												     wid={{ session.website|default('NULL') }} -->
 
 
 					<ul id="menu">
@@ -161,7 +161,8 @@ tinymce.init({selector: 'textarea.tinymce', branding: false, plugins: 'anchor au
 <script src="{{ doc_root }}js/site.js"></script>
 
 {# reCAPTCHA v3 (load once, only if key exists) #}
-{% if recaptcha_site_key is defined and recaptcha_site_key %}
+{# reCAPTCHA v3 (only on pages that set use_recaptcha=true) #}
+{% if use_recaptcha is defined and use_recaptcha and recaptcha_site_key is defined and recaptcha_site_key %}
 	<script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}"></script>
 	<script>
 		document.addEventListener('DOMContentLoaded', function () {
@@ -170,15 +171,19 @@ if (! forms.length)
 return;
 
 
-
 forms.forEach(function (form) {
 const action = form.getAttribute('data-recaptcha-action') || '';
-form.addEventListener('submit', function (e) {
+
+form.addEventListener('submit', function (e) { // If we already have a token, allow normal submit
+const existing = form.querySelector('input[name="g-recaptcha-response"]');
+if (existing && existing.value) 
+return;
+
+
 e.preventDefault();
 
 if (typeof grecaptcha === 'undefined') {
-console.error('reCAPTCHA not loaded. Submitting normally.');
-form.submit();
+form.submit(); // server will fail closed
 return;
 }
 
@@ -193,8 +198,7 @@ form.appendChild(field);
 }
 field.value = token || '';
 form.submit();
-}).catch(function (err) {
-console.error('reCAPTCHA execute error:', err);
+}).catch(function () {
 form.submit();
 });
 });
@@ -203,7 +207,6 @@ form.submit();
 });
 	</script>
 {% endif %}
-
 {# Splash logic (as you had it, cleaned) #}
 <script>
 	(function () {
@@ -290,5 +293,4 @@ requestAnimationFrame(() => {
 window.dispatchEvent(new Event('resize'));
 });
 </script>
-
 {% block body_end %}{% endblock %}</body></html>

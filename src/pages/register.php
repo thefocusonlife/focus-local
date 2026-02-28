@@ -301,7 +301,8 @@ $data['agegroups'] = $agegroups;
 $data['plans'] = $plans;
 $data['errors'] = $errors; // Error messages
 $data['website'] = $website; // $cms->getWebsite()->getById(intval($id));
-
+$data['use_recaptcha'] = true;
+$data['recaptcha_site_key'] = $config['recaptcha_site_key'];
 echo $twig->render('register.html', $data); // Render Twig template
 
 exit();

@@ -184,6 +184,25 @@ if (($parts[0] ?? '') === 'menu' && isset($parts[1]) && ctype_digit((string) $pa
 $page = $parts[0] ?? '';
 $id = (int) ($parts[1] ?? 0);
 
+// After $page and $id are computed:
+
+// ------------------------------------------------------------
+// Tenant context bootstrap for public deep links
+// /menu/{id}/... should set website context from menu.website
+// so guest visitors don't fall back to website 1.
+// ------------------------------------------------------------
+if ($page === 'menu' && $id > 0) {
+    try {
+        $menuRow = $cms->getMenu()->get($id); // SELECT ... FROM menu WHERE id=:id
+        if (!empty($menuRow['website'])) {
+            $_SESSION['website_id'] = (int) $menuRow['website'];
+            $_SESSION['website'] = (int) $menuRow['website']; // legacy bridge used elsewhere
+        }
+    } catch (\Throwable $e) {
+        // do nothing; menu page controller can still 404 cleanly
+    }
+}
+
 // Normalize default home route
 if ($page === '') {
     $page = 'index';

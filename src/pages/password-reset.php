@@ -69,5 +69,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 $data['navigation'] = $cms->getMenu()->getAll2(1, 1); // All menus for nav
 $data['errors'] = $errors; // Errors array
 $data['token'] = $token; // Token
-
+$data['use_recaptcha'] = true;
+$data['recaptcha_site_key'] = $config['recaptcha_site_key'];
 echo $twig->render('password-reset.html', $data); // Render Twig template

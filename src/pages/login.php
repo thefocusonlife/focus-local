@@ -236,7 +236,8 @@ $data['navigation'] = $cms->getMenu()->getAll2((int) $website['id'], 1);
 $data['success'] = $success;
 $data['email'] = $email;
 $data['errors'] = $errors;
-$data['recaptcha_site_key'] = $config['recaptcha_site_key'] ?? '';
+$data['use_recaptcha'] = true;
+$data['recaptcha_site_key'] = $config['recaptcha_site_key'];
 $data['website'] = $website;
 error_log(
     '[LOGIN BEFORE RENDER] id=' .

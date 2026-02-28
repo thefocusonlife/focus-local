@@ -2,8 +2,6 @@
 declare(strict_types=1); // Use strict types
 use PhpBook\Validate\Validate; // Import validate class
 
-require_once APP_ROOT . '/config/recaptcha.php'; // ⭐ reCAPTCHA helper
-
 $from = ''; // Initialize: from
 $subject = '';
 $message = ''; // Message
@@ -54,6 +52,8 @@ $data['navigation'] = $cms->getMenu()->getAll2(1, 1); // All categories for nav
 $data['website'] = $cms->getWebsite()->getById(1);
 $data['from'] = $from; // From email
 $data['message'] = $message; // Message
+$data['use_recaptcha'] = true;
+$data['recaptcha_site_key'] = $config['recaptcha_site_key'];
 $data['errors'] = $errors; // Error messages
 $data['success'] = $success; // Success message
 

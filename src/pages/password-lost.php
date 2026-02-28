@@ -60,6 +60,8 @@ $website = $cms->getWebsite()->getById($_SESSION['website']);
 $w = intval($website['id']);
 $data['website'] = $website;
 $data['navigation'] = $cms->getMenu()->getAll2($w, 1); // Menus for navigation
+$data['use_recaptcha'] = true;
+$data['recaptcha_site_key'] = $config['recaptcha_site_key'];
 $data['error'] = $error ?? null; // Validation errors
 $data['sent'] = $sent; // Did it send
 echo $twig->render('password-lost.html', $data); // Render Twig template
