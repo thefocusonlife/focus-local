@@ -1,6 +1,8 @@
 <?php
 namespace PhpBook\CMS; // Namespace declaration
 
+use PDO;
+
 class Database extends \PDO
 {
     public function __construct(
@@ -27,5 +29,13 @@ class Database extends \PDO
         $statement = $this->prepare($sql); // If still running prepare statement
         $statement->execute($arguments); // Execute SQL statement with arguments
         return $statement; // Return PDOStatement object
+    }
+
+    /**
+     * Expose PDO instance (this class extends PDO).
+     */
+    public function getPdo(): \PDO
+    {
+        return $this;
     }
 }

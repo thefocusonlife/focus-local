@@ -191,13 +191,7 @@ if (!empty($errors['name']) || !empty($errors['image_file'])) {
     echo $twig->render('admin/website.html', $data);
     exit();
 }
-// ...after validation passes...
-if ($pendingMove) {
-    if (!move_uploaded_file($pendingMove['tmp'], $pendingMove['dest'])) {
-        redirect('admin/websites/', ['failure' => 'Upload failed.']);
-        exit();
-    }
-}
+
 // SAVE split (single update block / single create block)
 if ($isUpdate) {
     $affected = $cms->getWebsite()->update($website);
@@ -214,29 +208,66 @@ if ($isUpdate) {
 // Create
 unset($website['id']); // safety
 
-$newWebsiteId = (int) $cms->getWebsite()->create($website);
+$pdo = $cms->getDb(); // Database extends PDO
 
-if ($newWebsiteId > 0) {
-    if ($newWebsiteId > 1) {
-        try {
-            $stmt = $cms
-                ->getDb()
-                ->runSql('CALL CopyUberMenusToWebsite(:wid)', ['wid' => $newWebsiteId]);
-            $stmt->closeCursor();
-        } catch (\PDOException $e) {
-            error_log('Menu copy failed for wid=' . $newWebsiteId . ' :: ' . $e->getMessage());
-            // Decide if this should block creation; Week 3 usually = creation stands, log the failure.
-        }
+$pendingMovedPath = null;
+
+try {
+    $pdo->beginTransaction();
+
+    // Create website row (returns new id, or -1 on dup)
+    $newWebsiteId = (int) $cms->getWebsite()->create($website);
+
+    if ($newWebsiteId === -1) {
+        $pdo->rollBack();
+        redirect('admin/websites/', ['failure' => 'Website already exists']);
+        exit();
     }
+
+    if ($newWebsiteId <= 0) {
+        throw new \RuntimeException('Create failed: invalid new website id');
+    }
+
+    // If upload is pending, move it *before* commit (so we can rollback on failure)
+    if ($pendingMove) {
+        if (!move_uploaded_file($pendingMove['tmp'], $pendingMove['dest'])) {
+            throw new \RuntimeException('Upload failed.');
+        }
+        $pendingMovedPath = $pendingMove['dest'];
+    }
+
+    // Provision the 5 menus (guest menus)
+    if ($newWebsiteId > 1) {
+        $setup = new \PhpBook\CMS\SetupService($pdo);
+        $result = $setup->copyUberMenusToWebsite($newWebsiteId);
+
+        error_log(
+            sprintf(
+                '[WebsiteCreate] wid=%d master=%d inserted=%d',
+                $result['target_website'],
+                $result['master_rows_available'],
+                $result['rows_inserted'],
+            ),
+        );
+    }
+
+    $pdo->commit();
 
     redirect('admin/websites/', ['success' => 'Website created']);
     exit();
-}
+} catch (\Throwable $e) {
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
 
-if ($newWebsiteId === -1) {
-    redirect('admin/websites/', ['failure' => 'Website already exists']);
+    // If file moved but DB rolled back, remove the file to keep consistency
+    if ($pendingMovedPath && file_exists($pendingMovedPath)) {
+        @unlink($pendingMovedPath);
+    }
+
+    error_log('[WebsiteCreate] FAILED :: ' . $e->getMessage());
+    error_log($e->getTraceAsString());
+
+    redirect('admin/websites/', ['failure' => 'Create failed. See error log.']);
     exit();
 }
-
-redirect('admin/websites/', ['failure' => 'Create failed']);
-exit();

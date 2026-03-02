@@ -89,12 +89,10 @@ class Website
         }
     }
 
-    // ✅ create returns inserted id (int). -1 optional for duplicate
+    // ✅ returns: new website id (>0) on success, -1 on duplicate
     public function create(array $website): int
     {
         try {
-            $this->db->beginTransaction();
-
             $sql = "INSERT INTO website (uber_id, sorttype, name, image_file, alt, non_members, blog)
                 VALUES (:uber_id, :sorttype, :name, :image_file, :alt, :non_members, :blog)";
 
@@ -108,17 +106,16 @@ class Website
                 'blog' => (int) ($website['blog'] ?? 0),
             ]);
 
-            $newId = (int) $this->db->lastInsertId();
-            $this->db->commit();
-            return $newId;
+            // Database extends PDO, so this exists
+            return (int) $this->db->lastInsertId();
         } catch (\PDOException $e) {
-            $this->db->rollBack();
             if (($e->errorInfo[1] ?? null) === 1062) {
-                return -1; // duplicate indicator
+                return -1;
             }
             throw $e;
         }
     }
+
     private int $lastCreatedId = 0;
 
     public function getLastCreatedId(): int
