@@ -352,7 +352,7 @@ AND (:crossWebsite = 1 OR a.website = :website)
 AND (m.publik = 1)";
         $sessionRole = (string) ($_SESSION['role'] ?? 'guest');
         $sessionMemberId = (int) ($_SESSION['id'] ?? 0);
-        $sessionSorttype = (int) ($_SESSION['sorttype'] ?? TFOL_DEFAULT_SORTTYPE_ID);
+        $sessionSorttype = (int) ($_SESSION['sorttype'] ?? \TFOL_DEFAULT_SORTTYPE_ID);
         $effectiveSorttype = (int) ($sorttypeId ?? $sessionSorttype);
         $sessionSorttype = $effectiveSorttype; // <-- one-liner to honor menu-scoped sort
 
