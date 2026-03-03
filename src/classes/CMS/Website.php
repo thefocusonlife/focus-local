@@ -89,33 +89,60 @@ class Website
         }
     }
 
-    // ✅ returns: new website id (>0) on success, -1 on duplicate
-    public function create(array $website): int
-    {
-        try {
-            $sql = "INSERT INTO website (uber_id, sorttype, name, image_file, alt, non_members, blog)
-                VALUES (:uber_id, :sorttype, :name, :image_file, :alt, :non_members, :blog)";
+    // ✅ create returns inserted id (int). -1 optional for duplicate
+   public function create(array $website): int
+{
+    $startedTx = false;
 
-            $this->db->runSql($sql, [
-                'uber_id' => $website['uber_id'] ?? null,
-                'sorttype' => (int) ($website['sorttype'] ?? 2),
-                'name' => (string) ($website['name'] ?? ''),
-                'image_file' => (string) ($website['image_file'] ?? ''),
-                'alt' => (string) ($website['alt'] ?? ''),
-                'non_members' => (int) ($website['non_members'] ?? 0),
-                'blog' => (int) ($website['blog'] ?? 0),
-            ]);
-
-            // Database extends PDO, so this exists
-            return (int) $this->db->lastInsertId();
-        } catch (\PDOException $e) {
-            if (($e->errorInfo[1] ?? null) === 1062) {
-                return -1;
-            }
-            throw $e;
-        }
+    // Only start a transaction if one is not already active
+    if (!$this->db->inTransaction()) {
+        $this->db->beginTransaction();
+        $startedTx = true;
     }
 
+    try {
+        $sql = "
+            INSERT INTO website
+                (uber_id, sorttype, name, image_file, alt, non_members, blog)
+            VALUES
+                (:uber_id, :sorttype, :name, :image_file, :alt, :non_members, :blog)
+        ";
+
+        $stmt = $this->db->prepare($sql);
+
+        $stmt->execute([
+            ':uber_id'     => $website['uber_id'] ?? null,
+            ':sorttype'    => (int) ($website['sorttype'] ?? 2),
+            ':name'        => (string) ($website['name'] ?? ''),
+            ':image_file'  => (string) ($website['image_file'] ?? ''),
+            ':alt'         => (string) ($website['alt'] ?? ''),
+            ':non_members' => (int) ($website['non_members'] ?? 0),
+            ':blog'        => (int) ($website['blog'] ?? 0),
+        ]);
+
+        $newId = (int) $this->db->lastInsertId();
+
+        // Commit only if this method started the transaction
+        if ($startedTx) {
+            $this->db->commit();
+        }
+
+        return $newId;
+
+    } catch (\PDOException $e) {
+
+        if ($startedTx && $this->db->inTransaction()) {
+            $this->db->rollBack();
+        }
+
+        // Duplicate key
+        if (($e->errorInfo[1] ?? null) === 1062) {
+            return -1;
+        }
+
+        throw $e;
+    }
+}
     private int $lastCreatedId = 0;
 
     public function getLastCreatedId(): int

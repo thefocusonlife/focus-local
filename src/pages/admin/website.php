@@ -151,7 +151,9 @@ $tmp = $_FILES['image']['tmp_name'] ?? '';
 $fileErr = (int) ($_FILES['image']['error'] ?? UPLOAD_ERR_NO_FILE);
 $hasUpload = $fileErr === UPLOAD_ERR_OK && $tmp && is_uploaded_file($tmp);
 
-$uploadDir = $_SERVER['DOCUMENT_ROOT'] . '/focus-local/public/img/';
+$uploadDir = realpath(__DIR__ . '/../../../public/img') . '/';
+
+$st = @stat($uploadDir);
 
 $tmp = $_FILES['image']['tmp_name'] ?? '';
 $fileErr = (int) ($_FILES['image']['error'] ?? UPLOAD_ERR_NO_FILE);
@@ -215,59 +217,36 @@ $pendingMovedPath = null;
 try {
     $pdo->beginTransaction();
 
-    // Create website row (returns new id, or -1 on dup)
-    $newWebsiteId = (int) $cms->getWebsite()->create($website);
+    $newWebsiteId = (int)$cms->getWebsite()->create($website);
 
     if ($newWebsiteId === -1) {
+       
         $pdo->rollBack();
         redirect('admin/websites/', ['failure' => 'Website already exists']);
         exit();
     }
-
     if ($newWebsiteId <= 0) {
-        throw new \RuntimeException('Create failed: invalid new website id');
+        throw new RuntimeException("Bad newWebsiteId={$newWebsiteId}");
     }
 
-    // If upload is pending, move it *before* commit (so we can rollback on failure)
     if ($pendingMove) {
+        
         if (!move_uploaded_file($pendingMove['tmp'], $pendingMove['dest'])) {
-            throw new \RuntimeException('Upload failed.');
+            throw new RuntimeException("move_uploaded_file failed");
         }
-        $pendingMovedPath = $pendingMove['dest'];
-    }
+            }
 
-    // Provision the 5 menus (guest menus)
-    if ($newWebsiteId > 1) {
-        $setup = new \PhpBook\CMS\SetupService($pdo);
-        $result = $setup->copyUberMenusToWebsite($newWebsiteId);
-
-        error_log(
-            sprintf(
-                '[WebsiteCreate] wid=%d master=%d inserted=%d',
-                $result['target_website'],
-                $result['master_rows_available'],
-                $result['rows_inserted'],
-            ),
-        );
-    }
-
+    $setup = new \PhpBook\CMS\SetupService($pdo);
+    
+    $result = $setup->copyUberMenusToWebsite($newWebsiteId);
+    
     $pdo->commit();
-
+    
     redirect('admin/websites/', ['success' => 'Website created']);
     exit();
+
 } catch (\Throwable $e) {
-    if ($pdo->inTransaction()) {
-        $pdo->rollBack();
-    }
-
-    // If file moved but DB rolled back, remove the file to keep consistency
-    if ($pendingMovedPath && file_exists($pendingMovedPath)) {
-        @unlink($pendingMovedPath);
-    }
-
-    error_log('[WebsiteCreate] FAILED :: ' . $e->getMessage());
-    error_log($e->getTraceAsString());
-
-    redirect('admin/websites/', ['failure' => 'Create failed. See error log.']);
+    if ($pdo->inTransaction()) { $pdo->rollBack(); }
+    redirect('admin/websites/', ['failure' => 'Create failed. See debug_create.log']);
     exit();
 }
