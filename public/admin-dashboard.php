@@ -76,7 +76,7 @@ declare(strict_types=1) ?>
     <div class="card">
         <h2>TFOL Sites</h2>
         <a href="http://localhost/focus-local/public/index/1" target="_blank">Website 1 – Home</a>
-        <a href="http://localhost/focus-local/public/index/2" target="_blank">Website 2 – Home</a>
+        <a href="https://thefocusonlife.org/_stage/" target="_blank">Staging – Home</a>
     </div>
 
     <div class="card">
