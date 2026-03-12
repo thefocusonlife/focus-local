@@ -89,8 +89,8 @@ tinymce.init({selector: 'textarea.tinymce', branding: false, plugins: 'anchor au
 						<span class="hidden">Menu</span>
 					</button>
 					<!-- DEBUG nav: count={{ navigation|default([])|length }}
-																																																												     sid={{ session.id|default('NULL') }}
-																																																												     wid={{ session.website|default('NULL') }} -->
+																																																																	     sid={{ session.id|default('NULL') }}
+																																																																	     wid={{ session.website|default('NULL') }} -->
 
 
 					<ul id="menu">
@@ -160,6 +160,26 @@ tinymce.init({selector: 'textarea.tinymce', branding: false, plugins: 'anchor au
 
 <script src="{{ doc_root }}js/site.js"></script>
 
+<script>
+	document.addEventListener('click', function (e) {
+const btn = e.target.closest('[data-toggle-password]');
+if (! btn) 
+return;
+
+
+const sel = btn.getAttribute('data-toggle-password');
+const input = document.querySelector(sel);
+if (! input) 
+return;
+
+
+const isHidden = input.type === 'password';
+input.type = isHidden ? 'text' : 'password';
+
+btn.setAttribute('aria-pressed', String(isHidden));
+btn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
+});
+</script>
 {# reCAPTCHA v3 (load once, only if key exists) #}
 {# reCAPTCHA v3 (only on pages that set use_recaptcha=true) #}
 {% if use_recaptcha is defined and use_recaptcha and recaptcha_site_key is defined and recaptcha_site_key %}
@@ -171,6 +191,7 @@ if (! forms.length)
 return;
 
 
+
 forms.forEach(function (form) {
 const action = form.getAttribute('data-recaptcha-action') || '';
 
@@ -178,6 +199,7 @@ form.addEventListener('submit', function (e) { // If we already have a token, al
 const existing = form.querySelector('input[name="g-recaptcha-response"]');
 if (existing && existing.value) 
 return;
+
 
 
 e.preventDefault();
