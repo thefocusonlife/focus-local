@@ -78,6 +78,14 @@ $charset = 'utf8mb4'; // UTF-8 encoding using 4 bytes per character
 $username = $db_user; // DB username
 $password = $db_pass; // DB password
 
+// Ensure route base is consistent everywhere
+if (!defined('DOC_ROOT') && isset($config['base_url'])) {
+    define('DOC_ROOT', rtrim($config['base_url'], '/') . '/');
+}
+
+// Provide Twig-safe version of doc_root
+$config['doc_root'] = DOC_ROOT;
+
 // DO NOT CHANGE NEXT LINE
 $dsn = "$type:host=$server;dbname=$db;port=$port;charset=$charset"; // Create DSN
 
