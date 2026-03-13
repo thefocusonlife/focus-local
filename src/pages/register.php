@@ -90,7 +90,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         if ($w <= 0) {
             $w = 1;
         }
-        tfol_redirect($doc_root . 'index/' . $w, 303);
+        tfol_redirect(DOC_ROOT . 'index/' . $w, 303);
     }
 
     // set/refresh lock timestamp for this POST attempt
@@ -255,7 +255,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         unset($_SESSION['flash_success']);
         $_SESSION['flash_failure'] = 'Registration failed. Please try again.';
         unset($_SESSION['register_submit_lock']);
-        tfol_redirect($doc_root . 'index/' . $websiteId, 303);
+        tfol_redirect(DOC_ROOT . 'index/' . $websiteId, 303);
     }
 
     // If create returned false without throwing
@@ -263,17 +263,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         unset($_SESSION['flash_success']);
         $_SESSION['flash_failure'] = 'Registration failed. Please try again.';
         unset($_SESSION['register_submit_lock']);
-        tfol_redirect($doc_root . 'index/' . $websiteId, 303);
+        tfol_redirect(DOC_ROOT . 'index/' . $websiteId, 303);
     }
 
     // SUCCESS
     unset($_SESSION['flash_failure']);
     $_SESSION['flash_success'] =
         'Registration submitted. Your account is pending approval. Use Contact Us to inquire about your approval.';
-    error_log('[REGISTER] SUCCESS -> redirecting to ' . $doc_root . 'index/' . $websiteId);
+    error_log('[REGISTER] SUCCESS -> redirecting to ' . DOC_ROOT . 'index/' . $websiteId);
 
     // unset($_SESSION['register_submit_lock']);
-    tfol_redirect($doc_root . 'index/' . $websiteId, 303);
+    tfol_redirect(DOC_ROOT . 'index/' . $websiteId, 303);
 }
 $path = mb_strtolower(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/');
 $path = substr($path, strlen(DOC_ROOT)); // Remove up to DOC_ROOT
