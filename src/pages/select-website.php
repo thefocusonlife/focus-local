@@ -3,9 +3,6 @@ declare(strict_types=1); // Use strict types
 use PhpBook\Validate\Validate; // Import Validate class
 require_once APP_ROOT . '/src/security/guard.php';
 guardPublic();
-if (session_status() !== PHP_SESSION_ACTIVE) {
-    session_start();
-}
 
 // If you have guard/bootstrap includes, keep them here.
 

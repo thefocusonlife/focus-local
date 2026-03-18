@@ -29,10 +29,8 @@ class Session // Define Session class
             $page = 'admin/' . ($parts[1] ?? ''); // Page name
             $id = $parts[2] ?? null; // Get ID
         } // Runs when object created
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            session_start();
-        }
 
+        $this->start();
         $this->id = $_SESSION['id'] ?? 2; // Set id property of this object
         $this->forename = $_SESSION['forename'] ?? 'Guest'; // Set forename property of this object
         $this->role = $_SESSION['role'] ?? 'guest'; // Set role property of this object
@@ -47,9 +45,7 @@ class Session // Define Session class
     // Create new session
     public function create($member, $website)
     {
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            session_start();
-        }
+        $this->start();
 
         // Only regenerate when headers can still be sent
         if (!headers_sent()) {
@@ -72,10 +68,21 @@ class Session // Define Session class
             $_SESSION['sorttype'] = (int) ($member['sorttype'] ?? TFOL_DEFAULT_SORTTYPE_ID);
             $_SESSION['website'] = (int) ($member['website'] ?? ($website ?? 1));
 
-            return; // ✅ stop here — authenticated session created
+            $_SESSION['created_at'] = time();
+            $_SESSION['last_activity'] = time();
+            $_SESSION['user_agent_hash'] = hash('sha256', $_SERVER['HTTP_USER_AGENT'] ?? '');
+            $_SESSION['ip_prefix'] = $this->getIpPrefix();
+
+            return;
         }
 
         // Guest session (covers: not array, id<=0, pending, suspended)
+        unset(
+            $_SESSION['created_at'],
+            $_SESSION['last_activity'],
+            $_SESSION['user_agent_hash'],
+            $_SESSION['ip_prefix'],
+        );
         $_SESSION['id'] = 2;
         $_SESSION['forename'] = 'Guest';
         $_SESSION['role'] = 'guest';
@@ -86,6 +93,29 @@ class Session // Define Session class
         $_SESSION['sorttype'] = (int) ($_SESSION['sorttype'] ?? TFOL_DEFAULT_SORTTYPE_ID);
 
         $_SESSION['website'] = (int) ($website ?? 1);
+    }
+
+    private function start(): void
+    {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            return;
+        }
+
+        $isHttps = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+
+        if (!headers_sent()) {
+            session_name('TFOLSESSID');
+            session_set_cookie_params([
+                'lifetime' => 0,
+                'path' => '/',
+                'domain' => '',
+                'secure' => $isHttps,
+                'httponly' => true,
+                'samesite' => 'Lax',
+            ]);
+        }
+
+        session_start();
     }
 
     // Update existing session - alias for create()
@@ -115,6 +145,12 @@ class Session // Define Session class
         }
 
         // Destroy the session
+        unset(
+            $_SESSION['created_at'],
+            $_SESSION['last_activity'],
+            $_SESSION['user_agent_hash'],
+            $_SESSION['ip_prefix'],
+        );
         session_destroy();
     }
 
@@ -124,9 +160,7 @@ class Session // Define Session class
      */
     public function resetToGuest(?int $websiteId = null, bool $regenerateId = true): void
     {
-        if (session_status() !== PHP_SESSION_ACTIVE) {
-            session_start();
-        }
+        $this->start();
 
         // ---- Clear identity that can leak ----
         unset(
@@ -137,6 +171,10 @@ class Session // Define Session class
             $_SESSION['member_id'],
             $_SESSION['email'],
             $_SESSION['logged_in'],
+            $_SESSION['created_at'],
+            $_SESSION['last_activity'],
+            $_SESSION['user_agent_hash'],
+            $_SESSION['ip_prefix'],
         );
 
         // ---- Clear UI/nav/page state that shouldn't carry across sites ----
@@ -178,5 +216,69 @@ class Session // Define Session class
         $this->role = (string) $_SESSION['role'];
         $this->account_id = (int) $_SESSION['account_id'];
         $this->website = (int) $_SESSION['website'];
+    }
+
+    private function getIpPrefix(): string
+    {
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+            $parts = explode('.', $ip);
+            return count($parts) >= 3 ? $parts[0] . '.' . $parts[1] . '.' . $parts[2] : $ip;
+        }
+
+        if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+            return substr($ip, 0, 19);
+        }
+
+        return '';
+    }
+
+    public function validateSecurity(int $idleLimit = 1800, int $absoluteLimit = 43200): bool
+    {
+        $this->start();
+
+        $role = (string) ($_SESSION['role'] ?? 'guest');
+        if ($role === 'guest') {
+            return true;
+        }
+
+        $now = time();
+
+        if (!isset($_SESSION['created_at'], $_SESSION['last_activity'])) {
+            $this->delete();
+            return false;
+        }
+
+        if ($now - (int) $_SESSION['last_activity'] > $idleLimit) {
+            $this->delete();
+            return false;
+        }
+
+        if ($now - (int) $_SESSION['created_at'] > $absoluteLimit) {
+            $this->delete();
+            return false;
+        }
+
+        $expectedUa = hash('sha256', $_SERVER['HTTP_USER_AGENT'] ?? '');
+        if (($_SESSION['user_agent_hash'] ?? '') !== $expectedUa) {
+            $this->delete();
+            return false;
+        }
+
+        $expectedIpPrefix = $this->getIpPrefix();
+        if (
+            isset($_SESSION['ip_prefix']) &&
+            $_SESSION['ip_prefix'] !== '' &&
+            $expectedIpPrefix !== '' &&
+            $_SESSION['ip_prefix'] !== $expectedIpPrefix
+        ) {
+            $this->delete();
+            return false;
+        }
+
+        $_SESSION['last_activity'] = $now;
+
+        return true;
     }
 }

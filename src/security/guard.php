@@ -2,7 +2,107 @@
 declare(strict_types=1);
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
+    $isHttps = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+
+    if (!headers_sent()) {
+        session_name('TFOLSESSID');
+        session_set_cookie_params([
+            'lifetime' => 0,
+            'path' => '/',
+            'domain' => '',
+            'secure' => $isHttps,
+            'httponly' => true,
+            'samesite' => 'Lax',
+        ]);
+    }
+
     session_start();
+}
+
+function getSessionIpPrefix(): string
+{
+    $ip = $_SERVER['REMOTE_ADDR'] ?? '';
+
+    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)) {
+        $parts = explode('.', $ip);
+        return count($parts) >= 3 ? $parts[0] . '.' . $parts[1] . '.' . $parts[2] : $ip;
+    }
+
+    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6)) {
+        return substr($ip, 0, 19);
+    }
+
+    return '';
+}
+
+function destroyGuardSession(): void
+{
+    $_SESSION = [];
+
+    if (ini_get('session.use_cookies')) {
+        $params = session_get_cookie_params();
+        setcookie(
+            session_name(),
+            '',
+            time() - 42000,
+            $params['path'],
+            $params['domain'],
+            (bool) $params['secure'],
+            (bool) $params['httponly'],
+        );
+    }
+
+    if (session_status() === PHP_SESSION_ACTIVE) {
+        session_destroy();
+    }
+}
+
+function validateGuardSessionSecurity(): bool
+{
+    $role = (string) ($_SESSION['role'] ?? 'guest');
+    if ($role === 'guest') {
+        return true;
+    }
+
+    $now = time();
+    $idleLimit = 1800; // 30 minutes
+    $absoluteLimit = 43200; // 12 hours
+
+    if (!isset($_SESSION['created_at'], $_SESSION['last_activity'])) {
+        destroyGuardSession();
+        return false;
+    }
+
+    if ($now - (int) $_SESSION['last_activity'] > $idleLimit) {
+        destroyGuardSession();
+        return false;
+    }
+
+    if ($now - (int) $_SESSION['created_at'] > $absoluteLimit) {
+        destroyGuardSession();
+        return false;
+    }
+
+    $expectedUa = hash('sha256', $_SERVER['HTTP_USER_AGENT'] ?? '');
+    if (($_SESSION['user_agent_hash'] ?? '') !== $expectedUa) {
+        destroyGuardSession();
+        return false;
+    }
+
+    $expectedIpPrefix = getSessionIpPrefix();
+    if (
+        isset($_SESSION['ip_prefix']) &&
+        $_SESSION['ip_prefix'] !== '' &&
+        $expectedIpPrefix !== '' &&
+        $_SESSION['ip_prefix'] !== $expectedIpPrefix
+    ) {
+        destroyGuardSession();
+        return false;
+    }
+
+    $_SESSION['last_activity'] = $now;
+
+    return true;
 }
 
 /**
@@ -27,22 +127,11 @@ function guard(array $options = []): void
     if ($requireLogin && empty($_SESSION['member_id'])) {
         redirectToLogin($loginPath, $rememberReturnTo);
     }
-    $timeoutSeconds = (int) ($options['timeoutSeconds'] ?? 0);
-    if ($timeoutSeconds > 0) {
-        $now = time();
-        $last = (int) ($_SESSION['last_activity'] ?? 0);
 
-        if ($last > 0 && $now - $last > $timeoutSeconds) {
-            // expire session
-            $_SESSION = [];
-            if (session_status() === PHP_SESSION_ACTIVE) {
-                session_destroy();
-            }
-            redirectToLogin($loginPath, false);
-        }
-
-        $_SESSION['last_activity'] = $now;
+    if ($requireLogin && !validateGuardSessionSecurity()) {
+        redirectToLogin($loginPath, false);
     }
+
     // ---- Role check ----
     if ($allowedRoles !== null) {
         $role = strtolower(trim((string) ($_SESSION['role'] ?? 'guest')));
