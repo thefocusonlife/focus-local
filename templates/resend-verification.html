@@ -1,0 +1,31 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+    <main>
+        <section class="header">
+            <h1>Resend Verification Email</h1>
+
+            {% if success %}
+                <div class="alert alert-success">{{ success }}</div>
+            {% endif %}
+
+            {% if errors.warning %}
+                <div class="alert alert-danger">{{ errors.warning }}</div>
+            {% endif %}
+        </section>
+
+        <section class="form-membership">
+            <form action="{{ doc_root }}resend-verification" method="POST" class="form-membership js-recaptcha-form" data-recaptcha-action="resend_verification">
+                <input type="hidden" name="g-recaptcha-response" value="">
+
+                <div class="form-group">
+                    <label for="email">Email address:</label>
+                    <input type="email" name="email" id="email" value="{{ email|default('')|e }}" class="form-control">
+                    <div class="errors">{{ errors.email }}</div>
+                </div>
+
+                <input type="submit" class="btn btn-primary" value="Resend Verification Email">
+            </form>
+        </section>
+    </main>
+{% endblock %}

@@ -9,6 +9,37 @@ use PhpBook\Validate\Validate; // Import Validate class
 require_once APP_ROOT . '/src/security/redirects.php';
 require_once __DIR__ . '/../../config/recaptcha.php';
 require_once APP_ROOT . '/src/security/guard.php';
+function sendVerificationEmail(
+    array $emailConfig,
+    string $toEmail,
+    string $forename,
+    string $verifyUrl,
+): void {
+    $subject = 'Verify your Focus on Life account';
+
+    $safeName = trim($forename) !== '' ? trim($forename) : 'there';
+
+    $message = <<<TEXT
+    Hi {$safeName},
+
+    Thank you for registering at Focus on Life.
+
+    Please verify your email address by clicking the link below:
+
+    {$verifyUrl}
+
+    This link will expire in 24 hours.
+
+    If you did not create this account, you can ignore this email.
+
+    Focus on Life
+    TEXT;
+
+    $mail = new \PhpBook\Email\Email($emailConfig);
+
+    // sender, recipient, subject, message
+    $mail->sendEmail($emailConfig['admin_email'], $toEmail, $subject, $message);
+}
 guardPublic();
 
 $doc_root = $config['doc_root'] ?? '/focus-local/public/';
@@ -71,11 +102,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    error_log('[REGISTER] POST start sid=' . session_id());
-    error_log('[register] METHOD=' . ($_SERVER['REQUEST_METHOD'] ?? 'NA'));
-    error_log('[register] GET keys=' . implode(',', array_keys($_GET)));
-    error_log('[register] POST keys=' . implode(',', array_keys($_POST)));
-
     $lockKey = 'register_submit_lock';
     $now = microtime(true);
     $windowSeconds = 3.0; // block duplicates within 3 seconds
@@ -174,9 +200,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         'sorttype' => (int) $cms->getSorttype()->getDefaultIdForMenu($menuId),
         'publik' => 1,
         'termsok' => 0,
-        'status' => 'pending',
+        'status' => 'active',
+        'email_verified' => 0,
+        'email_verified_at' => null,
     ];
-
     // Validate form data
     $errors['forename'] = Validate::isText($params['forename'], 1, 254)
         ? ''
@@ -266,14 +293,54 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         tfol_redirect(DOC_ROOT . 'index/' . $websiteId, 303);
     }
 
-    // SUCCESS
-    unset($_SESSION['flash_failure']);
-    $_SESSION['flash_success'] =
-        'Registration submitted. Your account is pending approval. Use Contact Us to inquire about your approval.';
-    error_log('[REGISTER] SUCCESS -> redirecting to ' . DOC_ROOT . 'index/' . $websiteId);
+    // SUCCESS: create email verification token + send mail
+    try {
+        $newUserId = (int) $cms->getMember()->getIdByEmail($emailForLogin);
 
-    // unset($_SESSION['register_submit_lock']);
-    tfol_redirect(DOC_ROOT . 'index/' . $websiteId, 303);
+        if ($newUserId <= 0) {
+            throw new RuntimeException('Could not resolve newly created member ID.');
+        }
+
+        $rawToken = bin2hex(random_bytes(32));
+        $tokenHash = hash('sha256', $rawToken);
+
+        $expiryDate = new DateTimeImmutable('+24 hours');
+        $expiresAt = $expiryDate->format('Y-m-d H:i:s');
+
+        $saved = $cms->getMember()->createEmailVerification($newUserId, $tokenHash, $expiresAt);
+        if (!$saved) {
+            throw new RuntimeException('Failed to save email verification token.');
+        }
+
+        $scheme = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $verifyUrl =
+            $scheme . '://' . $host . DOC_ROOT . 'verify-email?token=' . urlencode($rawToken);
+
+        sendVerificationEmail($email_config, $emailBase, $params['forename'], $verifyUrl);
+
+        unset($_SESSION['flash_failure']);
+        $_SESSION['flash_success'] =
+            'Registration successful. Please check your email and click the verification link before signing in.';
+
+        error_log(
+            '[REGISTER] SUCCESS + verification email sent -> redirecting to ' .
+                DOC_ROOT .
+                'index/' .
+                $websiteId,
+        );
+
+        tfol_redirect(DOC_ROOT . 'index/' . $websiteId, 303);
+    } catch (Throwable $e) {
+        error_log('[REGISTER][VERIFY EMAIL] Failed to setup verification: ' . $e->getMessage());
+
+        unset($_SESSION['flash_success']);
+        $_SESSION['flash_failure'] =
+            'Your account was created, but the verification email could not be sent from this development environment.';
+
+        unset($_SESSION['register_submit_lock']);
+        tfol_redirect(DOC_ROOT . 'index/' . $websiteId, 303);
+    }
 }
 $path = mb_strtolower(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/');
 $path = substr($path, strlen(DOC_ROOT)); // Remove up to DOC_ROOT

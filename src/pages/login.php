@@ -135,10 +135,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (empty($member)) {
             $errors['message'] = 'Invalid email or password.';
         } elseif (($member['status'] ?? '') === 'suspended') {
-            $errors['message'] = 'Account suspended';
+            $errors['message'] = 'Account suspended.';
         } elseif (($member['status'] ?? '') === 'pending') {
             $errors['message'] =
                 'Membership pending. Use Contact Us to inquire about your registration.';
+        } elseif ((int) ($member['email_verified'] ?? 0) !== 1) {
+            $errors['message'] =
+                'Please verify your email address before signing in. If needed, use the resend verification page.';
         } else {
             // Enforce tenant membership (no fallback)
             $memberWebsiteId = (int) ($member['website'] ?? 0);

@@ -53,6 +53,7 @@ tinymce.init({selector: 'textarea.tinymce', branding: false, plugins: 'anchor au
 
 		{% set noSplashPrefixes = [
   '/login','/logout','/register',
+  '/verify-email','/resend-verification',
   '/admin','/work','/member',
   '/password-lost','/password-reset',
   '/menu','/story',
@@ -89,8 +90,8 @@ tinymce.init({selector: 'textarea.tinymce', branding: false, plugins: 'anchor au
 						<span class="hidden">Menu</span>
 					</button>
 					<!-- DEBUG nav: count={{ navigation|default([])|length }}
-																																																																	     sid={{ session.id|default('NULL') }}
-																																																																	     wid={{ session.website|default('NULL') }} -->
+																																																																						     sid={{ session.id|default('NULL') }}
+																																																																						     wid={{ session.website|default('NULL') }} -->
 
 
 					<ul id="menu">
@@ -167,10 +168,12 @@ if (! btn)
 return;
 
 
+
 const sel = btn.getAttribute('data-toggle-password');
 const input = document.querySelector(sel);
 if (! input) 
 return;
+
 
 
 const isHidden = input.type === 'password';

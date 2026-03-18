@@ -90,29 +90,29 @@ class Member
         return $member;
     }
     // Login: returns member data if authenticated, false if not
+    // Login: returns member data if authenticated, false if not
     public function login2(string $email, string $password)
     {
         $arguments['email'] = $email;
 
-        $sql = "SELECT id, website, forename, surname, joined, email, email_master, password, picture, role, status, account_id, photo_limit, agegroup, plan, pagelimit,sorttype,  publik, termsok
+        $sql = "SELECT id, website, forename, surname, joined, email, email_master, password,
+                   picture, role, status, account_id, photo_limit, agegroup, plan,
+                   pagelimit, sorttype, publik, termsok, email_verified, email_verified_at
               FROM member
-             WHERE email = :email;"; // SQL to collect member data
+             WHERE email = :email
+             LIMIT 1;";
 
-        $member = $this->db->runSql($sql, $arguments)->fetch(); // Run SQL
+        $member = $this->db->runSql($sql, $arguments)->fetch();
+
         if (!$member) {
-            // If no member found
-            return false; // Return false
-        } // Otherwise
+            return false;
+        }
+
         $authenticated = password_verify($password, $member['password']);
         if (!$authenticated) {
             return false;
         }
-        /*
-        $status = (string) ($member['status'] ?? 'active'); // transitional default
-        if ($status !== 'active') {
-            return false; // pending/suspended cannot log in
-        }
-        */
+
         return $member;
     }
 
@@ -156,7 +156,7 @@ class Member
             'email_master' => trim((string) ($member['email_master'] ?? '')),
             'password' => (string) ($member['password'] ?? ''),
             'role' => (string) ($member['role'] ?? 'admin'),
-            'status' => (string) ($member['status'] ?? 'pending'),
+            'status' => (string) ($member['status'] ?? 'active'),
             'photo_limit' => (int) ($member['photo_limit'] ?? 0),
             'agegroup' => (int) ($member['agegroup'] ?? 0),
             'plan' => (int) ($member['plan'] ?? 1),
@@ -164,6 +164,8 @@ class Member
             'sorttype' => (int) ($member['sorttype'] ?? 1),
             'publik' => (int) ($member['publik'] ?? 1),
             'termsok' => (int) ($member['termsok'] ?? 0),
+            'email_verified' => (int) ($member['email_verified'] ?? 0),
+            'email_verified_at' => $member['email_verified_at'] ?? null,
         ];
 
         if ($params['website'] <= 0 || $params['email'] === '' || $params['password'] === '') {
@@ -172,7 +174,6 @@ class Member
 
         $params['password'] = password_hash($params['password'], PASSWORD_DEFAULT);
 
-        $started = false;
         error_log('[MEMBER create] ENTERED create()');
 
         try {
@@ -183,12 +184,47 @@ class Member
 
             $sql = "
             INSERT INTO member
-                (website, forename, surname, email, email_master, password, role, status,
-                 photo_limit, agegroup, plan, pagelimit, sorttype, publik, termsok)
+                (
+                    website,
+                    forename,
+                    surname,
+                    email,
+                    email_master,
+                    password,
+                    role,
+                    status,
+                    photo_limit,
+                    agegroup,
+                    plan,
+                    pagelimit,
+                    sorttype,
+                    publik,
+                    termsok,
+                    email_verified,
+                    email_verified_at
+                )
             VALUES
-                (:website, :forename, :surname, :email, :email_master, :password, :role, :status,
-                 :photo_limit, :agegroup, :plan, :pagelimit, :sorttype, :publik, :termsok);
+                (
+                    :website,
+                    :forename,
+                    :surname,
+                    :email,
+                    :email_master,
+                    :password,
+                    :role,
+                    :status,
+                    :photo_limit,
+                    :agegroup,
+                    :plan,
+                    :pagelimit,
+                    :sorttype,
+                    :publik,
+                    :termsok,
+                    :email_verified,
+                    :email_verified_at
+                );
         ";
+
             $this->db->runSql($sql, $params);
 
             $newId = (int) $this->db->lastInsertId();
@@ -210,7 +246,7 @@ class Member
             error_log('[MEMBER CREATE ERROR]');
             error_log('SQLSTATE=' . $e->getCode());
             error_log('Message=' . $e->getMessage());
-            return false;
+
             if ($this->db->inTransaction()) {
                 $this->db->rollBack();
             }
@@ -481,5 +517,114 @@ class Member
         }
 
         return $stmt->rowCount() === 1;
+    }
+
+    public function createEmailVerification(int $userId, string $tokenHash, string $expiresAt): bool
+    {
+        if ($userId <= 0 || $tokenHash === '' || $expiresAt === '') {
+            return false;
+        }
+
+        $sql = '
+        INSERT INTO email_verifications (user_id, token_hash, expires_at)
+        VALUES (:user_id, :token_hash, :expires_at)
+    ';
+
+        $stmt = $this->db->runSql($sql, [
+            'user_id' => $userId,
+            'token_hash' => $tokenHash,
+            'expires_at' => $expiresAt,
+        ]);
+
+        return $stmt !== false;
+    }
+
+    public function markEmailVerified(int $userId): bool
+    {
+        if ($userId <= 0) {
+            return false;
+        }
+
+        $sql = '
+        UPDATE member
+        SET email_verified = 1,
+            email_verified_at = NOW()
+        WHERE id = :id
+        LIMIT 1
+    ';
+
+        $stmt = $this->db->runSql($sql, ['id' => $userId]);
+
+        return $stmt !== false;
+    }
+
+    public function getEmailVerificationByTokenHash(string $tokenHash): array
+    {
+        $sql = '
+        SELECT ev.id AS verification_id,
+               ev.user_id,
+               ev.token_hash,
+               ev.expires_at,
+               ev.used_at,
+               m.email_verified
+        FROM email_verifications ev
+        INNER JOIN member m ON m.id = ev.user_id
+        WHERE ev.token_hash = :token_hash
+        LIMIT 1
+    ';
+
+        $stmt = $this->db->runSql($sql, ['token_hash' => $tokenHash]);
+        $row = $stmt->fetch();
+
+        return $row ?: [];
+    }
+
+    public function markEmailVerificationUsed(int $verificationId): bool
+    {
+        if ($verificationId <= 0) {
+            return false;
+        }
+
+        $sql = '
+        UPDATE email_verifications
+        SET used_at = NOW()
+        WHERE id = :id
+        LIMIT 1
+    ';
+
+        $stmt = $this->db->runSql($sql, ['id' => $verificationId]);
+
+        return $stmt !== false;
+    }
+    public function getByEmailMaster(string $emailMaster): array
+    {
+        $sql = '
+        SELECT id, website, forename, surname, email, email_master, status, email_verified
+        FROM member
+        WHERE email_master = :email_master
+        LIMIT 1
+    ';
+
+        $stmt = $this->db->runSql($sql, ['email_master' => trim($emailMaster)]);
+        $row = $stmt->fetch();
+
+        return $row ?: [];
+    }
+    public function expireUnusedEmailVerifications(int $userId): bool
+    {
+        if ($userId <= 0) {
+            return false;
+        }
+
+        $sql = '
+        UPDATE email_verifications
+        SET used_at = NOW()
+        WHERE user_id = :user_id
+          AND used_at IS NULL
+    ';
+
+        $stmt = $this->db->runSql($sql, ['user_id' => $userId]);
+
+        return $stmt !== false;
     }
 }
