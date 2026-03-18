@@ -1,67 +1,123 @@
 <?php
-declare(strict_types=1); // Use strict types
-use PhpBook\Validate\Validate; // Import Validate class
+declare(strict_types=1);
+
+use PhpBook\Validate\Validate;
+
+require_once __DIR__ . '/../../config/recaptcha.php';
+require_once APP_ROOT . '/src/security/redirects.php';
 require_once APP_ROOT . '/src/security/guard.php';
 guardPublic();
-$error = false; // Error message
-$sent = false; // Has email been sent
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // If form submitted
-    $email = $_POST['email']; // Get email
 
-    // -----------------------------
-    // reCAPTCHA v3 verification
-    // -----------------------------
+function sendPasswordResetEmail(
+    array $emailConfig,
+    string $toEmail,
+    string $forename,
+    string $resetUrl,
+): void {
+    $subject = 'Reset your Focus on Life password';
+
+    $safeName = trim($forename) !== '' ? trim($forename) : 'there';
+
+    $message = <<<TEXT
+    Hi {$safeName},
+
+    We received a request to reset your password.
+
+    Please click the link below to choose a new password:
+
+    {$resetUrl}
+
+    This link will expire in 1 hour.
+
+    If you did not request a password reset, you can ignore this email.
+
+    Focus on Life
+    TEXT;
+
+    $mail = new \PhpBook\Email\Email($emailConfig);
+    $mail->sendEmail($emailConfig['admin_email'], $toEmail, $subject, $message);
+}
+
+$email = '';
+$errors = [];
+$success = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $email = trim((string) ($_POST['email'] ?? ''));
+
     $recaptchaToken = $_POST['g-recaptcha-response'] ?? '';
-    error_log('PASSWORD-LOST recaptcha token: ' . substr($recaptchaToken, 0, 40));
-
     if (empty($recaptchaToken)) {
-        // Front-end didn't provide a token at all
         $errors['warning'] = 'Security check token missing. Please refresh the page and try again.';
     } else {
         $secretKey = $config['recaptcha_secret_key'] ?? '';
-
-        // Use a slightly lower threshold for login to reduce false negatives
-        if (!verify_recaptcha_v3($recaptchaToken, 'password-lost', $secretKey, 0.1)) {
-            // reCAPTCHA failed – do NOT attempt login
-            $errors['message'] = 'Password-lost failed security check. Please try again.';
-        } // end verify_recaptcha_v3()
-    } // end empty token check
-
-    $error = Validate::isEmail($email) ? '' : 'Please enter your email'; // Validate
-    if ($error === '') {
-        // If email valid
-        $id = $cms->getMember()->getIdByEmail($email); // Get member id
-        if ($id) {
-            // If id found
-            $token = $cms->getToken()->create($id, 'password_reset');
-
-            // Use website 1 for public reset flow (no Member->getById dependency)
-            $websiteId = 1;
-
-            $link =
-                rtrim(DOMAIN, '/') .
-                rtrim(DOC_ROOT, '/') .
-                '/password-reset/' .
-                $websiteId .
-                '?token=' .
-                urlencode($token);
-
-            $subject = 'Reset Password Link'; // Email subject
-            $body = 'To reset password click: <a href="' . $link . '">' . $link . '</a>'; // Email body
-            $mail = new \PhpBook\Email\Email($email_config); // Email object
-
-            $mail->sendEmail($email_config['admin_email'], $email, $subject, $body); // Send
-        } // Send to login
+        if (!verify_recaptcha_v3($recaptchaToken, 'password_lost', $secretKey, 0.1)) {
+            $errors['warning'] = 'Password reset failed security check. Please try again.';
+        }
     }
-    $sent = true;
+
+    if (empty($errors['warning'])) {
+        $errors['email'] = Validate::isEmail($email) ? '' : 'Please enter a valid email address';
+
+        if (!empty($errors['email'])) {
+            $errors['warning'] = 'Please correct the errors.';
+        } else {
+            try {
+                $member = $cms->getMember()->getByEmailMaster($email);
+
+                if ($member) {
+                    $userId = (int) ($member['id'] ?? 0);
+                    $forename = (string) ($member['forename'] ?? '');
+
+                    if ($userId > 0) {
+                        $cms->getMember()->expireUnusedPasswordResets($userId);
+
+                        $rawToken = bin2hex(random_bytes(32));
+                        $tokenHash = hash('sha256', $rawToken);
+                        $expiryDate = new \DateTimeImmutable('+1 hour');
+                        $expiresAt = $expiryDate->format('Y-m-d H:i:s');
+
+                        $saved = $cms
+                            ->getMember()
+                            ->createPasswordReset($userId, $tokenHash, $expiresAt);
+
+                        if ($saved) {
+                            $scheme =
+                                !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'
+                                    ? 'https'
+                                    : 'http';
+                            $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+                            $resetUrl =
+                                $scheme .
+                                '://' .
+                                $host .
+                                DOC_ROOT .
+                                'password-reset?token=' .
+                                urlencode($rawToken);
+
+                            sendPasswordResetEmail($email_config, $email, $forename, $resetUrl);
+                        }
+                    }
+                }
+
+                $success =
+                    'If that email address is registered, a password reset email has been sent.';
+            } catch (Throwable $e) {
+                error_log('[PASSWORD LOST] ' . $e->getMessage());
+                $success =
+                    'If that email address is registered, a password reset email has been sent.';
+            }
+        }
+    }
 }
-$website = $cms->getWebsite()->getById($_SESSION['website']);
-$w = intval($website['id']);
-$data['website'] = $website;
-$data['navigation'] = $cms->getMenu()->getAll2($w, 1); // Menus for navigation
+
+$data = [];
+$data['navigation'] = $cms->getMenu()->getAll2(1, 1);
+$data['website'] = $cms->getWebsite()->getById(1);
+$data['email'] = $email;
+$data['errors'] = $errors;
+$data['success'] = $success;
 $data['use_recaptcha'] = true;
 $data['recaptcha_site_key'] = $config['recaptcha_site_key'];
-$data['error'] = $error ?? null; // Validation errors
-$data['sent'] = $sent; // Did it send
-echo $twig->render('password-lost.html', $data); // Render Twig template
+
+echo $twig->render('password-lost.html', $data);
+exit();

@@ -627,4 +627,105 @@ class Member
 
         return $stmt !== false;
     }
+
+    public function expireUnusedPasswordResets(int $userId): bool
+    {
+        if ($userId <= 0) {
+            return false;
+        }
+
+        $sql = '
+        UPDATE password_resets
+        SET used_at = NOW()
+        WHERE user_id = :user_id
+          AND used_at IS NULL
+    ';
+
+        $stmt = $this->db->runSql($sql, ['user_id' => $userId]);
+
+        return $stmt !== false;
+    }
+
+    public function createPasswordReset(int $userId, string $tokenHash, string $expiresAt): bool
+    {
+        if ($userId <= 0 || $tokenHash === '' || $expiresAt === '') {
+            return false;
+        }
+
+        $sql = '
+        INSERT INTO password_resets (user_id, token_hash, expires_at)
+        VALUES (:user_id, :token_hash, :expires_at)
+    ';
+
+        $stmt = $this->db->runSql($sql, [
+            'user_id' => $userId,
+            'token_hash' => $tokenHash,
+            'expires_at' => $expiresAt,
+        ]);
+
+        return $stmt !== false;
+    }
+    public function getPasswordResetByTokenHash(string $tokenHash): array
+    {
+        $sql = '
+        SELECT pr.id AS reset_id,
+               pr.user_id,
+               pr.expires_at,
+               pr.used_at,
+               m.email,
+               m.email_master,
+               m.forename,
+               m.status
+        FROM password_resets pr
+        INNER JOIN member m ON m.id = pr.user_id
+        WHERE pr.token_hash = :token_hash
+        LIMIT 1
+    ';
+
+        $stmt = $this->db->runSql($sql, ['token_hash' => $tokenHash]);
+        $row = $stmt->fetch();
+
+        return $row ?: [];
+    }
+
+    public function markPasswordResetUsed(int $resetId): bool
+    {
+        if ($resetId <= 0) {
+            return false;
+        }
+
+        $sql = '
+        UPDATE password_resets
+        SET used_at = NOW()
+        WHERE id = :id
+        LIMIT 1
+    ';
+
+        $stmt = $this->db->runSql($sql, ['id' => $resetId]);
+
+        return $stmt !== false;
+    }
+
+    public function updatePasswordById(int $userId, string $newPassword): bool
+    {
+        if ($userId <= 0 || $newPassword === '') {
+            return false;
+        }
+
+        $passwordHash = password_hash($newPassword, PASSWORD_DEFAULT);
+
+        $sql = '
+        UPDATE member
+        SET password = :password
+        WHERE id = :id
+        LIMIT 1
+    ';
+
+        $stmt = $this->db->runSql($sql, [
+            'password' => $passwordHash,
+            'id' => $userId,
+        ]);
+
+        return $stmt !== false;
+    }
 }

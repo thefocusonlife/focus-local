@@ -38,10 +38,11 @@
 
 				<button type="submit" class="btn btn-primary">SIGN IN</button>
 
-				<p class="small">
-					<a href="/focus-local/public/password-lost/{{ websiteId|default(1) }}">Lost password?</a>
+				<p class="small"></p>
+				<p>
+					<a href="{{ doc_root }}password-lost">Forgot your password?</a>
 				</p>
-			</form>
-		</section>
-	</main>
-{% endblock %}
+			</p>
+		</form>
+	</section>
+</main>{% endblock %}

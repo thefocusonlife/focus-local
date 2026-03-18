@@ -1,74 +1,84 @@
 <?php
-declare(strict_types=1); // Use strict types
+declare(strict_types=1);
 
-use PhpBook\Validate\Validate; // Import class
+use PhpBook\Validate\Validate;
+
+require_once APP_ROOT . '/src/security/redirects.php';
 require_once APP_ROOT . '/src/security/guard.php';
 guardPublic();
-$errors = []; // Initialize array
 
-$token = $_GET['token'] ?? ''; // Get token
-if (!$token) {
-    // If id not returned
-    redirect('login/'); // Redirect
-}
+$token = trim((string) ($_GET['token'] ?? ($_POST['token'] ?? '')));
+$errors = [];
+$success = '';
+$validToken = false;
 
-$id = $cms->getToken()->getMemberId($token, 'password_reset'); // Get member id
-if (!$id) {
-    // If no id
-    redirect('login/', ['warning' => 'Link expired, try again.']); // Redirect
-}
+if ($token === '') {
+    $errors['message'] = 'Missing password reset token.';
+} else {
+    $tokenHash = hash('sha256', $token);
+    $reset = $cms->getMember()->getPasswordResetByTokenHash($tokenHash);
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // If form submitted
-    $password = $_POST['password']; // Get new password
-    $confirm = $_POST['confirm']; // Get password confirm
-
-    // Validate passwords and check they match
-    $errors['password'] = Validate::isPassword($password)
-        ? ''
-        : 'Passwords must be at least 8 characters and have:<br>
-                A lowercase letter<br>An uppercase letter<br>A number
-                <br>And a special character'; // Invalid password
-
-    $errors['confirm'] = $password === $confirm ? '' : 'Passwords do not match'; // Password does not match
-
-    $invalid = implode($errors); // Join error messages
-
-    if ($invalid) {
-        // If password not valid
-        $errors['message'] = 'Please enter a valid password.'; // Store error message
+    if (!$reset) {
+        $errors['message'] = 'Invalid password reset link.';
+    } elseif (!empty($reset['used_at'])) {
+        $errors['message'] = 'This password reset link has already been used.';
     } else {
-        // Otherwise
-        $cms->getMember()->passwordUpdate($id, $password); // Update password
-        $member = $cms->getMember()->get($id); // Get member details
+        $expiresAt = new \DateTimeImmutable((string) $reset['expires_at']);
+        $now = new \DateTimeImmutable('now');
 
-        // Send confirmation email
-        $subject = 'Password updated';
-        $body =
-            'Your password was updated on ' .
-            date('Y-m-d H:i:s') .
-            ' if you did not reset the password email ' .
-            $email_config['admin_email'];
-
-        $email = new \PhpBook\Email\Email($email_config);
-        $email->sendEmail($email_config['admin_email'], $member['email'], $subject, $body);
-
-        // -----------------------------
-        // NEW: Create a proper session so user is logged in
-        // -----------------------------
-        $website = $cms->getWebsite()->getById(1);
-        $cms->getSession()->create($member, $website['id']);
-
-        // Redirect as logged-in user
-        redirect('index/', ['success' => 'Password updated']);
-        exit();
+        if ($expiresAt < $now) {
+            $errors['message'] = 'This password reset link has expired.';
+        } else {
+            $validToken = true;
+        }
     }
 }
 
-// Render form (GET, or POST with errors)
-$data['navigation'] = $cms->getMenu()->getAll2(1, 1); // All menus for nav
-$data['errors'] = $errors; // Errors array
-$data['token'] = $token; // Token
-$data['use_recaptcha'] = true;
-$data['recaptcha_site_key'] = $config['recaptcha_site_key'];
-echo $twig->render('password-reset.html', $data); // Render Twig template
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $validToken) {
+    $password = (string) ($_POST['password'] ?? '');
+    $confirm = (string) ($_POST['confirm'] ?? '');
+
+    $errors['password'] = Validate::isPassword($password)
+        ? ''
+        : 'Passwords must be at least 8 characters and have:<br>
+            A lowercase letter<br>An uppercase letter<br>A number
+            <br>And a special character';
+
+    $errors['confirm'] = $password === $confirm ? '' : 'Passwords do not match';
+
+    $invalid = implode($errors);
+
+    if (!$invalid) {
+        try {
+            $userId = (int) ($reset['user_id'] ?? 0);
+            $resetId = (int) ($reset['reset_id'] ?? 0);
+
+            $updated = $cms->getMember()->updatePasswordById($userId, $password);
+            if (!$updated) {
+                throw new RuntimeException('Failed to update password.');
+            }
+
+            $used = $cms->getMember()->markPasswordResetUsed($resetId);
+            if (!$used) {
+                throw new RuntimeException('Failed to mark reset token used.');
+            }
+
+            $success = 'Your password has been reset successfully. You may now sign in.';
+            $validToken = false;
+        } catch (Throwable $e) {
+            error_log('[PASSWORD RESET] ' . $e->getMessage());
+            $errors['message'] = 'We could not reset your password. Please try again.';
+        }
+    }
+}
+
+$data = [];
+$data['navigation'] = $cms->getMenu()->getAll2(1, 1);
+$data['website'] = $cms->getWebsite()->getById(1);
+$data['errors'] = $errors;
+$data['success'] = $success;
+$data['token'] = $token;
+$data['validToken'] = $validToken;
+
+echo $twig->render('password-reset.html', $data);
+exit();
