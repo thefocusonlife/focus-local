@@ -15,9 +15,11 @@
 			<form method="post" action="" autocomplete="on" data-recaptcha-action="login">
 				{% if errors.message %}
 					<div class="alert alert-danger">{{ errors.message|raw }}</div>
-					<p>
-						<a href="{{ doc_root }}resend-verification">Resend verification email</a>
-					</p>
+					{% if show_resend_verification %}
+						<p>
+							<a href="{{ doc_root }}resend-verification">Resend verification email</a>
+						</p>
+					{% endif %}
 				{% endif %}
 
 				<input type="hidden" name="g-recaptcha-response" value="">

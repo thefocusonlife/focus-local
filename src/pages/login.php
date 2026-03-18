@@ -49,6 +49,7 @@ if ($role !== 'guest') {
 $email = '';
 $errors = [];
 $success = $_GET['success'] ?? null;
+$showResendVerification = false;
 
 // ----------------------------
 // POST handler
@@ -121,102 +122,100 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     // Attempt login
+    $loginEmail = trim($email);
     if (empty($errors['message'])) {
-        $member = $cms->getMember()->login2($email, $password);
-        error_log(
-            '[LOGIN2 RESULT] id=' .
-                (int) ($member['id'] ?? 0) .
-                ' account_id=' .
-                (int) ($member['account_id'] ?? 0) .
-                ' website=' .
-                (int) ($member['website'] ?? 0),
-        );
-
-        if (empty($member)) {
-            $errors['message'] = 'Invalid email or password.';
-        } elseif (($member['status'] ?? '') === 'suspended') {
-            $errors['message'] = 'Account suspended.';
-        } elseif (($member['status'] ?? '') === 'pending') {
-            $errors['message'] =
-                'Membership pending. Use Contact Us to inquire about your registration.';
-        } elseif ((int) ($member['email_verified'] ?? 0) !== 1) {
-            $errors['message'] =
-                'Please verify your email address before signing in. If needed, use the resend verification page.';
+        if ($cms->getMember()->isLoginLocked($loginEmail)) {
+            $errors['message'] = 'Too many failed login attempts. Please try again later.';
         } else {
-            // Enforce tenant membership (no fallback)
-            $memberWebsiteId = (int) ($member['website'] ?? 0);
-            if ($memberWebsiteId <= 0 || $memberWebsiteId !== (int) $website['id']) {
-                $errors['message'] = 'This email not valid for ' . (string) $website['name'];
+            $member = $cms->getMember()->login2($loginEmail, $password);
+
+            if (empty($member)) {
+                $cms->getMember()->recordFailedLogin($loginEmail);
+                $errors['message'] = 'Invalid email or password.';
+            } elseif (($member['status'] ?? '') === 'suspended') {
+                $errors['message'] = 'Account suspended.';
+            } elseif (($member['status'] ?? '') === 'pending') {
+                $errors['message'] =
+                    'Membership pending. Use Contact Us to inquire about your registration.';
+            } elseif ((int) ($member['email_verified'] ?? 0) !== 1) {
+                $errors['message'] = 'Please verify your email address before signing in.';
+                $showResendVerification = true;
             } else {
-                // ✅ SUCCESS: create session
-                $dbMember = $cms->getMember()->get((int) ($member['id'] ?? 0));
-                $role = strtolower(
-                    trim((string) ($dbMember['role'] ?? ($member['role'] ?? 'member'))),
-                );
-                $_SESSION['member_id'] = (int) $member['id'];
-                $_SESSION['role'] = $role;
-                error_log(
-                    '[DB MEMBER CHECK] id=' .
-                        (int) ($dbMember['id'] ?? 0) .
-                        ' account_id=' .
-                        (int) ($dbMember['account_id'] ?? 0) .
-                        ' website=' .
-                        (int) ($dbMember['website'] ?? 0),
-                );
-                if (session_status() !== PHP_SESSION_ACTIVE) {
-                    session_start();
-                }
-                session_regenerate_id(true);
-                $cms->getSession()->create($member, (int) $website['id']);
+                // Enforce tenant membership (no fallback)
+                $memberWebsiteId = (int) ($member['website'] ?? 0);
+                if ($memberWebsiteId <= 0 || $memberWebsiteId !== (int) $website['id']) {
+                    $errors['message'] = 'This email not valid for ' . (string) $website['name'];
+                } else {
+                    // ✅ SUCCESS: create session
+                    $dbMember = $cms->getMember()->get((int) ($member['id'] ?? 0));
+                    $role = strtolower(
+                        trim((string) ($dbMember['role'] ?? ($member['role'] ?? 'member'))),
+                    );
+                    $_SESSION['member_id'] = (int) $member['id'];
+                    $_SESSION['role'] = $role;
+                    error_log(
+                        '[DB MEMBER CHECK] id=' .
+                            (int) ($dbMember['id'] ?? 0) .
+                            ' account_id=' .
+                            (int) ($dbMember['account_id'] ?? 0) .
+                            ' website=' .
+                            (int) ($dbMember['website'] ?? 0),
+                    );
+                    if (session_status() !== PHP_SESSION_ACTIVE) {
+                        session_start();
+                    }
+                    session_regenerate_id(true);
+                    $cms->getSession()->create($member, (int) $website['id']);
+                    $cms->getMember()->clearFailedLogin($email);
+                    // hard-assert the important bits (defensive)
+                    $_SESSION['id'] = (int) $member['id'];
+                    $_SESSION['account_id'] = (int) ($member['account_id'] ?? $member['id']);
+                    $_SESSION['follow_id'] = (int) $_SESSION['account_id'];
+                    $_SESSION['website'] = (int) $member['website'];
+                    error_log(
+                        '[LOGIN AFTER CREATE] id=' .
+                            ($_SESSION['id'] ?? 'NULL') .
+                            ' account_id=' .
+                            ($_SESSION['account_id'] ?? 'NULL') .
+                            ' website=' .
+                            ($_SESSION['website'] ?? 'NULL'),
+                    );
 
-                // hard-assert the important bits (defensive)
-                $_SESSION['id'] = (int) $member['id'];
-                $_SESSION['account_id'] = (int) ($member['account_id'] ?? $member['id']);
-                $_SESSION['follow_id'] = (int) $_SESSION['account_id'];
-                $_SESSION['website'] = (int) $member['website'];
-                error_log(
-                    '[LOGIN AFTER CREATE] id=' .
-                        ($_SESSION['id'] ?? 'NULL') .
-                        ' account_id=' .
-                        ($_SESSION['account_id'] ?? 'NULL') .
-                        ' website=' .
-                        ($_SESSION['website'] ?? 'NULL'),
-                );
+                    // Redirect to intended deep-link if present (and safe), else safe fallback
+                    // After successful login, after setting $_SESSION['id'], $_SESSION['role'], $_SESSION['website']...
 
-                // Redirect to intended deep-link if present (and safe), else safe fallback
-                // After successful login, after setting $_SESSION['id'], $_SESSION['role'], $_SESSION['website']...
+                    $returnTo = (string) ($_SESSION['return_to'] ?? '');
+                    unset($_SESSION['return_to']);
 
-                $returnTo = (string) ($_SESSION['return_to'] ?? '');
-                unset($_SESSION['return_to']);
+                    $role = (string) ($_SESSION['role'] ?? 'member');
 
-                $role = (string) ($_SESSION['role'] ?? 'member');
+                    // Normalize: strip DOC_ROOT prefix if present, so comparisons are consistent
+                    if (
+                        defined('DOC_ROOT') &&
+                        DOC_ROOT !== '' &&
+                        str_starts_with($returnTo, DOC_ROOT)
+                    ) {
+                        $returnTo = '/' . ltrim(substr($returnTo, strlen(DOC_ROOT)), '/');
+                    }
 
-                // Normalize: strip DOC_ROOT prefix if present, so comparisons are consistent
-                if (
-                    defined('DOC_ROOT') &&
-                    DOC_ROOT !== '' &&
-                    str_starts_with($returnTo, DOC_ROOT)
-                ) {
-                    $returnTo = '/' . ltrim(substr($returnTo, strlen(DOC_ROOT)), '/');
-                }
+                    // If return_to points to admin and user isn't admin/uber, override to member grid
+                    $isAdmin = in_array($role, ['admin', 'uber'], true);
 
-                // If return_to points to admin and user isn't admin/uber, override to member grid
-                $isAdmin = in_array($role, ['admin', 'uber'], true);
+                    // Never redirect to admin pages via deep-link return_to (Week 3 hard rule)
+                    if ($returnTo !== '' && str_starts_with($returnTo, '/admin/')) {
+                        $returnTo = '';
+                    }
+                    // Choose landing
+                    if ($returnTo !== '') {
+                        // If your redirect() expects relative paths like 'admin/menus/' or 'member/grid/'
+                        redirect(ltrim($returnTo, '/'));
+                        exit();
+                    }
 
-                // Never redirect to admin pages via deep-link return_to (Week 3 hard rule)
-                if ($returnTo !== '' && str_starts_with($returnTo, '/admin/')) {
-                    $returnTo = '';
-                }
-                // Choose landing
-                if ($returnTo !== '') {
-                    // If your redirect() expects relative paths like 'admin/menus/' or 'member/grid/'
-                    redirect(ltrim($returnTo, '/'));
+                    // Default landing (THIS is what you want to change)
+                    redirect('member/' . $member['id']); // Redirect to their page
                     exit();
                 }
-
-                // Default landing (THIS is what you want to change)
-                redirect('member/' . $member['id']); // Redirect to their page
-                exit();
             }
         }
     }

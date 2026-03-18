@@ -90,14 +90,14 @@ class Member
         return $member;
     }
     // Login: returns member data if authenticated, false if not
-    // Login: returns member data if authenticated, false if not
     public function login2(string $email, string $password)
     {
         $arguments['email'] = $email;
 
         $sql = "SELECT id, website, forename, surname, joined, email, email_master, password,
                    picture, role, status, account_id, photo_limit, agegroup, plan,
-                   pagelimit, sorttype, publik, termsok, email_verified, email_verified_at
+                   pagelimit, sorttype, publik, termsok, email_verified, email_verified_at,
+                   failed_login_attempts, last_failed_login, lock_until
               FROM member
              WHERE email = :email
              LIMIT 1;";
@@ -725,6 +725,100 @@ class Member
             'password' => $passwordHash,
             'id' => $userId,
         ]);
+
+        return $stmt !== false;
+    }
+
+    public function isLoginLocked(string $email): bool
+    {
+        $sql = '
+        SELECT lock_until
+        FROM member
+        WHERE email = :email
+        LIMIT 1
+    ';
+
+        $stmt = $this->db->runSql($sql, ['email' => trim($email)]);
+        $row = $stmt->fetch();
+
+        if (!$row || empty($row['lock_until'])) {
+            return false;
+        }
+
+        $lockUntil = new \DateTimeImmutable((string) $row['lock_until']);
+        $now = new \DateTimeImmutable('now');
+
+        return $lockUntil > $now;
+    }
+
+    public function recordFailedLogin(
+        string $email,
+        int $maxAttempts = 5,
+        int $lockMinutes = 10,
+    ): bool {
+        $email = trim($email);
+        if ($email === '') {
+            return false;
+        }
+
+        $sql = '
+        SELECT id, failed_login_attempts
+        FROM member
+        WHERE email = :email
+        LIMIT 1
+    ';
+
+        $stmt = $this->db->runSql($sql, ['email' => $email]);
+        $member = $stmt->fetch();
+
+        if (!$member) {
+            return false;
+        }
+
+        $userId = (int) ($member['id'] ?? 0);
+        $attempts = (int) ($member['failed_login_attempts'] ?? 0) + 1;
+
+        $lockUntil = null;
+        if ($attempts >= $maxAttempts) {
+            $lockDate = new \DateTimeImmutable('now +' . $lockMinutes . ' minutes');
+            $lockUntil = $lockDate->format('Y-m-d H:i:s');
+        }
+
+        $sql = '
+        UPDATE member
+        SET failed_login_attempts = :failed_login_attempts,
+            last_failed_login = NOW(),
+            lock_until = :lock_until
+        WHERE id = :id
+        LIMIT 1
+    ';
+
+        $stmt = $this->db->runSql($sql, [
+            'failed_login_attempts' => $attempts,
+            'lock_until' => $lockUntil,
+            'id' => $userId,
+        ]);
+
+        return $stmt !== false;
+    }
+
+    public function clearFailedLogin(string $email): bool
+    {
+        $email = trim($email);
+        if ($email === '') {
+            return false;
+        }
+
+        $sql = '
+        UPDATE member
+        SET failed_login_attempts = 0,
+            last_failed_login = NULL,
+            lock_until = NULL
+        WHERE email = :email
+        LIMIT 1
+    ';
+
+        $stmt = $this->db->runSql($sql, ['email' => $email]);
 
         return $stmt !== false;
     }
