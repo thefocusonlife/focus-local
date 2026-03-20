@@ -1,0 +1,23 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+	<main>
+		<section class="header">
+			<h1>Confirm Email Change</h1>
+
+			{% if success %}
+				<div class="alert alert-success">{{ success }}</div>
+				<p>
+					<a href="{{ doc_root }}login/{{ website.id }}">Go to Login</a>
+				</p>
+			{% endif %}
+
+			{% if failure %}
+				<div class="alert alert-danger">{{ failure }}</div>
+				<p>
+					<a href="{{ doc_root }}login/{{ website.id }}">Go to Login</a>
+				</p>
+			{% endif %}
+		</section>
+	</main>
+{% endblock %}

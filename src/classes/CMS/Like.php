@@ -33,8 +33,6 @@ class Like // Define Member class
 
     public function delete(array $like): bool
     {
-        echo 'Like -42';
-
         $sql = "DELETE FROM likes
                  WHERE story_id = :story_id
                    AND member_id = :member_id;"; // SQL

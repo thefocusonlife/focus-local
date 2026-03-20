@@ -1,0 +1,54 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+	<main>
+		<section class="header">
+			<h1>Change Email Address</h1>
+
+			{% if success %}
+				<div class="alert alert-success">{{ success }}</div>
+			{% endif %}
+
+			{% if errors.warning %}
+				<div class="alert alert-danger">{{ errors.warning }}</div>
+			{% endif %}
+		</section>
+
+		<section class="form-membership">
+			<p>Current email:
+				<strong>{{ current_email }}</strong>
+			</p>
+
+			<div class="form-help">
+				Changing your email will update the email address used across all your linked Focus on Life memberships.
+			</div>
+
+			<form action="{{ doc_root }}change-email" method="POST" class="form-membership js-recaptcha-form" data-recaptcha-action="change_email">
+				<input type="hidden" name="g-recaptcha-response" value="">
+
+				<div class="form-group">
+					<label for="email">New email address (will apply to all your memberships):</label>
+					<input type="email" name="email" id="email" value="{{ email|default('')|e }}" class="form-control">
+					<div class="errors">{{ errors.email }}</div>
+				</div>
+				<div class="form-group">
+					<label for="confirm_password">Confirm your password:</label>
+
+					<div class="password-wrap">
+						<input type="password" name="confirm_password" id="confirm_password" class="form-control" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" required>
+
+						<button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false" data-toggle-password="#confirm_password">👁</button>
+					</div>
+
+					<div class="form-help">
+						Please enter your current Focus on Life password. Your browser may autofill a different saved password.
+					</div>
+
+					<div class="errors">{{ errors.password }}</div>
+				</div>
+
+				<input type="submit" class="btn btn-primary" value="Send Confirmation Email">
+			</form>
+		</section>
+	</main>
+{% endblock %}

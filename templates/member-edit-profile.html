@@ -1,114 +1,129 @@
 {% extends 'layout.html' %}
 
-{% block title %}Update profile{% endblock %}
-{% block description %}Update profile for theFocusOnLife{% endblock %}
+{% block title %}Update profile
+{% endblock %}
+{% block description %}Update profile for theFocusOnLife
+{% endblock %}
 
 {% block content %}
- 
-<section class="header"><h1>Update profile</h1></section>
-   <form action="{{ doc_root }}member-edit-profile/{{member.id}}" method="POST" class="form-membership">
 
-    {% if errors.message %}<div class="alert alert-danger">{{ errors.message }}</div>{% endif %}
-    <div class="form-group">
-   
-      <input type="hidden" name="id" value="{{member.id}}"  id="id" class="form-control"  />
-      <span class="errors">{{ errors.email }}</span><br>
-    </div>
-    <div class="form-group">
-      <label for="forename">Forename: </label>
-      <input type="text" name="forename" value="{{ member.forename }}" id="forename" class="form-control" />
-      <span class="errors">{{ errors.forename }}</span><br>
-    </div>
+	<section class="header">
+		<h1>Update profile</h1>
+	</section>
+	<form action="{{ doc_root }}member-edit-profile/{{member.id}}" method="POST" class="form-membership">
 
-    <div class="form-group">
-      <label for="surname">Surname: </label>
-      <input type="text" name="surname" value="{{ member.surname }}"  id="surname" class="form-control" />
-      <span class="errors">{{ errors.surname }}</span><br>
-    </div>
+		{% if errors.message %}
+			<div class="alert alert-danger">{{ errors.message }}</div>
+		{% endif %}
+		<div class="form-group">
 
-    <div class="form-group">
-      <label for="email">Email address: </label>
-      <input type="email" name="email" value="{{ member.email }}"  id="email" class="form-control" />
-      <span class="errors">{{ errors.email }}</span><br>
-    </div>
-     <div class="form-check">
-           <input type="checkbox" name="publik" value=1 class="form-check-input" id="publik"
-           {% if member.publik == 1 %} checked {% endif %}>
-          <label for="publik" class="form-check-label">Public</label>
-      </div>
-      
-      <div class="form-check">
-          <input type="checkbox" name="termsok" value="1" disabled class="form-check-input" id="termsok" {% if member.termsok %} checked {% endif %}>
-          <input type="hidden" name="termsok" value={{member.termsok}}>
-          <label for="termsok" class="form-check-label">Terms and Conditions</label>
-      </div>
+			<input type="hidden" name="id" value="{{member.id}}" id="id" class="form-control"/>
+			<span class="errors">{{ errors.email }}</span><br>
+		</div>
+		<div class="form-group">
+			<label for="forename">Forename:
+			</label>
+			<input type="text" name="forename" value="{{ member.forename }}" id="forename" class="form-control"/>
+			<span class="errors">{{ errors.forename }}</span><br>
+		</div>
 
- 
-    <div class="form-group">
-           <input type="hidden" name="account_id" value="{{member.account_id}}"  id="account_id" class="form-control"  />
-      <span class="errors">{{ errors.email }}</span><br>
-    </div>
+		<div class="form-group">
+			<label for="surname">Surname:
+			</label>
+			<input type="text" name="surname" value="{{ member.surname }}" id="surname" class="form-control"/>
+			<span class="errors">{{ errors.surname }}</span><br>
+		</div>
 
-  {% if session.id !=1 %}
-    <div class="form-group">
-   
-      <input type="hidden" name="photo_limit" value="{{member.photo_limit}}"  id="photo_limit" class="form-control"  />
-      <span class="errors">{{ errors.photo_limit }}</span><br>
-    </div>
-  {% else %}
-    <div class="form-group">
-      <label for="photo_limit">Photo limit: </label>
-      <input type="number" name="photo_limit" value="{{member.photo_limit}}"  id="photo_limit" class="form-control"  />
-      <span class="errors">{{ errors.photo_limit }}</span><br>
-    </div>
-    {% endif %}
+		<div class="form-group">
+			<label for="email_master">Email address:</label>
+			<input type="email" name="email_master" id="email_master" value="{{ member.email_master|default('')|e }}" class="form-control" readonly>
+			<div class="form-help">
+				To change your email address, use the request email change process.
+			</div>
+			<p>
+				<a href="{{ doc_root }}change-email" class="btn btn-primary">Request Email Change</a>
+			</p>
+		</div>
+		<div class="form-check">
+			<input type="checkbox" name="publik" value="1" class="form-check-input" id="publik" {% if member.publik == 1 %} checked {% endif %}>
+			<label for="publik" class="form-check-label">Public</label>
+		</div>
 
-    {% if session.id !=1 %}
-    <div class="form-group">
-   
-      <input type="hidden" name="agegroup" value="{{agegroup.age}}"  id="agegroup" class="form-control"  />
-      <span class="errors">{{ errors.agegroup }}</span><br>
-    </div>
-  {% else %}
-    <div class="form-group">
-            <label for="agegroup">Age Group: </label>
+		<div class="form-check">
+			<input type="checkbox" name="termsok" value="1" disabled class="form-check-input" id="termsok" {% if member.termsok %} checked {% endif %}>
+			<input type="hidden" name="termsok" value={{member.termsok}}>
+			<label for="termsok" class="form-check-label">Terms and Conditions</label>
+		</div>
 
-            <select name="agegroup" id="agegroup">
-              {% for agegroup in agegroups %}
-              <option value="{{ agegroup.age }}"
-              {% if agegroup.age == member.agegroup %} selected{% endif %}>
-              {{agegroup.agegroup}} </option>
-              {% endfor %}
-            </select>
-            <span class="errors">{{ errors.agegroup }}</span>
-          </div>
-    {% endif %}
-    
-    {% if session.id !=1 %}
-    <div class="form-group">
-   
-      <input type="hidden" name="plan" value="{{plan.id}}"  id="plan" class="form-control"  />
-      <span class="errors">{{ errors.plan}}</span><br>
-    </div>
-  {% else %}
-    <div class="form-group">
-            <label for="plan">Plan: </label>
 
-            <select name="plan" id="plan">
-              {% for plan in plans %}
-              <option value="{{ plan.id }}"
-              {% if plan.id == member.plan %} selected{% endif %}>
-              {{plan.name}} {{plan.description}} </option>
-              {% endfor %}
-            </select>
-            <span class="errors">{{ errors.agegroup }}</span>
-          </div>
-    {% endif %} 
-    
-    <div class="form-group">
-      <button type="submit" class="btn btn-primary">update</button>
-    </div>
+		<div class="form-group">
+			<input type="hidden" name="account_id" value="{{member.account_id}}" id="account_id" class="form-control"/>
+			<span class="errors">{{ errors.email }}</span><br>
+		</div>
 
-  </form>
-</main>
-{% endblock %}
+		{% if session.id !=1 %}
+			<div class="form-group">
+
+				<input type="hidden" name="photo_limit" value="{{member.photo_limit}}" id="photo_limit" class="form-control"/>
+				<span class="errors">{{ errors.photo_limit }}</span><br>
+			</div>
+		{% else %}
+			<div class="form-group">
+				<label for="photo_limit">Photo limit:
+				</label>
+				<input type="number" name="photo_limit" value="{{member.photo_limit}}" id="photo_limit" class="form-control"/>
+				<span class="errors">{{ errors.photo_limit }}</span><br>
+			</div>
+		{% endif %}
+
+		{% if session.id !=1 %}
+			<div class="form-group">
+
+				<input type="hidden" name="agegroup" value="{{agegroup.age}}" id="agegroup" class="form-control"/>
+				<span class="errors">{{ errors.agegroup }}</span><br>
+			</div>
+		{% else %}
+			<div class="form-group">
+				<label for="agegroup">Age Group:
+				</label>
+
+				<select name="agegroup" id="agegroup">
+					{% for agegroup in agegroups %}
+						<option value="{{ agegroup.age }}" {% if agegroup.age == member.agegroup %} selected {% endif %}>
+							{{agegroup.agegroup}}
+						</option>
+					{% endfor %}
+				</select>
+				<span class="errors">{{ errors.agegroup }}</span>
+			</div>
+		{% endif %}
+
+		{% if session.id !=1 %}
+			<div class="form-group">
+
+				<input type="hidden" name="plan" value="{{plan.id}}" id="plan" class="form-control"/>
+				<span class="errors">{{ errors.plan}}</span><br>
+			</div>
+		{% else %}
+			<div class="form-group">
+				<label for="plan">Plan:
+				</label>
+
+				<select name="plan" id="plan">
+					{% for plan in plans %}
+						<option value="{{ plan.id }}" {% if plan.id == member.plan %} selected {% endif %}>
+							{{plan.name}}
+							{{plan.description}}
+						</option>
+					{% endfor %}
+				</select>
+				<span class="errors">{{ errors.agegroup }}</span>
+			</div>
+		{% endif %}
+
+		<div class="form-group">
+			<button type="submit" class="btn btn-primary">update</button>
+		</div>
+
+	</form>
+</main>{% endblock %}

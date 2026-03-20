@@ -9,7 +9,6 @@ class Member
     {
         $this->db = $db; // Add ref to Database object
     }
-
     // Get individual member by id
     public function get(int $id)
     {
@@ -18,7 +17,21 @@ class Member
                  WHERE id = :id;"; // SQL to get member
         return $this->db->runSql($sql, [$id])->fetch(); // Return member
     }
+    // Get member by id for sensitive flows that require password verification
+    public function getForEmailChangeById(int $id): array
+    {
+        $sql = "
+        SELECT id, website, forename, surname, email, email_master, password, role, status, account_id
+        FROM member
+        WHERE id = :id
+        LIMIT 1;
+    ";
 
+        $stmt = $this->db->runSql($sql, ['id' => $id]);
+        $row = $stmt->fetch();
+
+        return $row ?: [];
+    }
     // Get details of all members
     public function getAll(): array
     {
@@ -35,6 +48,7 @@ class Member
                   WHERE website = :id;"; // SQL to get all members
         return $this->db->runSql($sql, $arguments)->fetchAll(); // Return all members
     }
+
     public function getAll3(int $id): array
     {
         $arguments = [$id];
@@ -819,6 +833,252 @@ class Member
     ';
 
         $stmt = $this->db->runSql($sql, ['email' => $email]);
+
+        return $stmt !== false;
+    }
+
+    public function getAllByEmailMaster(string $emailMaster): array
+    {
+        $sql = '
+        SELECT id, website, email, email_master
+        FROM member
+        WHERE email_master = :email_master
+        ORDER BY website ASC, id ASC
+    ';
+
+        $stmt = $this->db->runSql($sql, ['email_master' => trim($emailMaster)]);
+        return $stmt->fetchAll() ?: [];
+    }
+
+    public function emailLoginExistsOutsideEmailMaster(string $email, string $emailMaster): bool
+    {
+        $sql = '
+        SELECT id
+        FROM member
+        WHERE email = :email
+          AND email_master <> :email_master
+        LIMIT 1
+    ';
+
+        $stmt = $this->db->runSql($sql, [
+            'email' => trim($email),
+            'email_master' => trim($emailMaster),
+        ]);
+
+        $row = $stmt->fetch();
+        return !empty($row);
+    }
+
+    public function expireUnusedEmailChangeRequestsByEmailMaster(string $emailMaster): bool
+    {
+        if ($emailMaster === '') {
+            return false;
+        }
+
+        $sql = '
+        UPDATE email_change_requests
+        SET used_at = NOW()
+        WHERE old_email_master = :old_email_master
+          AND used_at IS NULL
+    ';
+
+        $stmt = $this->db->runSql($sql, ['old_email_master' => trim($emailMaster)]);
+        return $stmt !== false;
+    }
+
+    public function updateAllEmailsByEmailMaster(
+        string $oldEmailMaster,
+        string $newEmailMaster,
+    ): bool {
+        $oldEmailMaster = trim(strtolower($oldEmailMaster));
+        $newEmailMaster = trim(strtolower($newEmailMaster));
+
+        if ($oldEmailMaster === '' || $newEmailMaster === '') {
+            return false;
+        }
+
+        $members = $this->getAllByEmailMaster($oldEmailMaster);
+        if (!$members) {
+            return false;
+        }
+
+        try {
+            $this->db->beginTransaction();
+
+            foreach ($members as $member) {
+                $userId = (int) ($member['id'] ?? 0);
+                $websiteId = (int) ($member['website'] ?? 0);
+
+                if ($userId <= 0 || $websiteId <= 0) {
+                    throw new \RuntimeException('Invalid member row in email change update.');
+                }
+
+                $newLoginEmail = $websiteId > 1 ? $newEmailMaster . $websiteId : $newEmailMaster;
+
+                $sql = '
+                UPDATE member
+                SET email = :email,
+                    email_master = :email_master,
+                    email_verified = 1,
+                    email_verified_at = NOW()
+                WHERE id = :id
+                LIMIT 1
+            ';
+
+                $this->db->runSql($sql, [
+                    'email' => $newLoginEmail,
+                    'email_master' => $newEmailMaster,
+                    'id' => $userId,
+                ]);
+            }
+
+            $this->db->commit();
+            return true;
+        } catch (\Throwable $e) {
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
+            throw $e;
+        }
+    }
+    public function emailLoginExists(string $email): bool
+    {
+        $sql = '
+        SELECT id
+        FROM member
+        WHERE email = :email
+        LIMIT 1
+    ';
+
+        $stmt = $this->db->runSql($sql, ['email' => trim($email)]);
+        $row = $stmt->fetch();
+
+        return !empty($row);
+    }
+    public function expireUnusedEmailChangeRequests(int $userId): bool
+    {
+        if ($userId <= 0) {
+            return false;
+        }
+
+        $sql = '
+        UPDATE email_change_requests
+        SET used_at = NOW()
+        WHERE user_id = :user_id
+          AND used_at IS NULL
+    ';
+
+        $stmt = $this->db->runSql($sql, ['user_id' => $userId]);
+
+        return $stmt !== false;
+    }
+    public function createEmailChangeRequest(
+        int $userId,
+        string $oldEmailMaster,
+        string $newEmailMaster,
+        string $tokenHash,
+        string $expiresAt,
+    ): bool {
+        if (
+            $userId <= 0 ||
+            $oldEmailMaster === '' ||
+            $newEmailMaster === '' ||
+            $tokenHash === '' ||
+            $expiresAt === ''
+        ) {
+            return false;
+        }
+
+        $sql = '
+        INSERT INTO email_change_requests (
+            user_id,
+            old_email_master,
+            new_email_master,
+            token_hash,
+            expires_at
+        )
+        VALUES (
+            :user_id,
+            :old_email_master,
+            :new_email_master,
+            :token_hash,
+            :expires_at
+        )
+    ';
+
+        $stmt = $this->db->runSql($sql, [
+            'user_id' => $userId,
+            'old_email_master' => trim($oldEmailMaster),
+            'new_email_master' => trim($newEmailMaster),
+            'token_hash' => $tokenHash,
+            'expires_at' => $expiresAt,
+        ]);
+
+        return $stmt !== false;
+    }
+
+    public function getEmailChangeRequestByTokenHash(string $tokenHash): array
+    {
+        $sql = '
+        SELECT ecr.id AS request_id,
+               ecr.user_id,
+               ecr.old_email_master,
+               ecr.new_email_master,
+               ecr.expires_at,
+               ecr.used_at,
+               m.website,
+               m.forename
+        FROM email_change_requests ecr
+        INNER JOIN member m ON m.id = ecr.user_id
+        WHERE ecr.token_hash = :token_hash
+        LIMIT 1
+    ';
+
+        $stmt = $this->db->runSql($sql, ['token_hash' => $tokenHash]);
+        $row = $stmt->fetch();
+
+        return $row ?: [];
+    }
+    public function markEmailChangeRequestUsed(int $requestId): bool
+    {
+        if ($requestId <= 0) {
+            return false;
+        }
+
+        $sql = '
+        UPDATE email_change_requests
+        SET used_at = NOW()
+        WHERE id = :id
+        LIMIT 1
+    ';
+
+        $stmt = $this->db->runSql($sql, ['id' => $requestId]);
+        return $stmt !== false;
+    }
+    public function updateMemberEmailById(
+        int $userId,
+        string $newEmailLogin,
+        string $newEmail,
+    ): bool {
+        if ($userId <= 0 || $newEmailLogin === '' || $newEmail === '') {
+            return false;
+        }
+
+        $sql = '
+        UPDATE member
+        SET email = :email,
+            email_master = :email_master,
+            email_verified = 1,
+            email_verified_at = NOW()
+        WHERE id = :id
+        LIMIT 1
+    ';
+
+        $stmt = $this->db->runSql($sql, [
+            'email' => trim($newEmailLogin),
+            'email_master' => trim($newEmail),
+            'id' => $userId,
+        ]);
 
         return $stmt !== false;
     }
