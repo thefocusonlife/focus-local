@@ -9,6 +9,8 @@ use PhpBook\Validate\Validate; // Import Validate class
 require_once APP_ROOT . '/src/security/redirects.php';
 require_once __DIR__ . '/../../config/recaptcha.php';
 require_once APP_ROOT . '/src/security/guard.php';
+require_once APP_ROOT . '/src/security/csrf.php';
+
 function sendVerificationEmail(
     array $emailConfig,
     string $toEmail,
@@ -41,7 +43,7 @@ function sendVerificationEmail(
     $mail->sendEmail($emailConfig['admin_email'], $toEmail, $subject, $message);
 }
 guardPublic();
-
+$csrfFormKey = 'register';
 $doc_root = $config['doc_root'] ?? '/focus-local/public/';
 error_log(
     '[REGISTER] ' . ($_SERVER['REQUEST_METHOD'] ?? '?') . ' ' . ($_SERVER['REQUEST_URI'] ?? '?'),
@@ -82,6 +84,7 @@ $agegroups = [];
 $plans = []; // Initialize errors array
 $abc = [];
 $data = [];
+$data['doc_root'] = $doc_root;
 $last_id = 0;
 $lastid = 0;
 $menuId = (int) ($menuId ?? 0);
@@ -96,16 +99,51 @@ if ($menuId <= 0) {
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     unset($_SESSION['register_submit_lock']);
 
-    // If form doesn't exist
     $agegroups = $cms->getMember()->getAgegroups();
     $plans = $cms->getMember()->getPlans();
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $websiteId = (int) ($_POST['website'] ?? ($_SESSION['website'] ?? 1));
+    if ($websiteId <= 0) {
+        $websiteId = 1;
+    }
+
+    $submittedCsrf = $_POST['csrf_token'] ?? '';
+
+    if (!csrf_validate($csrfFormKey, is_string($submittedCsrf) ? $submittedCsrf : null)) {
+        error_log('[REGISTER] CSRF validation failed sid=' . session_id());
+
+        $data['website'] =
+            $cms->getWebsite()->getById($websiteId) ?: $cms->getWebsite()->getById(1);
+
+        $data['values'] = [
+            'forename' => trim((string) ($_POST['forename'] ?? '')),
+            'surname' => trim((string) ($_POST['surname'] ?? '')),
+            'email' => trim((string) ($_POST['email'] ?? '')),
+            'plan' => (string) ($_POST['plan'] ?? ''),
+            'agegroup' => (string) ($_POST['agegroup'] ?? ''),
+            'website' => (string) $websiteId,
+        ];
+
+        $data['agegroups'] = $cms->getMember()->getAgegroups();
+        $data['plans'] = $cms->getMember()->getPlans();
+        $data['errors'] = [
+            'master' =>
+                'Your form session expired or failed security validation. Please try again.',
+        ];
+        $data['use_recaptcha'] = true;
+        $data['recaptcha_site_key'] = $config['recaptcha_site_key'];
+        csrf_rotate($csrfFormKey);
+        $data['csrf_token'] = csrf_token($csrfFormKey);
+        unset($_SESSION['register_submit_lock']);
+        echo $twig->render('register.html', $data);
+        exit();
+    }
+
     $lockKey = 'register_submit_lock';
     $now = microtime(true);
     $windowSeconds = 3.0; // block duplicates within 3 seconds
-
     $last = isset($_SESSION[$lockKey]) ? (float) $_SESSION[$lockKey] : 0.0;
 
     if ($last > 0 && $now - $last < $windowSeconds) {
@@ -146,8 +184,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // If form was posted
     // Get form data
 
-    if ($_POST['website'] != 1) {
-        $valid = $cms->getMember()->getIdByEmail($_POST['email']);
+    if ((int) ($_POST['website'] ?? 1) !== 1) {
+        $valid = $cms->getMember()->getIdByEmail((string) ($_POST['email'] ?? ''));
         if ($valid == 0) {
             $errors['master'] =
                 'You must register with main theFocusOnLife website in order to register with this website.';
@@ -155,7 +193,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $errors['master'] = '';
         }
     }
-
     $websiteId = (int) ($_POST['website'] ?? 1);
     if ($websiteId <= 0) {
         $websiteId = 1;
@@ -233,17 +270,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 
     if ($hasErrors) {
-        // VALIDATION FAILURE: stay on register and show field errors
-
-        // website context: Twig expects website.id / website.name
         $data['website'] =
             $cms->getWebsite()->getById($websiteId) ?: $cms->getWebsite()->getById(1);
 
-        // repopulate fields (do NOT repopulate passwords)
         $data['values'] = [
             'forename' => $params['forename'] ?? '',
             'surname' => $params['surname'] ?? '',
-            'email' => $params['email_master'] ?? '', // show base email in form
+            'email' => $params['email_master'] ?? '',
             'plan' => (string) ($_POST['plan'] ?? ''),
             'agegroup' => (string) ($_POST['agegroup'] ?? ''),
             'website' => (string) $websiteId,
@@ -251,18 +284,17 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $data['agegroups'] = $cms->getMember()->getAgegroups();
         $data['plans'] = $cms->getMember()->getPlans();
 
-        // DO NOT repopulate password fields:
         unset($data['values']['password'], $data['values']['confirm']);
 
         $data['errors'] = $errors;
+        $data['csrf_token'] = csrf_token($csrfFormKey);
+        $data['use_recaptcha'] = true;
+        $data['recaptcha_site_key'] = $config['recaptcha_site_key'];
+
         unset($_SESSION['register_submit_lock']);
         echo $twig->render('register.html', $data);
         exit();
-
-        echo $twig->render('register.html', $data);
-        exit(); // IMPORTANT: stop execution
     }
-
     // No validation errors → attempt create
     try {
         $result = $cms->getMember()->create($params);
@@ -274,9 +306,29 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // Duplicate email (unique constraint)
         if ($e->getCode() === '23000') {
             $errors['email'] = 'That email is already registered.';
+
+            $data['website'] =
+                $cms->getWebsite()->getById($websiteId) ?: $cms->getWebsite()->getById(1);
+
+            $data['values'] = [
+                'forename' => $params['forename'] ?? '',
+                'surname' => $params['surname'] ?? '',
+                'email' => $params['email_master'] ?? '',
+                'plan' => (string) ($_POST['plan'] ?? ''),
+                'agegroup' => (string) ($_POST['agegroup'] ?? ''),
+                'website' => (string) $websiteId,
+            ];
+
+            $data['agegroups'] = $cms->getMember()->getAgegroups();
+            $data['plans'] = $cms->getMember()->getPlans();
             $data['errors'] = $errors;
+            $data['csrf_token'] = csrf_token($csrfFormKey);
+            $data['use_recaptcha'] = true;
+            $data['recaptcha_site_key'] = $config['recaptcha_site_key'];
+
+            unset($_SESSION['register_submit_lock']);
             echo $twig->render('register.html', $data);
-            return;
+            exit();
         }
 
         unset($_SESSION['flash_success']);
@@ -330,6 +382,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $websiteId,
         );
 
+        unset($_SESSION['register_submit_lock']);
+        csrf_rotate($csrfFormKey);
         tfol_redirect(DOC_ROOT . 'index/' . $websiteId, 303);
     } catch (Throwable $e) {
         error_log('[REGISTER][VERIFY EMAIL] Failed to setup verification: ' . $e->getMessage());
@@ -343,33 +397,42 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 $path = mb_strtolower(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/');
-$path = substr($path, strlen(DOC_ROOT)); // Remove up to DOC_ROOT
+$path = substr($path, strlen(DOC_ROOT));
 $path = trim($path, '/');
-$parts = explode('/', $path); // Split into array at /
+$parts = explode('/', $path);
 
 if ($parts[0] != 'admin') {
-    // If an admin page
-    $page = $parts[0] ?: 'index'; // Page name (or use index)
-    $id = $parts[1] ?? null; // Get ID (or use null)
+    $page = $parts[0] ?: 'index';
+    $id = $parts[1] ?? null;
 } else {
-    // If not an admin page
-    $page = 'admin/' . ($parts[1] ?? ''); // Page name
-    $id = $parts[2] ?? null; // Get ID
+    $page = 'admin/' . ($parts[1] ?? '');
+    $id = $parts[2] ?? null;
 }
+
 if (!$id) {
     $id = 1;
 }
-$website = $cms->getWebsite()->getById(intval($id));
+
+$website = $cms->getWebsite()->getById((int) $id);
+
+if (empty($agegroups)) {
+    $agegroups = $cms->getMember()->getAgegroups();
+}
+if (empty($plans)) {
+    $plans = $cms->getMember()->getPlans();
+}
 
 $member = [];
-$data['success'] = $_GET['success'] ?? null; // Check for success message
-$data['failure'] = $_GET['failure'] ?? null; // Check for failure message
+$data['doc_root'] = $doc_root;
+$data['success'] = $_GET['success'] ?? null;
+$data['failure'] = $_GET['failure'] ?? null;
 $data['agegroups'] = $agegroups;
 $data['plans'] = $plans;
-$data['errors'] = $errors; // Error messages
-$data['website'] = $website; // $cms->getWebsite()->getById(intval($id));
+$data['errors'] = $errors;
+$data['website'] = $website;
 $data['use_recaptcha'] = true;
 $data['recaptcha_site_key'] = $config['recaptcha_site_key'];
-echo $twig->render('register.html', $data); // Render Twig template
+$data['csrf_token'] = csrf_token($csrfFormKey);
 
+echo $twig->render('register.html', $data);
 exit();

@@ -12,27 +12,25 @@
 			{% endif %}
 
 			<h1>Register</h1>
-
-
 		</section>
 
 		<section class="form-membership">
-
-			<form
-				action="{{ doc_root }}register/{{ website.id }}" method="POST" class="form-membership js-recaptcha-form" data-recaptcha-action="register">
-
-				<!-- hidden recaptcha score  -->
+			<form action="{{ doc_root }}register/{{ website.id }}" method="POST" class="form-membership js-recaptcha-form" data-recaptcha-action="register">
+				<input type="hidden" name="csrf_token" value="{{ csrf_token|e }}">
 				<input type="hidden" name="g-recaptcha-response" value="">
 
 				{% if errors %}
-					<div class="alert alert-danger">{{ 'Please fix the errors listed below in red.' }}</div>
+					<div class="alert alert-danger">Please fix the errors listed below in red.</div>
+				{% endif %}
+
+				{% if errors.master %}
+					<div class="alert alert-danger">{{ errors.master }}</div>
 				{% endif %}
 
 				<div class="form-group">
-					<label for="forename">Forename:
-					</label>
+					<label for="forename">Forename:</label>
 					<input type="text" name="forename" id="forename" value="{{ values.forename|default('')|e }}" class="form-control">
-					<div class="errors">{{ errors.forename}}</div>
+					<div class="errors">{{ errors.forename }}</div>
 				</div>
 
 				<div class="form-group">
@@ -42,97 +40,70 @@
 				</div>
 
 				<div class="form-group">
-					<label for="email">Email address:
-						<input type="email" name="email" id="email" value="{{ values.email|default('')|e }}" class="form-control">
+					<label for="email">Email address:</label>
+					<input type="email" name="email" id="email" value="{{ values.email|default('')|e }}" class="form-control">
+					<div class="errors">{{ errors.email }}</div>
+				</div>
 
-						<div class="errors">{{ errors.email }}</div>
+				<div class="form-group">
+					<label for="plan">Plan:</label>
+					<select name="plan" id="plan">
+						{% set selectedPlan = values.plan|default('1') %}
+						{% for plan in plans %}
+							<option value="{{ plan.id }}" {{ (selectedPlan == (plan.id ~ '')) ? 'selected' : '' }}>
+								{{ plan.name }}
+								{{ plan.description }}
+							</option>
+						{% endfor %}
+					</select>
+					<span class="errors">{{ errors.plan }}</span>
+				</div>
+
+				<div class="form-group">
+					<label for="agegroup">Age Group:</label>
+					<select name="agegroup" id="agegroup">
+						{% set selectedAge = values.agegroup|default('3') %}
+						{% for agegroup in agegroups %}
+							<option value="{{ agegroup.age }}" {{ (selectedAge == (agegroup.age ~ '')) ? 'selected' : '' }}>
+								{{ agegroup.agegroup }}
+							</option>
+						{% endfor %}
+					</select>
+					<span class="errors">{{ errors.agegroup }}</span>
+				</div>
+
+				<div class="form-group">
+					<label for="password">Password:</label>
+					<div class="password-wrap">
+						<input type="password" name="password" id="password" class="form-control" autocomplete="new-password" required>
+						<button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false" data-toggle-password="#password">👁</button>
 					</div>
+					<div class="errors">{{ errors.password|raw }}</div>
+				</div>
 
-					<div class="form-group">
-						<label for="plan">Plan:</label>
-
-						<select name="plan" id="plan">
-							{% set selectedPlan = values.plan|default('1') %}
-							{% for plan in plans %}
-								<option value="{{ plan.id }}" {{ (selectedPlan == (plan.id ~ '')) ? 'selected' : '' }}>
-									{{ plan.name }}
-									{{ plan.description }}
-
-								</option>
-							{% endfor %}
-						</select>
-
-						<span class="errors">{{ errors.plan }}</span>
+				<div class="form-group">
+					<label for="confirm">Confirm Password:</label>
+					<div class="password-wrap">
+						<input type="password" name="confirm" id="confirm" class="form-control" autocomplete="new-password" required>
+						<button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false" data-toggle-password="#confirm">👁</button>
 					</div>
-					<div class="form-group">
-						<label for="agegroup">Age Group:</label>
+					<div class="errors">{{ errors.confirm }}</div>
+				</div>
 
-						<select name="agegroup" id="agegroup">
-							{% set selectedAge = values.agegroup|default('3') %}
-							{% for agegroup in agegroups %}
-								<option value="{{ agegroup.age }}" {{ (selectedAge == (agegroup.age ~ '')) ? 'selected' : '' }}>
-									{{ agegroup.agegroup }}
-								</option>
-							{% endfor %}
-						</select>
+				<div class="form-group">
+					<label for="websitename">Website:</label>
+					<input type="text" name="websitename" id="websitename" value="{{ website.name|e }}" readonly class="form-control">
+					<div class="errors">{{ errors.website }}</div>
+				</div>
 
-						<span class="errors">{{ errors.agegroup }}</span>
-					</div>
+				<input type="hidden" name="website" value="{{ website.id }}">
+				<input type="hidden" name="photo_limit" value="150" id="photo_limit">
+				<input type="hidden" name="publik" value="{{ publik|default('1')|e }}" id="publik">
+				<input type="hidden" name="termsok" value="{{ termsok|default('0')|e }}" id="termsok">
 
+				<input type="submit" class="btn btn-primary" value="Register">
+			</form>
+		</section>
 
-					<div class="form-group">
-						<label for="password">Password:</label>
-
-						<div class="password-wrap">
-							<input type="password" name="password" id="password" class="form-control" autocomplete="new-password" required>
-
-							<button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false" data-toggle-password="#password">👁</button>
-						</div>
-
-						<div class="errors">{{ errors.password|raw }}</div>
-					</div>
-
-					<div class="form-group">
-						<label for="confirm">Confirm Password:</label>
-
-						<div class="password-wrap">
-							<input type="password" name="confirm" id="confirm" class="form-control" autocomplete="new-password" required>
-
-							<button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false" data-toggle-password="#confirm">👁</button>
-						</div>
-
-						<div class="errors">{{ errors.confirm }}</div>
-					</div>
-
-
-					<div class="form-group">
-						<label for="websitename">Website:
-						</label>
-						<input type="text" name="websitename" value={{website.name}} readonly class="form-control">
-						<div class="errors">{{ errors.website}}</div>
-					</div>
-
-					<div class="form-group">
-						<input type="hidden" name="website" value="{{ website.id }}">
-						<span class="errors">{{ errors.website }}</span>
-					</div>
-
-					<div class="form-group">
-						<input type="hidden" name="photo_limit" value="150" id="photo_limit" class="form-control">
-						<div class="errors">{{ errors.photo_limit }}</div>
-					</div>
-
-					<div class="form-group">
-						<input type="hidden" name="publik" value={{publik}} id="publik" readonly class="form-control">
-						<div class="errors">{{ errors.publik}}</div>
-					</div>
-					<div class="form-group">
-						<input type="hidden" name="termsok" value={{termsok}} id="termsok" readonly class="form-control">
-						<div class="errors">{{ errors.termsok}}</div>
-					</div>
-					<input type="submit" class="btn btn-primary" value="Register">
-				</form>
-			</section>
-
-		</main>
-	{% endblock %}
+	</main>
+{% endblock %}
