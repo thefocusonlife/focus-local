@@ -1082,4 +1082,27 @@ class Member
 
         return $stmt !== false;
     }
+
+    public function getByEmailMasterAndWebsite(string $emailMaster, int $websiteId): array
+    {
+        if ($emailMaster === '' || $websiteId <= 0) {
+            return [];
+        }
+
+        $sql = '
+        SELECT id, website, forename, surname, email, email_master, status, email_verified
+        FROM member
+        WHERE email_master = :email_master
+          AND website = :website
+        LIMIT 1
+    ';
+
+        $stmt = $this->db->runSql($sql, [
+            'email_master' => trim(strtolower($emailMaster)),
+            'website' => $websiteId,
+        ]);
+
+        $row = $stmt->fetch();
+        return $row ?: [];
+    }
 }

@@ -6,8 +6,9 @@ use PhpBook\Validate\Validate;
 require_once __DIR__ . '/../../config/recaptcha.php';
 require_once APP_ROOT . '/src/security/redirects.php';
 require_once APP_ROOT . '/src/security/guard.php';
+require_once APP_ROOT . '/src/security/csrf.php';
 guardPublic();
-
+$csrfFormKey = 'resend_verification';
 function sendVerificationEmail(
     array $emailConfig,
     string $toEmail,
@@ -41,6 +42,14 @@ $errors = [];
 $success = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $submittedCsrf = $_POST['csrf_token'] ?? '';
+
+    if (!csrf_validate($csrfFormKey, is_string($submittedCsrf) ? $submittedCsrf : null)) {
+        error_log('[RESEND VERIFICATION] CSRF validation failed sid=' . session_id());
+        $errors['warning'] =
+            'Your form session expired or failed security validation. Please try again.';
+        csrf_rotate($csrfFormKey);
+    }
     $email = trim((string) ($_POST['email'] ?? ''));
 
     $recaptchaToken = $_POST['g-recaptcha-response'] ?? '';
@@ -54,13 +63,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if (empty($errors['warning'])) {
+        $recaptchaToken = $_POST['g-recaptcha-response'] ?? '';
         $errors['email'] = Validate::isEmail($email) ? '' : 'Please enter a valid email address';
 
         if (!empty($errors['email'])) {
             $errors['warning'] = 'Please correct the errors.';
         } else {
+            csrf_rotate($csrfFormKey);
             try {
-                $member = $cms->getMember()->getByEmailMaster($email);
+                $websiteId = (int) ($_SESSION['website'] ?? 1);
+                if ($websiteId <= 0) {
+                    $websiteId = 1;
+                }
+
+                $member = $cms->getMember()->getByEmailMasterAndWebsite($email, $websiteId);
 
                 if ($member && (int) ($member['email_verified'] ?? 0) !== 1) {
                     $userId = (int) ($member['id'] ?? 0);
@@ -110,14 +126,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+$websiteId = (int) ($_SESSION['website'] ?? 1);
+if ($websiteId <= 0) {
+    $websiteId = 1;
+}
+
 $data = [];
-$data['navigation'] = $cms->getMenu()->getAll2(1, 1);
-$data['website'] = $cms->getWebsite()->getById(1);
+$data['navigation'] = $cms->getMenu()->getAll2($websiteId, 1);
+$data['website'] = $cms->getWebsite()->getById($websiteId);
+$data['doc_root'] = $config['doc_root'] ?? '/focus-local/public/';
 $data['email'] = $email;
 $data['errors'] = $errors;
 $data['success'] = $success;
 $data['use_recaptcha'] = true;
 $data['recaptcha_site_key'] = $config['recaptcha_site_key'];
+$data['csrf_token'] = csrf_token($csrfFormKey);
 
 echo $twig->render('resend-verification.html', $data);
 exit();

@@ -7,7 +7,9 @@ require_once __DIR__ . '/../../config/recaptcha.php';
 require_once APP_ROOT . '/src/security/redirects.php';
 require_once APP_ROOT . '/src/tenancy/website_context.php';
 require_once APP_ROOT . '/src/security/guard.php';
+require_once APP_ROOT . '/src/security/csrf.php';
 guardPublic();
+$csrfFormKey = 'login';
 // (Optional, if you created it already)
 //require_once APP_ROOT . '/src/lib/debug.php';
 
@@ -55,6 +57,16 @@ $showResendVerification = false;
 // POST handler
 // ----------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $submittedCsrf = $_POST['csrf_token'] ?? '';
+
+    if (!csrf_validate($csrfFormKey, is_string($submittedCsrf) ? $submittedCsrf : null)) {
+        error_log('[LOGIN] CSRF validation failed sid=' . session_id());
+
+        $errors['message'] =
+            'Your form session expired or failed security validation. Please try again.';
+
+        csrf_rotate($csrfFormKey);
+    }
     $email = (string) ($_POST['email'] ?? '');
     $password = (string) ($_POST['password'] ?? '');
     // --- Website-email suffix routing (e.g. user@gmail.com16) ---
@@ -166,7 +178,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     session_regenerate_id(true);
                     $cms->getSession()->create($member, (int) $website['id']);
-                    $cms->getMember()->clearFailedLogin($email);
+                    $cms->getMember()->clearFailedLogin($loginEmail);
                     // hard-assert the important bits (defensive)
                     $_SESSION['id'] = (int) $member['id'];
                     $_SESSION['account_id'] = (int) ($member['account_id'] ?? $member['id']);
@@ -199,7 +211,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
 
                     // If return_to points to admin and user isn't admin/uber, override to member grid
-                    $isAdmin = in_array($role, ['admin', 'uber'], true);
 
                     // Never redirect to admin pages via deep-link return_to (Week 3 hard rule)
                     if ($returnTo !== '' && str_starts_with($returnTo, '/admin/')) {
@@ -207,13 +218,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                     // Choose landing
                     if ($returnTo !== '') {
-                        // If your redirect() expects relative paths like 'admin/menus/' or 'member/grid/'
+                        csrf_rotate($csrfFormKey);
                         redirect(ltrim($returnTo, '/'));
                         exit();
                     }
 
-                    // Default landing (THIS is what you want to change)
-                    redirect('member/' . $member['id']); // Redirect to their page
+                    csrf_rotate($csrfFormKey);
+                    redirect('member/' . $member['id']);
                     exit();
                 }
             }
@@ -241,6 +252,9 @@ $data['errors'] = $errors;
 $data['use_recaptcha'] = true;
 $data['recaptcha_site_key'] = $config['recaptcha_site_key'];
 $data['website'] = $website;
+$data['doc_root'] = $config['doc_root'] ?? '/focus-local/public/';
+$data['show_resend_verification'] = $showResendVerification;
+$data['csrf_token'] = csrf_token($csrfFormKey);
 error_log(
     '[LOGIN BEFORE RENDER] id=' .
         ($_SESSION['id'] ?? 'NULL') .
@@ -253,3 +267,4 @@ error_log(
 );
 
 echo $twig->render('login.html', $data);
+exit();

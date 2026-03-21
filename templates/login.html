@@ -22,12 +22,13 @@
 					{% endif %}
 				{% endif %}
 
+				<input type="hidden" name="csrf_token" value="{{ csrf_token|e }}">
 				<input type="hidden" name="g-recaptcha-response" value="">
-				<input type="hidden" name="website" id="website" value="{{ website.id }}" readonly class="form-control">
+				<input type="hidden" name="website" id="website" value="{{ website.id }}">
 
 				<div class="form-group">
 					<label for="login_email">Email</label>
-					<input id="login_email" name="email" type="email" autocomplete="username" required>
+					<input id="login_email" name="email" type="email" value="{{ email|default('')|e }}" autocomplete="username" required>
 				</div>
 
 				<div class="form-group">
@@ -40,11 +41,10 @@
 
 				<button type="submit" class="btn btn-primary">SIGN IN</button>
 
-				<p class="small"></p>
 				<p>
 					<a href="{{ doc_root }}password-lost">Forgot your password?</a>
 				</p>
-			</p>
-		</form>
-	</section>
-</main>{% endblock %}
+			</form>
+		</section>
+	</main>
+{% endblock %}
