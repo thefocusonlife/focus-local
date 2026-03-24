@@ -252,7 +252,7 @@ $data['errors'] = $errors;
 $data['use_recaptcha'] = true;
 $data['recaptcha_site_key'] = $config['recaptcha_site_key'];
 $data['website'] = $website;
-$data['doc_root'] = $config['doc_root'] ?? '/focus-local/public/';
+$data['doc_root'] = $config['doc_root'];
 $data['show_resend_verification'] = $showResendVerification;
 $data['csrf_token'] = csrf_token($csrfFormKey);
 error_log(

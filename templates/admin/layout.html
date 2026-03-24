@@ -77,10 +77,16 @@ tinymce.init({selector: 'textarea.tinymce', branding: false, plugins: 'anchor au
 			if (document.getElementById('story-content')) {
 tinymce.init({
 selector: 'textarea',
-plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount checklist mediaembed casechange export formatpainter pageembed linkchecker a11ychecker tinymcespellchecker permanentpen powerpaste advtable advcode editimage tinycomments tableofcontents footnotes mergetags autocorrect typography inlinecss',
-toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat',
+plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount checklist mediaembed casechange export formatpainter pageembed linkchecker a11ychecker tinymcespellchecker permanentpen powerpaste advtable advcode editimage tinycomments tableofcontents footnotes mergetags autocorrect typography inlinecss code',
+toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | code | removeformat',
+
 tinycomments_mode: 'embedded',
 tinycomments_author: 'Author name',
+
+extended_valid_elements: 'iframe[src|frameborder|style|scrolling|class|width|height|name|align|allow|allowfullscreen|title|loading|referrerpolicy]',
+valid_children: '+body[iframe]',
+media_live_embeds: true,
+
 mergetags_list: [
 {
 value: 'First.Name',
@@ -88,13 +94,11 @@ title: 'First Name'
 }, {
 value: 'Email',
 title: 'Email'
-},
+}
 ]
 });
-};
+}
 		</script>
-		<script src="{{ doc_root }}js/site.js"></script>
-
 		{% include 'partials/footer.html' %}
 
 	</body>

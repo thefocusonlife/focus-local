@@ -44,7 +44,7 @@ function sendVerificationEmail(
 }
 guardPublic();
 $csrfFormKey = 'register';
-$doc_root = $config['doc_root'] ?? '/focus-local/public/';
+$doc_root = $config['doc_root'];
 error_log(
     '[REGISTER] ' . ($_SERVER['REQUEST_METHOD'] ?? '?') . ' ' . ($_SERVER['REQUEST_URI'] ?? '?'),
 );
