@@ -72,7 +72,8 @@ $data['navigation'] = $cms->getMenu()->getAll2($websiteId, $ownerId);
 // ------------------------------------------------------------
 
 $data['stories'] = $cms->getStory()->getAll2($websiteId, 0, null, $ownerId);
-// Default sort menu id (Focus menu id=2)
-$data['sort_menu_id'] = (int) ($data['sort_menu_id'] ?? 2);
+// Do not hardcode website 1's sort menu.
+// Use current active/member menu when available.
+$data['sort_menu_id'] = (int) ($data['sort_menu_id'] ?? ($menuId ?? 0));
 
 echo $twig->render('author.html', $data);

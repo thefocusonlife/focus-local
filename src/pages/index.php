@@ -1,16 +1,15 @@
 <?php
 declare(strict_types=1);
+
 error_log(
     '[INDEX] ' . ($_SERVER['REQUEST_METHOD'] ?? '?') . ' ' . ($_SERVER['REQUEST_URI'] ?? '?'),
 );
 
-// index/{websiteId}
-// $id is coming from menu-path.php routing
 file_put_contents(
     '/tmp/tfol-route.log',
     date('c') .
         " ROUTE page={$page} id=" .
-        var_export($id, true) .
+        var_export($id ?? null, true) .
         ' parts=' .
         (isset($parts) ? json_encode($parts) : 'NA') .
         "\n",
@@ -20,147 +19,160 @@ file_put_contents(
 $data = [];
 $guidetext = '';
 
-// 1) Resolve website id (guest default = 1)
+/**
+ * Resolve canonical website for this request.
+ * Route wins. Then session. Then default 1.
+ */
 $websiteId = (int) ($id ?? 0);
 
 if ($websiteId <= 0) {
-    $websiteId = (int) ($_SESSION['website'] ?? 1);
+    $websiteId = (int) ($_SESSION['website'] ?? 0);
+}
+if ($websiteId <= 0) {
+    $websiteId = (int) ($_SESSION['websiteid'] ?? 0);
 }
 if ($websiteId <= 0) {
     $websiteId = 1;
 }
 
-// 2) Load website (fallback to 1 if invalid)
+/**
+ * Load website; fallback to 1 only if invalid.
+ */
 $website = $cms->getWebsite()->getById($websiteId);
 if (!$website || !isset($website['id'])) {
     $websiteId = 1;
     $website = $cms->getWebsite()->getById(1);
 }
 
-// 3) Determine logged-in member (or null)
+/**
+ * Keep session coherent.
+ */
+$_SESSION['website'] = $websiteId;
+$_SESSION['websiteid'] = $websiteId;
+$_SESSION['menu_website'] = $websiteId;
+
+/**
+ * Logged-in member is optional context only.
+ * Never use member.website to override current browsing website.
+ */
 $member = null;
 $memAccountId = 0;
+$viewerId = (int) ($_SESSION['id'] ?? 0);
 
-if (!empty($_SESSION['id'])) {
-    $member = $cms->getMember()->get((int) $_SESSION['id']);
+if ($viewerId > 0) {
+    $member = $cms->getMember()->get($viewerId);
     if ($member && isset($member['account_id'])) {
         $memAccountId = (int) $member['account_id'];
     }
 }
-$accountId = (int) ($_SESSION['id'] ?? 0);
 
-// Viewer vs menu owner:
-// - viewerId is who is logged in (June=182)
-// - menuOwnerId is whose menus we are browsing (Geoff=3 via your account_id hack)
-// - guests should browse UberAdmin (1)
-$viewerId = (int) ($_SESSION['id'] ?? 0);
-
+/**
+ * Menu owner logic preserved.
+ */
 if ($viewerId > 0) {
-    $menuOwnerId = (int) ($accountId > 0 ? $accountId : $viewerId);
-} else {
-    $menuOwnerId = 1; // Guest: UberAdmin menus
-}
-
-// Visibility filter:
-// - owner sees owner-view
-// - everyone else (including guests) sees public-view
-$visibilityViewerId = $viewerId > 0 && $viewerId === $menuOwnerId ? $viewerId : null;
-
-// Menu owner for navigation: guests should see UberAdmin menus
-$viewerId = (int) ($_SESSION['id'] ?? 0);
-$menuOwnerId = 0;
-
-if ($viewerId > 0) {
-    // Your existing shared-menu behavior: account_id points at the "menu owner" member id
     $menuOwnerId = (int) ($memAccountId > 0 ? $memAccountId : $viewerId);
 } else {
-    // Guest: show UberAdmin menus
     $menuOwnerId = 1;
 }
 
-// 4) Membership gating for websites that require membership
-// non_members: allow guests if set (based on your existing logic)
-if ($websiteId > 1 && empty($_SESSION['id']) && empty($website['non_members'])) {
-    $msg =
+$visibilityViewerId = $viewerId > 0 && $viewerId === $menuOwnerId ? $viewerId : null;
+
+/**
+ * Membership gating.
+ */
+if ($websiteId > 1 && $viewerId <= 0 && empty($website['non_members'])) {
+    $data['failure'] =
         'WARNING: You must be a registered member in order to access a GET FOCUSED website.  Click the Register link above to view subscription plans OR click the Refresh link for more photos on this page. ** Note: You may access websites marked as FREE-Access without a membership.';
-    $data['failure'] = $msg;
 
     $websiteId = 1;
     $website = $cms->getWebsite()->getById(1);
+
+    $_SESSION['website'] = 1;
+    $_SESSION['websiteid'] = 1;
+    $_SESSION['menu_website'] = 1;
 }
 
-// ------------------------------------------------------
-// TILE(1,1) MESSAGE OVERRIDE (TFOL UX)
-// If there is a one-time flash message (e.g., Registration),
-// show it in the TILE slot using the existing pink "failure"
-// styling. Otherwise show the normal QuickGuide text.
-// NOTE: This intentionally uses $data['failure'] so it lands
-// in tile(1,1) per index.html grid behavior.
-// ------------------------------------------------------
+/**
+ * Flash/quickguide.
+ */
 if (!empty($_SESSION['flash_success'])) {
-    $data['failure'] = (string) $_SESSION['flash_success']; // pink tile
+    $data['failure'] = (string) $_SESSION['flash_success'];
     unset($_SESSION['flash_success']);
 } elseif (!empty($_SESSION['flash_failure'])) {
-    $data['failure'] = (string) $_SESSION['flash_failure']; // pink tile
+    $data['failure'] = (string) $_SESSION['flash_failure'];
     unset($_SESSION['flash_failure']);
 } else {
-    // Normal behavior: QuickGuide text into success tile
     $guidetext = $cms->getQuickguide()->getAll();
     if (!empty($guidetext) && !empty($guidetext[0])) {
         $data['success'] = implode('', $guidetext[0]);
     }
 }
 
-/*
-// 4b) One-time flash alerts (do NOT collide with QuickGuide 'success')
-$data['flash_success'] = $_SESSION['flash_success'] ?? '';
-$data['flash_failure'] = $_SESSION['flash_failure'] ?? '';
-unset($_SESSION['flash_success'], $_SESSION['flash_failure']);
-
-// 5) Quickguide success message (your existing behavior)
-$guidetext = $cms->getQuickguide()->getAll();
-if (!empty($guidetext) && !empty($guidetext[0])) {
-    $data['success'] = implode('', $guidetext[0]);
-}
-*/
-// 6) Stories
-$websiteId = (int) ($_SESSION['website'] ?? ($website['id'] ?? 1));
-
-// Global (index) override: use for everyone (guest + member)
+/**
+ * Stories: use canonical websiteId already resolved above.
+ * Do NOT overwrite websiteId from session here.
+ */
 $preferredSorttypeId = (int) ($_SESSION['sort_override_global'][$websiteId] ?? 0);
-
-// Pass this into your story query / resolver
 $sorttypeId = $preferredSorttypeId > 0 ? $preferredSorttypeId : null;
+
 error_log(
-    'INDEX SORT DEBUG: role=' .
-        ($_SESSION['role'] ?? 'NONE') .
-        ' website=' .
-        ($_SESSION['website'] ?? 'NONE') .
+    'INDEX SORT DEBUG: routeWebsite=' .
+        (int) ($id ?? 0) .
+        ' resolvedWebsite=' .
+        $websiteId .
+        ' sessionWebsite=' .
+        (int) ($_SESSION['website'] ?? 0) .
+        ' sessionWebsiteId=' .
+        (int) ($_SESSION['websiteid'] ?? 0) .
         ' globalOverride=' .
         ($_SESSION['sort_override_global'][$websiteId] ?? 'NONE') .
         ' chosenSorttypeId=' .
         ($sorttypeId ?? 'NULL'),
 );
 
-$data['stories'] = $cms
-    ->getStory()
-    ->getAll3((int) $website['id'], true, null, null, 100, $sorttypeId);
+$data['stories'] = $cms->getStory()->getAll3($websiteId, true, null, null, 100, $sorttypeId);
 
-// 7) Navigation (guest account_id = 1)
-//$data['navigation'] = $cms->getMenu()->getAll2((int) $website['id'],$menuOwnerId);
-$data['navigation'] = $cms->getMenu()->getAll2((int) $website['id'], 1);
+/**
+ * Navigation.
+ */
+$data['navigation'] = $cms->getMenu()->getAll2($websiteId, 1);
 
-// 7.5) Default Sort target for global pages (Focus menu id=2)
+/**
+ * Default Sort target.
+ */
+/**
+ * Default Sort target.
+ * Use the current website's sort/focus menu, not hardcoded website 1 menu 2.
+ */
 if (empty($data['sort_menu_id'])) {
-    $data['sort_menu_id'] = 2;
+    $currentWebsiteId = (int) ($websiteId ?? ($website['id'] ?? ($_SESSION['website'] ?? 1)));
+
+    // Best case: ask menu model for the sort/focus menu for this website
+    $sortMenuId = 0;
+
+    // Replace this with your actual menu lookup if you have one
+    $menus = $cms->getMenu()->getAll2($currentWebsiteId, 1);
+    foreach ($menus as $menu) {
+        $name = strtolower(trim((string) ($menu['name'] ?? '')));
+        if ($name === 'focus' || $name === 'sort') {
+            $sortMenuId = (int) ($menu['id'] ?? 0);
+            break;
+        }
+    }
+
+    // Only fall back to menu 2 for website 1
+    if ($sortMenuId <= 0 && $currentWebsiteId === 1) {
+        $sortMenuId = 2;
+    }
+
+    $data['sort_menu_id'] = $sortMenuId;
 }
-
-// 8) Data for template
+/**
+ * Template data must use resolved websiteId, not raw route id.
+ */
 $data['website'] = $website;
-
-// Ensure splash + partials can preserve deep-linked website context
-$data['websiteId'] = (int) ($id ?? 0);
-$data['id'] = $data['websiteId'];
+$data['websiteId'] = $websiteId;
+$data['id'] = $websiteId;
 
 if ($member) {
     $data['member'] = $member;
@@ -172,8 +184,20 @@ if (defined('TFOL_ROUTE_DEBUG') && TFOL_ROUTE_DEBUG) {
         'get' => $_GET ?? [],
         'post' => $_POST ?? [],
         'session' => $_SESSION ?? [],
+        'resolved_website_id' => $websiteId,
     ];
 }
+
+error_log(
+    'INDEX FINAL: route=' .
+        (int) ($id ?? 0) .
+        ' resolved=' .
+        $websiteId .
+        ' session.website=' .
+        (int) ($_SESSION['website'] ?? 0) .
+        ' session.websiteid=' .
+        (int) ($_SESSION['websiteid'] ?? 0),
+);
 
 echo $twig->render('index.html', $data);
 return;

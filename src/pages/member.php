@@ -134,8 +134,29 @@ if ($viewerId === 1) {
         ->getAll2($websiteId, 0, null, $ownerId, 150, $sorttypeId > 0 ? $sorttypeId : null);
 }
 
-// Default sort menu id (Focus menu id=2)
-$data['sort_menu_id'] = (int) ($data['sort_menu_id'] ?? 2);
+/// Default sort menu id (Focus menu id=2)
+if (empty($data['sort_menu_id'])) {
+    $currentWebsiteId =
+        (int) ($data['website']['id'] ??
+            ($websiteId ?? ($_SESSION['website'] ?? ($_SESSION['websiteid'] ?? 1))));
+
+    $sortMenuId = 0;
+
+    $menus = $cms->getMenu()->getAll2($currentWebsiteId, 1);
+    foreach ($menus as $menu) {
+        $name = strtolower(trim((string) ($menu['name'] ?? '')));
+        if ($name === 'focus' || $name === 'sort') {
+            $sortMenuId = (int) ($menu['id'] ?? 0);
+            break;
+        }
+    }
+
+    if ($sortMenuId <= 0 && $currentWebsiteId === 1) {
+        $sortMenuId = 2;
+    }
+
+    $data['sort_menu_id'] = $sortMenuId;
+}
 
 error_log(
     '[member.php BEFORE RENDER] viewer.id=' .
