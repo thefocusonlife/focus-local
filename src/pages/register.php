@@ -24,7 +24,7 @@ function sendVerificationEmail(
     $message = <<<TEXT
     Hi {$safeName},
 
-    Thank you for registering at Focus on Life.
+    Thanks for creating an account at theFocusOnLife.org.
 
     Please verify your email address by clicking the link below:
 
@@ -35,6 +35,8 @@ function sendVerificationEmail(
     If you did not create this account, you can ignore this email.
 
     Focus on Life
+    https://thefocusonlife.org
+    contact@thefocusonlife.org
     TEXT;
 
     $mail = new \PhpBook\Email\Email($emailConfig);
@@ -44,7 +46,7 @@ function sendVerificationEmail(
 }
 guardPublic();
 $csrfFormKey = 'register';
-$doc_root = $config['doc_root'];
+$doc_root = $config['doc_root'] ?? '/_stage/';
 error_log(
     '[REGISTER] ' . ($_SERVER['REQUEST_METHOD'] ?? '?') . ' ' . ($_SERVER['REQUEST_URI'] ?? '?'),
 );
@@ -205,7 +207,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // TFOL rule: suffix email for non-main websites (login email is the UNIQUE key)
     $emailForLogin = $websiteId > 1 ? $emailBase . $websiteId : $emailBase;
-
+error_log('[REGISTER] email_config keys: ' . implode(', ', array_keys($email_config)));
+    
     // Duplicate check (only if email looks valid-ish; your full Validate::isEmail runs later)
     if ($emailBase !== '' && empty($errors['email'])) {
         // Check the UNIQUE login email (member.email)
@@ -386,11 +389,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         csrf_rotate($csrfFormKey);
         tfol_redirect(DOC_ROOT . 'index/' . $websiteId, 303);
     } catch (Throwable $e) {
-        error_log('[REGISTER][VERIFY EMAIL] Failed to setup verification: ' . $e->getMessage());
-
+        $messages[] = 'Your account was created, but the verification email could not be sent. Please contact us if you do not receive it.';
+       error_log('[REGISTER] Verification email send failed for ' . $emailBase . ': ' . $e->getMessage());
         unset($_SESSION['flash_success']);
         $_SESSION['flash_failure'] =
-            'Your account was created, but the verification email could not be sent from this development environment.';
+            'Your account was created, but the verification email could not be sent. Please contact us if you do not receive it.';
 
         unset($_SESSION['register_submit_lock']);
         tfol_redirect(DOC_ROOT . 'index/' . $websiteId, 303);

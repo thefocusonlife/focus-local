@@ -3,14 +3,18 @@ declare(strict_types=1);
 
 require_once APP_ROOT . '/src/security/redirects.php';
 require_once APP_ROOT . '/src/security/guard.php';
+
 guardPublic();
 error_log('[VERIFY PAGE HIT]');
 
 $data = [];
 $data['success'] = '';
 $data['failure'] = '';
-$data['website'] = $cms->getWebsite()->getById(1);
-$data['navigation'] = $cms->getMenu()->getAll2(1, 1);
+
+// Default fallback until token/member tells us the real website context
+$websiteId = 1;
+$data['website'] = $cms->getWebsite()->getById($websiteId);
+$data['navigation'] = $cms->getMenu()->getAll2($websiteId, 1);
 
 $rawToken = trim((string) ($_GET['token'] ?? ''));
 
@@ -33,6 +37,18 @@ try {
         $data['failure'] = 'Invalid verification link.';
         echo $twig->render('verify-email.html', $data);
         exit();
+    }
+
+    // Derive website context from the member tied to this token
+    $userId = (int) ($verification['user_id'] ?? 0);
+    if ($userId > 0) {
+        $member = $cms->getMember()->get($userId);
+        if ($member) {
+            $websiteId = (int) ($member['website'] ?? 1);
+            $data['website'] = $cms->getWebsite()->getById($websiteId);
+            $data['navigation'] = $cms->getMenu()->getAll2($websiteId, 1);
+            error_log('[VERIFY] website context resolved to website_id=' . $websiteId);
+        }
     }
 
     if (!empty($verification['used_at'])) {
@@ -59,7 +75,6 @@ try {
         exit();
     }
 
-    $userId = (int) ($verification['user_id'] ?? 0);
     $verificationId = (int) ($verification['verification_id'] ?? 0);
 
     error_log('[VERIFY] user_id=' . $userId . ' verification_id=' . $verificationId);
