@@ -218,7 +218,7 @@ if (!defined('IMAGE_WEBP_QUALITY')) {
 // ------------------------------------------------------------
 define('TFOL_DEFAULT_WEBSITE_ID', 1);
 define('TFOL_DEFAULT_ACCOUNT_ID', 1); // UberAdmin
-define('TFOL_DEFAULT_SORTTYPE_ID', 2); // Newest
+define('TFOL_DEFAULT_SORTTYPE_ID', 1); // Random
 
 // Optional legacy aliases if you have older code somewhere:
 // (uncomment ONLY if you find references)
