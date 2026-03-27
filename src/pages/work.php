@@ -221,7 +221,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $isUber = $role === 'uber';
 
     // Enforce ownership for edits (owner or uber). For create: force author.
-    $storyId = (int) ($story['id'] ?? 0);
+    $storyId = !empty($story['id']) ? (int) $story['id'] : null;
     if ($storyId > 0) {
         assertStoryOwnership($cms, $storyId, (int) $sessionMemberId, $isUber);
     } else {
@@ -320,11 +320,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // -----------------------------
             // C) Save if valid
             // -----------------------------
+
+            $storyId = !empty($story['id']) ? (int) $story['id'] : null;
+            $arguments = $story;
+
+            // Duplicate title check
+            if (empty($errors['title'])) {
+                if ($storyId === null) {
+                    if ($cms->getStory()->titleExists($story['title'])) {
+                        $errors['title'] = 'A story with this title already exists.';
+                    }
+                } else {
+                    if ($cms->getStory()->titleExists($story['title'], $storyId)) {
+                        $errors['title'] = 'Another story with this title already exists.';
+                    }
+                }
+            }
+
+            // Final validation gate
+            $invalid = implode($errors);
+
             if ($invalid) {
                 $errors['warning'] = 'Please correct form errors';
             } else {
-                $arguments = $story;
-
                 // ------------------------------------------------------------
                 // Image upload orchestration (Story Create + Update)
                 // ------------------------------------------------------------
@@ -390,13 +408,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $arguments['landscape'] = (int) ($result['landscape'] ?? 0);
                 }
 
-                if (!empty($arguments['id'])) {
+                // Save story
+                if ($storyId !== null) {
+                    $arguments['id'] = $storyId;
                     $saved = $cms->getStory()->update($arguments);
                 } else {
                     unset($arguments['id']);
                     $saved = $cms->getStory()->create($arguments);
                 }
 
+                // Optional alt text update after save
                 if ($saved) {
                     $imageId = (int) ($arguments['image_id'] ?? 0);
                     $alt = trim((string) ($_POST['image_alt'] ?? ''));
@@ -404,12 +425,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     if ($imageId > 0 && $alt !== '') {
                         $cms->getStory()->altUpdate($imageId, $alt);
                     }
-                }
 
-                if ($saved) {
                     redirect('admin/stories/', ['success' => 'Story saved']);
                 } else {
-                    $errors['warning'] = 'Story title already in use';
+                    $errors['warning'] = 'Story could not be saved';
                 }
             }
         }

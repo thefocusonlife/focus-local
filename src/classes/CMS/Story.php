@@ -557,6 +557,19 @@ AND (m.publik = 1)";
         return $this->db->runSql($sql)->fetchColumn();
     }
 
+    public function titleExists(string $title, ?int $excludeId = null): bool
+    {
+        $sql = 'SELECT COUNT(*) FROM story WHERE title = :title';
+        $params = ['title' => $title];
+
+        if ($excludeId !== null) {
+            $sql .= ' AND id != :id';
+            $params['id'] = $excludeId;
+        }
+
+        return (int) $this->db->runSql($sql, $params)->fetchColumn() > 0;
+    }
+
     // Save new story (DB only)
     public function create(array $story): bool
     {
@@ -574,7 +587,6 @@ AND (m.publik = 1)";
     // Update story (DB only)
     public function update(array $story): bool
     {
-        // Remove non-column / derived keys
         unset(
             $story['menu'],
             $story['seo_menu'],
@@ -606,8 +618,8 @@ AND (m.publik = 1)";
                    blog = :blog
              WHERE id = :id;";
 
-        $this->db->runSql($sql, $story)->rowCount();
-        return true;
+        $stmt = $this->db->runSql($sql, $story);
+        return $stmt->rowCount() > 0;
     }
 
     public function deleteForWebsite(int $id, int $websiteId): bool
