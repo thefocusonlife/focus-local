@@ -2,16 +2,16 @@
 {% block title %}Edit/create story
 {% endblock %}
 {% block content %}
-<form action="{{ doc_root }}work/{{ story.id }}" method="POST" enctype="multipart/form-data">
+	<form action="{{ doc_root }}work/{{ story.id }}" method="POST" enctype="multipart/form-data">
 
-	{% if failure %}
-		<div class="alert alert-success">{{ failure }}</div>
-	{% endif %}
+		{% if failure %}
+			<div class="alert alert-success">{{ failure }}</div>
+		{% endif %}
 
-	<body oncontextmenu="return true;">
 		<!---  <main class="story container" id="content"> -->
 		<!-- WORK.HTML LOADED -->
-		<input type="hidden" name="csrf" value="{{ csrf_token }}"> {% if story.blog ==3 %}
+		<input type="hidden" name="csrf" value="{{ csrf_token }}">
+		{% if story.blog ==3 %}
 			<main class="blog container">
 			{% endif %}
 			{% if story.blog == 2 %}
@@ -49,189 +49,178 @@
 						{% endif %}
 
 
-						<div{{errors.website}}
-            <!-- image panel body start -->
-            {% if not story.image_file and photocount<= member.photo_limit %}
+						<div"{{errors.website}}"</span <!-- image panel body start --> {% if not story.image_file and photocount<= member.photo_limit %} <label for="image">Upload image</label> <div class="form-group image-placeholder"> <input type="file" name="image" class="form-control-file" id="image"> <br> <span class="errors">{{ errors.image_file }} </span> </div> <div class="form-group"> <input type="hidden" name="website" id="website" value="{{website.id}}" class="form-control"> <span class="errors">></div>
 
-            <label for="image">Upload image</label>
-            <div class="form-group image-placeholder">
-            <input type="file" name="image" class="form-control-file" id="image">
-            <br>
-            <span class="errors">{{ errors.image_file }} </span>
-            </div>
+						<div
+							class="form-group">
+							<!--<label for="image_alt">Alt text: </label> -->
+							<input type="hidden" name="image_alt" id="image_alt" value="" class="form-control">
+							<span class="errors">{{ errors.image_alt }}</span>
+						</div>
 
-            <div class="form-group">
-             <input type="hidden" name="website" id="website" value={{website.id}} class="form-control">
-            <span class="errors"</span>
-            </div>
-
-						<div class="form-group">
-						<!--<label for="image_alt">Alt text: </label> -->
-						<input type="hidden" name="image_alt" id="image_alt" value="" class="form-control">
-						<span class="errors">{{ errors.image_alt }}</span>
 					</div>
 
-				</div>
-
-				<div class="form-group">
-					<label for="blog">Image Size (1 = Large, 2 = Medium, 3 = Blog):
-					</label>
-					<input type="number" name="blog" id="blog" value="{{ story.blog|default(1) }}" class="input-digit" min="1" max="3" step="1">
-					<span class="errors">{{ errors.blog }}</span>
-				</div>
-
-				<div class="form-group">
-					<label for="allow_comment">Allow Comments (1 = True, 0 = False):
-					</label>
-					<input type="number" name="allow_comment" id="allow_comment" value="{{ story.allow_comment|default(1) }}" class="input-digit" min="0" max="1" step="1">
-					<span class="errors">{{ errors.allow_comment }}</span>
-				</div>
-
-
-			{% endif %}
-			{% if story.image_file %}
-				<div class="form-group">
-
-					<label>Image:</label>
-					<img src="{{ doc_root }}uploads/{{story.image_file}}">
-					<p class="alt">
-						<strong>Alt text:</strong>
-						{{ story.image_alt }}</p>
-					<a href="{{ doc_root }}admin/alt-text-edit/{{ story.id }}" class="btn btn-secondary">Edit alt text</a>
-			    <a href="{{ doc_root }}admin/image-delete/{{story.id}}" class="btn btn-secondary">Delete image</a><br>
-
-				{#	<div class="form-group">
-						<label for="landscape">Orientation (1 = Landscape, 0 = Portrait):
+					<div class="form-group">
+						<label for="blog">Image Size (1 = Large, 2 = Medium, 3 = Blog):
 						</label>
-						<input type="number" name="landscape" id="landscape" value="{{ story.landscape|default(1) }}" class="input-digit" min="0" max="1" step="1">
-						<span class="errors">{{ errors.landscape }}</span>
-					</div> #}
-				</div>
+						<input type="number" name="blog" id="blog" value="{{ story.blog|default(1) }}" class="input-digit" min="1" max="3" step="1">
+						<span class="errors">{{ errors.blog }}</span>
+					</div>
 
-				<div class="form-group">
-					<label for="blog">Image Size (1 = Large, 2 = Medium, 3 = Blog):
-					</label>
-					<input type="number" name="blog" id="blog" value="{{ story.blog|default(1) }}" class="input-digit" min="1" max="3" step="1">
-					<span class="errors">{{ errors.blog }}</span>
-				</div>
+					<div class="form-group">
+						<label for="allow_comment">Allow Comments (1 = True, 0 = False):
+						</label>
+						<input type="number" name="allow_comment" id="allow_comment" value="{{ story.allow_comment|default(1) }}" class="input-digit" min="0" max="1" step="1">
+						<span class="errors">{{ errors.allow_comment }}</span>
+					</div>
 
-				<div class="form-group">
-					<label for="allow_comment">Allow Comments (1 = True, 0 = False):
-					</label>
-					<input type="number" name="allow_comment" id="allow_comment" value="{{ story.allow_comment|default(1) }}" class="input-digit" min="0" max="1" step="1">
-					<span class="errors">{{ errors.allow_comment }}</span>
-				</div>
 
-			{% endif %}
-		</div>
-		<!-- end #image-panel-body -->
-	</body>
-</section>
+				{% endif %}
+				{% if story.image_file %}
+					<div class="form-group">
 
-{% if (story.image_file )
+						<label>Image:</label>
+						<img src="{{ doc_root }}uploads/{{story.image_file}}">
+						<p class="alt">
+							<strong>Alt text:</strong>
+							{{ story.image_alt }}</p>
+						<a href="{{ doc_root }}admin/alt-text-edit/{{ story.id }}" class="btn btn-secondary">Edit alt text</a>
+						<a href="{{ doc_root }}admin/image-delete/{{story.id}}" class="btn btn-secondary">Delete image</a><br>
+
+						{#	<div class="form-group">
+																														<label for="landscape">Orientation (1 = Landscape, 0 = Portrait):
+																														</label>
+																														<input type="number" name="landscape" id="landscape" value="{{ story.landscape|default(1) }}" class="input-digit" min="0" max="1" step="1">
+																														<span class="errors">{{ errors.landscape }}</span>
+																													</div> #}
+					</div>
+
+					<div class="form-group">
+						<label for="blog">Image Size (1 = Large, 2 = Medium, 3 = Blog):
+						</label>
+						<input type="number" name="blog" id="blog" value="{{ story.blog|default(1) }}" class="input-digit" min="1" max="3" step="1">
+						<span class="errors">{{ errors.blog }}</span>
+					</div>
+
+					<div class="form-group">
+						<label for="allow_comment">Allow Comments (1 = True, 0 = False):
+						</label>
+						<input type="number" name="allow_comment" id="allow_comment" value="{{ story.allow_comment|default(1) }}" class="input-digit" min="0" max="1" step="1">
+						<span class="errors">{{ errors.allow_comment }}</span>
+					</div>
+
+				{% endif %}
+			</div>
+			<!-- end #image-panel-body -->
+
+		</section>
+
+		{% if (story.image_file )
            or (not story.image_file and photocount <= member.photo_limit) %}
 
-	<section class="text">
-		<div class="form-group">
-			<label for="title">Title:
-			</label>
-			<input type="text" name="title" id="title" value="{{ story.title }}" class="form-control">
-			<span class="errors">{{ errors.title }}</span>
-		</div>
-		<div class="form-group">
-			<input type="hidden" name="website" id="website" value="{{ story.website }}" class="form-control">
-			<span class="errors">{{ errors.website }}</span>
-		</div>
-		<div class="form-group">
-			<label for="summary">Summary:
-			</label><br>
-			<textarea id="summary" name="summary" class="form-control">{{ story.summary }}</textarea>
-			<span class="errors">{{ errors.summary}}</span><br>
-		</div>
+			<section class="text">
+				<div class="form-group">
+					<label for="title">Title:
+					</label>
+					<input type="text" name="title" id="title" value="{{ story.title }}" class="form-control">
+					<span class="errors">{{ errors.title }}</span>
+				</div>
+				<div class="form-group">
+					<input type="hidden" name="website" id="website" value="{{ story.website }}" class="form-control">
+					<span class="errors">{{ errors.website }}</span>
+				</div>
+				<div class="form-group">
+					<label for="summary">Summary:
+					</label><br>
+					<textarea id="summary" name="summary" class="form-control">{{ story.summary }}</textarea>
+					<span class="errors">{{ errors.summary}}</span><br>
+				</div>
 
-		<div class="story-content">
-			<label for="story-content">Content:
-			</label>
-			<textarea id="textarea2" class="tinymce" name="content" id="story-content" class="form-control">{{ story.content }}</textarea>
-			<span class="errors">{{ errors.content }}</span>
-		</div>
-		<br>
-		<div class="form-group">
-			<label for="member_id">
-				Author:</label>
-			<select name="member_id" id="member_id">
+				<div class="story-content">
+					<label for="story-content">Content:
+					</label>
+					<textarea id="textarea2" class="tinymce" name="content" id="story-content" class="form-control">{{ story.content }}</textarea>
+					<span class="errors">{{ errors.content }}</span>
+				</div>
+				<br>
+				<div class="form-group">
+					<label for="member_id">
+						Author:</label>
+					<select name="member_id" id="member_id">
 
-				{% if story.image_file %}
-					<option value="{{session.id }}" {% if story.member_id == session.id %} selected {% endif %}>
-						{{ story.forename }}
-						{{ story.surname }}</option>
-				{% else %}
-					<option value="{{authors.id }}" {% if session.id == authors.id %} selected {% endif %}>
-						{{ authors.forename }}
-						{{ authors.surname }}</option>
-				{% endif %}
-				<span class="errors">{{ errors.author }}</span>
-			</select>
-		</div>
-		<div class="form-group">
-			<label for="family_id">Family ID:
-			</label>
-			<select name="family_id" id="family_id">
+						{% if story.image_file %}
+							<option value="{{session.id }}" {% if story.member_id == session.id %} selected {% endif %}>
+								{{ story.forename }}
+								{{ story.surname }}</option>
+						{% else %}
+							<option value="{{authors.id }}" {% if session.id == authors.id %} selected {% endif %}>
+								{{ authors.forename }}
+								{{ authors.surname }}</option>
+						{% endif %}
+						<span class="errors">{{ errors.author }}</span>
+					</select>
+				</div>
+				<div class="form-group">
+					<label for="family_id">Family ID:
+					</label>
+					<select name="family_id" id="family_id">
 
-				{% if story.image_file %}
+						{% if story.image_file %}
 
-					<option value={{ family.id }} {% if story.family_id == family.id %} selected {% endif %}>
-						{{ family.id }}-{{ family.forename }}
-						{{ family.surname }}</option>
-				{% else %}
-					<option value={{ family.id }} {% if member.account_id == family.id %} selected {% endif %}>
-						{{ family.id }}-{{ family.forename }}
-						{{ family.surname }}</option>
-				{% endif %}
+							<option value={{ family.id }} {% if story.family_id == family.id %} selected {% endif %}>
+								{{ family.id }}-{{ family.forename }}
+								{{ family.surname }}</option>
+						{% else %}
+							<option value={{ family.id }} {% if member.account_id == family.id %} selected {% endif %}>
+								{{ family.id }}-{{ family.forename }}
+								{{ family.surname }}</option>
+						{% endif %}
 
-			</select>
-			<span class="errors">{{ errors.family }}</span>
-		</div>
-		{% set selected_menu_id = story.menu_id is defined and story.menu_id ? story.menu_id : member.member_id %}
+					</select>
+					<span class="errors">{{ errors.family }}</span>
+				</div>
+				{% set selected_menu_id = story.menu_id is defined and story.menu_id ? story.menu_id : member.member_id %}
 
-		<div class="form-group">
-			<label for="menu_id">Menu:</label>
-			<select name="menu_id" id="menu_id" class="form-control">
-				{% for menu in menus %}
-					{% if member.account_id == menu.account_id or session.id == 1 %}
-						<option value="{{ menu.id }}" {% if menu.id == selected_menu_id %} selected {% endif %}>
-							{{ menu.name }}
-						</option>
-					{% endif %}
-				{% endfor %}
-			</select>
-			<span class="errors">{{ errors.menu_id }}</span>
-		</div>
+				<div class="form-group">
+					<label for="menu_id">Menu:</label>
+					<select name="menu_id" id="menu_id" class="form-control">
+						{% for menu in menus %}
+							{% if member.account_id == menu.account_id or session.id == 1 %}
+								<option value="{{ menu.id }}" {% if menu.id == selected_menu_id %} selected {% endif %}>
+									{{ menu.name }}
+								</option>
+							{% endif %}
+						{% endfor %}
+					</select>
+					<span class="errors">{{ errors.menu_id }}</span>
+				</div>
 
-		<span class="errors">{{ errors.menu }}</span>
-		<div class="form-group">
-			<input type="hidden" name="website" id="website" value={{website.id}} class="form-control">
-			<span class="errors">{{ errors.website }}</span>
-		</div>
-	</div>
-	<div class="form-group">
-		<label for="keyword">Keyword:
-		</label>
-		<input type="text" name="keyword" id="keyword" value="{{ story.keyword }}" class="form-control">
-		<span class="errors">{{ errors.keyword }}</span>
-	</div>
+				<span class="errors">{{ errors.menu }}</span>
+				<div class="form-group">
+					<input type="hidden" name="website" id="website" value="{{website.id}}" class="form-control">
+					<span class="errors">{{ errors.website }}</span>
+				</div>
+			</div>
+			<div class="form-group">
+				<label for="keyword">Keyword:
+				</label>
+				<input type="text" name="keyword" id="keyword" value="{{ story.keyword }}" class="form-control">
+				<span class="errors">{{ errors.keyword }}</span>
+			</div>
 
-	<div class="form-group">
-		<label for="storyorder">Order:</label>
-		<input type="number" name="storyorder" id="storyorder" value="{{ story.storyorder|default(1) }}" class="input-digit" min="1" max="999" step="1">
+			<div class="form-group">
+				<label for="storyorder">Order:</label>
+				<input type="number" name="storyorder" id="storyorder" value="{{ story.storyorder|default(1) }}" class="input-digit" min="1" max="999" step="1">
 
-		<span class="errors">{{ errors.storyorder }}</span>
-	</div>
+				<span class="errors">{{ errors.storyorder }}</span>
+			</div>
 
 
-	<div class="form-check">
-		<input type="checkbox" name="published" value="1" class="form-check-input" id="published" {% if story.published %} checked {% endif %}>
-		<label for="published" class="form-check-label">Public</label>
-	</div>
-	<input type="submit" name="update" value="save" class="btn btn-primary">
-</section>{% endif %}</body></div><!-- /.admin-story -->{% include 'partials/debug_panel.html' %}</body></body></main></body></body></form> {% endblock %}
+			<div class="form-check">
+				<input type="checkbox" name="published" value="1" class="form-check-input" id="published" {% if story.published %} checked {% endif %}>
+				<label for="published" class="form-check-label">Public</label>
+			</div>
+			<input type="submit" name="update" value="save" class="btn btn-primary">
+		</section>
+	{% endif %}
+</div><!-- /.admin-story -->{% include 'partials/debug_panel.html' %}</main></form>{% endblock %}
