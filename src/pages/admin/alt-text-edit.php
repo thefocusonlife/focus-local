@@ -1,16 +1,20 @@
 <?php
 use PhpBook\Validate\Validate; // Import Validate namespace
 is_admin($session->role); // Check if admin
-
+include APP_ROOT . '/src/pages/menu-path.php'; // get path for website and menus
 require_once APP_ROOT . '/src/security/guard.php';
 guardMember();
 
 $story = []; // Initialize story array
 $errors = []; // Initialize error message
 
-if (!$id) {
-    // If no id
-    redirect('/admin/stories/', ['failure' => 'Story not found']); // Redirect
+if (!empty($parts[2])) {
+    $id = intval($parts[2]); // If valid id
+    $story = $cms->getStory()->get($id, false); // Get story data
+    if (!$story) {
+        // If story empty
+        redirect('admin/stories/', ['failure' => 'Story not found']); // Redirect
+    }
 }
 
 $story = $cms->getStory()->get($id, false); // Get story
