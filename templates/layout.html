@@ -40,28 +40,28 @@ tinymce.init({selector: 'textarea.tinymce', branding: false, plugins: 'anchor au
 	<body
 		oncontextmenu="return true;" class="{{ body_class|default('') }}">
 		{# normalize request path to a "relative" route like /admin/menu #}
-		{% set path = (request_uri|default('')|split('?'))[0] %}
-		{% set rel = path|replace({'/focus-local/public': ''}) %}
-		{% if rel == '' %}
-			{% set rel = '/' %}
-		{% endif %}
-
-		{% set rel = ((request_uri|default('')|split('?'))[0])|replace({'/focus-local/public': ''}) %}
-		{% if rel == '' %}
-			{% set rel = '/' %}
-		{% endif %}
+        {% set path = (request_uri|default('')|split('?'))[0] %}
+        {% set rel = path
+         |replace({
+           '/focus-local/public': '',
+           '/_stage': ''
+         })
+         %}
+        {% if rel == '' %}
+           {% set rel = '/' %}
+        {% endif %}
 
 		{% set noSplashPrefixes = [
-  '/login','/logout','/register',
-  '/verify-email','/resend-verification',
-  '/admin','/work','/member',
-  '/password-lost','/password-reset',
-  '/change-email',
-  '/confirm-email-change',
-  '/menu','/story',
-  '/index','/sort',
-  '/select-website'
-] %}
+        '/login','/logout','/register',
+        '/verify-email','/resend-verification',
+        '/admin','/work','/member',
+        '/password-lost','/password-reset',
+        '/change-email',
+        '/confirm-email-change',
+        '/menu','/story',
+        '/index','/sort',
+        '/select-website'
+        ] %}
 
 		{% set disableSplash = session.nosplash|default(false) %}
 		{% for p in noSplashPrefixes %}
