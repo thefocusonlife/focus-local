@@ -1167,6 +1167,152 @@ main.grid img.story-thumb {
 main.grid img.story-thumb.thumb-portrait {
     object-position: 50% 10% !important;
 }
+
+/* ===== GUIDE PAGE BASE ===== */
+.guide-page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: Arial, Helvetica, sans-serif;
+    line-height: 1.6;
+}
+
+/* ===== HEADER ===== */
+.guide-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.guide-header h1 {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    color: #2c3e50;
+}
+
+.guide-header p {
+    color: #555;
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+/* ===== INTRO CARD ===== */
+.guide-intro-card {
+    background: #f4f8fb;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.guide-intro-card h2 {
+    margin-bottom: 10px;
+    color: #2c3e50;
+}
+
+/* ===== GRID LAYOUT ===== */
+.guide-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+/* ===== CARD ===== */
+.guide-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 14px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+/* subtle hover effect */
+.guide-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.08);
+}
+
+/* ===== CARD TITLE ===== */
+.guide-card h2 {
+    font-size: 1.3rem;
+    margin-bottom: 6px;
+    color: #1f2937;
+}
+
+/* ===== SUBTITLE ===== */
+.guide-card-subtitle {
+    font-size: 0.9rem;
+    color: #6b7280;
+    margin-bottom: 12px;
+}
+
+/* ===== TEXT ===== */
+.guide-card p {
+    margin-bottom: 12px;
+    color: #444;
+}
+
+/* ===== HEADINGS INSIDE CARD ===== */
+.guide-card h3 {
+    font-size: 0.95rem;
+    margin-top: 15px;
+    margin-bottom: 6px;
+    color: #374151;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ===== LISTS ===== */
+.guide-card ul,
+.guide-card ol {
+    padding-left: 18px;
+    margin-bottom: 10px;
+}
+
+.guide-card li {
+    margin-bottom: 6px;
+}
+
+/* ===== STEP NUMBER BADGE ===== */
+.guide-card::before {
+    content: attr(id);
+    display: none; /* turn on if you want numbered cards */
+}
+
+/* ===== OPTIONAL: HIGHLIGHT "TRY THIS" ===== */
+.guide-card ol {
+    background: #f9fafb;
+    border-left: 3px solid #60a5fa;
+    padding: 10px 15px;
+    border-radius: 6px;
+}
+
+/* ===== LINKS ===== */
+.guide-card a {
+    color: #2563eb;
+    text-decoration: none;
+}
+
+.guide-card a:hover {
+    text-decoration: underline;
+}
+.guide-card-link {
+    text-decoration: none;
+    color: inherit;
+    display: block;
+}
+/* ===== RESPONSIVE ===== */
+@media (max-width: 600px) {
+    .guide-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .guide-card {
+        padding: 16px;
+    }
+}
 /******************************************/
 /*  TFOL Specials                         */
 /******************************************/

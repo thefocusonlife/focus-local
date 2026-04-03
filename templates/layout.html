@@ -40,16 +40,16 @@ tinymce.init({selector: 'textarea.tinymce', branding: false, plugins: 'anchor au
 	<body
 		oncontextmenu="return true;" class="{{ body_class|default('') }}">
 		{# normalize request path to a "relative" route like /admin/menu #}
-        {% set path = (request_uri|default('')|split('?'))[0] %}
-        {% set rel = path
+		{% set path = (request_uri|default('')|split('?'))[0] %}
+		{% set rel = path
          |replace({
            '/focus-local/public': '',
            '/_stage': ''
          })
          %}
-        {% if rel == '' %}
-           {% set rel = '/' %}
-        {% endif %}
+		{% if rel == '' %}
+			{% set rel = '/' %}
+		{% endif %}
 
 		{% set noSplashPrefixes = [
         '/login','/logout','/register',
@@ -59,7 +59,7 @@ tinymce.init({selector: 'textarea.tinymce', branding: false, plugins: 'anchor au
         '/change-email',
         '/confirm-email-change',
         '/menu','/story',
-        '/index','/sort',
+        '/index','/sort','/guide',
         '/select-website'
         ] %}
 
@@ -92,8 +92,8 @@ tinymce.init({selector: 'textarea.tinymce', branding: false, plugins: 'anchor au
 						<span class="hidden">Menu</span>
 					</button>
 					<!-- DEBUG nav: count={{ navigation|default([])|length }}
-																																																																																					     sid={{ session.id|default('NULL') }}
-																																																																																					     wid={{ session.website|default('NULL') }} -->
+																																																																																										     sid={{ session.id|default('NULL') }}
+																																																																																										     wid={{ session.website|default('NULL') }} -->
 
 
 					<ul id="menu">
@@ -320,4 +320,4 @@ requestAnimationFrame(() => {
 window.dispatchEvent(new Event('resize'));
 });
 </script>
-{% block body_end %}{% endblock %}</body></html>
+{% block body_end %}{% endblock %}</body></html></body></html>

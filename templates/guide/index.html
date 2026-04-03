@@ -6,43 +6,38 @@
 
 {% block content %}
 
-	<section class="guide-index">
+	<section class="guide-page">
 
-		<header class="guide-index__header">
-			<h1>The FocusOnLife Guide</h1>
-
-			{% if guide_index.intro %}
-				<p class="guide-index__intro">
-					{{ guide_index.intro|raw }}
-				</p>
-			{% endif %}
+		<header class="guide-header">
+			<h1>{{ guide_intro.title|default('Getting Started with TFOL') }}</h1>
+			<p>
+				{{ guide_intro.text|default('TFOL can feel large at first, so this guide breaks it into small steps. Start with one card at a time.') }}
+			</p>
 		</header>
 
-		{% for group in guide_index.groups %}
-			<section class="guide-index__group">
-				<h2>{{ group.title }}</h2>
+		<section class="guide-intro-card">
+			<h2>Start Here</h2>
+			<p>
+				If this is your first visit, begin with
+				<strong>The Top Bar</strong>
+				and
+				<strong>The Navigation Menu</strong>. Those two areas will help you get oriented quickly.
+			</p>
+		</section>
 
-				{% if group.summary %}
-					<p class="guide-index__summary">{{ group.summary }}</p>
-				{% endif %}
+		<section class="guide-grid">
 
-				<ul class="guide-index__list">
-					{% for item in group.items %}
-						<li class="guide-index__item">
-							<a href="{{ doc_root }}guide/{{ item.slug }}">
-								{{ item.title }}
-							</a>
+			{% include 'guide/cards/top-bar.html' %}
+			{% include 'guide/cards/navigation-menu.html' %}
+			{% include 'guide/cards/browsing-stories.html' %}
+			{% include 'guide/cards/member-name.html' %}
+			{% include 'guide/cards/menu-link.html' %}
+			{% include 'guide/cards/sort.html' %}
+			{% include 'guide/cards/register-login.html' %}
+			{% include 'guide/cards/create-story.html' %}
+			{% include 'guide/cards/editor.html' %}
 
-							{% if item.note %}
-								<div class="guide-index__note">
-									{{ item.note }}
-								</div>
-							{% endif %}
-						</li>
-					{% endfor %}
-				</ul>
-			</section>
-		{% endfor %}
+		</section>
 
 	</section>
 

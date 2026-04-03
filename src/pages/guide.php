@@ -6,94 +6,104 @@ declare(strict_types=1);
 //   /guide
 //   /guide/<slug>
 
-$slug = $parts[1] ?? ''; // assuming $parts is path segments after routing
+/**
+ * Resolve canonical website for this request.
+ * Route wins. Then session. Then default 1.
+ */
+$websiteId = (int) ($id ?? 0);
+
+if ($websiteId <= 0) {
+    $websiteId = (int) ($_SESSION['website'] ?? 0);
+}
+if ($websiteId <= 0) {
+    $websiteId = (int) ($_SESSION['websiteid'] ?? 0);
+}
+if ($websiteId <= 0) {
+    $websiteId = 1;
+}
+
+/* Load website; fallback to 1 only if invalid.
+ */
+$website = $cms->getWebsite()->getById($websiteId);
+if (!$website || !isset($website['id'])) {
+    $websiteId = 1;
+    $website = $cms->getWebsite()->getById(1);
+}
+$data['website'] = $website;
+$slug = $parts[1] ?? '';
 $slug = trim((string) $slug, "/ \t\n\r\0\x0B");
 
-// -------------------------
-// Shared: build Guide index data
-// -------------------------
-$guideIndex = [
-    'intro' =>
-        '<strong>Welcome.</strong> This Guide explains how FocusOnLife works and how to use it confidently.',
-    'groups' => [
-        [
-            'title' => 'Foundations',
-            'summary' => 'Start here to understand the big picture.',
-            'items' => [
-                [
-                    'slug' => 'getting-started',
-                    'title' => 'Getting Started',
-                    'note' => 'Your first 10 minutes',
-                ],
-                [
-                    'slug' => 'websites-menus-stories',
-                    'title' => 'Websites, Menus, and Stories',
-                    'note' => 'The core TFOL concept',
-                ],
-                [
-                    'slug' => 'basic-navigation',
-                    'title' => 'Basic Navigation',
-                    'note' => 'How to move around TFOL',
-                ],
-            ],
-        ],
-        [
-            'title' => 'Account & Roles',
-            'summary' => 'Identity, login, and what different roles can do.',
-            'items' => [
-                [
-                    'slug' => 'registration-login',
-                    'title' => 'Registration and Login',
-                    'note' => 'Create an account and sign in',
-                ],
-                [
-                    'slug' => 'user-roles',
-                    'title' => 'User Roles & Member Options',
-                    'note' => 'Guest, Member, Admin, UberAdmin',
-                ],
-                [
-                    'slug' => 'security-deep-links',
-                    'title' => 'Security: Roles, Permissions, and Safe Sharing',
-                    'note' => 'Deep links without risk',
-                ],
-            ],
-        ],
-        [
-            'title' => 'Creating Content',
-            'summary' => 'How to create menus and publish stories.',
-            'items' => [
-                [
-                    'slug' => 'creating-menus-stories',
-                    'title' => 'Creating Menus and Stories',
-                    'note' => 'From idea to published',
-                ],
-            ],
-        ],
-        [
-            'title' => 'Community',
-            'summary' => 'How following and notifications work (and why).',
-            'items' => [
-                [
-                    'slug' => 'following-notifications',
-                    'title' => 'Following and Notifications',
-                    'note' => 'Stay connected',
-                ],
-                [
-                    'slug' => 'community-vs-individual',
-                    'title' => 'Community vs Individual Websites',
-                    'note' => 'Ownership and sharing',
-                ],
-            ],
-        ],
+/*
+|--------------------------------------------------------------------------
+| Guide landing page data (card-based UX)
+|--------------------------------------------------------------------------
+*/
+$guideCards = [
+    [
+        'slug' => 'top-bar',
+        'title' => 'The Top Bar',
+        'subtitle' => 'Member menu and quick actions',
+        'summary' =>
+            'Learn what Guest, Log-in, Register, Sort, Refresh, Back, Home, FAQ, and Share do.',
+        'icon' => '🧭',
+    ],
+    [
+        'slug' => 'navigation-menu',
+        'title' => 'The Navigation Menu',
+        'subtitle' => 'Main site sections',
+        'summary' => 'Understand Guide, Focus, Get Focused, About, FAQ, and Resources.',
+        'icon' => '🗂️',
+    ],
+    [
+        'slug' => 'browsing-stories',
+        'title' => 'Browsing Stories',
+        'subtitle' => 'Open and read content',
+        'summary' => 'Learn how to click into stories and explore content without getting lost.',
+        'icon' => '📖',
+    ],
+    [
+        'slug' => 'member-name',
+        'title' => 'Exploring a Member',
+        'subtitle' => 'See public stories by one person',
+        'summary' => 'Click a member name to view that person’s public content.',
+        'icon' => '👤',
+    ],
+    [
+        'slug' => 'menu-link',
+        'title' => 'Exploring a Menu',
+        'subtitle' => 'Browse one topic at a time',
+        'summary' => 'Use Posted In links to stay inside one category or menu.',
+        'icon' => '📚',
+    ],
+    [
+        'slug' => 'sort',
+        'title' => 'Using Sort',
+        'subtitle' => 'Control how stories appear',
+        'summary' => 'Choose order, count, and image orientation for a better reading experience.',
+        'icon' => '↕️',
+    ],
+    [
+        'slug' => 'register-login',
+        'title' => 'Registering and Logging In',
+        'subtitle' => 'Unlock member features',
+        'summary' => 'Create an account and sign in so you can save preferences and add content.',
+        'icon' => '🔐',
+    ],
+    [
+        'slug' => 'create-story',
+        'title' => 'Creating a Story',
+        'subtitle' => 'Add your own content',
+        'summary' => 'Learn the basic steps for adding stories and images.',
+        'icon' => '✍️',
+    ],
+    [
+        'slug' => 'editor',
+        'title' => 'Using the Editor',
+        'subtitle' => 'Format content with TinyMCE',
+        'summary' => 'Make your stories easier to read with simple formatting tools.',
+        'icon' => '📝',
     ],
 ];
-
-// If no slug, render the Guide landing page
-if ($slug === '' || $slug === 'index') {
-    $data['guide_index'] = $guideIndex;
-    echo $twig->render('guide/index.html', $data);
-    exit();
-}
 
 // -------------------------
 // Topic lookup (Phase 1: simple hard-coded map)
@@ -448,14 +458,44 @@ $topics = [
     ],
 ];
 
-// Topic not found → show index (or you can render a 404 template)
-if (!isset($topics[$slug])) {
-    $data['guide_index'] = $guideIndex;
+/*
+|--------------------------------------------------------------------------
+| /guide landing page
+|--------------------------------------------------------------------------
+*/
+if ($slug === '' || $slug === 'index') {
+    $data['guide_intro'] = [
+        'title' => 'Getting Started with TFOL',
+        'text' =>
+            'TFOL can feel large at first, so this guide breaks it into small steps. Start with one card at a time.',
+    ];
+    $data['guide_cards'] = $guideCards;
+
     echo $twig->render('guide/index.html', $data);
     exit();
 }
 
-// Render topic
+/*
+|--------------------------------------------------------------------------
+| Fallback: if card slug should map to a dedicated topic later
+|--------------------------------------------------------------------------
+*/
+if (!isset($topics[$slug])) {
+    $data['guide_intro'] = [
+        'title' => 'Getting Started with TFOL',
+        'text' =>
+            'TFOL can feel large at first, so this guide breaks it into small steps. Start with one card at a time.',
+    ];
+    $data['guide_cards'] = $guideCards;
+    echo $twig->render('guide/index.html', $data);
+    exit();
+}
+
+/*
+|--------------------------------------------------------------------------
+| Render detailed topic
+|--------------------------------------------------------------------------
+*/
 $data['guide'] = $topics[$slug];
 echo $twig->render('guide/topic.html', $data);
 exit();
