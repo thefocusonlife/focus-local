@@ -10,25 +10,20 @@ declare(strict_types=1);
  * Resolve canonical website for this request.
  * Route wins. Then session. Then default 1.
  */
-$websiteId = (int) ($id ?? 0);
+require_once APP_ROOT . '/src/tenancy/website_context.php';
 
-if ($websiteId <= 0) {
-    $websiteId = (int) ($_SESSION['website'] ?? 0);
-}
-if ($websiteId <= 0) {
-    $websiteId = (int) ($_SESSION['websiteid'] ?? 0);
-}
-if ($websiteId <= 0) {
-    $websiteId = 1;
-}
+[$websiteId, $website] = resolveWebsiteId(
+    cms: $cms,
+    parts: $parts,
+    session: $_SESSION,
+    cookie: $_COOKIE,
+    get: $_GET,
+    email: null,
+    defaultWebsiteId: 1,
+    cookieName: 'tfol_tid',
+    persist: true,
+);
 
-/* Load website; fallback to 1 only if invalid.
- */
-$website = $cms->getWebsite()->getById($websiteId);
-if (!$website || !isset($website['id'])) {
-    $websiteId = 1;
-    $website = $cms->getWebsite()->getById(1);
-}
 $data['website'] = $website;
 $slug = $parts[1] ?? '';
 $slug = trim((string) $slug, "/ \t\n\r\0\x0B");
@@ -463,6 +458,8 @@ $topics = [
 | /guide landing page
 |--------------------------------------------------------------------------
 */
+$data['website'] = $website;
+$data['navigation'] = $cms->getMenu()->getAll2((int) $website['id'], 1);
 if ($slug === '' || $slug === 'index') {
     $data['guide_intro'] = [
         'title' => 'Getting Started with TFOL',
