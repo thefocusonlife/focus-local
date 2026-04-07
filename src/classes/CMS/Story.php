@@ -1,6 +1,6 @@
 <?php
 namespace PhpBook\CMS; // Namespace declaration
-
+use PDOStatement;
 class Story
 {
     public $id; // Store story id
@@ -619,7 +619,8 @@ AND (m.publik = 1)";
              WHERE id = :id;";
 
         $stmt = $this->db->runSql($sql, $story);
-        return $stmt->rowCount() > 0;
+
+        return $stmt instanceof PDOStatement;
     }
 
     public function deleteForWebsite(int $id, int $websiteId): bool
