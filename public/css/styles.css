@@ -1084,6 +1084,11 @@ input[type='file']::file-selector-button {
   height: 100%;
 }
 
+.support-intro {
+    text-align: center;
+    margin: 20px 0 30px 0;
+}
+
 /************************************/
 /* 8.1 Admin / Delete Forms         */
 /************************************/

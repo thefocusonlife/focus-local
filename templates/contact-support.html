@@ -1,0 +1,41 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+	<main>
+		<section class="support-container">
+
+			<section class="header">
+				<h1>Contact Support</h1>
+			</section>
+
+			<p class="support-intro">
+				Need help with a page, site navigation, account access, or a technical problem?<br>
+				Use the form below to contact support.
+			</p>
+
+			<form method="post" action="{{ doc_root }}support" class="form-contact" data-recaptcha-action="contact_support">
+				{% if errors.warning %}
+					<div class="alert alert-danger">{{ errors.warning }}</div>
+				{% endif %}
+				{% if success %}
+					<div class="alert alert-success">{{ success }}</div>
+				{% endif %}
+
+				<div class="form-group">
+					<label for="email">Your Email address:</label>
+					<input type="text" name="email" id="email" value="{{ from }}" class="form-control">
+					<span class="errors">{{ errors.email }}</span><br>
+				</div>
+
+				<div class="form-group">
+					<label for="message">Support Message:</label><br>
+					<textarea id="message" name="message" class="form-control">{{ message }}</textarea>
+					<span class="errors">{{ errors.message }}</span><br>
+				</div>
+
+				<input type="hidden" name="g-recaptcha-response">
+
+				<input type="submit" value="Submit Support Request" class="btn">
+			</form>
+		</main>
+	{% endblock %}
