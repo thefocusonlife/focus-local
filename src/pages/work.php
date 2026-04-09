@@ -200,7 +200,7 @@ if (empty($storyorder)) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Form submitted
-   
+
     // ---- WRITE BOUNDARY (must be first meaningful enforcement) ----
 
     $role = (string) ($_SESSION['role'] ?? 'guest');
@@ -302,7 +302,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 : 'Keyword should be 1 - 80 characters.';
 
             $invalid = implode($errors);
-
+            $failure = '';
             // -----------------------------
             // C) Save if valid
             // -----------------------------
@@ -336,6 +336,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     isset($_FILES['image']) &&
                     ($_FILES['image']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK &&
                     is_uploaded_file($_FILES['image']['tmp_name'] ?? '');
+
+                $uploadFailed = false;
 
                 if ($hasUpload) {
                     // Normalize image_id
@@ -373,48 +375,66 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ]);
                     }
 
-                    // Save uploaded image via ImageService
-                    $result = $cms
-                        ->getImageService()
-                        ->saveUploadedStoryImage(
-                            $_FILES['image'],
-                            $imageId,
-                            $arguments['title'] ?? '',
-                        );
+                    try {
+                        // Save uploaded image via ImageService
+                        $result = $cms
+                            ->getImageService()
+                            ->saveUploadedStoryImage(
+                                $_FILES['image'],
+                                $imageId,
+                                $arguments['title'] ?? '',
+                            );
 
-                    // Update image row with final filename + alt
-                    $sql = 'UPDATE image SET file = :file, alt = :alt WHERE id = :id;';
-                    $cms->getDb()->runSql($sql, [
-                        'file' => $result['filename'],
-                        'alt' => $alt,
-                        'id' => $imageId,
-                    ]);
+                        // Update image row with final filename + alt
+                        $sql = 'UPDATE image SET file = :file, alt = :alt WHERE id = :id;';
+                        $cms->getDb()->runSql($sql, [
+                            'file' => $result['filename'],
+                            'alt' => $alt,
+                            'id' => $imageId,
+                        ]);
 
-                    // Propagate derived values back into story args
-                    $arguments['landscape'] = (int) ($result['landscape'] ?? 0);
+                        // Propagate derived values back into story args
+                        $arguments['landscape'] = (int) ($result['landscape'] ?? 0);
+                    } catch (\Throwable $e) {
+                        $msg = $e->getMessage();
+
+                        if (str_contains($msg, 'Unsupported image type')) {
+                            $errors['warning'] =
+                                'Invalid image type. Please upload a JPG or PNG image.';
+                        } elseif (str_contains($msg, 'File too large')) {
+                            $errors['warning'] = $msg;
+                        } else {
+                            $errors['warning'] =
+                                'Sorry. A problem occurred while uploading your image.';
+                        }
+
+                        $uploadFailed = true;
+                    }
                 }
 
-                // Save story
-                if ($storyId !== null) {
-                    $arguments['id'] = $storyId;
-                    $saved = $cms->getStory()->update($arguments);
-                } else {
-                    unset($arguments['id']);
-                    $saved = $cms->getStory()->create($arguments);
-                }
-
-                // Optional alt text update after save
-                if ($saved) {
-                    $imageId = (int) ($arguments['image_id'] ?? 0);
-                    $alt = trim((string) ($_POST['image_alt'] ?? ''));
-
-                    if ($imageId > 0 && $alt !== '') {
-                        $cms->getStory()->altUpdate($imageId, $alt);
+                // Save story only if image upload did not fail
+                if (!$uploadFailed) {
+                    if ($storyId !== null) {
+                        $arguments['id'] = $storyId;
+                        $saved = $cms->getStory()->update($arguments);
+                    } else {
+                        unset($arguments['id']);
+                        $saved = $cms->getStory()->create($arguments);
                     }
 
-                    redirect('admin/stories/', ['success' => 'Story saved']);
-                } else {
-                    $errors['warning'] = 'Story could not be saved';
+                    // Optional alt text update after save
+                    if ($saved) {
+                        $imageId = (int) ($arguments['image_id'] ?? 0);
+                        $alt = trim((string) ($_POST['image_alt'] ?? ''));
+
+                        if ($imageId > 0 && $alt !== '') {
+                            $cms->getStory()->altUpdate($imageId, $alt);
+                        }
+
+                        redirect('admin/stories/', ['success' => 'Story saved']);
+                    } else {
+                        $errors['warning'] = 'Story could not be saved';
+                    }
                 }
             }
         }
