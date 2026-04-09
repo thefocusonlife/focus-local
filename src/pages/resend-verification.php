@@ -19,7 +19,23 @@ function sendVerificationEmail(
 
     $safeName = trim($forename) !== '' ? trim($forename) : 'there';
 
-    $message = <<<TEXT
+    // HTML version (clickable link)
+    $htmlMessage = <<<HTML
+    <p>Hi {$safeName},</p>
+
+    <p>Please verify your email address by clicking the link below:</p>
+
+    <p><a href="{$verifyUrl}">Verify your email</a></p>
+
+    <p>This link will expire in 24 hours.</p>
+
+    <p>If you did not create this account, you can ignore this email.</p>
+
+    <p>Focus on Life</p>
+    HTML;
+
+    // Plain text fallback (important for some clients)
+    $textMessage = <<<TEXT
     Hi {$safeName},
 
     Please verify your email address by clicking the link below:
@@ -34,9 +50,16 @@ function sendVerificationEmail(
     TEXT;
 
     $mail = new \PhpBook\Email\Email($emailConfig);
-    $mail->sendEmail($emailConfig['admin_email'], $toEmail, $subject, $message);
-}
 
+    // Assuming your Email class supports HTML + AltBody
+    $mail->sendEmail(
+        $emailConfig['admin_email'],
+        $toEmail,
+        $subject,
+        $htmlMessage,
+        $textMessage, // optional second param for fallback
+    );
+}
 $email = '';
 $errors = [];
 $success = '';
