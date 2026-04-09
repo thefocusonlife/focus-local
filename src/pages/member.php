@@ -11,16 +11,6 @@ guardMember();
 $errors = [];
 $data = [];
 
-// --- Debug (keep if you still want it) ---
-error_log(
-    '[member.php] session.id=' .
-        ($_SESSION['id'] ?? 'NA') .
-        ' session.account_id=' .
-        ($_SESSION['account_id'] ?? 'NA') .
-        ' session.website=' .
-        ($_SESSION['website'] ?? 'NA'),
-);
-
 // ------------------------------------------------------------
 // Guard: require login (member page is not for guests)
 // ------------------------------------------------------------
@@ -158,15 +148,6 @@ if (empty($data['sort_menu_id'])) {
     $data['sort_menu_id'] = $sortMenuId;
 }
 
-error_log(
-    '[member.php BEFORE RENDER] viewer.id=' .
-        $viewerId .
-        ' viewer.account_id=' .
-        (int) ($viewer['account_id'] ?? 0) .
-        ' owner.id=' .
-        $ownerId .
-        ' website.id=' .
-        $websiteId,
-);
+
 
 echo $twig->render('member.html', $data);

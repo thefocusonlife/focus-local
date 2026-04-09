@@ -23,9 +23,6 @@ if (!empty($_SESSION['flash_success'])) {
     unset($_SESSION['flash_success']);
 }
 
-error_log('MENUS PAGE SESSION ID: ' . session_id());
-error_log('MENUS PAGE SESSION CONTENTS: ' . print_r($_SESSION, true));
-
 require_once APP_ROOT . '/src/security/guard.php';
 
 require_once APP_ROOT . '/src/security/guard.php';
@@ -70,11 +67,6 @@ if ((int) ($_SESSION['id'] ?? 0) === 1) {
     $mem = (int) ($member['account_id'] ?? 0);
 
     $data['menus'] = $cms->getMenu()->getAll2($websiteId, $mem);
-}
-if (!empty($data['flash_failure'])) {
-    error_log('FLASH FAILURE present: ' . $data['flash_failure']);
-} else {
-    error_log('NO FLASH FAILURE present');
 }
 
 echo $twig->render('admin/menus.html', $data);

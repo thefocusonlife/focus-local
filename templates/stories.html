@@ -33,7 +33,11 @@
         <td>{{ story.created|date('M d Y') }}</td>
         <td>{{ story.menu_id }}</td><td>{{ story.storyorder }}</td>
         <td> {% if story.published  %} Yes {% else %} No {% endif %}</td>
-        <td><a href="{{ doc_root }}work/{{ story.id }}" class="btn btn-primary">edit </a></td>
+        <td>
+	        {% if session.id == story.member_id %}
+		        <a href="{{ doc_root }}work/{{ story.id }}" class="btn btn-primary">edit</a>
+	        {% endif %}
+        </td>
         <td><a href="{{ doc_root }}admin/story-delete/{{ story.id }}" class="btn btn-danger">delete</a></td>
       </tr>
       {% endif %}

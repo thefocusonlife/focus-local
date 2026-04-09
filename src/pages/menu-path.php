@@ -25,15 +25,6 @@ if (($parts[0] ?? '') === 'admin') {
     $page = $parts[0] ?? 'index';
     $id = (int) ($parts[1] ?? 0);
 }
-error_log(
-    '[menu-path] uri=' .
-        $_SERVER['REQUEST_URI'] .
-        ' path=' .
-        $path .
-        ' parts=' .
-        json_encode($parts),
-);
-error_log('[menu-path] page=' . ($page ?? 'NULL') . ' id=' . ($id ?? 'NULL'));
 
 // Admin routes: /admin/<page>/<id>
 if ($page === 'admin') {

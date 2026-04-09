@@ -128,14 +128,6 @@ if ($viewerId > 0) {
 // Navigation
 $data['navigation'] = $cms->getMenu()->getAll2((int) $website['id'], $menuOwnerId);
 
-// Optional debug
-if (defined('TFOL_ROUTE_DEBUG') && TFOL_ROUTE_DEBUG) {
-    $data['_debug_nav_owner'] = [
-        'viewerId' => $viewerId,
-        'memAccountId' => $memAccountId,
-        'menuOwnerId' => $menuOwnerId,
-    ];
-}
 
 // Only owners should get owner-visibility; everyone else sees public visibility
 $visibilityViewerId = $viewerId > 0 && $viewerId === $menuOwnerId ? $viewerId : null;
@@ -196,22 +188,6 @@ $menuAccountId = (int) ($menu['account_id'] ?? 0);
 // UberAdmin menus always source stories from website 1
 $storyWebsiteId = $menuAccountId === 1 ? 1 : $uiWebsiteId;
 
-// DEBUG: menu / website / story resolution
-
-error_log(
-    sprintf(
-        'MENU DEBUG: menuId=%d uiWebsite=%d storyWebsite=%d menuWebsite=%d masterId=%d storyMenuId=%d account=%d sessionWebsite=%s',
-        $menuId,
-        $uiWebsiteId ?? -1,
-        $storyWebsiteId ?? -1,
-        (int) ($menu['website'] ?? 0),
-        $masterMenuId,
-        $storyMenuId,
-        (int) ($menu['account_id'] ?? 0),
-        $_SESSION['website'] ?? 'NULL',
-    ),
-);
-
 // Sort defaults/overrides are per LOCAL menu row
 if ((int) $resolvedSorttypeId === 0) {
     $resolvedSorttypeId = (int) $cms->getSorttype()->resolveForMenu($menuId, 0);
@@ -222,24 +198,11 @@ if (defined('TFOL_ROUTE_DEBUG') && TFOL_ROUTE_DEBUG) {
     $data['_debug_sort'] = [
         'menuId' => $menuId ?? null,
         'preferredSorttypeId' => $preferredSorttypeId ?? null,
-        'resolvedSorttypeId' => $sorttypeId ?? null,
+        'resolvedSorttypeId' => $resolvedSorttypeId ?? null,
     ];
 }
 
-file_put_contents(
-    '/tmp/tfol-menu-call.log',
-    sprintf(
-        "%s menuId=%d masterId=%d storyMenuId=%d cross=%s sort=%d uri=%s\n",
-        date('c'),
-        $menuId,
-        $masterMenuId,
-        $storyMenuId,
-        $crossWebsite ? '1' : '0',
-        $resolvedSorttypeId,
-        $_SERVER['REQUEST_URI'] ?? '',
-    ),
-    FILE_APPEND,
-);
+
 // ------------------------------------------------------------
 // Sort selection (menu-based)
 // Priority: menu-scoped session -> global session -> member pref -> 0
@@ -260,26 +223,11 @@ $preferredSorttypeId = $hasMenuOverride
 $resolvedSorttypeId = (int) $cms->getSorttype()->resolveForMenu($menuId, $preferredSorttypeId);
 $data['active_sorttype_id'] = $resolvedSorttypeId;
 
-$resolvedSorttypeId = (int) $cms->getSorttype()->resolveForMenu($menuId, $preferredSorttypeId);
-$data['active_sorttype_id'] = $resolvedSorttypeId;
-
-// Optional: debug panel support
-if (defined('TFOL_ROUTE_DEBUG') && TFOL_ROUTE_DEBUG) {
-    $data['_debug_sort'] = [
-        'menuId' => $menuId,
-        'preferredSorttypeId' => $preferredSorttypeId,
-        'resolvedSorttypeId' => $resolvedSorttypeId,
-    ];
-}
-
 $viewerId = (int) ($_SESSION['id'] ?? 0);
 $memberFilter = $viewerId > 0 ? $viewerId : null;
 
 $published = $published ?? 1;
 $crossWebsite = false;
-error_log(
-    "MENU FETCH: website={$websiteId} menu={$menuId} viewer={$viewerId} preferred={$preferredSorttypeId} resolved={$resolvedSorttypeId}",
-);
 
 $data['stories'] = $cms->getStory()->getAll3(
     $storyWebsiteId, // source website for stories
@@ -288,12 +236,14 @@ $data['stories'] = $cms->getStory()->getAll3(
     $storyAccountFilter, // <-- use menu/account owner, e.g. 1 for UberAdmin
     300,
     $resolvedSorttypeId,
-    $crossWebsite,
+    $crossWebsite
 );
+
 //$menuOwnerId = 1; // guest
 $data['navigation'] = $cms->getMenu()->getAll2((int) $website['id'], $menuOwnerId);
 $data['current_path'] = "menu/$menuId";
 $data['current_menu_id'] = $menuId;
+
 // ------------------------------------------------------------
 // Sorttypes for menu default selection
 // ------------------------------------------------------------

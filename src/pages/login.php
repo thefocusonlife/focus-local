@@ -165,14 +165,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     );
                     $_SESSION['member_id'] = (int) $member['id'];
                     $_SESSION['role'] = $role;
-                    error_log(
-                        '[DB MEMBER CHECK] id=' .
-                            (int) ($dbMember['id'] ?? 0) .
-                            ' account_id=' .
-                            (int) ($dbMember['account_id'] ?? 0) .
-                            ' website=' .
-                            (int) ($dbMember['website'] ?? 0),
-                    );
+                    
                     if (session_status() !== PHP_SESSION_ACTIVE) {
                         session_start();
                     }
@@ -184,15 +177,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['account_id'] = (int) ($member['account_id'] ?? $member['id']);
                     $_SESSION['follow_id'] = (int) $_SESSION['account_id'];
                     $_SESSION['website'] = (int) $member['website'];
-                    error_log(
-                        '[LOGIN AFTER CREATE] id=' .
-                            ($_SESSION['id'] ?? 'NULL') .
-                            ' account_id=' .
-                            ($_SESSION['account_id'] ?? 'NULL') .
-                            ' website=' .
-                            ($_SESSION['website'] ?? 'NULL'),
-                    );
-
+                   
                     // Redirect to intended deep-link if present (and safe), else safe fallback
                     // After successful login, after setting $_SESSION['id'], $_SESSION['role'], $_SESSION['website']...
 
@@ -255,16 +240,6 @@ $data['website'] = $website;
 $data['doc_root'] = $config['doc_root'] ?? '/_stage/';
 $data['show_resend_verification'] = $showResendVerification;
 $data['csrf_token'] = csrf_token($csrfFormKey);
-error_log(
-    '[LOGIN BEFORE RENDER] id=' .
-        ($_SESSION['id'] ?? 'NULL') .
-        ' account_id=' .
-        ($_SESSION['account_id'] ?? 'NULL') .
-        ' website=' .
-        ($_SESSION['website'] ?? 'NULL') .
-        ' mem=' .
-        ($mem ?? 'NULL'),
-);
 
 echo $twig->render('login.html', $data);
 exit();

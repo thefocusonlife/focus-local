@@ -217,13 +217,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             (int) ($_SESSION['websiteid'] ?? 0),
     );
 
-    error_log(
-        'SORT SUBMIT: loggedIn=' .
-            (int) $isLoggedIn .
-            " website={$postWebsiteId} menu={$postedMenuId} chosen={$chosenSorttypeId} redirect={$returnUrl}",
-    );
-
-    redirect($returnUrl);
+        redirect($returnUrl);
     exit();
 }
 

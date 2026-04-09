@@ -200,21 +200,7 @@ if (empty($storyorder)) {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Form submitted
-    error_log(
-        '[work.php] POST update=' .
-            (isset($_POST['update']) ? 'yes' : 'no') .
-            ' files_image=' .
-            (isset($_FILES['image']) ? 'yes' : 'no') .
-            ' err=' .
-            ($_FILES['image']['error'] ?? 'NULL') .
-            ' tmp=' .
-            ($_FILES['image']['tmp_name'] ?? 'NULL') .
-            ' size=' .
-            ($_FILES['image']['size'] ?? 'NULL') .
-            ' name=' .
-            ($_FILES['image']['name'] ?? 'NULL'),
-    );
-
+   
     // ---- WRITE BOUNDARY (must be first meaningful enforcement) ----
 
     $role = (string) ($_SESSION['role'] ?? 'guest');
@@ -518,11 +504,5 @@ if (defined('DEV') && DEV) {
 if (defined('DEV') && DEV) {
     $data['debug_panel'] = $debugPanel;
 }
-error_log(
-    '[work.php] BEFORE RENDER ob_level=' .
-        ob_get_level() .
-        ' headers_sent=' .
-        (headers_sent() ? 'yes' : 'no'),
-);
 
 echo $twig->render('work.html', $data);

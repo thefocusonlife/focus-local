@@ -62,8 +62,9 @@
 							{% endif %}
 						</td>
 						<td>
-							<a href="{{ doc_root }}work/{{ story.id }}" class="btn btn-primary">edit
-							</a>
+							{% if session.id == story.member_id %}
+								<a href="{{ doc_root }}work/{{ story.id }}" class="btn btn-primary">edit</a>
+							{% endif %}
 						</td>
 						<td>
 							<a href="{{ doc_root }}admin/story-delete/{{ story.id }}" class="btn btn-danger">delete</a>
@@ -73,6 +74,5 @@
 
 			{% endfor %}
 		</table>
-
 	</main>
 {% endblock %}

@@ -1,16 +1,4 @@
 <?php
-error_log('[PAGE-NOT-FOUND] FILE=' . __FILE__);
-error_log('[PAGE-NOT-FOUND] CWD=' . getcwd());
-error_log('[PAGE-NOT-FOUND] uri=' . ($_SERVER['REQUEST_URI'] ?? 'NA'));
-
-error_log('[PAGE-NOT-FOUND] AFTER header logs');
-
-$bt = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 12);
-error_log('[PAGE-NOT-FOUND] bt_count=' . count($bt));
-
-foreach ($bt as $i => $f) {
-    error_log("[PAGE-NOT-FOUND] bt#$i file=" . ($f['file'] ?? 'NA') . ' line=' . ($f['line'] ?? 0));
-}
 
 http_response_code(404);
 

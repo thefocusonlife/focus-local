@@ -171,7 +171,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     try {
-        error_log('MENU DELETE EXECUTING: menuId=' . $menuId . ' csrf=' . ($_POST['csrf'] ?? ''));
+        
         $rowsDeleted = $cms->getMenu()->deleteForWebsite($menuId, $websiteId);
 
         if ($rowsDeleted > 0) {

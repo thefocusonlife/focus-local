@@ -115,21 +115,6 @@ if (!empty($_SESSION['flash_success'])) {
 $preferredSorttypeId = (int) ($_SESSION['sort_override_global'][$websiteId] ?? 0);
 $sorttypeId = $preferredSorttypeId > 0 ? $preferredSorttypeId : null;
 
-error_log(
-    'INDEX SORT DEBUG: routeWebsite=' .
-        (int) ($id ?? 0) .
-        ' resolvedWebsite=' .
-        $websiteId .
-        ' sessionWebsite=' .
-        (int) ($_SESSION['website'] ?? 0) .
-        ' sessionWebsiteId=' .
-        (int) ($_SESSION['websiteid'] ?? 0) .
-        ' globalOverride=' .
-        ($_SESSION['sort_override_global'][$websiteId] ?? 'NONE') .
-        ' chosenSorttypeId=' .
-        ($sorttypeId ?? 'NULL'),
-);
-
 $data['stories'] = $cms->getStory()->getAll3($websiteId, true, null, null, 100, $sorttypeId);
 
 /**
@@ -188,16 +173,6 @@ if (defined('TFOL_ROUTE_DEBUG') && TFOL_ROUTE_DEBUG) {
     ];
 }
 
-error_log(
-    'INDEX FINAL: route=' .
-        (int) ($id ?? 0) .
-        ' resolved=' .
-        $websiteId .
-        ' session.website=' .
-        (int) ($_SESSION['website'] ?? 0) .
-        ' session.websiteid=' .
-        (int) ($_SESSION['websiteid'] ?? 0),
-);
 
 echo $twig->render('index.html', $data);
 return;
