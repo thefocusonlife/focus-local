@@ -2,9 +2,8 @@
 {% block content %}
 
 	<main>
-		<!--	class="container" id="content">  -->
 		<section class="header">
-			<h1>Stories</h1>
+			<h1>Delete Image</h1>
 
 			{% if success %}
 				<div class="alert alert-success">{{ success }}</div>
@@ -12,68 +11,31 @@
 			{% if failure %}
 				<div class="alert alert-danger">{{ failure }}</div>
 			{% endif %}
-			{% if member.role != "family" %}
-				<p>
-					<a href="{{ doc_root }}admin/story/" class="btn btn-primary">Add new story</a>
-				</p>
-			{% endif %}
 		</section>
 
+		<p>Are you sure you want to delete this image?</p>
 
-		<table class="table">
+		{% if story.image_file %}
+			<p>
+				<img src="{{ doc_root }}uploads/{{ story.image_file }}" alt="{{ story.image_alt|e('html_attr') }}" class="delete-image-preview">
+			</p>
+		{% else %}
+			<p>No image is currently attached to this story.</p>
+		{% endif %}
 
-			<tr>
-				<!-- <th>Image</th><th>Title</th><th>Member ID</th><th>Family ID</th><th class="created">Created</th><th>Menu</th><th>Order</th><th class="pub">Public</th><th class="edit">Edit Story</th><th class="del">Delete</th> -->
-				<th>Image</th>
-				<th>Title</th>
-				<th>Member ID</th>
-				<th>Family ID</th>
-				<th>Created</th>
-				<th>Menu</th>
-				<th>Order</th>
-				<th>Public</th>
-				<th>Edit Story</th>
-				<th>Delete</th>
-			</tr>
-			{% for story in stories %}
-				{% if (session.account_id == story.family_id or session.id == story.member_id or session.account_id == story.member_id) or session.id == 1 %}
+		<p>
+			<strong>Story:</strong>
+			{{ story.title }}</p>
 
-					<tr>
-						<td>
-							{% if story.image_file %}
-								<img src="{{ doc_root }}uploads/{{ story.image_file}}" alt="{{ story.image_alt}}">
-							{% else %}
-								<img src="{{ doc_root }}uploads/blank.png" alt="">
-							{% endif %}
-						</td>
-						<td>
-							<strong>{{ story.title }}</strong>
-						</td>
-						<td>{{ story.member_id}}</td>
-						<td>{{ story.family_id }}</td>
-						<td>{{ story.created|date('M d Y') }}</td>
-						<td>{{ story.menu_id }}</td>
-						<td>{{ story.storyorder }}</td>
-						<td>
-							{% if story.published  %}
-								Yes
-							{% else %}
-								No
-							{% endif %}
-						</td>
-						<td>
-	                    {% if session.id == story.member_id %}
-		                    <a href="{{ doc_root }}work/{{ story.id }}" class="btn btn-primary">edit</a>
-	                    {% endif %}
-                        </td>
-						<td>
-							<a href="{{ doc_root }}admin/story-delete/{{ story.id }}" class="btn btn-danger">delete</a>
-						</td>
-					</tr>
-				{% endif %}
+		<form action="{{ refresh_href }}" method="post">
+			<input type="hidden" name="csrf" value="{{csrf_token}}">
 
-			{% endfor %}
-		</table>
+			<button type="submit" name="delete_image" value="1" class="btn btn-danger">
+				Delete Image
+			</button>
 
+			<a href="{{ doc_root }}work/{{ story.id }}" class="btn btn-secondary">Cancel</a>
+		</form>
 	</main>
+
 {% endblock %}
