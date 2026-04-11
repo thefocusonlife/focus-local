@@ -30,12 +30,12 @@ if ($sessionId !== 1 && $sessionId !== $targetId) {
 
 $errors = [];
 
-if ($_SERVER['REQUEST_METHOD'] != 'POST') {
-    // If form not posted
-    $member = $cms->getMember()->get($targetId); //  Get member details
-    $agegroups = $cms->getMember()->getAgegroups();
-    $plans = $cms->getMember()->getPlans();
-}
+//if ($_SERVER['REQUEST_METHOD'] != 'POST') {
+// If form not posted
+$member = $cms->getMember()->get($targetId); //  Get member details
+$agegroups = $cms->getMember()->getAgegroups();
+$plans = $cms->getMember()->getPlans();
+//}
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // If form was posted
@@ -49,15 +49,18 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $params = [
             'id' => $targetId,
 
-            // From the profile form (typical)
+            // From the profile form
             'forename' => trim((string) ($_POST['forename'] ?? ($current['forename'] ?? ''))),
             'surname' => trim((string) ($_POST['surname'] ?? ($current['surname'] ?? ''))),
+
+            // Email is NOT edited on this form; preserve current value
+            'email' => trim((string) ($current['email'] ?? '')),
 
             // Checkboxes often don’t post when unchecked; normalize to 0/1
             'publik' => isset($_POST['publik']) ? 1 : (int) ($current['publik'] ?? 0),
             'termsok' => isset($_POST['termsok']) ? 1 : (int) ($current['termsok'] ?? 0),
 
-            // NOT from POST (or only if you explicitly allow it)
+            // Preserve non-form fields from DB
             'account_id' => (int) ($current['account_id'] ?? 0),
             'photo_limit' => (int) ($current['photo_limit'] ?? 0),
             'agegroup' => (int) ($current['agegroup'] ?? 0),
@@ -67,8 +70,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // (Optional) basic validation examples
         if ($params['forename'] === '' || $params['surname'] === '') {
             $errors['message'] = 'Forename and surname are required.';
-        } elseif (!filter_var($params['email'], FILTER_VALIDATE_EMAIL)) {
-            $errors['message'] = 'Please enter a valid email address.';
+        } elseif ($params['email'] === '' || !filter_var($params['email'], FILTER_VALIDATE_EMAIL)) {
+            $errors['message'] = 'Stored email address is invalid.';
         }
 
         if (empty($errors)) {
