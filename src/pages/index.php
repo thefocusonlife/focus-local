@@ -1,10 +1,6 @@
 <?php
 declare(strict_types=1);
 
-error_log(
-    '[INDEX] ' . ($_SERVER['REQUEST_METHOD'] ?? '?') . ' ' . ($_SERVER['REQUEST_URI'] ?? '?'),
-);
-
 file_put_contents(
     '/tmp/tfol-route.log',
     date('c') .
@@ -172,7 +168,6 @@ if (defined('TFOL_ROUTE_DEBUG') && TFOL_ROUTE_DEBUG) {
         'resolved_website_id' => $websiteId,
     ];
 }
-
 
 echo $twig->render('index.html', $data);
 return;

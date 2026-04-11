@@ -4,8 +4,6 @@ declare(strict_types=1);
 require_once APP_ROOT . '/src/security/guard.php';
 guardPublic();
 
-error_log('MENU-DELETE SESSION ID: ' . session_id());
-
 if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }

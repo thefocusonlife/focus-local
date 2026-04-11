@@ -171,7 +171,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     try {
-        
         $rowsDeleted = $cms->getMenu()->deleteForWebsite($menuId, $websiteId);
 
         if ($rowsDeleted > 0) {
@@ -187,14 +186,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             session_start();
         }
         $_SESSION['flash_failure'] = 'Menu cannot be deleted: it contains dependent stories.';
-
-        // Check if headers already sent
-        if (headers_sent($file, $line)) {
-            error_log("HEADERS ALREADY SENT at $file:$line");
-        } else {
-            error_log('HEADERS NOT SENT — safe to redirect');
-        }
-        error_log('MENU-DELETE SESSION ID: ' . session_id());
 
         if (session_status() !== PHP_SESSION_ACTIVE) {
             session_start();
