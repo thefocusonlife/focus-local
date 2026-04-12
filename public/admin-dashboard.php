@@ -77,6 +77,7 @@ declare(strict_types=1) ?>
         <h2>TFOL Sites</h2>
         <a href="http://localhost/focus-local/public/index/1" target="_blank">Website 1 – Home</a>
         <a href="https://thefocusonlife.org/_stage/" target="_blank">Staging – Home</a>
+        <a href="https://thefocusonlife.org/index/1" target="_blank">Production – Home</a>
     </div>
 
     <div class="card">
