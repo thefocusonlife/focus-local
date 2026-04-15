@@ -14,7 +14,18 @@
 
 // Initialize TinyMCE for textareas with class "tinymce" and a custom toolbar
 
-tinymce.init({selector: 'textarea.tinymce', branding: false, plugins: 'anchor autolink  link lists searchreplace table wordcount', toolbar: 'undo redo | bold italic underline  link |  image table  | spellcheckdialog | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat'});
+tinymce.init({
+selector: 'textarea.tinymce',
+branding: false,
+
+// 🔧 FIX (add these lines)
+convert_urls: false,
+relative_urls: false,
+remove_script_host: false,
+
+plugins: 'anchor autolink  link lists searchreplace table wordcount',
+toolbar: 'undo redo | bold italic underline  link |  image table  | spellcheckdialog | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat'
+});
 		</script>
 
 
