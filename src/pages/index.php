@@ -98,12 +98,11 @@ if (!empty($_SESSION['flash_success'])) {
     $data['failure'] = (string) $_SESSION['flash_failure'];
     unset($_SESSION['flash_failure']);
 } else {
-    $guidetext = $cms->getQuickguide()->getAll();
-    if (!empty($guidetext) && !empty($guidetext[0])) {
-        $data['success'] = implode('', $guidetext[0]);
+    $guide = $cms->getQuickguide()->getOne();
+    if (!empty($guide['guidetext'])) {
+        $data['success'] = $guide['guidetext'];
     }
 }
-
 /**
  * Stories: use canonical websiteId already resolved above.
  * Do NOT overwrite websiteId from session here.

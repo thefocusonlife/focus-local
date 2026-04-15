@@ -21,14 +21,14 @@ class Quickguide // Define Session class
         return $this->db->runSql($sql, [$id])->fetch();  // Return pagelimit
     }
 */
-    // Get details of all sorttypes
-    public function getAll(): array
+    // Get quickguide te
+    public function getOne(): array|false
     {
         $sql = "SELECT guidetext
-                  FROM quickguide
-                  WHERE active = 1
-                  ORDER BY  RAND()
-                  LIMIT 1;";
-        return $this->db->runSql($sql)->fetchAll(); // Return all pagelimits
+            FROM quickguide
+            WHERE active = 1
+            ORDER BY RAND()
+            LIMIT 1";
+        return $this->db->runSql($sql)->fetch();
     }
 }
