@@ -1426,3 +1426,90 @@ main#content.container.admin form.narrow.story-delete .story-delete__actions inp
     max-width: 70%;
     height: auto;
 }
+
+/************************************/
+/* 8.05 Rides Forms                 */
+/************************************/
+/*
+form.ride-form {
+    outline: 4px solid red !important;
+}
+
+form.ride-form {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+}
+
+form.ride-form .ride-fields {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: 16px 24px !important;
+    align-items: start !important;
+    max-width: 1000px;
+}
+
+
+form.ride-form .ride-fields > .form-row {
+    display: flex !important;
+    flex-direction: column !important;
+    float: none !important;
+    width: auto !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    margin: 0 !important;
+    clear: none !important;
+}
+
+form.ride-form .ride-fields > .form-row label {
+    display: block !important;
+    margin: 0 0 0.35rem 0 !important;
+    font-weight: 600;
+}
+
+form.ride-form .ride-fields > .form-row input,
+form.ride-form .ride-fields > .form-row select,
+form.ride-form .ride-fields > .form-row textarea {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    float: none !important;
+}
+
+form.ride-form .ride-fields > .form-row.form-row-wide {
+    grid-column: 1 / -1 !important;
+}
+
+form.ride-form .form-actions {
+    display: block !important;
+    margin-top: 1rem !important;
+}
+
+form.ride-form .form-actions .btn {
+    display: inline-block !important;
+    margin-right: 0.5rem;
+    margin-bottom: 0.5rem;
+    vertical-align: middle;
+}
+
+@media (max-width: 800px) {
+    form.ride-form .ride-fields {
+        grid-template-columns: 1fr !important;
+    }
+
+    form.ride-form .ride-fields > .form-row.form-row-wide {
+        grid-column: auto !important;
+    }
+}
+
+.container.admin form.ride-form {
+    display: block !important;
+}
+
+.container.admin form.ride-form .ride-fields {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+}
+    */

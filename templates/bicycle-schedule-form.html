@@ -1,0 +1,177 @@
+{% block content %}
+	<style>
+		/* Break out of any parent layout grid */
+		.schedule-form {
+			display: block;
+			width: 100%;
+		}
+
+		.schedule-fields {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 16px 24px;
+			align-items: start;
+			max-width: 1000px;
+		}
+
+		.schedule-fields > .form-row {
+			display: flex;
+			flex-direction: column;
+			min-width: 0;
+			margin: 0;
+			float: none;
+			width: auto;
+		}
+
+		.schedule-fields > .form-row label {
+			display: block;
+			margin-bottom: 0.35rem;
+			font-weight: 600;
+		}
+
+		.schedule-fields > .form-row input,
+		.schedule-fields > .form-row select,
+		.schedule-fields > .form-row textarea {
+			width: 100%;
+			max-width: 100%;
+			box-sizing: border-box;
+			display: block;
+			margin: 0;
+			float: none;
+			height: 40px;
+			padding: 8px 10px;
+			font-size: 15px;
+			border: 1px solid #ccc;
+			border-radius: 4px;
+		}
+
+		/* Large text box */
+		.schedule-fields > .form-row textarea {
+			min-height: 140px;
+			height: auto;
+			padding: 10px;
+		}
+
+		/* Full-width rows */
+		.schedule-fields > .form-row.form-row-wide {
+			grid-column: 1 / -1;
+		}
+
+		.form-actions {
+			margin-top: 1rem;
+		}
+
+		.form-actions .btn {
+			display: inline-block;
+			margin-right: 0.5rem;
+			margin-bottom: 0.5rem;
+			vertical-align: middle;
+		}
+
+		/* Placeholder styling (optional but nice) */
+		::placeholder {
+			color: #999;
+			font-style: italic;
+		}
+
+		/* Mobile */
+		@media(max-width: 800px) {
+			.schedule-fields {
+				grid-template-columns: 1fr;
+			}
+
+			.schedule-fields > .form-row.form-row-wide {
+				grid-column: auto;
+			}
+		}
+	</style>
+
+	<main class="container" id="content">
+		<h1>
+			{% if mode == 'edit' %}Edit Group Ride{% else %}Add Group Ride
+			{% endif %}
+		</h1>
+
+		{% if failure %}
+			<div class="alert alert-danger">{{ failure }}</div>
+		{% endif %}
+
+		<form method="post" action="{{ doc_root }}bicycle/schedule-save" class="schedule-form">
+			<input type="hidden" name="id" value="{{ schedule.id }}">
+			<input
+			type="hidden" name="website_id" value="{{ websiteId }}">
+
+			<!-- <div class="form-row">
+							<label for="title">Title</label>
+							<input type="text" id="title" name="title" value="{{ schedule.title }}" required>
+						</div>
+			      -->
+			<form method="post" action="{{ doc_root }}bicycle/schedule-save" class="schedule-form">
+				<input type="hidden" name="id" value="{{ schedule.id }}">
+				<input type="hidden" name="website_id" value="{{ websiteId }}">
+
+				<section class="schedule-fields">
+					<div class="form-row">
+						<label for="title">Title</label>
+						<input type="text" id="title" name="title" value="{{ schedule.title }}" required>
+					</div>
+
+					<div class="form-row">
+						<label for="ride_type">Ride Type</label>
+						<select id="ride_type" name="ride_type">
+							<option value="">Select one</option>
+							<option value="Road" {% if schedule.ride_type == 'Road' %} selected {% endif %}>Road</option>
+							<option value="Gravel" {% if schedule.ride_type == 'Gravel' %} selected {% endif %}>Gravel</option>
+							<option value="Mountain Bike" {% if schedule.ride_type == 'Mountain Bike' %} selected {% endif %}>Mountain Bike</option>
+							<option value="Virtual" {% if schedule.ride_type == 'Virtual' %} selected {% endif %}>Virtual</option>
+							<option value="Hybrid" {% if schedule.ride_type == 'Hybrid' %} selected {% endif %}>Hybrid</option>
+							<option value="Casual" {% if schedule.ride_type == 'Casual' %} selected {% endif %}>Casual</option>
+							<option value="Commute" {% if schedule.ride_type == 'Commute' %} selected {% endif %}>Commute</option>
+							<option value="Event" {% if schedule.ride_type == 'Event' %} selected {% endif %}>Event</option>
+						</select>
+					</div>
+
+					<div class="form-row">
+						<label for="day_of_week">Day of Week</label>
+						<select id="day_of_week" name="day_of_week" required>
+							{% for day in ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'] %}
+								<option value="{{ day }}" {% if schedule.day_of_week == day %} selected {% endif %}>{{ day }}</option>
+							{% endfor %}
+						</select>
+					</div>
+
+					<div class="form-row">
+						<label for="start_time">Start Time</label>
+						<input type="time" id="start_time" name="start_time" value="{{ schedule.start_time }}" required>
+					</div>
+
+					<div class="form-row">
+						<label for="start_location">Start Location</label>
+						<input type="text" id="start_location" name="start_location" value="{{ schedule.start_location }}">
+					</div>
+
+					<div class="form-row">
+						<label for="sort_order">Sort Order</label>
+						<input type="number" id="sort_order" name="sort_order" value="{{ schedule.sort_order|default(0) }}">
+					</div>
+
+					<div class="form-row form-row-wide">
+						<label for="description">Description</label>
+						<textarea id="description" name="description" rows="5">{{ schedule.description }}</textarea>
+					</div>
+
+					<div class="form-row">
+						<label>
+							<input type="checkbox" name="is_active" value="1" {% if schedule.is_active %} checked {% endif %}>
+							Active
+						</label>
+					</div>
+				</section>
+
+				<p class="form-actions">
+					<button type="submit" class="btn btn-primary">Save Group Ride</button>
+					<a href="{{ doc_root }}index/44" class="btn btn-secondary">Back to Bicycle Club</a>
+				</p>
+			</form>
+		</main>
+	{% endblock %}

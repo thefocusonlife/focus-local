@@ -2,14 +2,226 @@
 {% block content %}
 
 	<main class="container grid" id="content">
-{% if failure %}
+		{% if failure %}
 			<div class="alert alert-danger">{{ failure }}</div>
 		{% endif %}
 		{% if success %}
 			<div class="alert alert-success">{{ success }}</div>
 		{% endif %}
 		{{ include('story-summaries.html') }}
+		{% if isBicycleClub %}
+			<section class="bicycle-club-module">
+				<div class="bicycle-club-header">
+					<h2>Group Ride Schedule</h2>
+					<p>Current ride schedule for Bend / Redmond Bicycle Club.</p>
+					<div class="bicycle-club-actions">
+						<a href="{{ doc_root }}bicycle/schedule-add" class="btn btn-primary">
+							Add Group Ride
+						</a>
+					</div>
+				</div>
 
+
+				{% if rideSchedules is empty %}
+					<div class="bicycle-empty-state">
+						<p>No group rides are scheduled yet.</p>
+					</div>
+				{% else %}
+					<div class="ride-schedule-list">
+						{% for schedule in rideSchedules %}
+							<article class="ride-schedule-card">
+								<header class="ride-schedule-header">
+									<h3>{{ schedule.title }}</h3>
+									<div class="ride-schedule-day">
+										{{ schedule.day_of_week }}
+										·
+										{{ schedule.start_time|date('g:i A') }}
+									</div>
+								</header>
+
+								<div class="ride-meta">
+									{% if schedule.ride_type %}
+										<span>{{ schedule.ride_type }}</span>
+									{% endif %}
+									{% if schedule.start_location %}
+										<span>·
+											{{ schedule.start_location }}</span>
+									{% endif %}
+								</div>
+
+								{% if schedule.description %}
+									<div class="ride-notes">
+										<p>{{ schedule.description }}</p>
+									</div>
+								{% endif %}
+
+								{% if session.id %}
+									<div class="bicycle-club-actions">{{ doc_root }}bicycle-schedule-edit/{{ schedule.id }}
+										<a href="" class="btn btn-primary">
+											Edit Group Ride
+										</a>
+									</div>
+								{% endif %}
+							</article>
+						{% endfor %}
+					</div>
+				{% endif %}
+			</section>
+
+			<section class="bicycle-club-module">
+				<div class="bicycle-club-header">
+					<h2>Club Notes</h2>
+					<p>Current member notes and ride updates.</p>
+				</div>
+				<div class="bicycle-club-actions">
+					<a href="{{ doc_root }}bicycle/note-add" class="btn btn-primary">
+						Add Club Note
+					</a>
+				</div>
+				{% if rideNotes is empty %}
+					<div class="bicycle-empty-state">
+						<p>No club notes yet.</p>
+					</div>
+				{% else %}
+					<div class="ride-note-list">
+						{% for note in rideNotes %}
+							<article class="ride-note-card">
+								<header class="ride-note-header">
+									<h3>{{ note.title }}</h3>
+									<div class="ride-note-date">
+										{% if note.note_date %}
+											{{ note.note_date|date('F j, Y') }}
+										{% else %}
+											{{ note.created|date('F j, Y') }}
+										{% endif %}
+									</div>
+								</header>
+
+								<div class="ride-notes">
+									<p>{{ note.note_text }}</p>
+								</div>
+
+								{% if note.forename or note.surname %}
+									<div class="ride-rider">
+										{{ note.forename }}
+										{{ note.surname }}
+									</div>
+								{% endif %}
+								{% if session.id %}
+									<div class="bicycle-club-actions">
+										<a href="{{ doc_root }}bicycle/note-edit/{{ note.id }}" class="btn btn-primary">
+											Edit Club Note
+										</a>
+									</div>
+								{% endif %}
+							</article>
+						{% endfor %}
+					</div>
+				{% endif %}
+			</section>
+
+			<section class="bicycle-club-module">
+				<div class="bicycle-club-header">
+					<h2>Bicycle Club Rides</h2>
+					<p>Recent rides from Bend / Redmond BC members.</p>
+
+					<div class="bicycle-club-actions">
+						<a href="{{ doc_root }}bicycle/submit?website=44" class="btn btn-primary">
+							Submit Ride
+						</a>
+					</div>
+				</div>
+
+				{% if rides is empty %}
+					<div class="bicycle-empty-state">
+						<p>No rides have been submitted yet.</p>
+					</div>
+				{% else %}
+					<div class="ride-feed">
+						{% for ride in rides %}
+							<article class="ride-card">
+								<header class="ride-card-header">
+									<h3>
+										{% if ride.title %}
+											{{ ride.title }}
+										{% else %}
+											Ride on
+											{{ ride.ride_date|date('F j, Y') }}
+										{% endif %}
+									</h3>
+									<div class="ride-date">{{ ride.ride_date|date('F j, Y') }}</div>
+								</header>
+
+								<div class="ride-rider">
+									{% if ride.forename or ride.surname %}
+										{{ ride.forename }}
+										{{ ride.surname }}
+									{% else %}
+										Club Member
+									{% endif %}
+								</div>
+
+								<div class="ride-meta">
+									<span>{{ ride.ride_type }}</span>
+									{% if ride.start_location %}
+										<span>·
+											{{ ride.start_location }}</span>
+									{% endif %}
+								</div>
+
+								<div class="ride-stats">
+									<div class="ride-stat">
+										<strong>
+											{% if ride.distance_miles is not null and ride.distance_miles != '' %}
+												{{ ride.distance_miles }}{% else %}—
+											{% endif %}
+										</strong>
+										<span>mi</span>
+									</div>
+									<div class="ride-stat">
+										<strong>
+											{% if ride.elapsed_minutes is not null and ride.elapsed_minutes != '' %}
+												{{ ride.elapsed_minutes }}{% else %}—
+											{% endif %}
+										</strong>
+										<span>min</span>
+									</div>
+									<div class="ride-stat">
+										<strong>
+											{% if ride.elevation_gain_ft is not null and ride.elevation_gain_ft != '' %}
+												{{ ride.elevation_gain_ft }}{% else %}—
+											{% endif %}
+										</strong>
+										<span>ft</span>
+									</div>
+									<div class="ride-stat">
+										<strong>
+											{% if ride.avg_speed_mph is not null and ride.avg_speed_mph != '' %}
+												{{ ride.avg_speed_mph }}{% else %}—
+											{% endif %}
+										</strong>
+										<span>mph</span>
+									</div>
+
+									{% if ride.avg_power_watts is not null and ride.avg_power_watts != '' %}
+										<div class="ride-stat">
+											<strong>{{ ride.avg_power_watts }}</strong>
+											<span>W</span>
+										</div>
+									{% endif %}
+								</div>
+
+								{% if ride.notes %}
+									<div class="ride-notes">
+										<p>{{ ride.notes }}</p>
+									</div>
+								{% endif %}
+							</article>
+						{% endfor %}
+					</div>
+				{% endif %}
+			</section>
+		{% endif %}
 
 	</main>
 {% endblock %}

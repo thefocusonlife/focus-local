@@ -1,0 +1,153 @@
+{% block content %}
+
+	<style>
+
+		.ride-form {
+			display: block;
+			width: 100%;
+		}
+
+		.ride-fields {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 16px 24px;
+			align-items: start;
+			max-width: 1000px;
+		}
+
+		.ride-fields > .form-row {
+			display: flex;
+			flex-direction: column;
+			min-width: 0;
+			margin: 0;
+			float: none;
+			width: auto;
+		}
+
+		.ride-fields > .form-row label {
+			display: block;
+			margin-bottom: 0.35rem;
+			font-weight: 600;
+		}
+
+		.ride-fields input,
+		.ride-fields select {
+			height: 40px;
+			padding: 8px 10px;
+			font-size: 15px;
+		}
+
+		.ride-fields textarea {
+			min-height: 140px;
+			padding: 10px;
+			font-size: 15px;
+		}
+
+		.ride-fields > .form-row.form-row-wide {
+			grid-column: 1 / -1;
+		}
+
+		.form-actions {
+			margin-top: 1rem;
+		}
+
+		.form-actions .btn {
+			display: inline-block;
+			margin-right: 0.5rem;
+			margin-bottom: 0.5rem;
+			vertical-align: middle;
+		}
+
+		@media(max-width: 800px) {
+			.ride-fields {
+				grid-template-columns: 1fr;
+			}
+
+			.ride-fields > .form-row.form-row-wide {
+				grid-column: auto;
+			}
+		}
+	</style>
+	<h1>Submit Ride</h1>
+	<p>Add a ride for the Bend / Redmond Bicycle Club.</p>
+	<main class="container" id="content">
+
+
+		{% if failure %}
+			<div class="alert alert-danger">{{ failure }}</div>
+		{% endif %}
+		{% if success %}
+			<div class="alert alert-success">{{ success }}</div>
+		{% endif %}
+
+
+		<form method="post" action="{{ doc_root }}bicycle/save" enctype="multipart/form-data" class="ride-form">
+
+			<section class="ride-fields">
+				<div class="form-row">
+					<label for="title">Ride Title</label>
+					<input type="text" id="title" name="title" maxlength="255" placeholder="[Enter route title]">
+				</div>
+
+				<div class="form-row">
+					<label for="ride_date">Ride Date</label>
+					<input type="date" id="ride_date" name="ride_date" required>
+				</div>
+
+				<div class="form-row">
+					<label for="ride_type">Ride Type</label>
+					<select id="ride_type" name="ride_type" required>
+						<option value="">Select one</option>
+						<option value="Road">Road</option>
+						<option value="Gravel">Gravel</option>
+						<option value="Mountain Bike">Mountain Bike</option>
+						<option value="Virtual">Virtual</option>
+						<option value="Hybrid">Hybrid</option>
+						<option value="Casual">Casual</option>
+						<option value="Commute">Commute</option>
+						<option value="Event">Event</option>
+					</select>
+				</div>
+
+				<div class="form-row">
+					<label for="start_location">Start Location</label>
+					<input type="text" id="start_location" name="start_location" maxlength="255" placeholder="[Redmond]">
+				</div>
+
+				<div class="form-row">
+					<label for="distance_miles">Distance (miles)</label>
+					<input type="number" id="distance_miles" name="distance_miles" min="0" step="0.01">
+				</div>
+
+				<div class="form-row">
+					<label for="elapsed_minutes">Elapsed Time (minutes)</label>
+					<input type="number" id="elapsed_minutes" name="elapsed_minutes" min="0" step="1">
+				</div>
+
+				<div class="form-row">
+					<label for="elevation_gain_ft">Elevation Gain (ft)</label>
+					<input type="number" id="elevation_gain_ft" name="elevation_gain_ft" min="0" step="1">
+				</div>
+
+				<div class="form-row form-row-wide">
+					<label for="notes">Notes</label>
+					<textarea id="notes" name="notes" rows="5" maxlength="5000"></textarea>
+				</div>
+
+				<div class="form-row form-row-wide">
+					<label for="gpx_file">GPX File</label>
+					<input type="file" id="gpx_file" name="gpx_file" accept=".gpx,.tcx,application/gpx+xml,application/xml,text/xml">
+					<small>Optional. Upload a GPX or TCX file to auto-fill ride metrics.</small>
+				</div>
+			</section>
+
+			<p class="form-actions">
+				<button type="submit" class="btn btn-primary">Save Ride</button>
+				<a href="{{ doc_root }}index/44" class="btn btn-secondary">Back to Bicycle Club</a>
+			</p>
+		</form>
+
+
+	</main>
+
+{% endblock %}

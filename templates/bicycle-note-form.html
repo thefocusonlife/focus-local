@@ -1,0 +1,45 @@
+{% extends 'layout.html' %}
+{% block content %}
+	<main class="container" id="content">
+		<h1>
+			{% if mode == 'edit' %}Edit Club Note{% else %}Add Club Note
+			{% endif %}
+		</h1>
+
+		{% if failure %}
+			<div class="alert alert-danger">{{ failure }}</div>
+		{% endif %}
+
+		<form method="post" action="{{ doc_root }}bicycle/note-save">
+			<input type="hidden" name="id" value="{{ note.id }}">
+			<input type="hidden" name="website_id" value="{{ websiteId }}">
+
+			<div class="form-row">
+				<label for="title">Title</label>
+				<input type="text" id="title" name="title" value="{{ note.title }}" required>
+			</div>
+
+			<div class="form-row">
+				<label for="note_date">Note Date</label>
+				<input type="date" id="note_date" name="note_date" value="{{ note.note_date }}">
+			</div>
+
+			<div class="form-row">
+				<label for="note_text">Note</label>
+				<textarea id="note_text" name="note_text" rows="6" required>{{ note.note_text }}</textarea>
+			</div>
+
+			<div class="form-row">
+				<label>
+					<input type="checkbox" name="is_active" value="1" {% if note.is_active %} checked {% endif %}>
+					Active
+				</label>
+			</div>
+
+			<div class="form-actions">
+				<button type="submit" class="btn btn-primary">Save Club Note</button>
+				<a href="{{ doc_root }}index/44" class="btn btn-secondary">Back to Bicycle Club</a>
+			</div>
+		</form>
+	</main>
+{% endblock %}

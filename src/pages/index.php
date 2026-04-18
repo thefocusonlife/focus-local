@@ -113,6 +113,119 @@ $sorttypeId = $preferredSorttypeId > 0 ? $preferredSorttypeId : null;
 $data['stories'] = $cms->getStory()->getAll3($websiteId, true, null, null, 100, $sorttypeId);
 
 /**
+ * Bicycle Club module for website 44.
+ * Keep normal website/story flow, then append ride feed data.
+ */
+//limit stories to 3 on bicycle website=44
+if ($websiteId === 44 && !empty($data['stories'])) {
+    $data['stories'] = array_slice($data['stories'], 0, 3);
+}
+$data['isBicycleClub'] = $websiteId === 44;
+$data['rides'] = [];
+$data['rideSchedules'] = [];
+$data['rideNotes'] = [];
+
+if ($data['isBicycleClub']) {
+    // Group ride schedule
+    $scheduleSql = "
+        SELECT
+            rs.id,
+            rs.website_id,
+            rs.member_id,
+            rs.title,
+            rs.ride_type,
+            rs.day_of_week,
+            rs.start_time,
+            rs.start_location,
+            rs.description,
+            rs.is_active,
+            rs.sort_order,
+            rs.created,
+            m.forename,
+            m.surname
+        FROM ride_schedule rs
+        LEFT JOIN member m ON m.id = rs.member_id
+        WHERE rs.website_id = :website_id
+          AND rs.is_active = 1
+        ORDER BY rs.sort_order ASC, rs.day_of_week ASC, rs.start_time ASC, rs.id ASC
+    ";
+
+    $scheduleStmt = $cms->getDb()->runSql($scheduleSql, [
+        'website_id' => $websiteId,
+    ]);
+    $data['rideSchedules'] = $scheduleStmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Club notes
+    $noteSql = "
+        SELECT
+            rn.id,
+            rn.website_id,
+            rn.member_id,
+            rn.title,
+            rn.note_text,
+            rn.note_date,
+            rn.is_active,
+            rn.created,
+            m.forename,
+            m.surname
+        FROM ride_note rn
+        LEFT JOIN member m ON m.id = rn.member_id
+        WHERE rn.website_id = :website_id
+          AND rn.is_active = 1
+        ORDER BY
+            CASE WHEN rn.note_date IS NULL THEN 1 ELSE 0 END,
+            rn.note_date DESC,
+            rn.created DESC,
+            rn.id DESC
+    ";
+
+    $noteStmt = $cms->getDb()->runSql($noteSql, [
+        'website_id' => $websiteId,
+    ]);
+    $data['rideNotes'] = $noteStmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Recent rides
+    $rideSql = "
+        SELECT
+            r.id,
+            r.website_id,
+            r.member_id,
+            r.ride_date,
+            r.start_time,
+            r.title,
+            r.ride_type,
+            r.start_location,
+            r.distance_miles,
+            r.elapsed_minutes,
+            r.elevation_gain_ft,
+            r.avg_speed_mph,
+            r.avg_power_watts,
+            r.np_power_watts,
+            r.notes,
+            r.gpx_file,
+            r.gpx_uploaded,
+            r.start_lat,
+            r.start_lng,
+            r.end_lat,
+            r.end_lng,
+            r.status,
+            r.created,
+            m.forename,
+            m.surname
+        FROM ride r
+        LEFT JOIN member m ON m.id = r.member_id
+        WHERE r.website_id = :website_id
+          AND r.status = 'published'
+        ORDER BY r.ride_date DESC, r.id DESC
+        LIMIT 20
+    ";
+
+    $rideStmt = $cms->getDb()->runSql($rideSql, [
+        'website_id' => $websiteId,
+    ]);
+    $data['rides'] = $rideStmt->fetchAll(PDO::FETCH_ASSOC);
+}
+/**
  * Navigation.
  */
 $data['navigation'] = $cms->getMenu()->getAll2($websiteId, 1);

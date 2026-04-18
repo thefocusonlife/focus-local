@@ -159,32 +159,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $errors['message'] = 'This email not valid for ' . (string) $website['name'];
                 } else {
                     // ✅ SUCCESS: create session
+                    if (session_status() !== PHP_SESSION_ACTIVE) {
+                        session_start();
+                    }
+
+                    session_regenerate_id(true);
+
                     $dbMember = $cms->getMember()->get((int) ($member['id'] ?? 0));
                     $role = strtolower(
                         trim((string) ($dbMember['role'] ?? ($member['role'] ?? 'member'))),
                     );
-                    $_SESSION['member_id'] = (int) $member['id'];
-                    $_SESSION['role'] = $role;
-                    
-                    if (session_status() !== PHP_SESSION_ACTIVE) {
-                        session_start();
-                    }
-                    session_regenerate_id(true);
+
                     $cms->getSession()->create($member, (int) $website['id']);
                     $cms->getMember()->clearFailedLogin($loginEmail);
+
                     // hard-assert the important bits (defensive)
+                    $_SESSION['member_id'] = (int) $member['id'];
                     $_SESSION['id'] = (int) $member['id'];
+                    $_SESSION['role'] = $role;
                     $_SESSION['account_id'] = (int) ($member['account_id'] ?? $member['id']);
                     $_SESSION['follow_id'] = (int) $_SESSION['account_id'];
-                    $_SESSION['website'] = (int) $member['website'];
-                   
-                    // Redirect to intended deep-link if present (and safe), else safe fallback
-                    // After successful login, after setting $_SESSION['id'], $_SESSION['role'], $_SESSION['website']...
 
+                    // Redirect to intended deep-link if present (and safe), else safe fallback
                     $returnTo = (string) ($_SESSION['return_to'] ?? '');
                     unset($_SESSION['return_to']);
-
-                    $role = (string) ($_SESSION['role'] ?? 'member');
 
                     // Normalize: strip DOC_ROOT prefix if present, so comparisons are consistent
                     if (
@@ -195,13 +193,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $returnTo = '/' . ltrim(substr($returnTo, strlen(DOC_ROOT)), '/');
                     }
 
-                    // If return_to points to admin and user isn't admin/uber, override to member grid
-
-                    // Never redirect to admin pages via deep-link return_to (Week 3 hard rule)
+                    // Never redirect to admin pages via deep-link return_to
                     if ($returnTo !== '' && str_starts_with($returnTo, '/admin/')) {
                         $returnTo = '';
                     }
-                    // Choose landing
+
+                    // Preserve website context for deep links like /index/44
+                    if ($returnTo !== '' && preg_match('#^/index/(\\d+)$#', $returnTo, $matches)) {
+                        $returnWebsiteId = (int) $matches[1];
+                        $_SESSION['website'] = $returnWebsiteId;
+                        $_SESSION['websiteid'] = $returnWebsiteId;
+                        $_SESSION['menu_website'] = $returnWebsiteId;
+                    } else {
+                        $_SESSION['website'] = (int) $member['website'];
+                        $_SESSION['websiteid'] = (int) $member['website'];
+                        $_SESSION['menu_website'] = (int) $member['website'];
+                    }
+
                     if ($returnTo !== '') {
                         csrf_rotate($csrfFormKey);
                         redirect(ltrim($returnTo, '/'));
