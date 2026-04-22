@@ -50,6 +50,18 @@
 						<a href="{{ doc_root}}admin/members/" class="btn btn-primary">View</a>
 					</td>
 				</tr>
+				{% if show_ride_report %}
+					<tr>
+						<td>
+							<strong>Ride Report</strong>
+						</td>
+						<td>-</td>
+						<td></td>
+						<td>
+							<a href="{{ doc_root }}admin/ride_report/" class="btn btn-primary">View</a>
+						</td>
+					</tr>
+				{% endif %}
 			</table>
 		{% else %}
 			<table class="admin">
@@ -93,6 +105,18 @@
 						<a href="{{ doc_root}}admin/members/" class="btn btn-primary">View</a>
 					</td>
 				</tr>
+				{% if show_ride_report %}
+					<tr>
+						<td>
+							<strong>Ride Report</strong>
+						</td>
+						<td>-</td>
+						<td></td>
+						<td>
+							<a href="{{ doc_root }}admin/ride_report/" class="btn btn-primary">View</a>
+						</td>
+					</tr>
+				{% endif %}
 				<tr>
 					<td>
 						<strong>Websites</strong>

@@ -1,0 +1,350 @@
+{% extends 'admin/layout.html' %}
+
+{% block content %}
+	<main>
+		<section class="header">
+			<h1>Ride Statistics Report</h1>
+			<p>
+				Website
+				{{ website.id }}
+				bicycle club report. One row per submitted ride, with filters and summary statistics.
+			</p>
+		</section>
+
+		<style>
+			.ride-report-wrap {
+				font-family: Arial, Helvetica, sans-serif;
+				color: #333;
+			}
+
+			.ride-report-filters,
+			.ride-report-summary {
+				display: flex;
+				flex-wrap: wrap;
+				gap: 12px;
+				margin-bottom: 20px;
+			}
+
+			.ride-report-filter,
+			.ride-report-stat {
+				background: #f5f5f5;
+				border: 1px solid #ddd;
+				border-radius: 4px;
+				padding: 12px;
+			}
+
+			.ride-report-filter label {
+				display: block;
+				font-size: 12px;
+				font-weight: bold;
+				color: #666;
+				margin-bottom: 6px;
+				text-transform: uppercase;
+			}
+
+			.ride-report-filter input,
+			.ride-report-filter select {
+				padding: 8px 10px;
+				min-width: 160px;
+				border: 1px solid #bbb;
+				border-radius: 4px;
+				font-size: 14px;
+				background: #fff;
+			}
+
+			.ride-report-actions {
+				display: flex;
+				align-items: flex-end;
+				gap: 10px;
+			}
+
+			.ride-report-btn {
+				display: inline-block;
+				padding: 10px 16px;
+				background: #2f5d86;
+				color: #fff;
+				text-decoration: none;
+				border-radius: 4px;
+				font-weight: bold;
+				border: none;
+				cursor: pointer;
+			}
+
+			.ride-report-btn:hover {
+				background: #244866;
+			}
+
+			.ride-report-stat {
+				min-width: 160px;
+			}
+
+			.ride-report-stat-label {
+				font-size: 12px;
+				text-transform: uppercase;
+				color: #777;
+				margin-bottom: 6px;
+				font-weight: bold;
+			}
+
+			.ride-report-stat-value {
+				font-size: 24px;
+				font-weight: 700;
+				color: #2f5d86;
+			}
+
+			.ride-report-table-wrap {
+				overflow-x: auto;
+				border: 1px solid #ddd;
+				background: #fff;
+			}
+
+			.ride-report-table {
+				width: 100%;
+				min-width: 1800px;
+				border-collapse: collapse;
+				font-size: 14px;
+			}
+
+			.ride-report-table th,
+			.ride-report-table td {
+				border: 1px solid #ddd;
+				padding: 10px 8px;
+				text-align: left;
+				vertical-align: top;
+				white-space: nowrap;
+			}
+
+			.ride-report-table th {
+				background: #eaeaea;
+				color: #444;
+				font-size: 13px;
+				text-transform: uppercase;
+			}
+
+			.ride-report-table tr:nth-child(even) td {
+				background: #fafafa;
+			}
+
+			.ride-report-table td.notes-cell {
+				white-space: normal;
+				min-width: 240px;
+			}
+
+			.ride-report-table td.title-cell {
+				min-width: 220px;
+				white-space: normal;
+			}
+
+			.ride-report-table {
+				width: max-content;
+				min-width: 100%;
+				border-collapse: collapse;
+				table-layout: auto;
+			}
+
+			.ride-report-badge {
+				display: inline-block;
+				padding: 4px 8px;
+				border-radius: 12px;
+				font-size: 12px;
+				font-weight: bold;
+				text-transform: uppercase;
+			}
+
+			.status-published {
+				background: #dff0d8;
+				color: #3c763d;
+			}
+
+			.status-draft {
+				background: #fcf8e3;
+				color: #8a6d3b;
+			}
+
+			.status-archived {
+				background: #eee;
+				color: #666;
+			}
+		</style>
+
+		<div class="ride-report-wrap">
+
+			<form method="get" class="ride-report-filters">
+				<div class="ride-report-filter">
+					<label for="from_date">From Date</label>
+					<input type="date" id="from_date" name="from_date" value="{{ filters.from_date }}">
+				</div>
+
+				<div class="ride-report-filter">
+					<label for="to_date">To Date</label>
+					<input type="date" id="to_date" name="to_date" value="{{ filters.to_date }}">
+				</div>
+
+				<div class="ride-report-filter">
+					<label for="member_id">Member</label>
+					<select id="member_id" name="member_id">
+						<option value="">All Members</option>
+						{% for member in members %}
+							<option value="{{ member.id }}" {% if filters.member_id == member.id %} selected {% endif %}>
+								{{ member.member_name|trim ?: ('Member #' ~ member.id) }}
+							</option>
+						{% endfor %}
+					</select>
+				</div>
+
+				<div class="ride-report-filter">
+					<label for="ride_type">Ride Type</label>
+					<select id="ride_type" name="ride_type">
+						<option value="">All Types</option>
+						{% for option in ride_type_options %}
+							<option value="{{ option }}" {% if filters.ride_type == option %} selected {% endif %}></option>
+							{{ option }}
+						</option>
+					{% endfor %}
+				</select>
+			</div>
+
+			<div class="ride-report-filter">
+				<label for="status">Status</label>
+				<select id="status" name="status">
+					<option value="">All Statuses</option>
+					<option value="published" {% if filters.status == 'published' %} selected {% endif %}>Published</option>
+					<option value="draft" {% if filters.status == 'draft' %} selected {% endif %}>Draft</option>
+					<option value="archived" {% if filters.status == 'archived' %} selected {% endif %}>Archived</option>
+				</select>
+			</div>
+
+			<div class="ride-report-filter">
+				<label for="gpx_uploaded">GPX Uploaded</label>
+				<select id="gpx_uploaded" name="gpx_uploaded">
+					<option value="">All</option>
+					<option value="1" {% if filters.gpx_uploaded == '1' %} selected {% endif %}>Yes</option>
+					<option value="0" {% if filters.gpx_uploaded == '0' %} selected {% endif %}>No</option>
+				</select>
+			</div>
+
+			<div class="ride-report-actions">
+				<button class="ride-report-btn" type="submit">Filter Report</button>
+				<a class="ride-report-btn" href="{{ doc_root }}admin/ride_report/">Clear Filters</a>
+			</div>
+		</form>
+
+		<div class="ride-report-summary">
+			<div class="ride-report-stat">
+				<div class="ride-report-stat-label">Total Rides</div>
+				<div class="ride-report-stat-value">{{ summary.total_rides|number_format }}</div>
+			</div>
+
+			<div class="ride-report-stat">
+				<div class="ride-report-stat-label">Total Miles</div>
+				<div class="ride-report-stat-value">{{ summary.total_miles|number_format(1) }}</div>
+			</div>
+
+			<div class="ride-report-stat">
+				<div class="ride-report-stat-label">Total Elevation</div>
+				<div class="ride-report-stat-value">{{ summary.total_elevation|number_format }}
+					ft</div>
+			</div>
+
+			<div class="ride-report-stat">
+				<div class="ride-report-stat-label">Avg Distance</div>
+				<div class="ride-report-stat-value">{{ summary.avg_distance|number_format(1) }}
+					mi</div>
+			</div>
+
+			<div class="ride-report-stat">
+				<div class="ride-report-stat-label">Avg Speed</div>
+				<div class="ride-report-stat-value">{{ summary.avg_speed|number_format(1) }}
+					mph</div>
+			</div>
+
+			<div class="ride-report-stat">
+				<div class="ride-report-stat-label">Active Riders</div>
+				<div class="ride-report-stat-value">{{ summary.active_riders|number_format }}</div>
+			</div>
+		</div>
+
+		<div class="ride-report-table-wrap">
+			<table class="ride-report-table">
+				<thead>
+					<tr>
+						<th>Ride Date</th>
+						<th>Start Time</th>
+						<th>Title</th>
+						<th>Member</th>
+						<th>Ride Type</th>
+						<th>Start Location</th>
+						<th>Distance (mi)</th>
+						<th>Elapsed (min)</th>
+						<th>Elevation Gain (ft)</th>
+						<th>Avg Speed (mph)</th>
+						<th>Avg Power (W)</th>
+						<th>NP Power (W)</th>
+						<th>GPX Uploaded</th>
+						<th>Status</th>
+						<th>Created</th>
+						<th>Notes</th>
+						<th>Ride ID</th>
+						<th>Website ID</th>
+						<th>Member ID</th>
+						<th>GPX File</th>
+						<th>Start Lat</th>
+						<th>Start Lng</th>
+						<th>End Lat</th>
+						<th>End Lng</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% if rides %}
+						{% for ride in rides %}
+							{% set ride_status_class = 'status-archived' %}
+							{% if ride.status == 'published' %}
+								{% set ride_status_class = 'status-published' %}
+							{% elseif ride.status == 'draft' %}
+								{% set ride_status_class = 'status-draft' %}
+							{% endif %}
+
+							<tr>
+								<td>{{ ride.ride_date }}</td>
+								<td>{{ ride.start_time }}</td>
+								<td class="title-cell">{{ ride.title }}</td>
+								<td>{{ ride.member_name|trim ?: ('Member #' ~ ride.member_id) }}</td>
+								<td>{{ ride.ride_type }}</td>
+								<td>{{ ride.start_location }}</td>
+								<td>{{ ride.distance_miles }}</td>
+								<td>{{ ride.elapsed_minutes }}</td>
+								<td>{{ ride.elevation_gain_ft }}</td>
+								<td>{{ ride.avg_speed_mph }}</td>
+								<td>{{ ride.avg_power_watts }}</td>
+								<td>{{ ride.np_power_watts }}</td>
+								<td>
+									{% if ride.gpx_uploaded == 1 %}Yes{% else %}No
+									{% endif %}
+								</td>
+								<td>
+									<span class="ride-report-badge {{ ride_status_class }}">
+										{{ ride.status }}
+									</span>
+								</td>
+								<td>{{ ride.created }}</td>
+								<td class="notes-cell">{{ ride.notes|nl2br }}</td>
+								<td>{{ ride.id }}</td>
+								<td>{{ ride.website_id }}</td>
+								<td>{{ ride.member_id }}</td>
+								<td>{{ ride.gpx_file }}</td>
+								<td>{{ ride.start_lat }}</td>
+								<td>{{ ride.start_lng }}</td>
+								<td>{{ ride.end_lat }}</td>
+								<td>{{ ride.end_lng }}</td>
+							</tr>
+						{% endfor %}
+					{% else %}
+						<tr>
+							<td colspan="24">No rides found for the selected filters.</td>
+						</tr>
+					{% endif %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+</main>{% endblock %}

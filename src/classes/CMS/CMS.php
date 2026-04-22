@@ -27,6 +27,7 @@ class CMS
     protected $notetype = null;
     protected $website = null;
     protected $quickguide = null;
+    protected $ride = null; //Stores reference to Ride object
 
     public function __construct($dsn, $username, $password)
     {
@@ -232,6 +233,14 @@ class CMS
         }
         return $this->website; // Return website object
     } // Return website object
+
+    public function getRide(): Ride
+    {
+        // if (!$this->ride === null) {
+        $this->ride = new Ride($this->db);
+        // }
+        return $this->ride;
+    }
     public function redirect(string $path, array $params = []): void
     {
         // Ensure path is relative (no leading slash required)
@@ -245,4 +254,5 @@ class CMS
         exit();
     }
 }
+
 ?>

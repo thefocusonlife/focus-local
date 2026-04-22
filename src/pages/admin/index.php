@@ -21,17 +21,16 @@ if (!$website || !isset($website['id'])) {
     $website = $cms->getWebsite()->getById(1);
 }
 
-// Capability flag for UI only (server-side enforcement still required in each controller)
+// Capability flag for UI only
 $role = (string) ($_SESSION['role'] ?? 'guest');
 $data = [];
 $data['isUber'] = $role === 'uber';
 $data['website'] = $website;
+$data['show_ride_report'] = $websiteId === 44;
 
-// Dashboard metrics (counts)
+// Dashboard metrics
 $data['story_count'] = $cms->getStory()->count();
-
 $data['menu_count'] = $cms->getMenu()->count();
-
 $data['member_count'] = $cms->getMember()->count();
 $data['website_count'] = $cms->getWebsite()->count();
 

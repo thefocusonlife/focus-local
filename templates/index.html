@@ -14,11 +14,11 @@
 				<div class="bicycle-club-header">
 					<h2>Group Ride Schedule</h2>
 					<p>Current ride schedule for Bend / Redmond Bicycle Club.</p>
-					<div class="bicycle-club-actions">
-						<a href="{{ doc_root }}bicycle/schedule-add" class="btn btn-primary">
-							Add Group Ride
-						</a>
-					</div>
+					{% if session.id == 1 or session.id == 339 %}
+						<div class="bicycle-club-actions">
+							<a href="{{ doc_root }}bicycle-schedule-add" class="btn btn-primary">Add Group Ride</a>
+						</div>
+					{% endif %}
 				</div>
 
 
@@ -56,8 +56,8 @@
 								{% endif %}
 
 								{% if session.id %}
-									<div class="bicycle-club-actions">{{ doc_root }}bicycle-schedule-edit/{{ schedule.id }}
-										<a href="" class="btn btn-primary">
+									<div class="bicycle-club-actions">
+										<a href="{{ doc_root }}bicycle-schedule-edit/{{ schedule.id }}" class="btn btn-primary">
 											Edit Group Ride
 										</a>
 									</div>
@@ -74,7 +74,7 @@
 					<p>Current member notes and ride updates.</p>
 				</div>
 				<div class="bicycle-club-actions">
-					<a href="{{ doc_root }}bicycle/note-add" class="btn btn-primary">
+					<a href="{{ doc_root }}bicycle-note-add/{{ note.id }}" class="btn btn-primary">
 						Add Club Note
 					</a>
 				</div>
@@ -109,7 +109,7 @@
 								{% endif %}
 								{% if session.id %}
 									<div class="bicycle-club-actions">
-										<a href="{{ doc_root }}bicycle/note-edit/{{ note.id }}" class="btn btn-primary">
+										<a href="{{ doc_root }}bicycle-note-edit/{{ note.id }}" class="btn btn-primary">
 											Edit Club Note
 										</a>
 									</div>
@@ -126,7 +126,7 @@
 					<p>Recent rides from Bend / Redmond BC members.</p>
 
 					<div class="bicycle-club-actions">
-						<a href="{{ doc_root }}bicycle/submit?website=44" class="btn btn-primary">
+						<a href="{{ doc_root }}bicycle-submit?website=44" class="btn btn-primary">
 							Submit Ride
 						</a>
 					</div>
