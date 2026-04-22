@@ -11,6 +11,7 @@ if ($viewerId <= 0 || $role === 'guest') {
     exit();
 }
 
+include APP_ROOT . '/src/pages/menu-path.php';
 $id = (int) ($id ?? ($_GET['id'] ?? 0));
 if ($id <= 0) {
     $_SESSION['flash_failure'] = 'Invalid note id.';

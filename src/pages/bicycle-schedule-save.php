@@ -16,6 +16,14 @@ if ($viewerId <= 0 || $role === 'guest') {
     exit();
 }
 
+$groupRideManagerId = 339;
+
+if ($viewerId !== 1 && $viewerId !== $groupRideManagerId) {
+    $_SESSION['flash_failure'] = 'You do not have permission to manage group rides.';
+    redirect('index/44');
+    exit();
+}
+
 $id = (int) ($_POST['id'] ?? 0);
 $websiteId = 44;
 
@@ -30,7 +38,7 @@ $sortOrder = (int) ($_POST['sort_order'] ?? 0);
 
 if ($title === '' || $dayOfWeek === '' || $startTime === '') {
     $_SESSION['flash_failure'] = 'Title, day, and start time are required.';
-    redirect($id > 0 ? 'bicycle/schedule-edit/' . $id : 'bicycle/schedule-add');
+    redirect($id > 0 ? 'bicycle-schedule-edit/' . $id : 'bicycle-schedule-add');
     exit();
 }
 

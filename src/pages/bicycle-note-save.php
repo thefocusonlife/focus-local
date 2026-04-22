@@ -26,7 +26,7 @@ $isActive = isset($_POST['is_active']) ? 1 : 0;
 
 if ($title === '' || $noteText === '') {
     $_SESSION['flash_failure'] = 'Title and note text are required.';
-    redirect($id > 0 ? 'bicycle/note-edit/' . $id : 'bicycle/note-add');
+    redirect($id > 0 ? 'bicycle-note-edit/' . $id : 'bicycle-note-add');
     exit();
 }
 

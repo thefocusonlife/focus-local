@@ -10,7 +10,8 @@ if ($viewerId <= 0 || $role === 'guest') {
     redirect('login');
     exit();
 }
-
+require_once APP_ROOT . '/src/security/guard.php';
+include APP_ROOT . '/src/pages/menu-path.php';
 $data = [
     'mode' => 'add',
     'websiteId' => 44,

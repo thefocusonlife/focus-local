@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: ' . DOC_ROOT . 'bicycle/submit?website=44');
+    header('Location: ' . DOC_ROOT . 'bicycle-submit?website=44');
     exit();
 }
 
@@ -15,7 +15,8 @@ if ($viewerId <= 0 || $role === 'guest') {
     redirect('login');
     exit();
 }
-
+require_once APP_ROOT . '/src/security/guard.php';
+include APP_ROOT . '/src/pages/menu-path.php';
 $websiteId = (int) ($_POST['website_id'] ?? 44);
 if ($websiteId !== 44) {
     $websiteId = 44;
@@ -34,7 +35,7 @@ $notes = trim((string) ($_POST['notes'] ?? ''));
 
 if ($rideDate === '' || $rideType === '') {
     $_SESSION['flash_failure'] = 'Ride date and ride type are required.';
-    header('Location: ' . DOC_ROOT . 'bicycle/submit?website=44');
+    header('Location: ' . DOC_ROOT . 'bicycle-submit?website=44');
     exit();
 }
 
@@ -409,20 +410,20 @@ $uploadFileUploadedValue = 0;
 if (!empty($_FILES['gpx_file']['name'])) {
     if (!isset($_FILES['gpx_file']['error']) || $_FILES['gpx_file']['error'] !== UPLOAD_ERR_OK) {
         $_SESSION['flash_failure'] = 'There was a problem uploading the ride file.';
-        header('Location: ' . DOC_ROOT . 'bicycle/submit?website=44');
+        header('Location: ' . DOC_ROOT . 'bicycle-submit?website=44');
         exit();
     }
 
     $extension = strtolower(pathinfo($_FILES['gpx_file']['name'], PATHINFO_EXTENSION));
     if (!in_array($extension, ['gpx', 'tcx'], true)) {
         $_SESSION['flash_failure'] = 'Only GPX and TCX files are allowed.';
-        header('Location: ' . DOC_ROOT . 'bicycle/submit?website=44');
+        header('Location: ' . DOC_ROOT . 'bicycle-submit?website=44');
         exit();
     }
 
     if ((int) $_FILES['gpx_file']['size'] > 5 * 1024 * 1024) {
         $_SESSION['flash_failure'] = 'The ride file is too large. Max size is 5 MB.';
-        header('Location: ' . DOC_ROOT . 'bicycle/submit?website=44');
+        header('Location: ' . DOC_ROOT . 'bicycle-submit?website=44');
         exit();
     }
 
@@ -433,7 +434,7 @@ if (!empty($_FILES['gpx_file']['name'])) {
         !is_dir($uploadDirectory)
     ) {
         $_SESSION['flash_failure'] = 'Upload folder could not be created.';
-        header('Location: ' . DOC_ROOT . 'bicycle/submit?website=44');
+        header('Location: ' . DOC_ROOT . 'bicycle-submit?website=44');
         exit();
     }
 
@@ -442,7 +443,7 @@ if (!empty($_FILES['gpx_file']['name'])) {
 
     if (!move_uploaded_file($_FILES['gpx_file']['tmp_name'], $destinationPath)) {
         $_SESSION['flash_failure'] = 'GPX file could not be saved.';
-        header('Location: ' . DOC_ROOT . 'bicycle/submit?website=44');
+        header('Location: ' . DOC_ROOT . 'bicycle-submit?website=44');
         exit();
     }
 
@@ -471,7 +472,7 @@ if (!empty($_FILES['gpx_file']['name'])) {
     } catch (Throwable $e) {
         @unlink($destinationPath);
         $_SESSION['flash_failure'] = 'The ride file could not be parsed: ' . $e->getMessage();
-        header('Location: ' . DOC_ROOT . 'bicycle/submit?website=44');
+        header('Location: ' . DOC_ROOT . 'bicycle-submit?website=44');
         exit();
     }
 }

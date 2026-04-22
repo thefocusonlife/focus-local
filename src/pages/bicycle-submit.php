@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
-
+require_once APP_ROOT . '/src/security/guard.php';
+include APP_ROOT . '/src/pages/menu-path.php';
 $data = [];
 $websiteId = (int) ($_GET['website'] ?? 44);
 $data['websiteId'] = $websiteId;

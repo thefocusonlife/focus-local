@@ -10,7 +10,15 @@ if ($viewerId <= 0 || $role === 'guest') {
     redirect('login');
     exit();
 }
+$groupRideManagerId = 339;
 
+if ($viewerId !== 1 && $viewerId !== $groupRideManagerId) {
+    $_SESSION['flash_failure'] = 'You do not have permission to manage group rides.';
+    redirect('index/44');
+    exit();
+}
+
+include APP_ROOT . '/src/pages/menu-path.php';
 $data = [
     'mode' => 'add',
     'websiteId' => 44,
