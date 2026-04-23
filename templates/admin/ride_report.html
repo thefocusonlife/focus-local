@@ -279,7 +279,7 @@
 						<th>Elevation Gain (ft)</th>
 						<th>Avg Speed (mph)</th>
 						<th>Avg Power (W)</th>
-						<th>NP Power (W)</th>
+						<th class="num-col">Avg HR (bpm)</th>
 						<th>GPX Uploaded</th>
 						<th>Status</th>
 						<th>Created</th>
@@ -310,13 +310,22 @@
 								<td class="title-cell">{{ ride.title }}</td>
 								<td>{{ ride.member_name|trim ?: ('Member #' ~ ride.member_id) }}</td>
 								<td>{{ ride.ride_type }}</td>
-								<td>{{ ride.start_location }}</td>
+								<td>
+									{% if ride.start_location %}
+										{{ ride.start_location }}
+									{% elseif ride.start_lat and ride.start_lng %}
+										{{ ride.start_lat }},
+										{{ ride.start_lng }}
+									{% else %}
+										-
+									{% endif %}
+								</td>
 								<td>{{ ride.distance_miles }}</td>
 								<td>{{ ride.elapsed_minutes }}</td>
 								<td>{{ ride.elevation_gain_ft }}</td>
 								<td>{{ ride.avg_speed_mph }}</td>
 								<td>{{ ride.avg_power_watts }}</td>
-								<td>{{ ride.np_power_watts }}</td>
+								<td class="num-cell">{{ ride.avg_heart_rate }}</td>
 								<td>
 									{% if ride.gpx_uploaded == 1 %}Yes{% else %}No
 									{% endif %}

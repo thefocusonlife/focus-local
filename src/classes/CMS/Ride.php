@@ -78,7 +78,7 @@ class Ride
                 r.elevation_gain_ft,
                 r.avg_speed_mph,
                 r.avg_power_watts,
-                r.np_power_watts,
+                r.avg_heart_rate,
                 r.notes,
                 r.gpx_file,
                 r.gpx_uploaded,
