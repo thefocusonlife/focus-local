@@ -278,20 +278,23 @@
 						<th>Elapsed (min)</th>
 						<th>Elevation Gain (ft)</th>
 						<th>Avg Speed (mph)</th>
+						<th class="num-col">Max Speed (mph)</th>
 						<th>Avg Power (W)</th>
+						<th class="num-col">Max Power (W)</th>
 						<th class="num-col">Avg HR (bpm)</th>
-						<th>GPX Uploaded</th>
-						<th>Status</th>
-						<th>Created</th>
+						<th class="num-col">Max HR (bpm)</th>
+						<!--	<th>GPX Uploaded</th>
+																														<th>Status</th> -->
+						<th>Date</th>
 						<th>Notes</th>
-						<th>Ride ID</th>
-						<th>Website ID</th>
-						<th>Member ID</th>
-						<th>GPX File</th>
-						<th>Start Lat</th>
-						<th>Start Lng</th>
-						<th>End Lat</th>
-						<th>End Lng</th>
+						<!--	<th>Ride ID</th>
+																														<th>Website ID</th>
+																														<th>Member ID</th>
+																														<th>GPX File</th>
+																														<th>Start Lat</th>
+																														<th>Start Lng</th>
+																														<th>End Lat</th>
+																														<th>End Lng</th> -->
 					</tr>
 				</thead>
 				<tbody>
@@ -324,27 +327,30 @@
 								<td>{{ ride.elapsed_minutes }}</td>
 								<td>{{ ride.elevation_gain_ft }}</td>
 								<td>{{ ride.avg_speed_mph }}</td>
+								<td class="num-cell">{{ ride.max_speed_mph }}</td>
 								<td>{{ ride.avg_power_watts }}</td>
+								<td class="num-cell">{{ ride.max_power_watts }}</td>
 								<td class="num-cell">{{ ride.avg_heart_rate }}</td>
-								<td>
-									{% if ride.gpx_uploaded == 1 %}Yes{% else %}No
-									{% endif %}
-								</td>
-								<td>
-									<span class="ride-report-badge {{ ride_status_class }}">
-										{{ ride.status }}
-									</span>
-								</td>
+								<td class="num-cell">{{ ride.max_heart_rate }}</td>
+								<!--	<td>
+																																									{% if ride.gpx_uploaded == 1 %}Yes{% else %}No
+																																									{% endif %}
+																																								</td> -->
+								<!--	<td>
+																																	<span class="ride-report-badge {{ ride_status_class }}">
+																																		{{ ride.status }}
+																																	</span>
+																																</td> -->
 								<td>{{ ride.created }}</td>
 								<td class="notes-cell">{{ ride.notes|nl2br }}</td>
-								<td>{{ ride.id }}</td>
-								<td>{{ ride.website_id }}</td>
-								<td>{{ ride.member_id }}</td>
-								<td>{{ ride.gpx_file }}</td>
-								<td>{{ ride.start_lat }}</td>
-								<td>{{ ride.start_lng }}</td>
-								<td>{{ ride.end_lat }}</td>
-								<td>{{ ride.end_lng }}</td>
+								<!--	<td>{{ ride.id }}</td>
+																																								<td>{{ ride.website_id }}</td>
+																																								<td>{{ ride.member_id }}</td>
+																																								<td>{{ ride.gpx_file }}</td>
+																																								<td>{{ ride.start_lat }}</td>
+																																								<td>{{ ride.start_lng }}</td>
+																																								<td>{{ ride.end_lat }}</td>
+																																								<td>{{ ride.end_lng }}</td>  -->
 							</tr>
 						{% endfor %}
 					{% else %}

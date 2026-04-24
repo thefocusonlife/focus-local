@@ -15,7 +15,9 @@ var/log/
 public/uploads/
 public/save_img/
 public/save_uploads/
-public/uploads/gpx/*
+public/uploads/gpx/
+*.gpx
+*.tcx
 
 # Local-only images that should not be in source control
 public/img/Untitled-1.psd

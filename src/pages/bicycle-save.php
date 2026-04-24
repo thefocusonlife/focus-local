@@ -171,6 +171,7 @@ function parseGpxRide(string $filePath): array
     $points = [];
     $samplePoints = [];
     $heartRateSamples = [];
+
     if (!isset($xml->trk)) {
         throw new RuntimeException('GPX file does not contain track data.');
     }
@@ -180,13 +181,11 @@ function parseGpxRide(string $filePath): array
             foreach ($segment->trkpt as $point) {
                 $lat = isset($point['lat']) ? (float) $point['lat'] : null;
                 $lng = isset($point['lon']) ? (float) $point['lon'] : null;
-                // Keep a small sample of the first 5 points for reverse geocoding only
+
                 if ($lat !== null && $lng !== null && count($samplePoints) < 5) {
-                    $samplePoints[] = [
-                        'lat' => $lat,
-                        'lng' => $lng,
-                    ];
+                    $samplePoints[] = ['lat' => $lat, 'lng' => $lng];
                 }
+
                 if ($lat === null || $lng === null) {
                     continue;
                 }
@@ -226,26 +225,7 @@ function parseGpxRide(string $filePath): array
                 if ($heartRate !== null && $heartRate > 0) {
                     $heartRateSamples[] = $heartRate;
                 }
-                /*        $heartRate = null;
 
-                if (isset($point->extensions)) {
-                    $gpxtpxNs = 'http://www.garmin.com/xmlschemas/TrackPointExtension/v1';
-
-                    $extensionsChildren = $point->extensions->children();
-                    foreach ($extensionsChildren as $extensionChild) {
-                        $trackPointExtension = $extensionChild->children($gpxtpxNs);
-
-                        if (isset($trackPointExtension->hr)) {
-                            $heartRate = (int) $trackPointExtension->hr;
-                            break;
-                        }
-                    }
-                }
-
-                if ($heartRate !== null && $heartRate > 0) {
-                    $heartRateSamples[] = $heartRate;
-                }
-                    */
                 $points[] = [
                     'lat' => $lat,
                     'lng' => $lng,
@@ -264,43 +244,41 @@ function parseGpxRide(string $filePath): array
     $distanceMilesValue = 0.0;
     $elevationGainFeetValue = 0.0;
     $powerSamples = [];
+    $speedSamples = [];
     $pointCount = count($points);
 
     for ($i = 1; $i < $pointCount; $i++) {
         $prev = $points[$i - 1];
         $curr = $points[$i];
 
-        $distanceMilesValue += haversineMiles(
+        $segmentDistanceMiles = haversineMiles(
             $prev['lat'],
             $prev['lng'],
             $curr['lat'],
             $curr['lng'],
         );
 
+        $distanceMilesValue += $segmentDistanceMiles;
+
+        if (
+            !empty($prev['time']) &&
+            !empty($curr['time']) &&
+            $curr['time'] > $prev['time'] &&
+            $segmentDistanceMiles > 0
+        ) {
+            $seconds = $curr['time'] - $prev['time'];
+            $segmentSpeedMph = $segmentDistanceMiles / ($seconds / 3600);
+
+            if ($segmentSpeedMph > 0 && $segmentSpeedMph < 45) {
+                $speedSamples[] = $segmentSpeedMph;
+            }
+        }
+
         if ($curr['power'] !== null && $curr['power'] > 0) {
             $powerSamples[] = $curr['power'];
         }
     }
 
-    $heartRate = null;
-
-    // Look for heart rate tags anywhere inside extensions
-    if (isset($point->extensions)) {
-        $extXml = $point->extensions->asXML();
-        if ($extXml) {
-            if (preg_match('/<(?:[^:>]+:)?hr>([^<]+)</i', $extXml, $m)) {
-                if (is_numeric($m[1])) {
-                    $heartRate = (int) $m[1];
-                }
-            }
-        }
-    }
-
-    if ($heartRate !== null && $heartRate > 0) {
-        $heartRateSamples[] = $heartRate;
-    }
-
-    // Build a smoothed elevation series using a 3-point moving average
     $smoothedElevations = [];
 
     for ($i = 0; $i < $pointCount; $i++) {
@@ -315,7 +293,6 @@ function parseGpxRide(string $filePath): array
         $smoothedElevations[$i] = !empty($samples) ? array_sum($samples) / count($samples) : null;
     }
 
-    // Sum only positive elevation gain from the smoothed series
     for ($i = 1; $i < $pointCount; $i++) {
         $prevEle = $smoothedElevations[$i - 1];
         $currEle = $smoothedElevations[$i];
@@ -346,19 +323,24 @@ function parseGpxRide(string $filePath): array
         $avgPowerWattsValue = (int) round(array_sum($powerSamples) / count($powerSamples));
     }
 
+    $maxPowerWattsValue = null;
+    if (!empty($powerSamples)) {
+        $maxPowerWattsValue = (int) round(max($powerSamples));
+    }
+
     $avgHeartRateValue = null;
     if (!empty($heartRateSamples)) {
         $avgHeartRateValue = (int) round(array_sum($heartRateSamples) / count($heartRateSamples));
     }
 
-    // Debug logs
-    error_log('[GPX DEBUG] total points: ' . count($points));
-    error_log('[HR DEBUG] sample count: ' . count($heartRateSamples));
-    error_log('[HR DEBUG] avg: ' . var_export($avgHeartRateValue, true));
-
+    $maxHeartRateValue = null;
     if (!empty($heartRateSamples)) {
-        error_log('[HR DEBUG] min: ' . min($heartRateSamples));
-        error_log('[HR DEBUG] max: ' . max($heartRateSamples));
+        $maxHeartRateValue = (int) max($heartRateSamples);
+    }
+
+    $maxSpeedMphValue = null;
+    if (!empty($speedSamples)) {
+        $maxSpeedMphValue = round(max($speedSamples), 2);
     }
 
     return [
@@ -366,7 +348,10 @@ function parseGpxRide(string $filePath): array
         'elapsed_minutes' => $elapsedMinutesValue,
         'elevation_gain_ft' => (int) round($elevationGainFeetValue),
         'avg_power_watts' => $avgPowerWattsValue,
+        'max_power_watts' => $maxPowerWattsValue,
         'avg_heart_rate' => $avgHeartRateValue,
+        'max_heart_rate' => $maxHeartRateValue,
+        'max_speed_mph' => $maxSpeedMphValue,
         'np_power_watts' => null,
         'start_time' => !empty($firstPoint['time'])
             ? date('Y-m-d H:i:s', $firstPoint['time'])
@@ -641,9 +626,13 @@ if (!empty($_FILES['gpx_file']['name'])) {
         $distanceMilesValue = $parsed['distance_miles'] ?? $distanceMilesValue;
         $elapsedMinutesValue = $parsed['elapsed_minutes'] ?? $elapsedMinutesValue;
         $elevationGainFtValue = $parsed['elevation_gain_ft'] ?? $elevationGainFtValue;
+        $maxSpeedMphValue = $parsed['max_speed_mph'] ?? $maxSpeedMphValue;
         $avgPowerWattsValue = $parsed['avg_power_watts'] ?? null;
+        $maxPowerWattsValue = $parsed['max_power_watts'] ?? null;
         $avgHeartRateValue = $parsed['avg_heart_rate'] ?? null;
+        $maxHeartRateValue = $parsed['max_heart_rate'] ?? null;
         $npPowerWattsValue = $parsed['np_power_watts'] ?? null;
+
         $startTimeValue = $parsed['start_time'] ?? null;
         $startLatValue = $parsed['start_lat'] ?? null;
         $startLngValue = $parsed['start_lng'] ?? null;
@@ -689,8 +678,11 @@ $sql = "
         elapsed_minutes,
         elevation_gain_ft,
         avg_speed_mph,
+        max_speed_mph,
         avg_power_watts,
+        max_power_watts,
         avg_heart_rate,
+        max_heart_rate,
         np_power_watts,
         notes,
         gpx_file,
@@ -712,8 +704,11 @@ $sql = "
         :elapsed_minutes,
         :elevation_gain_ft,
         :avg_speed_mph,
+        :max_speed_mph,
         :avg_power_watts,
+        :max_power_watts,
         :avg_heart_rate,
+        :max_heart_rate,
         :np_power_watts,
         :notes,
         :gpx_file,
@@ -742,8 +737,11 @@ $cms->getDb()->runSql($sql, [
     'elapsed_minutes' => $elapsedMinutesValue,
     'elevation_gain_ft' => $elevationGainFtValue,
     'avg_speed_mph' => $avgSpeed,
+    'max_speed_mph' => $maxSpeedMphValue,
     'avg_power_watts' => $avgPowerWattsValue,
+    'max_power_watts' => $maxPowerWattsValue,
     'avg_heart_rate' => $avgHeartRateValue,
+    'max_heart_rate' => $maxHeartRateValue,
     'np_power_watts' => $npPowerWattsValue,
     'notes' => $notes !== '' ? $notes : null,
     'gpx_file' => $gpxFileValue,
