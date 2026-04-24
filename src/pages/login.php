@@ -199,8 +199,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
 
                     // Preserve website context for deep links like /index/44
+                    $returnWebsiteId = null;
+
                     if ($returnTo !== '' && preg_match('#^/index/(\\d+)$#', $returnTo, $matches)) {
                         $returnWebsiteId = (int) $matches[1];
+                    } elseif ($returnTo !== '') {
+                        $parts = parse_url($returnTo);
+                        parse_str($parts['query'] ?? '', $query);
+
+                        if (isset($query['website'])) {
+                            $returnWebsiteId = (int) $query['website'];
+                        } elseif (isset($query['website_id'])) {
+                            $returnWebsiteId = (int) $query['website_id'];
+                        }
+                    }
+
+                    if ($returnWebsiteId !== null && $returnWebsiteId > 0) {
                         $_SESSION['website'] = $returnWebsiteId;
                         $_SESSION['websiteid'] = $returnWebsiteId;
                         $_SESSION['menu_website'] = $returnWebsiteId;
