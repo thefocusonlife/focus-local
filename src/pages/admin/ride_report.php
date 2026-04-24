@@ -44,5 +44,5 @@ $data['ride_type_options'] = [
     'Commute',
     'Event',
 ];
-
+$data['query_string'] = $_SERVER['QUERY_STRING'] ?? '';
 echo $twig->render('admin/ride_report.html', $data);
