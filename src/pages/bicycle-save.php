@@ -1,6 +1,8 @@
 <?php
 declare(strict_types=1);
 
+require_once APP_ROOT . '/vendor/autoload.php';
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: ' . DOC_ROOT . 'bicycle-submit?website=44');
     exit();
@@ -154,6 +156,25 @@ function haversineMiles(float $lat1, float $lon1, float $lat2, float $lon2): flo
         );
 
     return $earthRadiusMiles * $angle;
+}
+
+function firstFitValue(array $source, string $field)
+{
+    if (!isset($source[$field])) {
+        return null;
+    }
+
+    if (is_array($source[$field])) {
+        $values = array_values(
+            array_filter($source[$field], static function ($value) {
+                return $value !== null && $value !== '';
+            }),
+        );
+
+        return $values[0] ?? null;
+    }
+
+    return $source[$field];
 }
 
 /**
@@ -542,6 +563,235 @@ function parseTcxRide(string $filePath): array
     ];
 }
 
+function parseFitRide(string $filePath): array
+{
+    if (!class_exists('\\adriangibbons\\phpFITFileAnalysis')) {
+        throw new RuntimeException(
+            'FIT parser is not installed. Run: composer require adriangibbons/php-fit-file-analysis',
+        );
+    }
+
+    $options = [
+        'units' => 'statute',
+        'overwrite_with_dev_data' => true,
+    ];
+
+    $pFFA = new \adriangibbons\phpFITFileAnalysis($filePath, $options);
+    $messages = $pFFA->data_mesgs ?? [];
+
+    $session = $messages['session'] ?? [];
+    $record = $messages['record'] ?? [];
+
+    if (empty($session) && empty($record)) {
+        throw new RuntimeException('FIT file did not contain usable activity data.');
+    }
+
+    $distanceMilesValue = null;
+    $elapsedMinutesValue = null;
+    $elevationGainFeetValue = null;
+    $avgPowerWattsValue = null;
+    $maxPowerWattsValue = null;
+    $avgHeartRateValue = null;
+    $maxHeartRateValue = null;
+    $maxSpeedMphValue = null;
+    $npPowerWattsValue = null;
+    $startTimeValue = null;
+    $startLatValue = null;
+    $startLngValue = null;
+    $endLatValue = null;
+    $endLngValue = null;
+
+    /*
+     * Prefer FIT session summary values.
+     * With units=statute:
+     * - distance is miles
+     * - speed is mph
+     * - altitude/elevation is feet
+     */
+    $totalDistance = firstFitValue($session, 'total_distance');
+    if ($totalDistance !== null && is_numeric($totalDistance)) {
+        $distanceMilesValue = round((float) $totalDistance, 2);
+    }
+
+    $totalTimerTime = firstFitValue($session, 'total_timer_time');
+    if ($totalTimerTime !== null && is_numeric($totalTimerTime)) {
+        $elapsedMinutesValue = (int) round(((float) $totalTimerTime) / 60);
+    }
+
+    $totalAscent = firstFitValue($session, 'total_ascent');
+    if ($totalAscent !== null && is_numeric($totalAscent)) {
+        $elevationGainFeetValue = (int) round((float) $totalAscent);
+    }
+
+    $avgPower = firstFitValue($session, 'avg_power');
+    if ($avgPower !== null && is_numeric($avgPower)) {
+        $avgPowerWattsValue = (int) round((float) $avgPower);
+    }
+
+    $maxPower = firstFitValue($session, 'max_power');
+    if ($maxPower !== null && is_numeric($maxPower)) {
+        $maxPowerWattsValue = (int) round((float) $maxPower);
+    }
+
+    $avgHeartRate = firstFitValue($session, 'avg_heart_rate');
+    if ($avgHeartRate !== null && is_numeric($avgHeartRate)) {
+        $avgHeartRateValue = (int) round((float) $avgHeartRate);
+    }
+
+    $maxHeartRate = firstFitValue($session, 'max_heart_rate');
+    if ($maxHeartRate !== null && is_numeric($maxHeartRate)) {
+        $maxHeartRateValue = (int) round((float) $maxHeartRate);
+    }
+
+    $maxSpeed = firstFitValue($session, 'max_speed');
+    if ($maxSpeed !== null && is_numeric($maxSpeed)) {
+        $maxSpeedMphValue = round((float) $maxSpeed, 2);
+    }
+
+    $normalizedPower = firstFitValue($session, 'normalized_power');
+    if ($normalizedPower !== null && is_numeric($normalizedPower)) {
+        $npPowerWattsValue = (int) round((float) $normalizedPower);
+    }
+
+    $startTime = firstFitValue($session, 'start_time');
+    if ($startTime === null) {
+        $startTime = firstFitValue($record, 'timestamp');
+    }
+
+    if ($startTime !== null) {
+        if (is_numeric($startTime)) {
+            $startTimeValue = date('Y-m-d H:i:s', (int) $startTime);
+        } else {
+            $timestamp = strtotime((string) $startTime);
+            if ($timestamp !== false) {
+                $startTimeValue = date('Y-m-d H:i:s', $timestamp);
+            }
+        }
+    }
+
+    /*
+     * Fallbacks from record streams.
+     */
+    if (
+        $distanceMilesValue === null &&
+        !empty($record['distance']) &&
+        is_array($record['distance'])
+    ) {
+        $distanceValues = array_values(array_filter($record['distance'], 'is_numeric'));
+        if (!empty($distanceValues)) {
+            $distanceMilesValue = round((float) max($distanceValues), 2);
+        }
+    }
+
+    if ($maxSpeedMphValue === null && !empty($record['speed']) && is_array($record['speed'])) {
+        $speedValues = array_values(
+            array_filter($record['speed'], static function ($value) {
+                return is_numeric($value) && (float) $value > 0 && (float) $value < 80;
+            }),
+        );
+
+        if (!empty($speedValues)) {
+            $maxSpeedMphValue = round((float) max($speedValues), 2);
+        }
+    }
+
+    if ($avgPowerWattsValue === null && !empty($record['power']) && is_array($record['power'])) {
+        $powerValues = array_values(
+            array_filter($record['power'], static function ($value) {
+                return is_numeric($value) && (float) $value > 0;
+            }),
+        );
+
+        if (!empty($powerValues)) {
+            $avgPowerWattsValue = (int) round(array_sum($powerValues) / count($powerValues));
+        }
+    }
+
+    if ($maxPowerWattsValue === null && !empty($record['power']) && is_array($record['power'])) {
+        $powerValues = array_values(
+            array_filter($record['power'], static function ($value) {
+                return is_numeric($value) && (float) $value > 0;
+            }),
+        );
+
+        if (!empty($powerValues)) {
+            $maxPowerWattsValue = (int) round(max($powerValues));
+        }
+    }
+
+    if (
+        $avgHeartRateValue === null &&
+        !empty($record['heart_rate']) &&
+        is_array($record['heart_rate'])
+    ) {
+        $heartRateValues = array_values(
+            array_filter($record['heart_rate'], static function ($value) {
+                return is_numeric($value) && (int) $value > 0;
+            }),
+        );
+
+        if (!empty($heartRateValues)) {
+            $avgHeartRateValue = (int) round(array_sum($heartRateValues) / count($heartRateValues));
+        }
+    }
+
+    if (
+        $maxHeartRateValue === null &&
+        !empty($record['heart_rate']) &&
+        is_array($record['heart_rate'])
+    ) {
+        $heartRateValues = array_values(
+            array_filter($record['heart_rate'], static function ($value) {
+                return is_numeric($value) && (int) $value > 0;
+            }),
+        );
+
+        if (!empty($heartRateValues)) {
+            $maxHeartRateValue = (int) max($heartRateValues);
+        }
+    }
+
+    if (!empty($record['position_lat']) && !empty($record['position_long'])) {
+        $latValues = array_values($record['position_lat']);
+        $lngValues = array_values($record['position_long']);
+
+        $count = min(count($latValues), count($lngValues));
+
+        for ($i = 0; $i < $count; $i++) {
+            if (is_numeric($latValues[$i]) && is_numeric($lngValues[$i])) {
+                $startLatValue = round((float) $latValues[$i], 6);
+                $startLngValue = round((float) $lngValues[$i], 6);
+                break;
+            }
+        }
+
+        for ($i = $count - 1; $i >= 0; $i--) {
+            if (is_numeric($latValues[$i]) && is_numeric($lngValues[$i])) {
+                $endLatValue = round((float) $latValues[$i], 6);
+                $endLngValue = round((float) $lngValues[$i], 6);
+                break;
+            }
+        }
+    }
+
+    return [
+        'distance_miles' => $distanceMilesValue,
+        'elapsed_minutes' => $elapsedMinutesValue,
+        'elevation_gain_ft' => $elevationGainFeetValue,
+        'avg_power_watts' => $avgPowerWattsValue,
+        'max_power_watts' => $maxPowerWattsValue,
+        'avg_heart_rate' => $avgHeartRateValue,
+        'max_heart_rate' => $maxHeartRateValue,
+        'max_speed_mph' => $maxSpeedMphValue,
+        'np_power_watts' => $npPowerWattsValue,
+        'start_time' => $startTimeValue,
+        'start_lat' => $startLatValue,
+        'start_lng' => $startLngValue,
+        'end_lat' => $endLatValue,
+        'end_lng' => $endLngValue,
+    ];
+}
+
 $distanceMilesValue = $distanceMiles !== '' ? (float) $distanceMiles : null;
 $elapsedMinutesValue = $elapsedMinutes !== '' ? (int) $elapsedMinutes : null;
 $elevationGainFtValue = $elevationGainFt !== '' ? (int) $elevationGainFt : null;
@@ -570,16 +820,16 @@ if (!empty($_FILES['gpx_file']['name'])) {
     }
 
     $extension = strtolower(pathinfo($_FILES['gpx_file']['name'], PATHINFO_EXTENSION));
-    if (!in_array($extension, ['gpx', 'tcx'], true)) {
-        $_SESSION['flash_failure'] = 'Only GPX and TCX files are allowed.';
+    if (!in_array($extension, ['gpx', 'tcx', 'fit'], true)) {
+        $_SESSION['flash_failure'] = 'Only GPX, TCX, and FIT files are allowed.';
         header('Location: ' . DOC_ROOT . 'bicycle-submit?website=44');
         exit();
     }
 
     logStep('FILE received', $_FILES['gpx_file']['name'] ?? 'none');
 
-    if ((int) $_FILES['gpx_file']['size'] > 5 * 1024 * 1024) {
-        $_SESSION['flash_failure'] = 'The ride file is too large. Max size is 5 MB.';
+    if ((int) $_FILES['gpx_file']['size'] > 15 * 1024 * 1024) {
+        $_SESSION['flash_failure'] = 'The ride file is too large. Max size is 15 MB.';
         header('Location: ' . DOC_ROOT . 'bicycle-submit?website=44');
         exit();
     }
@@ -606,7 +856,7 @@ if (!empty($_FILES['gpx_file']['name'])) {
 
     logStep('MOVE file →', $destinationPath);
     if (!move_uploaded_file($_FILES['gpx_file']['tmp_name'], $destinationPath)) {
-        $_SESSION['flash_failure'] = 'GPX file could not be saved.';
+        $_SESSION['flash_failure'] = 'Ride file could not be saved.';
         header('Location: ' . DOC_ROOT . 'bicycle-submit?website=44');
         exit();
     }
@@ -616,6 +866,8 @@ if (!empty($_FILES['gpx_file']['name'])) {
             $parsed = parseGpxRide($destinationPath);
         } elseif ($extension === 'tcx') {
             $parsed = parseTcxRide($destinationPath);
+        } elseif ($extension === 'fit') {
+            $parsed = parseFitRide($destinationPath);
         } else {
             throw new RuntimeException('Unsupported file type.');
         }

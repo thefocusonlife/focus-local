@@ -2,7 +2,8 @@
     "require": {
         "ezyang/htmlpurifier": "^4.12",
         "twig/twig": "^3.0",
-        "phpmailer/phpmailer": "^6.1"
+        "phpmailer/phpmailer": "^6.1",
+        "adriangibbons/php-fit-file-analysis": "^3.2"
     },
     "autoload": {
         "psr-4": {
