@@ -120,6 +120,7 @@ $rideDate = trim((string) ($_POST['ride_date'] ?? ''));
 $title = trim((string) ($_POST['title'] ?? ''));
 $rideType = trim((string) ($_POST['ride_type'] ?? ''));
 $startLocation = trim((string) ($_POST['start_location'] ?? ''));
+$manualStartTime = trim((string) ($_POST['manual_start_time'] ?? ''));
 $distanceMiles = trim((string) ($_POST['distance_miles'] ?? ''));
 $elapsedMinutes = trim((string) ($_POST['elapsed_minutes'] ?? ''));
 $elevationGainFt = trim((string) ($_POST['elevation_gain_ft'] ?? ''));
@@ -585,6 +586,11 @@ function parseFitRide(string $filePath): array
     $session = $messages['session'] ?? [];
     $record = $messages['record'] ?? [];
 
+    error_log('[FIT session keys] ' . implode(', ', array_keys($session)));
+    error_log('[FIT record keys] ' . implode(', ', array_keys($record)));
+
+    error_log('[FIT session raw] ' . print_r($session, true));
+
     if (empty($session) && empty($record)) {
         throw new RuntimeException('FIT file did not contain usable activity data.');
     }
@@ -599,6 +605,11 @@ function parseFitRide(string $filePath): array
     $maxSpeedMphValue = null;
     $npPowerWattsValue = null;
     $startTimeValue = null;
+    $rideDate = trim((string) ($_POST['ride_date'] ?? ''));
+    $manualStartTime = trim((string) ($_POST['manual_start_time'] ?? ''));
+    if ($rideDate !== '' && $manualStartTime !== '') {
+        $startTimeValue = $rideDate . ' ' . $manualStartTime . ':00';
+    }
     $startLatValue = null;
     $startLngValue = null;
     $endLatValue = null;
@@ -663,11 +674,15 @@ function parseFitRide(string $filePath): array
 
     if ($startTime !== null) {
         if (is_numeric($startTime)) {
-            $startTimeValue = date('Y-m-d H:i:s', (int) $startTime);
+            $dt = new DateTime('@' . (int) $startTime);
+            $dt->setTimezone(new DateTimeZone('America/Los_Angeles'));
+            $startTimeValue = $dt->format('Y-m-d H:i:s');
         } else {
             $timestamp = strtotime((string) $startTime);
             if ($timestamp !== false) {
-                $startTimeValue = date('Y-m-d H:i:s', $timestamp);
+                $dt = new DateTime('@' . $timestamp);
+                $dt->setTimezone(new DateTimeZone('America/Los_Angeles'));
+                $startTimeValue = $dt->format('Y-m-d H:i:s');
             }
         }
     }
@@ -805,6 +820,10 @@ $avgHeartRateValue = $avgHeartRate !== '' ? (int) round((float) $avgHeartRate) :
 
 $npPowerWattsValue = null;
 $startTimeValue = null;
+
+if ($rideDate !== '' && $manualStartTime !== '') {
+    $startTimeValue = $rideDate . ' ' . $manualStartTime . ':00';
+}
 $startLatValue = null;
 $startLngValue = null;
 $endLatValue = null;
@@ -874,6 +893,7 @@ if (!empty($_FILES['gpx_file']['name'])) {
             $parsed = parseTcxRide($destinationPath);
         } elseif ($extension === 'fit') {
             $parsed = parseFitRide($destinationPath);
+            error_log('[FIT parsed result] ' . print_r($parsed, true));
         } else {
             throw new RuntimeException('Unsupported file type.');
         }
@@ -884,18 +904,22 @@ if (!empty($_FILES['gpx_file']['name'])) {
         $distanceMilesValue = $parsed['distance_miles'] ?? $distanceMilesValue;
         $elapsedMinutesValue = $parsed['elapsed_minutes'] ?? $elapsedMinutesValue;
         $elevationGainFtValue = $parsed['elevation_gain_ft'] ?? $elevationGainFtValue;
-        $maxSpeedMphValue = $parsed['max_speed_mph'] ?? $maxSpeedMphValue;
-        $avgPowerWattsValue = $parsed['avg_power_watts'] ?? null;
-        $maxPowerWattsValue = $parsed['max_power_watts'] ?? null;
-        $avgHeartRateValue = $parsed['avg_heart_rate'] ?? null;
-        $maxHeartRateValue = $parsed['max_heart_rate'] ?? null;
-        $npPowerWattsValue = $parsed['np_power_watts'] ?? null;
 
-        $startTimeValue = $parsed['start_time'] ?? null;
-        $startLatValue = $parsed['start_lat'] ?? null;
-        $startLngValue = $parsed['start_lng'] ?? null;
-        $endLatValue = $parsed['end_lat'] ?? null;
-        $endLngValue = $parsed['end_lng'] ?? null;
+        $maxSpeedMphValue = $parsed['max_speed_mph'] ?? $maxSpeedMphValue;
+        $avgPowerWattsValue = $parsed['avg_power_watts'] ?? $avgPowerWattsValue;
+        $maxPowerWattsValue = $parsed['max_power_watts'] ?? $maxPowerWattsValue;
+        $avgHeartRateValue = $parsed['avg_heart_rate'] ?? $avgHeartRateValue;
+        $maxHeartRateValue = $parsed['max_heart_rate'] ?? $maxHeartRateValue;
+        $npPowerWattsValue = $parsed['np_power_watts'] ?? $npPowerWattsValue;
+
+        $startTimeValue = $parsed['start_time'] ?? $startTimeValue;
+        if (!empty($parsed['start_time'])) {
+            $rideDate = substr($parsed['start_time'], 0, 10);
+        }
+        $startLatValue = $parsed['start_lat'] ?? $startLatValue;
+        $startLngValue = $parsed['start_lng'] ?? $startLngValue;
+        $endLatValue = $parsed['end_lat'] ?? $endLatValue;
+        $endLngValue = $parsed['end_lng'] ?? $endLngValue;
         $startLocation = trim((string) ($startLocation ?? ''));
 
         if ($startLocation === '' && $startLatValue !== null && $startLngValue !== null) {
@@ -928,6 +952,21 @@ if (
 ) {
     $avgSpeed = round($distanceMilesValue / ($elapsedMinutesValue / 60), 2);
 }
+
+error_log(
+    '[RIDE INSERT VALUES] ' .
+        print_r(
+            [
+                'max_speed_mph' => $maxSpeedMphValue,
+                'avg_power_watts' => $avgPowerWattsValue,
+                'max_power_watts' => $maxPowerWattsValue,
+                'avg_heart_rate' => $avgHeartRateValue,
+                'max_heart_rate' => $maxHeartRateValue,
+                'np_power_watts' => $npPowerWattsValue,
+            ],
+            true,
+        ),
+);
 
 $sql = "
     INSERT INTO ride (
@@ -984,17 +1023,26 @@ $sql = "
         :status
     )
 ";
-$manualAvgSpeedMphValue = $avgSpeedMph !== '' ? round((float) $avgSpeedMph, 2) : null;
-$avgPowerWattsValue = $avgPowerWatts !== '' ? (int) round((float) $avgPowerWatts) : null;
-$avgHeartRateValue = $avgHeartRate !== '' ? (int) round((float) $avgHeartRate) : null;
-
-$maxSpeedMphValue = null;
-$maxPowerWattsValue = null;
-$maxHeartRateValue = null;
 
 $startLocation = trim((string) ($startLocation ?? ''));
 $gpxFileValue = $gpxFileValue ?? null;
 $gpxUploadedValue = $gpxUploadedValue ?? 0;
+
+error_log(
+    '[RIDE INSERT VALUES] ' .
+        print_r(
+            [
+                'avg_speed_mph' => $avgSpeed,
+                'max_speed_mph' => $maxSpeedMphValue,
+                'avg_power_watts' => $avgPowerWattsValue,
+                'max_power_watts' => $maxPowerWattsValue,
+                'avg_heart_rate' => $avgHeartRateValue,
+                'max_heart_rate' => $maxHeartRateValue,
+                'np_power_watts' => $npPowerWattsValue,
+            ],
+            true,
+        ),
+);
 
 $cms->getDb()->runSql($sql, [
     'website_id' => $websiteId,

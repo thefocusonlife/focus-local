@@ -67,6 +67,34 @@
 				grid-column: auto;
 			}
 		}
+		.metrics-grid {
+			display: grid;
+			grid-template-columns: repeat(4, 1fr);
+			gap: 12px;
+			margin: 12px 0;
+		}
+
+		.metrics-grid label {
+			display: block;
+			font-weight: 600;
+			margin-bottom: 4px;
+		}
+
+		.metrics-grid input {
+			width: 100%;
+		}
+
+		@media(max-width: 800px) {
+			.metrics-grid {
+				grid-template-columns: repeat(2, 1fr);
+			}
+		}
+
+		@media(max-width: 500px) {
+			.metrics-grid {
+				grid-template-columns: 1fr;
+			}
+		}
 	</style>
 	<h1>Submit Ride</h1>
 	<p>Add a ride for the Bend / Redmond Bicycle Club.</p>
@@ -129,19 +157,26 @@
 					<input type="number" id="elevation_gain_ft" name="elevation_gain_ft" min="0" step="1">
 				</div>
 
-				<div>
-					<label for="avg_speed_mph">Avg Speed (mph)</label>
-					<input type="number" step="0.01" min="0" id="avg_speed_mph" name="avg_speed_mph">
-				</div>
+				<div class="metrics-grid">
+					<div>
+						<label>Start Time</label>
+						<input type="time" name="manual_start_time">
+					</div>
 
-				<div>
-					<label for="avg_power_watts">Avg Power (W)</label>
-					<input type="number" step="1" min="0" id="avg_power_watts" name="avg_power_watts">
-				</div>
+					<div>
+						<label>Avg Speed</label>
+						<input type="number" step="0.01" name="avg_speed_mph">
+					</div>
 
-				<div>
-					<label for="avg_heart_rate">Avg Heart Rate (bpm)</label>
-					<input type="number" step="1" min="0" id="avg_heart_rate" name="avg_heart_rate">
+					<div>
+						<label>Avg Power (W)</label>
+						<input type="number" name="avg_power_watts">
+					</div>
+
+					<div>
+						<label>Avg Heart Rate</label>
+						<input type="number" name="avg_heart_rate">
+					</div>
 				</div>
 
 				<div class="form-row form-row-wide">

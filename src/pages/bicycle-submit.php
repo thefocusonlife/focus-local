@@ -28,7 +28,12 @@ $role = strtolower((string) ($_SESSION['role'] ?? ''));
 
 if ($viewerId <= 0 || $role === 'guest') {
     $_SESSION['return_to'] = $_SERVER['REQUEST_URI'];
-    $_SESSION['flash_failure'] = 'You must be logged in to submit a ride.';
+    if (!empty($_SESSION['flash_failure'])) {
+        if ($_SESSION['flash_failure'] !== 'You must be logged in to submit a ride.') {
+            $data['failure'] = (string) $_SESSION['flash_failure'];
+        }
+        unset($_SESSION['flash_failure']);
+    }
     redirect('login');
     exit();
 }
