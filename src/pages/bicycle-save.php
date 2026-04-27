@@ -123,6 +123,9 @@ $startLocation = trim((string) ($_POST['start_location'] ?? ''));
 $distanceMiles = trim((string) ($_POST['distance_miles'] ?? ''));
 $elapsedMinutes = trim((string) ($_POST['elapsed_minutes'] ?? ''));
 $elevationGainFt = trim((string) ($_POST['elevation_gain_ft'] ?? ''));
+$avgSpeedMph = trim((string) ($_POST['avg_speed_mph'] ?? ''));
+$avgPowerWatts = trim((string) ($_POST['avg_power_watts'] ?? ''));
+$avgHeartRate = trim((string) ($_POST['avg_heart_rate'] ?? ''));
 $notes = trim((string) ($_POST['notes'] ?? ''));
 
 if ($rideDate === '' || $rideType === '') {
@@ -796,7 +799,10 @@ $distanceMilesValue = $distanceMiles !== '' ? (float) $distanceMiles : null;
 $elapsedMinutesValue = $elapsedMinutes !== '' ? (int) $elapsedMinutes : null;
 $elevationGainFtValue = $elevationGainFt !== '' ? (int) $elevationGainFt : null;
 
-$avgPowerWattsValue = null;
+$manualAvgSpeedMphValue = $avgSpeedMph !== '' ? round((float) $avgSpeedMph, 2) : null;
+$avgPowerWattsValue = $avgPowerWatts !== '' ? (int) round((float) $avgPowerWatts) : null;
+$avgHeartRateValue = $avgHeartRate !== '' ? (int) round((float) $avgHeartRate) : null;
+
 $npPowerWattsValue = null;
 $startTimeValue = null;
 $startLatValue = null;
@@ -912,8 +918,14 @@ if (!empty($_FILES['gpx_file']['name'])) {
     }
 }
 
-$avgSpeed = null;
-if ($distanceMilesValue !== null && $elapsedMinutesValue !== null && $elapsedMinutesValue > 0) {
+$avgSpeed = $manualAvgSpeedMphValue;
+
+if (
+    $avgSpeed === null &&
+    $distanceMilesValue !== null &&
+    $elapsedMinutesValue !== null &&
+    $elapsedMinutesValue > 0
+) {
     $avgSpeed = round($distanceMilesValue / ($elapsedMinutesValue / 60), 2);
 }
 
@@ -972,6 +984,13 @@ $sql = "
         :status
     )
 ";
+$manualAvgSpeedMphValue = $avgSpeedMph !== '' ? round((float) $avgSpeedMph, 2) : null;
+$avgPowerWattsValue = $avgPowerWatts !== '' ? (int) round((float) $avgPowerWatts) : null;
+$avgHeartRateValue = $avgHeartRate !== '' ? (int) round((float) $avgHeartRate) : null;
+
+$maxSpeedMphValue = null;
+$maxPowerWattsValue = null;
+$maxHeartRateValue = null;
 
 $startLocation = trim((string) ($startLocation ?? ''));
 $gpxFileValue = $gpxFileValue ?? null;
