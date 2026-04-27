@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en-US">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Bicycle Community</title>
+
+		<script src="https://cdn.tiny.cloud/1/{{ constant('TINYMCE_API_KEY') }}/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+	</head>
+	<style>
+		.community-form {
+			max-width: 1100px;
+			margin: 0;
+		}
+
+		.community-form-grid {
+			display: grid;
+			grid-template-columns: 420px 1fr;
+			gap: 36px;
+			align-items: start;
+		}
+
+		.community-form label {
+			display: block;
+			margin-bottom: 6px;
+			font-weight: 700;
+		}
+
+		.community-form input,
+		.community-form select,
+		.community-form textarea {
+			width: 100%;
+			box-sizing: border-box;
+			font-size: 16px;
+		}
+
+		.community-form input,
+		.community-form select {
+			height: 38px;
+			padding: 6px 10px;
+		}
+
+		.community-form textarea {
+			padding: 8px 10px;
+		}
+
+		.community-field {
+			margin-bottom: 18px;
+		}
+
+		.form-actions {
+			margin-top: 18px;
+		}
+
+		.community-form .tox-tinymce {
+			width: 100% !important;
+		}
+
+		@media(max-width: 900px) {
+			.community-form-grid {
+				grid-template-columns: 1fr;
+			}
+		}
+	</style>
+	<body>
+		<main class="container">
+			<section class="header">
+				<h2>
+					{% if community.id %}Edit Community Item{% else %}Add Community Item
+					{% endif %}
+				</h2>
+			</section>
+
+			{% if success %}
+				<p class="success">{{ success }}</p>
+			{% endif %}
+
+			{% if failure %}
+				<p class="failure">{{ failure }}</p>
+			{% endif %}
+
+			<form method="post" action="{{ doc_root }}bicycle-community-save" class="community-form">
+				<input type="hidden" name="id" value="{{ community.id|default(0) }}">
+				<input type="hidden" name="website_id" value="{{ website.id }}">
+
+				<div class="community-form-grid">
+					<div class="community-left">
+
+						<p>
+							<label for="title">Title</label><br>
+							<input type="text" id="title" name="title" value="{{ community.title|default('') }}" required>
+						</p>
+
+						<p>
+							<label for="content_type">Type</label><br>
+							<select id="content_type" name="content_type">
+								<option value="story" {% if community.content_type|default('story') == 'story' %} selected {% endif %}>Story</option>
+								<option value="link" {% if community.content_type|default('story') == 'link' %} selected {% endif %}>Link</option>
+								<option value="newsletter" {% if community.content_type|default('story') == 'newsletter' %} selected {% endif %}>Newsletter</option>
+							</select>
+						</p>
+
+						<p>
+							<label for="url">URL</label><br>
+							<input type="url" id="url" name="url" value="{{ community.url|default('') }}">
+						</p>
+
+						<p>
+							<label for="summary">Summary</label><br>
+							<textarea id="summary" name="summary" rows="2">{{ community.summary|default('') }}</textarea>
+						</p>
+						<p>
+							<label for="status">Status</label><br>
+							<select id="status" name="status">
+								<option value="published" {% if community.status|default('published') == 'published' %} selected {% endif %}>Published</option>
+								<option value="draft" {% if community.status|default('published') == 'draft' %} selected {% endif %}>Draft</option>
+								<option value="archived" {% if community.status|default('published') == 'archived' %} selected {% endif %}>Archived</option>
+							</select>
+						</p>
+
+						<p class="form-actions">
+							<button type="submit" class="btn btn-primary">Save Community Item</button>
+							<a href="{{ doc_root }}index/44" class="btn btn-secondary">Back to Bicycle Club</a>
+						</p>
+					</div>
+
+					<div class="community-right">
+						<label for="textarea2">Content</label>
+						<textarea id="textarea2" class="tinymce form-control" name="content" rows="10">{{ community.content|default('') }}</textarea>
+					</div>
+				</div>
+
+
+			</form>
+
+			<script>
+				window.addEventListener('load', function () {
+tinymce.init({
+selector: '#textarea2',
+height: 430,
+menubar: true,
+branding: false,
+plugins: 'anchor autolink link lists searchreplace table wordcount',
+toolbar: 'undo redo | bold italic underline | link | bullist numlist | table | removeformat'
+});
+});
+			</script>
+		</body>
+	</body>
+</html></body></html>
