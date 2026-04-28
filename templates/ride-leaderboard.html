@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en-US">
+	<head>
+		<meta charset="UTF-8">
+		<title>Ride Leaderboard</title>
+	</head>
+	<body>
+		<main class="container">
+
+			<p>
+				<a href="{{ doc_root }}index/44">Back to Bicycle Club</a>
+			</p>
+
+			<section class="ride-leaderboard">
+				<h1>Monthly Bicycle Club Leaderboard</h1>
+				<p>{{ month }}
+					· rides 2+ miles</p>
+
+				{% if leaderboard %}
+					<table>
+						<thead>
+							<tr>
+								<th>Rank</th>
+								<th>Member</th>
+								<th>Total Miles</th>
+								<th>Total Elevation</th>
+								<th>Ride Count</th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for row in leaderboard %}
+								<tr>
+									<td>{{ row.rank_miles }}</td>
+									<td>{{ row.member_name }}</td>
+									<td>{{ row.total_miles|number_format(1) }}
+										mi</td>
+									<td>{{ row.total_elevation|number_format(0) }}
+										ft</td>
+									<td>{{ row.ride_count }}</td>
+								</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				{% else %}
+					<p>No qualifying rides found for this month.</p>
+				{% endif %}
+			</section>
+
+		</main>
+	</body>
+</html>

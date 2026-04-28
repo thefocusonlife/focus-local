@@ -4,7 +4,7 @@ namespace PhpBook\CMS; // Declare namespace
 use PhpBook\CMS\ImageService;
 //use PhpBook\CMS\Website;
 //use PhpBook\CMS\Quickguide;
-
+require_once APP_ROOT . '/src/classes/CMS/BicycleCommunity.php';
 class CMS
 {
     protected $db = null; // Stores reference to Database object
@@ -241,6 +241,11 @@ class CMS
         // }
         return $this->ride;
     }
+    public function getBicycleCommunity()
+    {
+        return new \CMS\BicycleCommunity($this->db);
+    }
+
     public function redirect(string $path, array $params = []): void
     {
         // Ensure path is relative (no leading slash required)

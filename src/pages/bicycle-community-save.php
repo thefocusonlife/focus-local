@@ -136,6 +136,7 @@ try {
     redirect('bicycle-community?website=44');
     exit();
 }
+
 $websiteId = (int) ($_POST['website_id'] ?? 0);
 redirect('index/' . $websiteId);
 exit();

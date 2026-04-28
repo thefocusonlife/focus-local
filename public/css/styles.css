@@ -1431,6 +1431,14 @@ main#content.container.admin form.narrow.story-delete .story-delete__actions inp
 /* 8.05 Rides Forms                 */
 /************************************/
 /*
+/* Bicycle Community Form Layout */
+/*.community-fields {
+	display: grid;
+	grid-template-columns: 1fr 1.5fr;
+	gap: 2rem;
+	align-items: start;
+}
+
 form.ride-form {
     outline: 4px solid red !important;
 }

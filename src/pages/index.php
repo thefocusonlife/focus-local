@@ -224,7 +224,10 @@ if ($data['isBicycleClub']) {
         'website_id' => $websiteId,
     ]);
     $data['rides'] = $rideStmt->fetchAll(PDO::FETCH_ASSOC);
+
+    $data['communityItems'] = $cms->getBicycleCommunity()->getByWebsiteId(44, 8);
 }
+
 /**
  * Navigation.
  */

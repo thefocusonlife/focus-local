@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en-US">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<title>{{ item.title|default('Community Item') }}</title>
+	</head>
+
+	<body>
+		<main class="container">
+
+			<p>
+				<a href="{{ doc_root }}index/44" class="btn btn-secondary">
+					Back to Bicycle Club
+				</a>
+			</p>
+
+			<article class="community-item-view">
+
+				<header class="community-item-header">
+					<h1>{{ item.title }}</h1>
+
+					<p class="community-meta">
+						{{ item.content_type|default('story')|capitalize }}
+
+						{% if item.member_name %}
+							by
+							{{ item.member_name }}
+						{% endif %}
+
+						{% if item.created %}
+							·
+							{{ item.created|date('M j, Y') }}
+						{% endif %}
+					</p>
+				</header>
+
+				{% if item.summary %}
+					<section class="community-summary">
+						<p>{{ item.summary }}</p>
+					</section>
+				{% endif %}
+
+				{% if item.url %}
+					<p>
+						<a href="{{ item.url }}" target="_blank" rel="noopener" class="btn btn-primary">
+							Open Link
+						</a>
+					</p>
+				{% endif %}
+
+				{% if item.content %}
+					<section class="community-content">
+						{{ item.content|raw }}
+					</section>
+				{% endif %}
+
+			</article>
+
+		</main>
+	</body>
+</html>
