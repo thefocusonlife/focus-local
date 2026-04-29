@@ -250,6 +250,12 @@
 												{{ item.title }}
 											</a>
 										{% endif %}
+
+										{% if member %}
+											<small>
+												<a href="{{ doc_root }}bicycle-community?website=44&id={{ item.id }}">Edit</a>
+											</small>
+										{% endif %}
 									</li>
 								{% else %}
 									<li>No community items yet.</li>
@@ -259,6 +265,7 @@
 							<a href="{{ doc_root }}bicycle-community?website=44" class="btn btn-primary">
 								Add Community Item
 							</a>
+
 						</div>
 
 

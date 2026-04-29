@@ -13,12 +13,15 @@ if ($viewerId <= 0 || $role === 'guest') {
     exit();
 }
 
+$data = [];
+
 $websiteId = (int) ($_GET['website'] ?? ($_SESSION['website'] ?? 44));
 if ($websiteId !== 44) {
     $websiteId = 44;
 }
 
-$data = [];
+$id = (int) ($_GET['id'] ?? 0);
+
 $data['website'] = $cms->getWebsite()->getById($websiteId);
 $data['websiteId'] = $websiteId;
 
@@ -31,6 +34,31 @@ $data['community'] = [
     'content' => '',
     'status' => 'published',
 ];
-$websiteId = 44;
+
+if ($id > 0) {
+    $sql = "
+        SELECT *
+        FROM bicycle_community
+        WHERE id = :id
+          AND website_id = :website_id
+        LIMIT 1
+    ";
+
+    $existing = $cms
+        ->getDb()
+        ->runSql($sql, [
+            'id' => $id,
+            'website_id' => $websiteId,
+        ])
+        ->fetch();
+
+    if ($existing) {
+        $data['community'] = $existing;
+    } else {
+        $_SESSION['flash_failure'] = 'Community item not found.';
+        redirect('index/44');
+        exit();
+    }
+}
 
 echo $twig->render('bicycle-community-form.html', $data);

@@ -7,15 +7,19 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header('Location: ' . DOC_ROOT . 'bicycle-submit?website=44');
     exit();
 }
-function logStep(string $step, $data = null): void
+function logstep(string $message, array $context = []): void
 {
-    $msg = '[bicycle-save] ' . $step;
-
-    if ($data !== null) {
-        $msg .= ' | ' . var_export($data, true);
+    if (!defined('TFOL_DEBUG') || !TFOL_DEBUG) {
+        return;
     }
 
-    error_log($msg);
+    $line = date('c') . ' ' . $message;
+
+    if (!empty($context)) {
+        $line .= ' ' . json_encode($context);
+    }
+
+    file_put_contents('/tmp/tfol-debug.log', $line . "\n", FILE_APPEND);
 }
 
 $viewerId = (int) ($_SESSION['id'] ?? 0);
@@ -127,6 +131,21 @@ $elevationGainFt = trim((string) ($_POST['elevation_gain_ft'] ?? ''));
 $avgSpeedMph = trim((string) ($_POST['avg_speed_mph'] ?? ''));
 $avgPowerWatts = trim((string) ($_POST['avg_power_watts'] ?? ''));
 $avgHeartRate = trim((string) ($_POST['avg_heart_rate'] ?? ''));
+$maxSpeedMphValue =
+    isset($_POST['max_speed_mph']) && $_POST['max_speed_mph'] !== ''
+        ? (float) $_POST['max_speed_mph']
+        : null;
+
+$maxPowerWattsValue =
+    isset($_POST['max_power_watts']) && $_POST['max_power_watts'] !== ''
+        ? (int) $_POST['max_power_watts']
+        : null;
+
+$maxHeartRateValue =
+    isset($_POST['max_heart_rate']) && $_POST['max_heart_rate'] !== ''
+        ? (int) $_POST['max_heart_rate']
+        : null;
+
 $notes = trim((string) ($_POST['notes'] ?? ''));
 
 if ($rideDate === '' || $rideType === '') {
@@ -835,7 +854,7 @@ $uploadFileUploadedValue = 0;
  * Optional ride file upload (GPX or TCX)
  */
 
-logStep('FILE received', $_FILES['gpx_file']['name'] ?? 'none');
+//logStep('FILE received', $_FILES['gpx_file']['name'] ?? 'none');
 
 if (!empty($_FILES['gpx_file']['name'])) {
     if (!isset($_FILES['gpx_file']['error']) || $_FILES['gpx_file']['error'] !== UPLOAD_ERR_OK) {
@@ -851,7 +870,7 @@ if (!empty($_FILES['gpx_file']['name'])) {
         exit();
     }
 
-    logStep('FILE received', $_FILES['gpx_file']['name'] ?? 'none');
+    //logStep('FILE received', $_FILES['gpx_file']['name'] ?? 'none');
 
     if ((int) $_FILES['gpx_file']['size'] > 15 * 1024 * 1024) {
         $_SESSION['flash_failure'] = 'The ride file is too large. Max size is 15 MB.';
@@ -879,7 +898,7 @@ if (!empty($_FILES['gpx_file']['name'])) {
     $safeFileName = 'ride_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $extension;
     $destinationPath = $uploadDirectory . '/' . $safeFileName;
 
-    logStep('MOVE file →', $destinationPath);
+    //('MOVE file →', $destinationPath);
     if (!move_uploaded_file($_FILES['gpx_file']['tmp_name'], $destinationPath)) {
         $_SESSION['flash_failure'] = 'Ride file could not be saved.';
         header('Location: ' . DOC_ROOT . 'bicycle-submit?website=44');
@@ -928,7 +947,7 @@ if (!empty($_FILES['gpx_file']['name'])) {
                 (float) $startLngValue,
             );
 
-            logStep('GEOCODE result', $resolvedLocation);
+            //logStep('GEOCODE result', $resolvedLocation);
 
             if ($resolvedLocation !== null && trim($resolvedLocation) !== '') {
                 $startLocation = trim($resolvedLocation);
