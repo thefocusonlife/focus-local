@@ -228,7 +228,7 @@
 							<h2>Community</h2>
 							<p>Connect with the club through leaderboards, stories, cycling resources, and updates.</p>
 
-							<ul>
+							<ul class="bicycle-community-links">
 								<li>
 									<a href="{{ doc_root }}ride-leaderboard?website=44">🏆 Leaderboard</a>
 								</li>
@@ -259,20 +259,28 @@
 									</li>
 								{% else %}
 									<li>No community items yet.</li>
-								{% endfor %}
-							</ul>
-
-							<a href="{{ doc_root }}bicycle-community?website=44" class="btn btn-primary">
-								Add Community Item
-							</a>
-
-						</div>
-
+								</li>
+							{% endfor %}
+						</ul>
+						<a href="{{ doc_root }}bicycle-community?website=44" class="btn btn-primary">
+							Add Community Item
+						</a>
 
 					</div>
-				{% endif %}
-			</sectio>
-		{% endif %}
 
-	</main>
-{% endblock %}
+
+				</div>
+			{% endif %}
+		</sectio>
+	{% endif %}
+	<style>
+		ul.bicycle-community-links li {
+			margin-bottom: 18px !important;
+			line-height: 1.45 !important;
+		}
+
+		ul.bicycle-community-links li:last-child {
+			margin-bottom: 0 !important;
+		}
+	</style>
+</main>{% endblock %}
