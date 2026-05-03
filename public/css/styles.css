@@ -1353,8 +1353,8 @@ body.splash-active {
     margin: 0 !important;
     padding: 0 !important;
 }
-/* ===== Admin Story Delete: hard reset to a single column ===== */
-./* ===== Admin Story Delete: force a single centered column ===== */
+
+/* ===== Admin Story Delete: force a single centered column ===== */
 
 /* If the admin layout is a grid, make THIS form span full width */
 #content.container.admin form.narrow.story-delete {
@@ -1426,12 +1426,20 @@ main#content.container.admin form.narrow.story-delete .story-delete__actions inp
     max-width: 70%;
     height: auto;
 }
-
+body .membership-form-wrap input,
+body .membership-form-wrap select,
+body .membership-form-wrap textarea {
+    width: 100%;
+    max-width: 520px;
+}
 /************************************/
 /* 8.05 Rides Forms                 */
 /************************************/
 /*
+
+
 /* Bicycle Community Form Layout */
+
 /*.community-fields {
 	display: grid;
 	grid-template-columns: 1fr 1.5fr;

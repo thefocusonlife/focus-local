@@ -1,12 +1,16 @@
 <?php
 declare(strict_types=1);
 
-namespace CMS;
+namespace PhpBook\CMS;
 
 class BicycleCommunity
 {
+    /** @var mixed Database object with runSql() */
     protected $db;
 
+    /**
+     * @param mixed $db Database object with runSql()
+     */
     public function __construct($db)
     {
         $this->db = $db;

@@ -1,34 +1,107 @@
 <?php
-namespace PhpBook\CMS; // Declare namespace
+namespace PhpBook\CMS;
 
-use PhpBook\CMS\ImageService;
-//use PhpBook\CMS\Website;
-//use PhpBook\CMS\Quickguide;
-require_once APP_ROOT . '/src/classes/CMS/BicycleCommunity.php';
+require_once __DIR__ . '/BicycleCommunity.php';
+require_once __DIR__ . '/Club_members.php';
+
 class CMS
 {
-    protected $db = null; // Stores reference to Database object
-    protected ImageService $imageService; // Stores reference to ImageService object
-    protected $story = null; // Stores reference to Story object
-    protected $menu = null; // Stores reference to Menu object
-    protected $member = null; // Stores reference to Member object
-    protected $family = null; // Stores reference to Family object
-    protected $session = null; // Stores reference to Session object
-    protected $token = null; // Stores reference to Token object
-    protected $like = null; // Stores reference to Like object
-    protected $comment = null; // Stores reference to Comment object
-    // protected $storyorder = null;                         // Stores reference to Story Order object
+    /**
+     * =========================================
+     * CORE SYSTEM OBJECTS
+     * =========================================
+     */
+
+    /** @var mixed Database object (provides runSql()) */
+    protected $db = null;
+
+    /** @var ImageService|null */
+    protected $imageService = null;
+
+    /** @var Session|null */
+    protected $session = null;
+
+    /** @var Token|null */
+    protected $token = null;
+
+    /**
+     * =========================================
+     * CONTENT MODELS
+     * =========================================
+     */
+
+    /** @var Story|null */
+    protected $story = null;
+
+    /** @var Menu|null */
+    protected $menu = null;
+
+    /** @var Comment|null */
+    protected $comment = null;
+
+    /** @var Like|null */
+    protected $like = null;
+
+    /** @var Family|null */
+    protected $family = null;
+
+    /** @var Member|null */
+    protected $member = null;
+
+    /** @var Follow|null */
+    protected $follow = null;
+
+    /**
+     * =========================================
+     * COMMUNITY / FEATURE MODULES
+     * =========================================
+     */
+
+    /** @var \PhpBook\CMS\BicycleCommunity|null */
+    protected $bicycleCommunity = null;
+    /** @var \PhpBook\CMS\Club_members|null */
+    protected $club_members = null;
+
+    /**
+     * =========================================
+     * OPTIONAL / FUTURE
+     * =========================================
+     */
+
+    /** @var mixed|null */
+    protected $storyorder = null;
+
+    /** @var pagelimit|null */
     protected $pagelimit = null; // Stores reference to Pagelimit objec
+
+    /** @var sorttype|null */
     protected $sorttype = null; // Stores reference to Sorttype objec
-    protected $follow = null; // Stores reference to Follow objec
+
+    /** @var note|null */
     protected $note = null; // Stores reference to Note object
+
+    /** @var notes|null */
     protected $notes = null;
+
+    /** @var newnote|null */
     protected $newnote = null; // Stores reference to Newnote object
+    /** @var notetype|null */
     protected $notetype = null;
+
+    /** @var website|null */
     protected $website = null;
+
+    /** @var quickguide|null */
     protected $quickguide = null;
+
+    /** @var ride|null */
     protected $ride = null; //Stores reference to Ride object
 
+    /**
+     * @param mixed $dsn
+     * @param mixed $username
+     * @param mixed $password
+     */
     public function __construct($dsn, $username, $password)
     {
         $this->db = new Database($dsn, $username, $password); // Create Database object
@@ -241,9 +314,19 @@ class CMS
         // }
         return $this->ride;
     }
+
+    public function getClubMembers()
+    {
+        if ($this->club_members === null) {
+            $this->club_members = new \PhpBook\CMS\Club_members($this->db);
+        }
+
+        return $this->club_members;
+    }
+
     public function getBicycleCommunity()
     {
-        return new \CMS\BicycleCommunity($this->db);
+        return new BicycleCommunity($this->db);
     }
 
     public function redirect(string $path, array $params = []): void
@@ -259,5 +342,3 @@ class CMS
         exit();
     }
 }
-
-?>

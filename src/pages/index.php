@@ -1,17 +1,6 @@
 <?php
 declare(strict_types=1);
 
-file_put_contents(
-    '/tmp/tfol-route.log',
-    date('c') .
-        " ROUTE page={$page} id=" .
-        var_export($id ?? null, true) .
-        ' parts=' .
-        (isset($parts) ? json_encode($parts) : 'NA') .
-        "\n",
-    FILE_APPEND,
-);
-
 $data = [];
 $guidetext = '';
 
