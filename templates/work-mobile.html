@@ -1,0 +1,94 @@
+{% extends 'layout.html' %}
+
+{% block title %}Mobile Story Upload
+{% endblock %}
+
+{% block content %}
+
+	<form action="{{ doc_root }}work/{{ story.id }}" method="POST" enctype="multipart/form-data">
+
+		<input type="hidden" name="csrf" value="{{ csrf_token }}">
+		<input type="hidden" name="content" value=".">
+		<input type="hidden" name="website" value="{{ website.id }}">
+		<input type="hidden" name="keyword" value="{{ story.keyword|default('none') }}">
+		<input type="hidden" name="storyorder" value="{{ story.storyorder|default(1) }}">
+		<input type="hidden" name="blog" value="{{ story.blog|default(2) }}">
+		<input type="hidden" name="allow_comment" value="{{ story.allow_comment|default(0) }}">
+
+		<main class="mobile-work">
+
+			{% if errors.warning %}
+				<div class="alert alert-danger">{{ errors.warning }}</div>
+			{% endif %}
+
+			<!-- Image Upload -->
+			<label for="image">Image</label>
+			<input type="file" name="image" id="image" accept="image/*" class="form-control-file">
+			<span class="errors">{{ errors.image_file }}</span>
+
+			<!-- Title -->
+			<label for="title">Title</label>
+			<input type="text" name="title" id="title" value="{{ story.title }}" class="form-control">
+			<span class="errors">{{ errors.title }}</span>
+
+			<!-- Summary -->
+			<label for="summary">Summary</label>
+			<textarea id="summary" name="summary" class="form-control">{{ story.summary|default('.') }}</textarea>
+			<span class="errors">{{ errors.summary }}</span>
+
+			<!-- Menu -->
+			<label for="menu_id">Menu</label>
+			<select name="menu_id" id="menu_id" class="form-control">
+				{% for menu in menus %}
+					{% if member.account_id == menu.account_id or session.id == 1 %}
+						<option value="{{ menu.id }}" {% if menu.id == story.menu_id %} selected {% endif %}>
+							{{ menu.name }}
+						</option>
+					{% endif %}
+				{% endfor %}
+			</select>
+			<span class="errors">{{ errors.menu }}</span>
+
+			<!-- Public -->
+			<div class="form-check" style="margin-top: 15px;">
+				<input type="checkbox" name="published" value="1" id="published" {% if story.published %} checked {% endif %}>
+				<label for="published">Public</label>
+			</div>
+
+			<!-- Submit -->
+			<input type="submit" name="update" value="Save Story" class="btn btn-primary">
+
+		</main>
+	</form>
+
+	<style>
+		.mobile-work {
+			max-width: 420px;
+			margin: 0 auto;
+			padding: 16px;
+		}
+
+		.mobile-work label {
+			display: block;
+			margin-top: 14px;
+			font-weight: bold;
+		}
+
+		.mobile-work input,
+		.mobile-work textarea,
+		.mobile-work select {
+			width: 100%;
+			font-size: 16px;
+		}
+
+		.mobile-work textarea {
+			min-height: 90px;
+		}
+
+		.mobile-work .btn {
+			margin-top: 20px;
+			width: 100%;
+		}
+	</style>
+
+{% endblock %}

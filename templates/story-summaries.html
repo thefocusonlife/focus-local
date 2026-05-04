@@ -36,7 +36,9 @@
 			{% if session.role != "family" %}
 				{% if (session.id == story.member_id or session.id == 1) %}
 
-					<a href="{{ doc_root }}work/{{ story.id }}" class="btn btn-primary">Edit Story</a>
+					<a href="{{ doc_root }}work/{{ story.id }}" class="btn btn-primary mobile-disable-edit">
+						EDIT STORY
+					</a>
 
 					<!--<a href="{{ doc_root }}story-family/{{ story.id }}" class="btn btn-primary">Edit Family</a> -->
 				{% endif %}

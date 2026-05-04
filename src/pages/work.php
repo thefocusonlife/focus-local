@@ -24,11 +24,26 @@ $allow_comment = 1;
 
 // Initialize variables needed for the HTML page
 // Always initialize/parse id BEFORE building default story
+$isMobileRoute = false;
 $id = 0;
-if (isset($parts[1]) && ctype_digit((string) $parts[1])) {
-    $id = (int) $parts[1];
-}
 
+// Detect mobile work form
+$isMobileRoute = false;
+$id = 0;
+
+$path = parse_url($_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
+$segments = array_values(array_filter(explode('/', trim($path, '/'))));
+
+$isMobileRoute =
+    (isset($_GET['mobile']) && $_GET['mobile'] === '1') || in_array('mobile', $segments, true);
+
+if (!$isMobileRoute) {
+    $lastSegment = end($segments);
+
+    if ($lastSegment !== false && ctype_digit((string) $lastSegment)) {
+        $id = (int) $lastSegment;
+    }
+}
 $story = [
     'id' => $id,
     'website' => '',
@@ -240,7 +255,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
             $story['title'] = $_POST['title'] ?? '';
             $story['summary'] = $_POST['summary'] ?? '';
-            $story['content'] = $_POST['content'] ?? '';
+            $story['content'] = $_POST['content'] ?? '.';
 
             // Force author: never trust POST member_id
             if (!empty($story['id'])) {
@@ -525,4 +540,5 @@ if (defined('DEV') && DEV) {
     $data['debug_panel'] = $debugPanel;
 }
 
-echo $twig->render('work.html', $data);
+$template = $isMobileRoute ? 'work-mobile.html' : 'work.html';
+echo $twig->render($template, $data);
