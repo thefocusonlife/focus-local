@@ -9,25 +9,25 @@
 		<!-- Initialize TinyMCE with default settings and custom plugins and toolbars  -->
 
 		<script>
+			if (window.matchMedia("(min-width: 769px)").matches) { // textarea1 legacy init
+tinymce.init({selector: 'textarea1', branding: false, plugins: 'anchor emoticons wordcount checklist', toolbar: 'undo redo | bold italic underline | spellcheckdialog | align | removeformat'});
 
-			tinymce.init({selector: 'textarea1', branding: false, plugins: 'anchor emoticons  wordcount checklist  ', toolbar: 'undo redo | bold italic underline| spellcheckdialog | align | removeformat'});
-
-// Initialize TinyMCE for textareas with class "tinymce" and a custom toolbar
-
+// class-based init
 tinymce.init({
 selector: 'textarea.tinymce',
 branding: false,
 
-// 🔧 FIX (add these lines)
+// 🔧 URL handling
 convert_urls: false,
 relative_urls: false,
 remove_script_host: false,
 
-plugins: 'anchor autolink  link lists searchreplace table wordcount',
-toolbar: 'undo redo | bold italic underline  link |  image table  | spellcheckdialog | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat'
+plugins: 'anchor autolink link lists searchreplace table wordcount',
+toolbar: 'undo redo | bold italic underline link | image table | spellcheckdialog | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat'
 });
-		</script>
 
+}
+		</script>
 
 		<title>
 			{% block title %}theFocusOnLife
@@ -84,9 +84,9 @@ toolbar: 'undo redo | bold italic underline  link |  image table  | spellcheckdi
 
 
 		<script>
-			if (document.getElementById('story-content')) {
+			if (window.matchMedia("(min-width: 769px)").matches && document.getElementById('story-content') && typeof tinymce !== 'undefined') {
 tinymce.init({
-selector: 'textarea',
+selector: 'textarea.tinymce',
 plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount checklist mediaembed casechange export formatpainter pageembed linkchecker a11ychecker tinymcespellchecker permanentpen powerpaste advtable advcode editimage tinycomments tableofcontents footnotes mergetags autocorrect typography inlinecss code',
 toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | code | removeformat',
 

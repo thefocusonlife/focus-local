@@ -24,8 +24,9 @@
 		{# TinyMCE (only if key exists) #}
 		{% if constant('TINYMCE_API_KEY') is defined and constant('TINYMCE_API_KEY') %}
 			<script src="https://cdn.tiny.cloud/1/{{ constant('TINYMCE_API_KEY') }}/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+
 			<script>
-				// textarea1 legacy init
+				if (window.innerWidth > 768) { // textarea1 legacy init
 tinymce.init({selector: 'textarea1', branding: false, plugins: 'anchor emoticons wordcount checklist', toolbar: 'undo redo | bold italic underline | spellcheckdialog | align | removeformat'});
 
 // class-based init
@@ -33,7 +34,7 @@ tinymce.init({
 selector: 'textarea.tinymce',
 branding: false,
 
-// 🔧 FIX (add these lines)
+// 🔧 URL handling
 convert_urls: false,
 relative_urls: false,
 remove_script_host: false,
@@ -41,6 +42,8 @@ remove_script_host: false,
 plugins: 'anchor autolink link lists searchreplace table wordcount',
 toolbar: 'undo redo | bold italic underline link | image table | spellcheckdialog | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | removeformat'
 });
+
+}
 			</script>
 		{% endif %}
 
@@ -103,8 +106,8 @@ toolbar: 'undo redo | bold italic underline link | image table | spellcheckdialo
 						<span class="hidden">Menu</span>
 					</button>
 					<!-- DEBUG nav: count={{ navigation|default([])|length }}
-																																																																																																				     sid={{ session.id|default('NULL') }}
-																																																																																																				     wid={{ session.website|default('NULL') }} -->
+																																																																																																									     sid={{ session.id|default('NULL') }}
+																																																																																																									     wid={{ session.website|default('NULL') }} -->
 
 
 					<ul id="menu">
