@@ -19,7 +19,7 @@ $families = null;
 $image = [];
 $website = [];
 $landscape = 1;
-$blog = 1;
+$blog = 2;
 $allow_comment = 1;
 
 // Initialize variables needed for the HTML page
@@ -59,7 +59,7 @@ $story = [
     'image_alt' => '',
     'storyorder' => 0,
     'landscape' => '1',
-    'blog' => 1,
+    'blog' => 2,
     'allow_comment' => '0',
     'keyword' => 'none',
 ]; // Story data
@@ -541,4 +541,6 @@ if (defined('DEV') && DEV) {
 }
 
 $template = $isMobileRoute ? 'work-mobile.html' : 'work.html';
+$template = $isMobileRoute ? 'work-mobile.html' : 'work.html';
+
 echo $twig->render($template, $data);
