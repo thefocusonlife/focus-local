@@ -6,6 +6,14 @@ require_once APP_ROOT . '/src/security/guard.php';
 $viewerId = (int) ($_SESSION['id'] ?? 0);
 $role = strtolower((string) ($_SESSION['role'] ?? ''));
 
+$allowedMemberAdmins = [1, 3, 339]; // user IDs allowed to view club members
+
+if (!in_array($viewerId, $allowedMemberAdmins, true)) {
+    $_SESSION['flash_failure'] = 'You do not have permission to view club members.';
+    redirect('index');
+    exit();
+}
+
 if ($viewerId <= 0 || $role === 'guest') {
     $_SESSION['return_to'] = '/club-members-admin?website=44';
     $_SESSION['flash_failure'] = 'You must be logged in to view club members.';

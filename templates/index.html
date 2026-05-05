@@ -236,7 +236,13 @@
 								<li class="community-membership-link">
 									<a href="{{ doc_root }}membership?website=44">📝 Join / Membership Form</a>
 								</li>
-
+								{% if session.id in [1,3,339] %}
+									<li>
+										<a href="{{ doc_root }}club-members-admin?website=44">
+											👥 Club Members
+										</a>
+									</li>
+								{% endif %}
 								<li>
 									<a href="{{ doc_root }}ride-leaderboard?website=44">🏆 Leaderboard</a>
 								</li>
