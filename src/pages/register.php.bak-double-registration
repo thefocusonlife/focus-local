@@ -10,10 +10,7 @@ require_once APP_ROOT . '/src/security/redirects.php';
 require_once __DIR__ . '/../../config/recaptcha.php';
 require_once APP_ROOT . '/src/security/guard.php';
 require_once APP_ROOT . '/src/security/csrf.php';
-/** @var array $config */
-/** @var array $email_config */
-/** @var \Twig\Environment $twig */
-/** @var mixed $cms */
+
 function sendVerificationEmail(
     array $emailConfig,
     string $toEmail,
@@ -186,6 +183,15 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // If form was posted
     // Get form data
 
+    if ((int) ($_POST['website'] ?? 1) !== 1) {
+        $valid = $cms->getMember()->getIdByEmail((string) ($_POST['email'] ?? ''));
+        if ($valid == 0) {
+            $errors['master'] =
+                'You must register with main theFocusOnLife website in order to register with this website.';
+        } else {
+            $errors['master'] = '';
+        }
+    }
     $websiteId = (int) ($_POST['website'] ?? 1);
     if ($websiteId <= 0) {
         $websiteId = 1;
@@ -289,45 +295,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         echo $twig->render('register.html', $data);
         exit();
     }
-    // No validation errors → create missing Website 1 master account first when needed
-    $masterUserId = 0;
-    $masterAlreadyVerified = false;
-    $result = false;
+    // No validation errors → attempt create
     try {
-        if ($websiteId > 1) {
-            $masterUserId = (int) $cms->getMember()->getIdByEmail($emailBase);
-
-            if ($masterUserId <= 0) {
-                $masterParams = $params;
-                $masterParams['website'] = 1;
-                $masterParams['email'] = $emailBase;
-                $masterParams['email_master'] = $emailBase;
-                $masterParams['email_verified'] = 0;
-                $masterParams['email_verified_at'] = null;
-
-                $masterCreated = $cms->getMember()->create($masterParams);
-
-                if (!$masterCreated) {
-                    throw new RuntimeException('Failed to create Website 1 master member.');
-                }
-
-                $masterUserId = (int) $cms->getMember()->getIdByEmail($emailBase);
-
-                if ($masterUserId <= 0) {
-                    throw new RuntimeException('Could not resolve Website 1 master member ID.');
-                }
-            } else {
-                $masterMember = $cms->getMember()->get($masterUserId);
-                $masterAlreadyVerified = (int) ($masterMember['email_verified'] ?? 0) === 1;
-
-                if ($masterAlreadyVerified) {
-                    $params['email_verified'] = 1;
-                    $params['email_verified_at'] =
-                        $masterMember['email_verified_at'] ?? date('Y-m-d H:i:s');
-                }
-            }
-        }
-
         $result = $cms->getMember()->create($params);
     } catch (PDOException $e) {
         error_log(
@@ -378,10 +347,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // SUCCESS: create email verification token + send mail
     try {
-        $newUserId =
-            $websiteId > 1 && $masterUserId > 0
-                ? $masterUserId
-                : (int) $cms->getMember()->getIdByEmail($emailForLogin);
+        $newUserId = (int) $cms->getMember()->getIdByEmail($emailForLogin);
 
         if ($newUserId <= 0) {
             throw new RuntimeException('Could not resolve newly created member ID.');
@@ -400,9 +366,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         $scheme = !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http';
         $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-        $baseUrl = rtrim((string) ($config['base_url'] ?? ''), '/');
-
-        $verifyUrl = $baseUrl . '/verify-email?token=' . urlencode($rawToken);
+        $verifyUrl =
+            $scheme . '://' . $host . DOC_ROOT . 'verify-email?token=' . urlencode($rawToken);
 
         sendVerificationEmail($email_config, $emailBase, $params['forename'], $verifyUrl);
 

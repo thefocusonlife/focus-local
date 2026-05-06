@@ -5,6 +5,12 @@ use PhpBook\Validate\Validate;
 
 require_once __DIR__ . '/../../config/recaptcha.php';
 require_once APP_ROOT . '/src/security/guard.php';
+
+/** @var array $config */
+/** @var array $email_config */
+/** @var mixed $cms */
+/** @var \Twig\Environment $twig */
+
 guardMember();
 
 function sendEmailChangeVerification(
@@ -133,17 +139,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     throw new RuntimeException('Failed to create email change request.');
                 }
 
-                $scheme =
-                    !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' ? 'https' : 'http';
-                $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-                $verifyUrl =
-                    $scheme .
-                    '://' .
-                    $host .
-                    DOC_ROOT .
-                    'confirm-email-change?token=' .
-                    urlencode($rawToken);
+                $baseUrl = rtrim((string) ($config['base_url'] ?? ''), '/');
 
+                $verifyUrl = $baseUrl . '/confirm-email-change?token=' . urlencode($rawToken);
                 sendEmailChangeVerification(
                     $email_config,
                     $newEmailMaster,

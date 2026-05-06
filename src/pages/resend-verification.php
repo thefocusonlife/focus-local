@@ -7,6 +7,12 @@ require_once __DIR__ . '/../../config/recaptcha.php';
 require_once APP_ROOT . '/src/security/redirects.php';
 require_once APP_ROOT . '/src/security/guard.php';
 require_once APP_ROOT . '/src/security/csrf.php';
+
+/** @var array $config */
+/** @var array $email_config */
+/** @var mixed $cms */
+/** @var \Twig\Environment $twig */
+
 guardPublic();
 $csrfFormKey = 'resend_verification';
 function sendVerificationEmail(
@@ -34,31 +40,10 @@ function sendVerificationEmail(
     <p>Focus on Life</p>
     HTML;
 
-    // Plain text fallback (important for some clients)
-    $textMessage = <<<TEXT
-    Hi {$safeName},
-
-    Please verify your email address by clicking the link below:
-
-    {$verifyUrl}
-
-    This link will expire in 24 hours.
-
-    If you did not create this account, you can ignore this email.
-
-    Focus on Life
-    TEXT;
-
     $mail = new \PhpBook\Email\Email($emailConfig);
 
     // Assuming your Email class supports HTML + AltBody
-    $mail->sendEmail(
-        $emailConfig['admin_email'],
-        $toEmail,
-        $subject,
-        $htmlMessage,
-        $textMessage, // optional second param for fallback
-    );
+    $mail->sendEmail($emailConfig['admin_email'], $toEmail, $subject, $htmlMessage);
 }
 $email = '';
 $errors = [];
@@ -120,18 +105,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             ->createEmailVerification($userId, $tokenHash, $expiresAt);
 
                         if ($saved) {
-                            $scheme =
-                                !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'
-                                    ? 'https'
-                                    : 'http';
-                            $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
-                            $verifyUrl =
-                                $scheme .
-                                '://' .
-                                $host .
-                                DOC_ROOT .
-                                'verify-email?token=' .
-                                urlencode($rawToken);
+                            $baseUrl = rtrim((string) ($config['base_url'] ?? ''), '/');
+
+                            $verifyUrl = $baseUrl . '/verify-email?token=' . urlencode($rawToken);
 
                             sendVerificationEmail($email_config, $email, $forename, $verifyUrl);
                         }

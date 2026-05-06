@@ -3,7 +3,8 @@ namespace PhpBook\CMS; // Namespace declaration
 
 class Member
 {
-    protected $db; // Holds ref to Database object
+    /** @var object Database wrapper with runSql() */
+    protected $db;
 
     public function __construct(Database $db)
     {
@@ -1104,5 +1105,17 @@ class Member
 
         $row = $stmt->fetch();
         return $row ?: [];
+    }
+    public function markEmailMasterVerified(string $emailMaster): bool
+    {
+        $sql = "UPDATE member
+            SET email_verified = 1,
+                email_verified_at = NOW()
+            WHERE email_master = :email_master";
+
+        $stmt = $this->db->prepare($sql);
+        return $stmt->execute([
+            'email_master' => strtolower(trim($emailMaster)),
+        ]);
     }
 }

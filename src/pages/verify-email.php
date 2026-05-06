@@ -85,7 +85,9 @@ try {
     if (!$verified) {
         throw new RuntimeException('Failed to update member verification status.');
     }
-
+    if ($verified && !empty($member['email_master'])) {
+        $cms->getMember()->markEmailMasterVerified((string) $member['email_master']);
+    }
     $used = $cms->getMember()->markEmailVerificationUsed($verificationId);
     error_log('[VERIFY] markEmailVerificationUsed result=' . ($used ? 'true' : 'false'));
 
