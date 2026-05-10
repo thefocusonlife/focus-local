@@ -13,7 +13,7 @@ class Member
     // Get individual member by id
     public function get(int $id)
     {
-        $sql = "SELECT id, website, forename, surname, email, email_master, joined, picture, role, status, account_id, photo_limit, agegroup, plan, pagelimit,sorttype,  publik, termsok
+        $sql = "SELECT id, website, forename, surname, email, email_master, joined, picture, role, status, account_id, photo_limit, agegroup, plan, pagelimit,sorttype,  publik, termsok,public_ride_leaderboard
                   FROM member
                  WHERE id = :id;"; // SQL to get member
         return $this->db->runSql($sql, [$id])->fetch(); // Return member
@@ -296,6 +296,7 @@ class Member
             'photo_limit' => (int) ($member['photo_limit'] ?? 0),
             'agegroup' => (int) ($member['agegroup'] ?? 0),
             'plan' => (int) ($member['plan'] ?? 0),
+            'public_ride_leaderboard' => (int) ($member['public_ride_leaderboard'] ?? 0),
         ];
 
         if ($params['id'] <= 0) {
@@ -312,7 +313,8 @@ class Member
                account_id  = :account_id,
                photo_limit = :photo_limit,
                agegroup    = :agegroup,
-               plan        = :plan
+               plan        = :plan,
+               public_ride_leaderboard = :public_ride_leaderboard
          WHERE id = :id
          LIMIT 1;
     ";

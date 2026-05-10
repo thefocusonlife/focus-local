@@ -57,7 +57,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             'email' => trim((string) ($current['email'] ?? '')),
 
             // Checkboxes often don’t post when unchecked; normalize to 0/1
-            'publik' => isset($_POST['publik']) ? 1 : (int) ($current['publik'] ?? 0),
+            'publik' => isset($_POST['publik']) ? 1 : 0,
+            'public_ride_leaderboard' => isset($_POST['public_ride_leaderboard']) ? 1 : 0,
             'termsok' => isset($_POST['termsok']) ? 1 : (int) ($current['termsok'] ?? 0),
 
             // Preserve non-form fields from DB

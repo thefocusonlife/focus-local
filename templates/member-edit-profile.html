@@ -49,12 +49,19 @@
 			<label for="publik" class="form-check-label">Public</label>
 		</div>
 
+
 		<div class="form-check">
 			<input type="checkbox" name="termsok" value="1" disabled class="form-check-input" id="termsok" {% if member.termsok %} checked {% endif %}>
 			<input type="hidden" name="termsok" value={{member.termsok}}>
 			<label for="termsok" class="form-check-label">Terms and Conditions</label>
 		</div>
 
+		<div class="form-check">
+			<input type="checkbox" name="public_ride_leaderboard" value="1" class="form-check-input" id="public_ride_leaderboard" {% if member.public_ride_leaderboard == 1 %} checked {% endif %}>
+			<label for="public_ride_leaderboard" class="form-check-label">
+				Public Ride Leaderboard
+			</label>
+		</div>
 
 		<div class="form-group">
 			<input type="hidden" name="account_id" value="{{member.account_id}}" id="account_id" class="form-control"/>

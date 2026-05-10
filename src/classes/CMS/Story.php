@@ -27,6 +27,24 @@ class Story
         $this->db = $db; // Add ref to Database object
     }
 
+    // /CMS/Story.php
+
+    private static function visibilityCondition(string $alias = 'a'): string
+    {
+        $role = strtolower((string) ($_SESSION['role'] ?? 'guest'));
+        $viewerId = (int) ($_SESSION['id'] ?? 0);
+
+        if ($role === 'admin') {
+            return '1=1';
+        }
+
+        if ($viewerId > 0) {
+            return "({$alias}.published = 1 OR {$alias}.member_id = {$viewerId})";
+        }
+
+        return "{$alias}.published = 1";
+    }
+
     private function orderByForSorttype(?int $sorttypeId): string
     {
         $id = (int) ($sorttypeId ?? 0);
@@ -73,12 +91,11 @@ class Story
                   LEFT JOIN image AS i ON a.image_id    = i.id
                  WHERE a.id = :id "; // SQL statement
         if ($published) {
-            // If must be published
-            $sql .= 'AND a.published = 1 '; // Add clause to SQL
+            $sql .= 'AND ' . self::visibilityCondition('a') . ' ';
         }
 
         $sql .= 'GROUP BY 1;'; // Add GROUP BY clause
-        return $this->db->runSql($sql, [$id])->fetch(); // Return story
+        return $this->db->runSql($sql, ['id' => $id])->fetch();
     }
 
     public function getForWebsite(int $id, int $websiteId, bool $published): ?array
@@ -108,7 +125,7 @@ class Story
                AND a.website = :website ";
 
         if ($published) {
-            $sql .= 'AND a.published = 1 ';
+            $sql .= 'AND ' . self::visibilityCondition('a') . ' ';
         }
 
         $sql .= "GROUP BY a.id
@@ -190,15 +207,19 @@ class Story
         $viewerId = (int) ($_SESSION['id'] ?? 0);
 
         if ($role === 'admin') {
-            $sql .= ' AND (a.published IN (0,1))';
-        } elseif ($member !== null && $viewerId > 0 && $viewerId === $member) {
-            // Viewer is the author being filtered; allow drafts
-            $sql .= ' AND (a.published IN (0,1))';
+            // Admin sees all stories.
+        } elseif ($member !== null && $viewerId > 0 && $viewerId === (int) $member) {
+            // Owner sees own drafts.
         } else {
-            $sql .= ' AND a.published = 1';
+            $sql .= ' AND ' . self::visibilityCondition('a') . ' ';
         }
-
         $orderBy = $this->orderByForSorttype($sorttypeId);
+        $role = strtolower((string) ($_SESSION['role'] ?? 'guest'));
+        $requestedLimit = (int) ($arguments['limit'] ?? ($args['limit'] ?? ($limit ?? 12)));
+
+        $maxLimit = $role === 'admin' ? 100 : 24;
+        $finalLimit = min(max($requestedLimit, 1), $maxLimit);
+        $args['limit'] = $finalLimit;
         $sql .= " {$orderBy} LIMIT :limit";
 
         // Drop unused args to avoid driver complaints (optional but nice)
@@ -265,10 +286,16 @@ class Story
         } elseif ($viewerId > 0 && $member !== null && $viewerId === (int) $member) {
             $sql .= ' AND (a.published IN (0,1))';
         } else {
-            $sql .= ' AND a.published = 1';
+            $sql .= 'AND ' . self::visibilityCondition('a') . ' ';
         }
 
         $orderBy = $this->orderByForSorttype($sorttypeId);
+        $role = strtolower((string) ($_SESSION['role'] ?? 'guest'));
+        $requestedLimit = (int) ($arguments['limit'] ?? ($args['limit'] ?? ($limit ?? 12)));
+
+        $maxLimit = $role === 'admin' ? 100 : 24;
+        $finalLimit = min(max($requestedLimit, 1), $maxLimit);
+        $arguments['limit'] = $finalLimit;
         $sql .= " {$orderBy} LIMIT :limit";
 
         foreach (array_keys($arguments) as $k) {
@@ -349,26 +376,41 @@ WHERE w.is_active = 1
 AND (a.menu_id = :menu OR :menu1 is null)
 AND (a.member_id   = :member   OR :member1   is null)
 AND (:crossWebsite = 1 OR a.website = :website)
-AND (m.publik = 1)";
+";
         $sessionRole = (string) ($_SESSION['role'] ?? 'guest');
         $sessionMemberId = (int) ($_SESSION['id'] ?? 0);
         $sessionSorttype = (int) ($_SESSION['sorttype'] ?? \TFOL_DEFAULT_SORTTYPE_ID);
         $effectiveSorttype = (int) ($sorttypeId ?? $sessionSorttype);
         $sessionSorttype = $effectiveSorttype; // <-- one-liner to honor menu-scoped sort
 
+        // Visibility rules:
+        // - admin can see all stories and all members
+        // - author can see own stories, including drafts, even if m.publik = 0
+        // - everyone else sees only published stories from public members
+        $sessionRole = strtolower((string) ($_SESSION['role'] ?? 'guest'));
+        $sessionMemberId = (int) ($_SESSION['id'] ?? 0);
+
         if ($sessionRole === 'admin') {
-            $sql .= ' AND (a.published = 0 or a.published = 1)';
-        } elseif ($sessionMemberId === (int) $member) {
-            $sql .= ' AND (a.published = 0 or a.published = 1)';
+            // Admin sees everything: no published or publik restriction
+        } elseif ($sessionMemberId > 0) {
+            $sql .= ' AND (
+        (a.published = 1 AND m.publik = 1)
+        OR a.member_id = :viewer_id
+    )';
+
+            $arguments['viewer_id'] = $sessionMemberId;
         } else {
-            $sql .= ' AND (a.published = 1)';
+            $sql .= ' AND a.published = 1 AND m.publik = 1';
         }
         $effectiveSorttype =
             (int) ($sorttypeId ?? ($_SESSION['sorttype'] ?? TFOL_DEFAULT_SORTTYPE_ID));
+        $orderBy = $this->orderByForSorttype($effectiveSorttype);
+        $role = strtolower((string) ($_SESSION['role'] ?? 'guest'));
+        $requestedLimit = (int) ($arguments['limit'] ?? ($args['limit'] ?? ($limit ?? 12)));
 
-        $sorttypeId = (int) ($sorttypeId ?? TFOL_DEFAULT_SORTTYPE_ID);
-
-        $orderBy = $this->orderByForSorttype($sorttypeId);
+        $maxLimit = $role === 'admin' ? 100 : 24;
+        $finalLimit = min(max($requestedLimit, 1), $maxLimit);
+        $arguments['limit'] = $finalLimit;
         $sql .= " $orderBy LIMIT :limit";
 
         foreach (array_keys($arguments) as $k) {
@@ -523,7 +565,7 @@ AND (m.publik = 1)";
                  WHERE a.member_id = :id
                  ORDER BY a.storyorder DESC, a.member_id
                  LIMIT 1;"; // Add GROUP BY clause
-        return $this->db->runSql($sql, [$id])->fetch(); // Return story
+        return $this->db->runSql($sql, ['id' => $id])->fetch();
     }
 
     // get families
@@ -532,7 +574,7 @@ AND (m.publik = 1)";
         $sql = "SELECT DISTINCT m2.id, CONCAT (m2.forename,' ',m2.surname) AS family
                 FROM member as m
                 JOIN member as m2 ON m2.id = m.account_id;";
-        return $this->db->runSql($sql, [$id])->fetch(); // Return story
+        return $this->db->runSql($sql, ['id' => $id])->fetch();
     }
 
     // ADMIN METHODS
