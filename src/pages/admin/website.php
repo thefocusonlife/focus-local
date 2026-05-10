@@ -1,6 +1,8 @@
 <?php
 use PhpBook\Validate\Validate; // Import Validate namespace
 
+/** @var array<string,mixed> $data */
+/** @var \CMS\Session $session */
 is_admin($session->role); // Keep for now
 
 $sessionUserId = (int) ($cms->getSession()->id ?? 0);
@@ -217,10 +219,9 @@ $pendingMovedPath = null;
 try {
     $pdo->beginTransaction();
 
-    $newWebsiteId = (int)$cms->getWebsite()->create($website);
+    $newWebsiteId = (int) $cms->getWebsite()->create($website);
 
     if ($newWebsiteId === -1) {
-       
         $pdo->rollBack();
         redirect('admin/websites/', ['failure' => 'Website already exists']);
         exit();
@@ -230,23 +231,23 @@ try {
     }
 
     if ($pendingMove) {
-        
         if (!move_uploaded_file($pendingMove['tmp'], $pendingMove['dest'])) {
-            throw new RuntimeException("move_uploaded_file failed");
+            throw new RuntimeException('move_uploaded_file failed');
         }
-            }
+    }
 
     $setup = new \PhpBook\CMS\SetupService($pdo);
-    
+
     $result = $setup->copyUberMenusToWebsite($newWebsiteId);
-    
+
     $pdo->commit();
-    
+
     redirect('admin/websites/', ['success' => 'Website created']);
     exit();
-
 } catch (\Throwable $e) {
-    if ($pdo->inTransaction()) { $pdo->rollBack(); }
+    if ($pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
     redirect('admin/websites/', ['failure' => 'Create failed. See debug_create.log']);
     exit();
 }
