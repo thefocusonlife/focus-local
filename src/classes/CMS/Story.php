@@ -91,7 +91,7 @@ class Story
                   LEFT JOIN image AS i ON a.image_id    = i.id
                  WHERE a.id = :id "; // SQL statement
         if ($published) {
-            $sql .= 'AND ' . self::visibilityCondition('a') . ' ';
+            $sql .= ' AND ' . self::visibilityCondition('a') . ' ';
         }
 
         $sql .= 'GROUP BY 1;'; // Add GROUP BY clause
@@ -276,7 +276,7 @@ class Story
               LEFT JOIN image  AS i ON a.image_id = i.id
              WHERE (:menu1 IS NULL OR a.menu_id = :menu)
                AND (:member1 IS NULL OR a.member_id = :member)
-               AND a.website = :website";
+               AND a.website = :website ";
 
         $role = (string) ($_SESSION['role'] ?? 'guest');
         $viewerId = (int) ($_SESSION['id'] ?? 0);
@@ -291,13 +291,31 @@ class Story
 
         $orderBy = $this->orderByForSorttype($sorttypeId);
         $role = strtolower((string) ($_SESSION['role'] ?? 'guest'));
-        $requestedLimit = (int) ($arguments['limit'] ?? ($args['limit'] ?? ($limit ?? 12)));
 
-        $maxLimit = $role === 'admin' ? 100 : (int) ($menuTileLimit ?? 24);
-        $finalLimit = min(max($requestedLimit, 1), $maxLimit);
-        $arguments['limit'] = $finalLimit;
+        $menuTileLimit = 24;
+
+        if ((int) ($menu ?? 0) > 0) {
+            $menuLimitSql = "
+        SELECT tile_limit
+          FROM menu
+         WHERE id = :menu_id
+         LIMIT 1;
+    ";
+
+            $menuTileLimit =
+                (int) ($this->db
+                    ->runSql($menuLimitSql, ['menu_id' => (int) $menu])
+                    ->fetchColumn() ?:
+                24);
+        }
+
+        $requestedLimit = (int) ($arguments['limit'] ?? ($limit ?? 12));
+
+        $maxLimit = $role === 'admin' ? 100 : max(1, $menuTileLimit);
+
+        $arguments['limit'] = min(max($requestedLimit, 1), $maxLimit);
+
         $sql .= " {$orderBy} LIMIT :limit";
-
         foreach (array_keys($arguments) as $k) {
             if (!str_contains($sql, ':' . $k)) {
                 unset($arguments[$k]);
