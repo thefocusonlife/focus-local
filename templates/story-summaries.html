@@ -4,7 +4,8 @@
 
 			<a href="{{ doc_root }}story/{{ story.id }}/{{ story.seo_title }}">
 				{% if story.image_file %}
-					<img src="{{ doc_root }}uploads/{{ story.image_file }}" alt="{{ story.image_alt|e('html_attr') }}" class="story-thumb {{ story.landscape ? 'thumb-landscape' : 'thumb-portrait' }}">
+					<img src="{{ doc_root }}uploads/{{ story.image_file }}" alt="{{ story.image_alt|e('html_attr') }}" class="story-thumb {{ story.landscape ? 'thumb-landscape' : 'thumb-portrait' }}" loading="lazy" decoding="async">
+
 				{% else %}
 					<img src="{{ doc_root }}img/blank.png" alt="" class="story-thumb thumb-placeholder">
 				{% endif %}

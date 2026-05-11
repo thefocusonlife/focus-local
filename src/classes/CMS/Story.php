@@ -217,7 +217,7 @@ class Story
         $role = strtolower((string) ($_SESSION['role'] ?? 'guest'));
         $requestedLimit = (int) ($arguments['limit'] ?? ($args['limit'] ?? ($limit ?? 12)));
 
-        $maxLimit = $role === 'admin' ? 100 : 24;
+        $maxLimit = $role === 'admin' ? 100 : (int) ($menuTileLimit ?? 24);
         $finalLimit = min(max($requestedLimit, 1), $maxLimit);
         $args['limit'] = $finalLimit;
         $sql .= " {$orderBy} LIMIT :limit";
@@ -293,7 +293,7 @@ class Story
         $role = strtolower((string) ($_SESSION['role'] ?? 'guest'));
         $requestedLimit = (int) ($arguments['limit'] ?? ($args['limit'] ?? ($limit ?? 12)));
 
-        $maxLimit = $role === 'admin' ? 100 : 24;
+        $maxLimit = $role === 'admin' ? 100 : (int) ($menuTileLimit ?? 24);
         $finalLimit = min(max($requestedLimit, 1), $maxLimit);
         $arguments['limit'] = $finalLimit;
         $sql .= " {$orderBy} LIMIT :limit";
@@ -408,9 +408,37 @@ AND (:crossWebsite = 1 OR a.website = :website)
         $role = strtolower((string) ($_SESSION['role'] ?? 'guest'));
         $requestedLimit = (int) ($arguments['limit'] ?? ($args['limit'] ?? ($limit ?? 12)));
 
-        $maxLimit = $role === 'admin' ? 100 : 24;
+        $menuId = (int) ($menu ?? 0);
+        $menuTileLimit = 24;
+
+        if ((int) ($menu ?? 0) > 0) {
+            $menuLimitSql = "
+        SELECT tile_limit
+          FROM menu
+         WHERE id = :menu_id
+         LIMIT 1;
+    ";
+
+            $menuTileLimit =
+                (int) ($this->db
+                    ->runSql($menuLimitSql, ['menu_id' => (int) $menu])
+                    ->fetchColumn() ?:
+                24);
+        }
+        // Get Focused menu gets higher tile limit
+
+        $requestedLimit = (int) ($arguments['limit'] ?? ($limit ?? 12));
+
+        if ($role === 'admin') {
+            $maxLimit = 100;
+        } else {
+            $maxLimit = max(1, (int) ($menuTileLimit ?? 24));
+        }
+
         $finalLimit = min(max($requestedLimit, 1), $maxLimit);
+
         $arguments['limit'] = $finalLimit;
+
         $sql .= " $orderBy LIMIT :limit";
 
         foreach (array_keys($arguments) as $k) {
