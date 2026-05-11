@@ -38,7 +38,7 @@ class Session // Define Session class
         $this->landscape = $_SESSION['landscape'] ?? true;
         $this->follow_id = $_SESSION['follow_id'] ?? 0; // set follow_id property of this
         $this->pagelimit = $_SESSION['pagelimit'] ?? 200;
-        $this->sorttype = $_SESSION['sorttype'] ?? 2;
+        $this->sorttype = (int) ($_SESSION['sorttype'] ?? 1);
         $this->website = $_SESSION['website'] ?? $id;
     }
 
@@ -90,7 +90,7 @@ class Session // Define Session class
         $_SESSION['landscape'] = true;
         $_SESSION['follow_id'] = 0;
         $_SESSION['pagelimit'] = 200;
-        $_SESSION['sorttype'] = (int) ($_SESSION['sorttype'] ?? TFOL_DEFAULT_SORTTYPE_ID);
+        $_SESSION['sorttype'] = (int) ($_SESSION['sorttype'] ?? 1); // Guest default: Random
 
         $_SESSION['website'] = (int) ($website ?? 1);
     }
@@ -197,7 +197,7 @@ class Session // Define Session class
         $_SESSION['landscape'] = $_SESSION['landscape'] ?? true;
         $_SESSION['follow_id'] = 0;
         $_SESSION['pagelimit'] = $_SESSION['pagelimit'] ?? 200;
-        $_SESSION['sorttype'] = $_SESSION['sorttype'] ?? TFOL_DEFAULT_SORTTYPE_ID;
+        $_SESSION['sorttype'] = (int) ($_SESSION['sorttype'] ?? 1); // Guest default: Random
 
         // Website context
         if ($websiteId !== null && $websiteId > 0) {
