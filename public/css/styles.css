@@ -711,6 +711,9 @@ textarea#content {
     }
 }
 
+/* Keep forgot password aligned with password label */
+
+
 /* SEARCH */
 .form-search {
     margin-bottom: 1rem;
@@ -1476,100 +1479,23 @@ body .membership-form-wrap textarea {
     font-size: 0.75em;
   }
 }
-/************************************/
-/* 8.05 Rides Forms                 */
-/************************************/
-/*
 
-
-/* Bicycle Community Form Layout */
-
-/*.community-fields {
-	display: grid;
-	grid-template-columns: 1fr 1.5fr;
-	gap: 2rem;
-	align-items: start;
+/* FORCE positioning to work in all environments */
+.form-group {
+  position: relative !important;
 }
 
-form.ride-form {
-    outline: 4px solid red !important;
+.form-group .forgot-link {
+  position: absolute !important;
+  right: 0 !important;
+  top: 0 !important;
+  display: inline-block;
+  font-size: 0.85rem;
+  color: #999;
+  text-decoration: underline;
+  white-space: nowrap;
 }
 
-form.ride-form {
-    display: block !important;
-    width: 100% !important;
-    max-width: none !important;
+.form-group .forgot-link:hover {
+  color: #295073;
 }
-
-form.ride-form .ride-fields {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 16px 24px !important;
-    align-items: start !important;
-    max-width: 1000px;
-}
-
-
-form.ride-form .ride-fields > .form-row {
-    display: flex !important;
-    flex-direction: column !important;
-    float: none !important;
-    width: auto !important;
-    max-width: none !important;
-    min-width: 0 !important;
-    margin: 0 !important;
-    clear: none !important;
-}
-
-form.ride-form .ride-fields > .form-row label {
-    display: block !important;
-    margin: 0 0 0.35rem 0 !important;
-    font-weight: 600;
-}
-
-form.ride-form .ride-fields > .form-row input,
-form.ride-form .ride-fields > .form-row select,
-form.ride-form .ride-fields > .form-row textarea {
-    display: block !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    box-sizing: border-box !important;
-    margin: 0 !important;
-    float: none !important;
-}
-
-form.ride-form .ride-fields > .form-row.form-row-wide {
-    grid-column: 1 / -1 !important;
-}
-
-form.ride-form .form-actions {
-    display: block !important;
-    margin-top: 1rem !important;
-}
-
-form.ride-form .form-actions .btn {
-    display: inline-block !important;
-    margin-right: 0.5rem;
-    margin-bottom: 0.5rem;
-    vertical-align: middle;
-}
-
-@media (max-width: 800px) {
-    form.ride-form .ride-fields {
-        grid-template-columns: 1fr !important;
-    }
-
-    form.ride-form .ride-fields > .form-row.form-row-wide {
-        grid-column: auto !important;
-    }
-}
-
-.container.admin form.ride-form {
-    display: block !important;
-}
-
-.container.admin form.ride-form .ride-fields {
-    display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-}
-    */
