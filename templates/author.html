@@ -38,8 +38,8 @@
 				{% if (session.id != member.id  and session.id != 1 and session.id != 2) %}
 					<p></p>
 					<!--		<a href="{{ doc_root }}newnote/{{ member.id }}" class="btn btn-primary">
-																										FOLLOW REQUEST
-																									</a> -->
+																															FOLLOW REQUEST
+																														</a> -->
 				{% endif %}
 
 				{% if success %}
@@ -52,7 +52,7 @@
 						{% if member.role != "family" %}
 							{% if session.id ==1 or session.id> 2%}
 								{% if member.id == session.id %}
-									<a href="{{ doc_root }}work/" readonly class="btn  btn-primary">Add work</a>
+									<a href="{{ doc_root }}work/" readonly class="btn  btn-primary">Add Story</a>
 									<a href="{{ doc_root }}member-edit-profile/{{ member.id }}" readonly class="btn btn-primary">Edit profile
 									</a>
 									<a href="{{ doc_root }}member-edit-picture/" readonly class="btn btn-primary">Profile picture</a>
