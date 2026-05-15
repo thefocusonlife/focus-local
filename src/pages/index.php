@@ -173,6 +173,11 @@ if ($data['isBicycleClub']) {
     ]);
     $data['rideNotes'] = $noteStmt->fetchAll(PDO::FETCH_ASSOC);
 
+    foreach ($data['rideNotes'] as &$note) {
+        $note['note_text_html'] = formatTextWithLinks((string) ($note['note_text'] ?? ''));
+    }
+    unset($note);
+
     // Recent rides
     $rideSql = "
         SELECT

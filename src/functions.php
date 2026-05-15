@@ -131,3 +131,29 @@ function verify_csrf(string $token): bool
 
     return $valid;
 }
+
+function autoLinkUrls(string $text): string
+{
+    $escaped = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+
+    $linked = preg_replace(
+        '~(https?://[^\s<]+)~i',
+        '<a href="$1" target="_blank" rel="noopener">$1</a>',
+        $escaped,
+    );
+
+    return nl2br($linked);
+}
+
+function formatTextWithLinks(string $text): string
+{
+    $escaped = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
+
+    $linked = preg_replace(
+        '~(https?://[^\s<]+)~i',
+        '<a href="$1" target="_blank" rel="noopener">$1</a>',
+        $escaped,
+    );
+
+    return nl2br($linked);
+}
