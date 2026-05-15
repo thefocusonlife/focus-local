@@ -18,6 +18,7 @@ public/save_uploads/
 public/uploads/gpx/
 *.gpx
 *.tcx
+*.fit
 
 # Local-only images that should not be in source control
 public/img/Untitled-1.psd
