@@ -99,7 +99,11 @@ if (!empty($_SESSION['flash_success'])) {
 $preferredSorttypeId = (int) ($_SESSION['sort_override_global'][$websiteId] ?? 0);
 $sorttypeId = $preferredSorttypeId > 0 ? $preferredSorttypeId : null;
 
-$data['stories'] = $cms->getStory()->getAll3($websiteId, true, null, null, 100, $sorttypeId);
+$crossWebsite = (int) $websiteId === 1;
+
+$data['stories'] = $cms
+    ->getStory()
+    ->getAll3($websiteId, true, null, null, 100, $sorttypeId, $crossWebsite);
 
 /**
  * Bicycle Club module for website 44.
