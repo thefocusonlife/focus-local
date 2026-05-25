@@ -100,7 +100,7 @@ class Menu
         }
 
         $sql = "SELECT id, default_sorttype_id, master_id, website, name, description, navigation,
-                   account_id, seo_name, position
+                   account_id, seo_name, position, is_default
               FROM menu
              WHERE id = :id
                AND website = :website
@@ -123,7 +123,7 @@ class Menu
             return [];
         }
 
-        $sql = "SELECT id, website, name, navigation, account_id, seo_name, position
+        $sql = "SELECT id, website, name, navigation, account_id, seo_name, position, is_default
               FROM menu
              WHERE website = :website
              ORDER BY account_id ASC, position ASC;";
@@ -165,9 +165,9 @@ class Menu
     {
         try {
             $sql = "INSERT INTO menu
-            (website, name, description, navigation, account_id, seo_name, position, default_sorttype_id)
-            VALUES
-            (:website, :name, :description, :navigation, :account_id, :seo_name, :position, :default_sorttype_id)";
+        (website, name, description, navigation, account_id, seo_name, position, default_sorttype_id, is_default)
+        VALUES
+        (:website, :name, :description, :navigation, :account_id, :seo_name, :position, :default_sorttype_id, :is_default)";
 
             $params = [
                 'website' => $menu['website'],
@@ -178,6 +178,7 @@ class Menu
                 'seo_name' => $menu['seo_name'],
                 'position' => $menu['position'],
                 'default_sorttype_id' => $menu['default_sorttype_id'],
+                'is_default' => (int) ($menu['is_default'] ?? 0),
             ];
 
             $this->db->runSql($sql, $params);
@@ -190,7 +191,6 @@ class Menu
             throw $e;
         }
     }
-
     public function updateAccountId(int $menuId, int $accountId): bool
     {
         $menuId = (int) $menuId;
@@ -228,6 +228,7 @@ class Menu
             $menu['account_id'] ?? null,
             $menu['seo_name'] ?? null,
             $menu['position'] ?? null,
+            $menu['is_default'] ?? null,
         );
     }
 
@@ -242,19 +243,20 @@ class Menu
         $account_id = null,
         $seo_name = null,
         $position = null,
+        $is_default = null,
     ): int {
         try {
             $sql = "UPDATE menu
-            SET master_id = :master_id,
-                name = :name,
-                description = :description,
-                navigation = :navigation,
-                account_id = :account_id,
-                seo_name = :seo_name,
-                position = :position,
-                default_sorttype_id = :default_sorttype_id
-            WHERE id = :id AND website = :website";
-
+        SET master_id = :master_id,
+            name = :name,
+            description = :description,
+            navigation = :navigation,
+            account_id = :account_id,
+            seo_name = :seo_name,
+            position = :position,
+            default_sorttype_id = :default_sorttype_id,
+            is_default = :is_default
+        WHERE id = :id AND website = :website";
             $params = [
                 'id' => $id,
                 'website' => $website,
@@ -266,8 +268,9 @@ class Menu
                 'seo_name' => $seo_name,
                 'position' => $position,
                 'default_sorttype_id' => $default_sorttype_id,
+                'is_default' => $is_default,
             ];
-
+            error_log(print_r($params, true));
             $stmt = $this->db->runSql($sql, $params);
             return (int) $stmt->rowCount();
         } catch (\PDOException $e) {
@@ -339,5 +342,29 @@ class Menu
 
         $max = (int) ($row['max_pos'] ?? 0);
         return $max + $step;
+    }
+    public function clearDefaultForAccount(int $account_id): void
+    {
+        $sql = "UPDATE menu
+            SET is_default = 0
+            WHERE account_id = :account_id";
+
+        $this->db->runSql($sql, ['account_id' => $account_id]);
+    }
+    public function getDefaultMenuIdForAccount(int $account_id): int
+    {
+        $sql = "SELECT id
+            FROM menu
+            WHERE account_id = :account_id
+            ORDER BY is_default DESC, position ASC, id ASC
+            LIMIT 1";
+
+        $result = $this->db
+            ->runSql($sql, [
+                'account_id' => $account_id,
+            ])
+            ->fetch();
+
+        return (int) ($result['id'] ?? 0);
     }
 }

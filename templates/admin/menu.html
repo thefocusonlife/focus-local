@@ -83,6 +83,13 @@
 				<span class="errors">{{ errors.position }}</span>
 			</div>
 
+			<div class="form-group">
+				<label for="is_default">
+					<input type="checkbox" name="is_default" id="is_default" value="1" {% if menu.is_default|default(0) == 1 %} checked="checked" {% endif %}>
+					Default Menu
+				</label>
+			</div>
+
 
 			<div
 				class="form-group">

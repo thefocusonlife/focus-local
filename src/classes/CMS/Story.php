@@ -52,19 +52,30 @@ class Story
         switch ($id) {
             case 1:
                 return 'ORDER BY RAND()';
+
             case 2:
                 return 'ORDER BY a.created DESC, a.id DESC';
+
             case 3:
                 return 'ORDER BY a.created ASC, a.id ASC';
+
             case 4:
                 return 'ORDER BY a.title ASC, a.id ASC';
+
             case 5:
                 return 'ORDER BY a.title DESC, a.id DESC';
+
+            case 6:
+                return 'ORDER BY
+                CASE WHEN a.storyorder IS NULL OR a.storyorder = 0 THEN 1 ELSE 0 END,
+                a.storyorder ASC,
+                a.created DESC,
+                a.id DESC';
+
             default:
                 return 'ORDER BY a.created DESC, a.id DESC';
         }
     }
-
     // Get individual story
     public function get(int $id, bool $published)
     {
@@ -604,16 +615,20 @@ AND (:crossWebsite = 1 OR a.website = :website)
     }
 
     //Get Story Order
-    public function getStoryorder(int $id)
+    public function getStoryorder(int $menu_id)
     {
-        $sql = "SELECT (a.storyorder+1) as 'storyorder'
-                 FROM story    AS a
-                 WHERE a.member_id = :id
-                 ORDER BY a.storyorder DESC, a.member_id
-                 LIMIT 1;"; // Add GROUP BY clause
-        return $this->db->runSql($sql, ['id' => $id])->fetch();
-    }
+        error_log('getStoryorder menu_id=' . $menu_id);
 
+        $sql = "SELECT COALESCE(MAX(a.storyorder), 0) + 10 AS storyorder
+            FROM story AS a
+            WHERE a.menu_id = :menu_id";
+
+        $result = $this->db->runSql($sql, ['menu_id' => $menu_id])->fetch();
+
+        error_log('getStoryorder result=' . print_r($result, true));
+
+        return $result;
+    }
     // get families
     public function getFamily(int $id)
     {
@@ -689,24 +704,43 @@ AND (:crossWebsite = 1 OR a.website = :website)
         );
 
         $sql = "UPDATE story
-               SET website = :website,
-                   title = :title,
-                   summary = :summary,
-                   content = :content,
-                   menu_id = :menu_id,
-                   member_id = :member_id,
-                   family_id = :family_id,
-                   image_id = :image_id,
-                   published = :published,
-                   seo_title = :seo_title,
-                   storyorder = :storyorder,
-                   landscape = :landscape,
-                   allow_comment = :allow_comment,
-                   keyword = :keyword,
-                   blog = :blog
-             WHERE id = :id;";
+       SET website = :website,
+           title = :title,
+           summary = :summary,
+           content = :content,
+           menu_id = :menu_id,
+           member_id = :member_id,
+           family_id = :family_id,
+           image_id = :image_id,
+           published = :published,
+           seo_title = :seo_title,
+           storyorder = :storyorder,
+           landscape = :landscape,
+           allow_comment = :allow_comment,
+           keyword = :keyword,
+           blog = :blog
+     WHERE id = :id;";
 
-        $stmt = $this->db->runSql($sql, $story);
+        $params = [
+            'id' => (int) $story['id'],
+            'website' => (int) $story['website'],
+            'title' => $story['title'] ?? '',
+            'summary' => $story['summary'] ?? '',
+            'content' => $story['content'] ?? '',
+            'menu_id' => (int) ($story['menu_id'] ?? 0),
+            'member_id' => (int) ($story['member_id'] ?? 0),
+            'family_id' => (int) ($story['family_id'] ?? 0),
+            'image_id' => (int) ($story['image_id'] ?? 0),
+            'published' => (int) ($story['published'] ?? 0),
+            'seo_title' => $story['seo_title'] ?? '',
+            'storyorder' => (int) ($story['storyorder'] ?? 0),
+            'landscape' => (int) ($story['landscape'] ?? 0),
+            'allow_comment' => (int) ($story['allow_comment'] ?? 0),
+            'keyword' => $story['keyword'] ?? '',
+            'blog' => (int) ($story['blog'] ?? 0),
+        ];
+
+        $stmt = $this->db->runSql($sql, $params);
 
         return $stmt instanceof PDOStatement;
     }

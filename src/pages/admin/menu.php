@@ -98,6 +98,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($accountId <= 0) {
         $accountId = $defaultAccountId;
     }
+    $isDefault = isset($_POST['is_default']) ? 1 : 0;
+
+    if ($isDefault === 1) {
+        $cms->getMenu()->clearDefaultForAccount($accountId);
+    }
 
     // validate
     if ($name === '') {
@@ -152,7 +157,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $update['position'] = $position;
             $update['default_sorttype_id'] = $defaultSorttypeId;
             $update['seo_name'] = create_seo_name($name);
-
+            $update['is_default'] = $isDefault;
             $affected = (int) $cms->getMenu()->update($update);
 
             // 0 rows affected = OK (no-change save)
@@ -173,6 +178,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'seo_name' => create_seo_name($name),
                 'position' => $position,
                 'default_sorttype_id' => $defaultSorttypeId,
+                'is_default' => $isDefault,
             ];
 
             $newId = (int) $cms->getMenu()->create($createParams);
@@ -195,6 +201,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'position' => $position,
         'account_id' => $accountId,
         'default_sorttype_id' => $defaultSorttypeId,
+        'is_default' => $isDefault,
     ];
 }
 
@@ -239,6 +246,7 @@ if ($menu === null) {
             'position' => $defaultPosition,
             'account_id' => $defaultAccountId,
             'default_sorttype_id' => 0,
+            'is_default' => 0,
         ];
     }
 }
