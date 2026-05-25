@@ -678,13 +678,35 @@ AND (:crossWebsite = 1 OR a.website = :website)
     {
         unset($story['id'], $story['image_file'], $story['image_alt']);
 
-        $sql = "INSERT INTO story (website, title, summary, content, menu_id, member_id, family_id,
-               image_id, published, seo_title, storyorder, landscape, allow_comment, keyword, blog)
-            VALUES (:website, :title, :summary, :content, :menu_id, :member_id, :family_id, :image_id,
-             :published, :seo_title, :storyorder, :landscape, :allow_comment, :keyword, :blog);";
+        $sql = "INSERT INTO story (
+                website, title, summary, content, menu_id, member_id, family_id,
+                image_id, published, seo_title, storyorder, landscape, allow_comment, keyword, blog
+            ) VALUES (
+                :website, :title, :summary, :content, :menu_id, :member_id, :family_id,
+                :image_id, :published, :seo_title, :storyorder, :landscape, :allow_comment, :keyword, :blog
+            );";
 
-        $this->db->runSql($sql, $story);
-        return true;
+        $params = [
+            'website' => (int) ($story['website'] ?? 0),
+            'title' => $story['title'] ?? '',
+            'summary' => $story['summary'] ?? '',
+            'content' => $story['content'] ?? '',
+            'menu_id' => (int) ($story['menu_id'] ?? 0),
+            'member_id' => (int) ($story['member_id'] ?? 0),
+            'family_id' => (int) ($story['family_id'] ?? 0),
+            'image_id' => (int) ($story['image_id'] ?? 0),
+            'published' => (int) ($story['published'] ?? 0),
+            'seo_title' => $story['seo_title'] ?? '',
+            'storyorder' => (int) ($story['storyorder'] ?? 10),
+            'landscape' => (int) ($story['landscape'] ?? 0),
+            'allow_comment' => (int) ($story['allow_comment'] ?? 0),
+            'keyword' => $story['keyword'] ?? '',
+            'blog' => (int) ($story['blog'] ?? 0),
+        ];
+
+        $stmt = $this->db->runSql($sql, $params);
+
+        return $stmt instanceof PDOStatement;
     }
 
     // Update story (DB only)
