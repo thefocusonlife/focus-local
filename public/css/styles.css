@@ -30,6 +30,11 @@ story.summary a:hover p {
     color: #295073;
 }
 
+p.credit a:link,
+p.credit a:visited {
+    color: #4a86c5;
+    text-decoration: underline;
+}
 /**********************/
 /* 1:   CORE STYLES   */
 /**********************/
@@ -591,6 +596,17 @@ textarea {
     border-radius: 0.25rem;
 }
 
+.credit a {
+  color: #1a73e8;          /* link blue */
+  text-decoration: underline;
+  font-weight: 500;        /* optional: slightly stronger */
+}
+
+.credit a:hover {
+  text-decoration: underline;
+  opacity: 0.8;
+  cursor: pointer;
+}
 /* ---------- ADMIN FORMS ---------- */
 
 main.admin form {
