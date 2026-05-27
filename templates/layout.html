@@ -94,26 +94,30 @@ toolbar: 'undo redo | bold italic underline link | image table | spellcheckdialo
 
 			{% include 'partials/nav-utility.html' %}
 
-			<div class="container">
-				<div class="logo">
-					<input type="image" src="{{doc_root}}img/{{website.image_file}}" height="100px" width="300px" alt="submit"/>
+			<div class="container site-header-container">
+				<div class="logo desktop-logo">
+					<input type="image" src="{{ doc_root }}img/{{ website.image_file }}" height="100px" width="300px" alt="{{ website.name|default('Website logo') }}">
 				</div>
 
+				<div class="mobile-site-header">
+					<img src="{{ doc_root }}img/{{ website.image_file }}" alt="{{ website.name|default('Website logo') }}" class="mobile-site-logo">
+
+					<div class="mobile-site-title">
+						<strong>{{ website.name|default('theFocusOnLife') }}</strong>
+						<span>Get Focused</span>
+					</div>
+				</div>
 
 				<nav>
 					<button id="toggle-navigation" aria-expanded="false" aria-controls="menu">
 						<span class="icon-menu"></span>
 						<span class="hidden">Menu</span>
 					</button>
-					<!-- DEBUG nav: count={{ navigation|default([])|length }}
-																																																																																																																			     sid={{ session.id|default('NULL') }}
-																																																																																																																			     wid={{ session.website|default('NULL') }} -->
-
 
 					<ul id="menu">
 						{% for link in navigation %}
 							<li>
-								<a href="{{ doc_root }}menu/{{ link.id }}/{{ link.seo_name }}" {% if (section is defined and section == link.id) %} class="on" {% endif %}>
+								<a href="{{ doc_root }}menu/{{ link.id }}/{{ link.seo_name }}" {% if section is defined and section == link.id %} class="on" {% endif %}>
 									{{ link.name }}
 								</a>
 							</li>
@@ -128,26 +132,21 @@ toolbar: 'undo redo | bold italic underline link | image table | spellcheckdialo
 					</ul>
 				</nav>
 			</div>
+		</header>
 
-			{# Optional: keep this only if you truly need it; right now it’s a half-open form in your file #}
-			{% block header_extra %}{% endblock %}
-		</body>
 		{% if _debug is defined %}
 			<div style="margin:1rem 0; padding:0.75rem; border:1px solid #ccc; font-size:0.9rem;">
 				<div>
 					<strong>DEBUG</strong>
 				</div>
-
 				<div>
 					<strong>URI</strong>
 				</div>
 				<pre style="white-space:pre-wrap;">{{ _debug.uri }}</pre>
-
 				<div>
 					<strong>SESSION</strong>
 				</div>
 				<pre style="white-space:pre-wrap;">{{ _debug.session|json_encode(constant('JSON_PRETTY_PRINT')) }}</pre>
-
 				<div>
 					<strong>GET</strong>
 				</div>
@@ -161,6 +160,7 @@ toolbar: 'undo redo | bold italic underline link | image table | spellcheckdialo
 				{% endif %}
 			</div>
 		{% endif %}
+
 		{% if _debug_sort is defined %}
 			<div>
 				<strong>SORT</strong>
@@ -168,17 +168,15 @@ toolbar: 'undo redo | bold italic underline link | image table | spellcheckdialo
 			<pre style="white-space:pre-wrap;">{{ _debug_sort|json_encode(constant('JSON_PRETTY_PRINT')) }}</pre>
 		{% endif %}
 
+		<main id="content"> {% block content %}{% endblock %}
+			</main>
 
-	</body>
-</html></header><main id="content"> {% block content %}{% endblock %}
-</main>
+			{% include 'partials/footer.html' %}
 
-{% include 'partials/footer.html' %}
+			<script src="{{ doc_root }}js/site.js"></script>
 
-<script src="{{ doc_root }}js/site.js"></script>
-
-<script>
-	document.addEventListener('click', function (e) {
+			<script>
+				document.addEventListener('click', function (e) {
 const btn = e.target.closest('[data-toggle-password]');
 if (! btn) 
 return;
@@ -198,13 +196,12 @@ input.type = isHidden ? 'text' : 'password';
 btn.setAttribute('aria-pressed', String(isHidden));
 btn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
 });
-</script>
-{# reCAPTCHA v3 (load once, only if key exists) #}
-{# reCAPTCHA v3 (only on pages that set use_recaptcha=true) #}
-{% if use_recaptcha is defined and use_recaptcha and recaptcha_site_key is defined and recaptcha_site_key %}
-	<script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}"></script>
-	<script>
-		document.addEventListener('DOMContentLoaded', function () {
+			</script>
+
+			{% if use_recaptcha is defined and use_recaptcha and recaptcha_site_key is defined and recaptcha_site_key %}
+				<script src="https://www.google.com/recaptcha/api.js?render={{ recaptcha_site_key }}"></script>
+				<script>
+					document.addEventListener('DOMContentLoaded', function () {
 const forms = document.querySelectorAll('form[data-recaptcha-action]');
 if (! forms.length) 
 return;
@@ -214,7 +211,7 @@ return;
 forms.forEach(function (form) {
 const action = form.getAttribute('data-recaptcha-action') || '';
 
-form.addEventListener('submit', function (e) { // If we already have a token, allow normal submit
+form.addEventListener('submit', function (e) {
 const existing = form.querySelector('input[name="g-recaptcha-response"]');
 if (existing && existing.value) 
 return;
@@ -224,7 +221,7 @@ return;
 e.preventDefault();
 
 if (typeof grecaptcha === 'undefined') {
-form.submit(); // server will fail closed
+form.submit();
 return;
 }
 
@@ -246,11 +243,11 @@ form.submit();
 });
 });
 });
-	</script>
-{% endif %}
-{# Splash logic (as you had it, cleaned) #}
-<script>
-	(function () {
+				</script>
+			{% endif %}
+
+			<script>
+				(function () {
 const splash = document.getElementById('splashScreen');
 if (! splash) 
 return;
@@ -258,66 +255,11 @@ return;
 
 
 const HIDDEN_CLASS = 'hidden';
-const orig = {
-htmlOverflow: document.documentElement.style.overflow,
-htmlHeight: document.documentElement.style.height,
-bodyOverflow: document.body.style.overflow,
-bodyPosition: document.body.style.position,
-bodyInset: document.body.style.inset,
-bodyWidth: document.body.style.width,
-bodyHeight: document.body.style.height,
-bodyMargin: document.body.style.margin,
-bodyPadding: document.body.style.padding
-};
-
-function lockScroll() {
-document.documentElement.style.overflow = 'hidden';
-document.documentElement.style.height = '100%';
-
-document.body.style.overflow = 'hidden';
-document.body.style.position = 'fixed';
-document.body.style.inset = '0';
-document.body.style.width = '100%';
-document.body.style.height = '100%';
-document.body.style.margin = '0';
-document.body.style.padding = '0';
-
-const badge = document.querySelector('.grecaptcha-badge');
-if (badge) 
-badge.style.display = 'none';
-
-
-
-}
-
-function unlockScroll() {
-document.documentElement.style.overflow = orig.htmlOverflow;
-document.documentElement.style.height = orig.htmlHeight;
-
-document.body.style.overflow = orig.bodyOverflow;
-document.body.style.position = orig.bodyPosition;
-document.body.style.inset = orig.bodyInset;
-document.body.style.width = orig.bodyWidth;
-document.body.style.height = orig.bodyHeight;
-document.body.style.margin = orig.bodyMargin;
-document.body.style.padding = orig.bodyPadding;
-
-const badge = document.querySelector('.grecaptcha-badge');
-if (badge) 
-badge.style.display = '';
-
-
-
-}
-
-function showSplash() {
-splash.classList.remove(HIDDEN_CLASS);
-lockScroll();
-}
 
 function hideSplash() {
 splash.classList.add(HIDDEN_CLASS);
-unlockScroll();
+document.documentElement.style.overflow = '';
+document.body.style.overflow = '';
 }
 
 if (sessionStorage.getItem('tfolSplashShown')) {
@@ -326,12 +268,18 @@ return;
 }
 
 sessionStorage.setItem('tfolSplashShown', '1');
-showSplash();
+splash.classList.remove(HIDDEN_CLASS);
+document.documentElement.style.overflow = 'hidden';
+document.body.style.overflow = 'hidden';
 splash.addEventListener('click', hideSplash);
 })();
 
 requestAnimationFrame(() => {
 window.dispatchEvent(new Event('resize'));
 });
-</script>
-{% block body_end %}{% endblock %}</body></html></body></html>
+			</script>
+
+			{% block body_end %}{% endblock %}
+
+		</body>
+	</html>
