@@ -450,6 +450,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     error_log('after getStoryorder, raw value=' . print_r($storyorder, true));
                     if ($storyId !== null) {
                         $arguments['id'] = $storyId;
+                        if (empty($arguments['image_id'])) {
+                            $arguments['image_id'] = null;
+                        }
                         $saved = $cms->getStory()->update($arguments);
                     } else {
                         unset($arguments['id']);
