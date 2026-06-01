@@ -1,12 +1,19 @@
 <?php
 declare(strict_types=1);
+$allowedLocations = ['bend', 'redmond', 'sisters'];
+
+$location = strtolower((string) ($_GET['location'] ?? 'redmond'));
+
+if (!in_array($location, $allowedLocations, true)) {
+    $location = 'redmond';
+}
 
 $viewerId = (int) ($_SESSION['id'] ?? 0);
 $role = strtolower((string) ($_SESSION['role'] ?? ''));
 
 if ($viewerId <= 0 || $role === 'guest') {
     $_SESSION['return_to'] = '/index/44';
-    $_SESSION['flash_failure'] = 'You must be logged in to manage club notes.';
+    //$_SESSION['flash_failure'] = 'You must be logged in to manage club notes.';
     redirect('login');
     exit();
 }
@@ -34,6 +41,8 @@ $data = [
     'mode' => 'edit',
     'websiteId' => 44,
     'note' => $note,
+    'location' => $location,
+    'locationName' => ucfirst($location),
 ];
 
 if (!empty($_SESSION['flash_failure'])) {

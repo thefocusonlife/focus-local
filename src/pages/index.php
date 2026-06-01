@@ -119,6 +119,22 @@ $data['rideSchedules'] = [];
 $data['rideNotes'] = [];
 
 if ($data['isBicycleClub']) {
+    $allowedLocations = ['bend', 'redmond', 'sisters'];
+
+    $location = strtolower((string) ($_GET['location'] ?? 'redmond'));
+
+    if (!in_array($location, $allowedLocations, true)) {
+        $location = 'redmond';
+    }
+
+    $data['location'] = $location;
+    $data['locationName'] = ucfirst($location);
+    $data['locations'] = [
+        'bend' => 'Bend',
+        'redmond' => 'Redmond',
+        'sisters' => 'Sisters',
+    ];
+
     // Group ride schedule
     $scheduleSql = "
         SELECT
@@ -139,12 +155,14 @@ if ($data['isBicycleClub']) {
         FROM ride_schedule rs
         LEFT JOIN member m ON m.id = rs.member_id
         WHERE rs.website_id = :website_id
-          AND rs.is_active = 1
+        AND rs.is_active = 1
+        AND rs.location = :location
         ORDER BY rs.sort_order ASC, rs.day_of_week ASC, rs.start_time ASC, rs.id ASC
     ";
 
     $scheduleStmt = $cms->getDb()->runSql($scheduleSql, [
         'website_id' => $websiteId,
+        'location' => $location,
     ]);
     $data['rideSchedules'] = $scheduleStmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -165,6 +183,7 @@ if ($data['isBicycleClub']) {
         LEFT JOIN member m ON m.id = rn.member_id
         WHERE rn.website_id = :website_id
           AND rn.is_active = 1
+          AND rn.location = :location
         ORDER BY
             CASE WHEN rn.note_date IS NULL THEN 1 ELSE 0 END,
             rn.note_date DESC,
@@ -174,6 +193,7 @@ if ($data['isBicycleClub']) {
 
     $noteStmt = $cms->getDb()->runSql($noteSql, [
         'website_id' => $websiteId,
+        'location' => $location,
     ]);
     $data['rideNotes'] = $noteStmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -214,12 +234,14 @@ if ($data['isBicycleClub']) {
         LEFT JOIN member m ON m.id = r.member_id
         WHERE r.website_id = :website_id
           AND r.status = 'published'
+          AND r.location = :location
         ORDER BY r.ride_date DESC, r.id DESC
         LIMIT 20
     ";
 
     $rideStmt = $cms->getDb()->runSql($rideSql, [
         'website_id' => $websiteId,
+        'location' => $location,
     ]);
     $data['rides'] = $rideStmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -281,6 +303,10 @@ if (defined('TFOL_ROUTE_DEBUG') && TFOL_ROUTE_DEBUG) {
         'resolved_website_id' => $websiteId,
     ];
 }
-
+$data['locations'] = [
+    'bend' => 'Bend',
+    'redmond' => 'Redmond',
+    'sisters' => 'Sisters',
+];
 echo $twig->render('index.html', $data);
 return;

@@ -64,7 +64,7 @@
 	</style>
 	<body>
 		<main class="container">
-			<section class="header">
+			<section class="bicycle-club-module">
 				<h2>
 					{% if community.id %}Edit Community Item{% else %}Add Community Item
 					{% endif %}
@@ -82,7 +82,7 @@
 			<form method="post" action="{{ doc_root }}bicycle-community-save" class="community-form">
 				<input type="hidden" name="id" value="{{ community.id|default(0) }}">
 				<input type="hidden" name="website_id" value="{{ website.id }}">
-
+				<input type="hidden" name="location" value="{{ location }}">
 				<div class="community-form-grid">
 					<div class="community-left">
 
@@ -120,7 +120,10 @@
 
 						<p class="form-actions">
 							<button type="submit" class="btn btn-primary">Save Community Item</button>
-							<a href="{{ doc_root }}index/44" class="btn btn-secondary">Back to Bicycle Club</a>
+
+							<a href="{{ doc_root }}index/44?location={{ location }}" class="btn btn-secondary">
+								Back to Bicycle Club
+							</a>
 						</p>
 					</div>
 
@@ -150,6 +153,6 @@ toolbar : 'undo redo | bold italic underline | link | bullist numlist | table | 
 					</body>
 				</html>
 			</html>
-		</main>
+		</html>
 	</body>
-</html></body></html></body></html>
+</html></html></body></html></body></html></html></body></html></body> </html></body></html></body></html></body></html></body></html></body></html></body></html></main></body></html></body></html></body></html>

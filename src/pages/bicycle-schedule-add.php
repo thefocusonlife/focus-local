@@ -1,5 +1,12 @@
 <?php
 declare(strict_types=1);
+$allowedLocations = ['bend', 'redmond', 'sisters'];
+
+$location = strtolower((string) ($_GET['location'] ?? 'redmond'));
+
+if (!in_array($location, $allowedLocations, true)) {
+    $location = 'redmond';
+}
 
 $viewerId = (int) ($_SESSION['id'] ?? 0);
 $role = strtolower((string) ($_SESSION['role'] ?? ''));
@@ -22,6 +29,8 @@ include APP_ROOT . '/src/pages/menu-path.php';
 $data = [
     'mode' => 'add',
     'websiteId' => 44,
+    'location' => $location,
+    'locationName' => ucfirst($location),
     'schedule' => [
         'id' => null,
         'title' => '',

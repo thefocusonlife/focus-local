@@ -8,6 +8,7 @@
 			{% endif %}
 		</title>
 
+
 		<!-- TinyMCE -->
 		<script src="https://cdn.tiny.cloud/1/{{ constant('TINYMCE_API_KEY') }}/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
 
@@ -127,9 +128,10 @@
 			{% endif %}
 
 			<form method="post" action="{{ doc_root }}bicycle-note-save" class="note-form">
+
 				<input type="hidden" name="id" value="{{ note.id }}">
 				<input type="hidden" name="website_id" value="{{ websiteId }}">
-
+				<input type="hidden" name="location" value="{{ location }}">
 				<section class="note-fields">
 
 					<div class="form-row">
@@ -156,17 +158,15 @@
 
 				</section>
 
-				<p class="form-actions">
-					<button type="submit" class="btn btn-primary">Save Note</button>
-					<a href="{{ doc_root }}index/44" class="btn btn-secondary">
-						Back to Bicycle Club
-					</a>
-				</p>
-			</form>
-		</main>
-
-		<script>
-			document.addEventListener('DOMContentLoaded', function () {
+				<button type="submit" class="btn btn-primary">Save Note</button>
+				<a href="{{ doc_root }}index/44?location={{ location }}" class="btn btn-secondary">
+					Back to Bicycle Club
+				</a>
+			</p>
+		</form>
+	</body>
+</html></main><script>
+document.addEventListener('DOMContentLoaded', function () {
 if (typeof tinymce !== 'undefined') {
 tinymce.init({
 selector: '#note_text',
@@ -177,8 +177,4 @@ plugins: 'anchor autolink link lists searchreplace table wordcount',
 toolbar: 'undo redo | bold italic underline | link | bullist numlist | table | removeformat'
 });
 }
-});
-		</script>
-
-	</body>
-</html>
+});</script></body></html>
