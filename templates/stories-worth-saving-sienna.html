@@ -1,0 +1,94 @@
+{% extends 'layout.html' %}
+
+{% block title %}Through the Locust Trees
+{% endblock %}
+
+{% block content %}
+
+	<style>
+
+		.featured-story {
+			max-width: 900px;
+			margin: 0 auto;
+			padding: 2rem 1rem 3rem;
+		}
+
+		.featured-story h1 {
+			color: #295073;
+			margin-bottom: 1rem;
+			text-align: center;
+		}
+
+		.featured-image {
+			width: 100%;
+			max-height: 500px;
+			object-fit: cover;
+			border-radius: 10px;
+			margin-bottom: 2rem;
+		}
+
+		.story-content {
+			font-size: 1.1rem;
+			line-height: 1.8;
+		}
+
+		.story-content p {
+			margin-bottom: 1.25rem;
+		}
+
+		.featured-actions {
+			margin-top: 2.5rem;
+			display: flex;
+			gap: 1rem;
+			flex-wrap: wrap;
+		}
+
+		.stories-btn {
+			display: inline-block;
+			background: #295073;
+			color: #fff;
+			text-decoration: none;
+			padding: 0.8rem 1.25rem;
+			border-radius: 8px;
+			font-weight: bold;
+		}
+
+		.stories-btn.primary {
+			background: #a62d2d;
+		}
+
+		.stories-btn:hover {
+			color: #fff;
+		}
+	</style>
+
+	<div class="featured-story">
+
+		```
+		<h1>Through the Locust Trees</h1>
+
+		<img src="{{ doc_root }}img/horse-locust-tree.jpg" alt="horse-locus-tree" class="featured-image">
+
+		<div class="story-content">
+			<p>
+
+				Just thought this was a beautiful photograph.  Unfortunately, beetles got to the Purple Locust trees in the back yard.
+			</p>
+		</div>
+
+		<div class="featured-actions">
+
+			<a class="stories-btn" href="{{ doc_root }}stories-worth-saving">
+				← Back to Stories Worth Saving
+			</a>
+
+			<a class="stories-btn primary" href="{{ doc_root }}work">
+				Write Your Story
+			</a>
+
+		</div>
+		```
+
+	</div>
+
+{% endblock %}

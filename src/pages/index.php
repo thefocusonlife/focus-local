@@ -37,8 +37,9 @@ $_SESSION['websiteid'] = $websiteId;
 $_SESSION['menu_website'] = $websiteId;
 
 $isGuest = empty($_SESSION['id']);
+$isStoriesLandingCandidate = $page === 'index' && ($id === 0 || $id === 1);
 
-if ($isGuest && $page === 'index') {
+if ($isGuest && $isStoriesLandingCandidate) {
     header('Location: ' . DOC_ROOT . 'stories-worth-saving');
     exit();
 }
