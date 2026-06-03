@@ -36,6 +36,13 @@ $_SESSION['website'] = $websiteId;
 $_SESSION['websiteid'] = $websiteId;
 $_SESSION['menu_website'] = $websiteId;
 
+$isGuest = empty($_SESSION['id']);
+
+if ($isGuest && $page === 'index') {
+    header('Location: ' . DOC_ROOT . 'stories-worth-saving');
+    exit();
+}
+
 /**
  * Logged-in member is optional context only.
  * Never use member.website to override current browsing website.

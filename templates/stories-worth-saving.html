@@ -1,0 +1,256 @@
+{% extends 'layout.html' %}
+
+{% block title %}Stories Worth Saving
+{% endblock %}
+
+{% block content %}
+
+	<style>
+		.stories-page {
+			max-width: 1100px;
+			margin: 0 auto;
+			padding: 2rem 1rem 3rem;
+			color: #333;
+		}
+
+		.stories-hero {
+			text-align: center;
+			margin-bottom: 2.5rem;
+		}
+
+		.stories-hero h1 {
+			font-size: 2.6rem;
+			color: #295073;
+			margin-bottom: 1rem;
+		}
+
+		.stories-hero p {
+			max-width: 780px;
+			margin: 0.6rem auto;
+			font-size: 1.1rem;
+			line-height: 1.6;
+		}
+
+		.featured-stories {
+			display: grid;
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: 1.5rem;
+			margin: 2.5rem 0;
+		}
+
+		.story-card {
+			background: #fff;
+			border: 1px solid #ddd;
+			border-radius: 12px;
+			padding: 1.5rem;
+			box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+		}
+
+		.story-image-placeholder {
+			height: 220px;
+			border-radius: 10px;
+			background: #e7edf3;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			color: #666;
+			font-style: italic;
+			margin-bottom: 1rem;
+		}
+
+		.story-card h3 {
+			color: #295073;
+			margin-top: 0;
+			font-size: 1.5rem;
+		}
+
+		.story-card p {
+			line-height: 1.55;
+		}
+
+		.btn-row {
+			margin-top: 1.2rem;
+		}
+
+		.stories-btn {
+			display: inline-block;
+			background: #295073;
+			color: #fff;
+			padding: 0.75rem 1.2rem;
+			border-radius: 8px;
+			text-decoration: none;
+			font-weight: bold;
+		}
+
+		.stories-btn:hover {
+			background: #3b6f9c;
+			color: #fff;
+		}
+
+		.write-section {
+			background: #f7f4ef;
+			border-radius: 14px;
+			padding: 2rem;
+			margin-top: 2.5rem;
+			text-align: center;
+		}
+
+		.write-section h2 {
+			color: #a62d2d;
+			font-size: 2rem;
+			margin-top: 0;
+		}
+
+		.write-section p {
+			max-width: 760px;
+			margin: 0.7rem auto;
+			line-height: 1.6;
+			font-size: 1.05rem;
+		}
+
+		.story-ideas {
+			max-width: 680px;
+			margin: 1.5rem auto;
+			text-align: left;
+			columns: 2;
+			line-height: 1.7;
+		}
+
+		.primary-action {
+			margin-top: 1.8rem;
+		}
+
+		.primary-action .stories-btn {
+			font-size: 1.15rem;
+			padding: 0.9rem 1.6rem;
+			background: #a62d2d;
+		}
+
+		.primary-action .stories-btn:hover {
+			background: #c14949;
+		}
+
+		.secondary-link {
+			display: block;
+			margin-top: 1.2rem;
+			color: #295073;
+			font-weight: bold;
+		}
+
+		@media(max-width: 760px) {
+			.stories-hero h1 {
+				font-size: 2.1rem;
+			}
+
+			.featured-stories {
+				grid-template-columns: 1fr;
+			}
+
+			.story-ideas {
+				columns: 1;
+			}
+
+			.write-section {
+				padding: 1.5rem 1rem;
+			}
+		}
+	</style>
+
+	<main class="stories-page">
+
+		<section class="stories-hero">
+			<h1>Stories Worth Saving</h1>
+
+			<p>Everyone has stories that deserve a place to live.</p>
+
+			<p>
+				Some are funny. Some are serious. Some are about music, family,
+																																																								            pets, bicycles, ranch life, old cars, chickens, gardens, faith,
+																																																								            recovery, or just a moment that stayed with you.
+			</p>
+
+			<p>
+				TheFocusOnLife is a place to collect those stories, add photos,
+																																																								            and organize them in a way that still makes sense years from now.
+			</p>
+		</section>
+
+		<section class="featured-stories">
+			<article class="story-card">
+				<img src="{{ doc_root }}img/lonelybanjo.jpg" alt="The Lonely Banjo" class="featured-story-image">
+				<h3>The Lonely Banjo</h3>
+
+				<p>
+					A quiet story about an old banjo, a new beginning, and the
+																																																																						                surprising ways music can find its way back into a life.
+				</p>
+
+				<div class="btn-row">
+
+					<a class="stories-btn" href="{{ doc_root }}stories-worth-saving-banjo">
+
+						Read The Lonely Banjo
+					</a>
+
+				</div>
+			</article>
+
+			<article class="story-card">
+				<img src="{{ doc_root }}img/we-weren-t-lost.jpg" alt="We Weren't Lost" class="featured-story-image">
+
+				<h3>We Weren't Lost</h3>
+
+				<p>
+					A childhood memory from the hills above Glendale — two boys,
+																																																																						                an afternoon adventure, and a story that grew larger than
+																																																																						                either of them expected.
+				</p>
+
+				<div class="btn-row">
+					<a class="stories-btn" href="{{ doc_root }}stories-worth-saving-lost">
+						Read We Weren't Lost
+					</a>
+				</div>
+
+			</article>
+		</section>
+
+		<section class="write-section">
+			<h2>What Story Would You Tell?</h2>
+
+			<p>You do not need to be a writer.</p>
+			<p>You do not need a polished essay.</p>
+
+			<p>
+				You only need a memory, a photo, a hobby, a project,
+																																																												            or something you care about.
+			</p>
+
+			<ul class="story-ideas">
+				<li>Your first bicycle</li>
+				<li>A favorite pet</li>
+				<li>A place you used to live</li>
+				<li>A family memory</li>
+				<li>A hobby that changed your life</li>
+				<li>A car, horse, chicken, garden, banjo, or road trip</li>
+				<li>A lesson learned the hard way</li>
+			</ul>
+
+			<p>Start with one story.</p>
+			<p>You can always add more later.</p>
+
+			<div class="primary-action">
+				<a class="stories-btn" href="#">Write Your Story</a>
+			</div>
+
+			<a class="secondary-link" href="{{ doc_root }}menu/50/get-focused">
+				Explore All Topics
+			</a>
+
+			<a class="secondary-link" href="{{ doc_root }}select-website">
+				Browse Websites
+			</a>
+		</section>
+
+	</main>
+{% endblock %}
