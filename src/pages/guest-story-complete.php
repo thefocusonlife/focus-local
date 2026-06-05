@@ -24,32 +24,36 @@ if ($title === '' || $content === '') {
 
 $websiteId = 1;
 $memberId = (int) $_SESSION['id'];
-$familyId = (int) ($_SESSION['account_id'] ?? $memberId);
-$contributionsMenuId = 572; // TODO: replace with real Contributions menu id
 $accountId = (int) ($_SESSION['account_id'] ?? $memberId);
+$familyId = $accountId;
 
-// Try first member menu
-$stmt = $cms->getDb()->runSql(
-    "
-    SELECT id
-    FROM menu
-    WHERE account_id = :account_id
-      AND website = :website
-    ORDER BY id ASC
-    LIMIT 1
-    ",
-    [
-        'account_id' => $accountId,
-        'website' => $websiteId,
-    ],
-);
+// 1. Try account default menu first
+$menuId = (int) $cms->getMenu()->getDefaultMenuIdForAccount($accountId);
 
-$menu = $stmt->fetch();
+// 2. If no default menu exists, use lowest-numbered menu
+if ($menuId < 1) {
+    $stmt = $cms->getDb()->runSql(
+        "
+        SELECT id
+        FROM menu
+        WHERE account_id = :account_id
+          AND website = :website
+        ORDER BY id ASC
+        LIMIT 1
+        ",
+        [
+            'account_id' => $accountId,
+            'website' => $websiteId,
+        ],
+    );
 
-if (!empty($menu['id'])) {
-    $menuId = (int) $menu['id'];
-} else {
-    // Create starter menu for new member
+    $menu = $stmt->fetch();
+
+    $menuId = !empty($menu['id']) ? (int) $menu['id'] : 0;
+}
+
+// 3. If member has no menus, create starter menu
+if ($menuId < 1) {
     $cms->getDb()->runSql(
         "
         INSERT INTO menu
@@ -83,24 +87,14 @@ if (!empty($menu['id'])) {
 
     $menuId = (int) $cms->getDb()->lastInsertId();
 }
+
 $seoTitle = strtolower(trim(preg_replace('/[^a-z0-9]+/i', '-', $title), '-'));
 if ($seoTitle === '') {
     $seoTitle = 'guest-story-' . time();
 }
 
-$stmt = $cms->getDb()->runSql(
-    "
-    SELECT COALESCE(MAX(storyorder), 0) + 10 AS next_storyorder
-    FROM story
-    WHERE menu_id = :menu_id
-    ",
-    [
-        'menu_id' => $menuId,
-    ],
-);
-
-$row = $stmt->fetch();
-$storyorder = (int) ($row['next_storyorder'] ?? 10);
+$storyorderRow = $cms->getStory()->getStoryorder($menuId);
+$storyorder = (int) ($storyorderRow['storyorder'] ?? 10);
 
 $sql = "
     INSERT INTO story
