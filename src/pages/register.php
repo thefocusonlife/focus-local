@@ -406,6 +406,11 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
         sendVerificationEmail($email_config, $emailBase, $params['forename'], $verifyUrl);
 
+        if (!empty($_SESSION['guest_story_draft'])) {
+            header('Location: ' . DOC_ROOT . 'guest-story-check-email');
+            exit();
+        }
+
         unset($_SESSION['flash_failure']);
         $_SESSION['flash_success'] =
             'Registration successful. Please check your email and click the verification link before signing in.';

@@ -180,6 +180,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $_SESSION['account_id'] = (int) ($member['account_id'] ?? $member['id']);
                     $_SESSION['follow_id'] = (int) $_SESSION['account_id'];
 
+                    // Guest Story flow: after successful login, continue saving the draft
+                    $isGuestStoryFlow =
+                        isset($_GET['guest_story']) ||
+                        isset($_POST['guest_story']) ||
+                        !empty($_SESSION['guest_story_draft']);
+
+                    if ($isGuestStoryFlow && !empty($_SESSION['guest_story_draft'])) {
+                        header('Location: ' . DOC_ROOT . 'guest-story-complete');
+                        exit();
+                    }
                     // Redirect to intended deep-link if present (and safe), else safe fallback
                     $returnTo = (string) ($_SESSION['return_to'] ?? '');
                     unset($_SESSION['return_to']);
@@ -262,6 +272,8 @@ $data['website'] = $website;
 $data['doc_root'] = $config['doc_root'] ?? '/_stage/';
 $data['show_resend_verification'] = $showResendVerification;
 $data['csrf_token'] = csrf_token($csrfFormKey);
+$data['login_email'] = $_SESSION['guest_story_email'] ?? '';
+$data['guest_story'] = !empty($_SESSION['guest_story_draft']);
 
 echo $twig->render('login.html', $data);
 exit();

@@ -1,218 +1,202 @@
 {% extends 'layout.html' %}
 
-{% block title %}Write Your Story{% endblock %}
+{% block title %}Write Your Story
+{% endblock %}
 
 {% block content %}
 
-<style>
-    .guest-story-page {
-        max-width: 850px;
-        margin: 0 auto;
-        padding: 2rem 1rem 3rem;
-        color: #333;
-    }
+	<style>
+		.guest-story-page {
+			max-width: 850px;
+			margin: 0 auto;
+			padding: 2rem 1rem 3rem;
+			color: #333;
+		}
 
-    .guest-story-page h1 {
-        color: #295073;
-        text-align: center;
-        margin-bottom: 0.75rem;
-    }
+		.guest-story-page h1 {
+			color: #295073;
+			text-align: center;
+			margin-bottom: 0.75rem;
+		}
 
-    .guest-story-intro {
-        max-width: 720px;
-        margin: 0 auto 2rem;
-        text-align: center;
-        line-height: 1.6;
-        font-size: 1.05rem;
-    }
+		.guest-story-intro {
+			max-width: 720px;
+			margin: 0 auto 2rem;
+			text-align: center;
+			line-height: 1.6;
+			font-size: 1.05rem;
+		}
 
-    .guest-story-form {
-        background: #fff;
-        border: 1px solid #ddd;
-        border-radius: 14px;
-        padding: 1.5rem;
-        box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-    }
+		.guest-story-form {
+			background: #fff;
+			border: 1px solid #ddd;
+			border-radius: 14px;
+			padding: 1.5rem;
+			box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+		}
 
-    .form-group {
-        margin-bottom: 1.35rem;
-    }
+		.form-group {
+			margin-bottom: 1.35rem;
+		}
 
-    .form-group label {
-        display: block;
-        font-weight: bold;
-        margin-bottom: 0.4rem;
-        color: #295073;
-    }
+		.form-group label {
+			display: block;
+			font-weight: bold;
+			margin-bottom: 0.4rem;
+			color: #295073;
+		}
 
-    .form-group input,
-    .form-group textarea {
-        width: 100%;
-        box-sizing: border-box;
-        border: 1px solid #bbb;
-        border-radius: 8px;
-        padding: 0.75rem;
-        font-size: 1rem;
-        font-family: inherit;
-    }
+		.form-group input,
+		.form-group textarea {
+			width: 100%;
+			box-sizing: border-box;
+			border: 1px solid #bbb;
+			border-radius: 8px;
+			padding: 0.75rem;
+			font-size: 1rem;
+			font-family: inherit;
+		}
 
-    .form-group textarea {
-        resize: vertical;
-        line-height: 1.5;
-    }
+		.form-group textarea {
+			resize: vertical;
+			line-height: 1.5;
+		}
 
-    #summary {
-        min-height: 90px;
-    }
+		#summary {
+			min-height: 90px;
+		}
 
-    #content {
-        min-height: 260px;
-    }
+		#content {
+			min-height: 260px;
+		}
 
-    .help-text {
-        font-size: 0.92rem;
-        color: #666;
-        margin-top: 0.35rem;
-    }
+		.help-text {
+			font-size: 0.92rem;
+			color: #666;
+			margin-top: 0.35rem;
+		}
 
-    .guest-story-actions {
-        margin-top: 1.75rem;
-        display: flex;
-        gap: 1rem;
-        flex-wrap: wrap;
-        align-items: center;
-    }
+		.guest-story-actions {
+			margin-top: 1.75rem;
+			display: flex;
+			gap: 1rem;
+			flex-wrap: wrap;
+			align-items: center;
+		}
 
-    .stories-btn {
-        display: inline-block;
-        border: none;
-        background: #a62d2d;
-        color: #fff;
-        padding: 0.85rem 1.35rem;
-        border-radius: 8px;
-        text-decoration: none;
-        font-weight: bold;
-        cursor: pointer;
-        font-size: 1rem;
-    }
+		.stories-btn {
+			display: inline-block;
+			border: none;
+			background: #a62d2d;
+			color: #fff;
+			padding: 0.85rem 1.35rem;
+			border-radius: 8px;
+			text-decoration: none;
+			font-weight: bold;
+			cursor: pointer;
+			font-size: 1rem;
+		}
 
-    .stories-btn:hover {
-        background: #c14949;
-        color: #fff;
-    }
+		.stories-btn:hover {
+			background: #c14949;
+			color: #fff;
+		}
 
-    .secondary-link {
-        color: #295073;
-        font-weight: bold;
-        text-decoration: none;
-    }
+		.secondary-link {
+			color: #295073;
+			font-weight: bold;
+			text-decoration: none;
+		}
 
-    .secondary-link:hover {
-        text-decoration: underline;
-    }
+		.secondary-link:hover {
+			text-decoration: underline;
+		}
 
-    .privacy-note {
-        margin-top: 1.5rem;
-        background: #f7f4ef;
-        border-radius: 10px;
-        padding: 1rem;
-        line-height: 1.55;
-        font-size: 0.95rem;
-    }
+		.privacy-note {
+			margin-top: 1.5rem;
+			background: #f7f4ef;
+			border-radius: 10px;
+			padding: 1rem;
+			line-height: 1.55;
+			font-size: 0.95rem;
+		}
 
-    @media (max-width: 760px) {
-        .guest-story-form {
-            padding: 1rem;
-        }
+		@media(max-width: 760px) {
+			.guest-story-form {
+				padding: 1rem;
+			}
 
-        .guest-story-actions {
-            flex-direction: column;
-            align-items: stretch;
-        }
+			.guest-story-actions {
+				flex-direction: column;
+				align-items: stretch;
+			}
 
-        .stories-btn,
-        .secondary-link {
-            text-align: center;
-        }
-    }
-</style>
+			.stories-btn,
+			.secondary-link {
+				text-align: center;
+			}
+		}
+	</style>
 
-<main class="guest-story-page">
+	<main class="guest-story-page">
 
-    <h1>Write Your Story</h1>
+		<h1>Write Your Story</h1>
 
-    <div class="guest-story-intro">
-        <p>
-            Start with one memory, one photo, one moment, or one thing you care about.
-            You do not need to be a writer.
-        </p>
+		<div class="guest-story-intro">
+			<p>
+				Start with one memory, one photo, one moment, or one thing you care about.
+				            You do not need to be a writer.
+			</p>
 
-        <p>
-            Write your story first. When you are ready to save it, we will help you
-            sign in or create a free account so your work is not lost.
-        </p>
-    </div>
+			<p>
+				Write your story first. When you are ready to save it, we will help you
+				            sign in or create a free account so your work is not lost.
+			</p>
+		</div>
 
-    <form class="guest-story-form"
-          method="post"
-          action="{{ doc_root }}guest-story-save">
+		<form class="guest-story-form" method="post" action="{{ doc_root }}guest-story-save">
 
-        <div class="form-group">
-            <label for="title">Story Title</label>
-            <input
-                id="title"
-                name="title"
-                type="text"
-                maxlength="120"
-                required
-                placeholder="Example: Saturday Morning Soccer">
-            <div class="help-text">
-                A simple title is fine. You can change it later.
-            </div>
-        </div>
+			<div class="form-group">
+				<label for="title">Story Title</label>
+				<input id="title" name="title" type="text" maxlength="120" required placeholder="Example: Saturday Morning Soccer">
+				<div class="help-text">
+					A simple title is fine. You can change it later.
+				</div>
+			</div>
 
-        <div class="form-group">
-            <label for="summary">Short Summary</label>
-            <textarea
-                id="summary"
-                name="summary"
-                maxlength="500"
-                rows="4"
-                placeholder="One or two lines about your story."></textarea>
-            <div class="help-text">
-                This appears as a short introduction. It can be very simple.
-            </div>
-        </div>
+			<div class="form-group">
+				<label for="summary">Short Summary</label>
+				<textarea id="summary" name="summary" maxlength="500" rows="4" placeholder="One or two lines about your story."></textarea>
+				<div class="help-text">
+					This appears as a short introduction. It can be very simple.
+				</div>
+			</div>
 
-        <div class="form-group">
-            <label for="content">Story Content</label>
-            <textarea
-                id="content"
-                name="content"
-                required
-                placeholder="Write your story here. It can be short, simple, and personal."></textarea>
-            <div class="help-text">
-                Start anywhere. A few sentences are enough.
-            </div>
-        </div>
+			<div class="story-content">
+				<label for="story-content">Story Content:</label>
 
-        <div class="guest-story-actions">
-            <button class="stories-btn" type="submit">
-                Save My Story
-            </button>
+				<textarea id="textarea2" class="tinymce" name="content">{{ draft.content|default('') }}</textarea>
 
-            <a class="secondary-link" href="{{ doc_root }}stories-worth-saving">
-                Back to Stories Worth Saving
-            </a>
-        </div>
+				<span class="errors">{{ errors.content }}</span>
+			</div>
 
-        <div class="privacy-note">
-            Your story will not be published anonymously. To protect the site from spam,
-            stories are saved only after you sign in or create a free account.
-        </div>
+			<div class="guest-story-actions">
+				<button class="stories-btn" type="submit">
+					Save My Story
+				</button>
 
-    </form>
+				<a class="secondary-link" href="{{ doc_root }}stories-worth-saving">
+					Back to Stories Worth Saving
+				</a>
+			</div>
 
-</main>
+			<div class="privacy-note">
+				Your story will not be published anonymously. To protect the site from spam,
+				            stories are saved only after you sign in or create a free account.
+			</div>
+
+		</form>
+
+	</main>
 
 {% endblock %}
