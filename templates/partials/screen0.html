@@ -1,5 +1,7 @@
-<div class="splash-screen hidden" id="splashScreen">
-	<a href="{{ doc_root }}index/{{ websiteId ?? id ?? (session.website_id ?? session.website ?? 1) }}">
-		<img src="{{ doc_root }}img/adjustfocus.jpg" alt="Splash Screen Image">
-	</a>
-</div>
+{% if page != 'stories-worth-saving' %}
+	<div class="splash-screen hidden" id="splashScreen">
+		<a href="{{ doc_root }}stories-worth-saving">
+			<img src="{{ doc_root }}img/adjustfocus.jpg" alt="Splash Screen Image">
+		</a>
+	</div>
+{% endif %}

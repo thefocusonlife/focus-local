@@ -65,13 +65,22 @@ $existingMember = $stmt->fetch();
 */
 
 if ($existingMember) {
-    $_SESSION['guest_story_login_notice'] = 'Please sign in to save your story.';
+    $_SESSION['website'] = 1;
+    $_SESSION['websiteid'] = 1;
+    $_SESSION['menu_website'] = 1;
+    $_SESSION['guest_story'] = 1;
 
+    $_SESSION['guest_story_login_notice'] = 'Please sign in to save your story.';
     $_SESSION['guest_story_email'] = $email;
 
     header('Location: ' . DOC_ROOT . 'login?guest_story=1');
     exit();
 }
+
+$_SESSION['website'] = 1;
+$_SESSION['websiteid'] = 1;
+$_SESSION['menu_website'] = 1;
+$_SESSION['guest_story'] = 1;
 
 $_SESSION['guest_story_register_email'] = $email;
 

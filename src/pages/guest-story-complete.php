@@ -22,12 +22,18 @@ if ($title === '' || $content === '') {
     exit();
 }
 
-$websiteId = 1;
+$storiesWebsiteId = 1;
+
+$_SESSION['website'] = $storiesWebsiteId;
+$_SESSION['websiteid'] = $storiesWebsiteId;
+$_SESSION['menu_website'] = $storiesWebsiteId;
+$_SESSION['guest_story'] = 1;
+
 $memberId = (int) $_SESSION['id'];
 $accountId = (int) ($_SESSION['account_id'] ?? $memberId);
 $familyId = $accountId;
 
-// 1. Try account default menu first
+// 1. Try account def ault menu first
 $menuId = (int) $cms->getMenu()->getDefaultMenuIdForAccount($accountId);
 
 // 2. If no default menu exists, use lowest-numbered menu
