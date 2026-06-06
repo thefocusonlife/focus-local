@@ -200,6 +200,23 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $emailForLogin = $websiteId > 1 ? $emailBase . $websiteId : $emailBase;
     error_log('[REGISTER] email_config keys: ' . implode(', ', array_keys($email_config)));
 
+    // Basic MX validation
+    if ($emailBase !== '' && empty($errors['email'])) {
+        $parts = explode('@', $emailBase);
+
+        if (count($parts) === 2) {
+            $domain = $parts[1];
+
+            if (!checkdnsrr($domain, 'MX')) {
+                // temp log
+                error_log('[REGISTER] MX validation failed for domain: ' . $domain);
+
+                $errors['email'] =
+                    'We could not verify that email address. Please check for typing errors.';
+            }
+        }
+    }
+
     // Duplicate check (only if email looks valid-ish; your full Validate::isEmail runs later)
     if ($emailBase !== '' && empty($errors['email'])) {
         // Check the UNIQUE login email (member.email)
@@ -209,6 +226,10 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
                 $errors['email'] = 'That email is already registered.';
             }
         }
+    }
+    if (!empty($_SESSION['guest_story_draft'])) {
+        $_SESSION['guest_story_email'] = $emailBase;
+        $_SESSION['guest_story_register_email'] = $emailBase;
     }
 
     // photolimit from plan
@@ -405,7 +426,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $verifyUrl = $baseUrl . '/verify-email?token=' . urlencode($rawToken);
 
         sendVerificationEmail($email_config, $emailBase, $params['forename'], $verifyUrl);
-
+        $_SESSION['guest_story_email'] = $emailBase;
+        $_SESSION['guest_story_register_email'] = $emailBase;
         if (!empty($_SESSION['guest_story_draft'])) {
             header('Location: ' . DOC_ROOT . 'guest-story-check-email');
             exit();
