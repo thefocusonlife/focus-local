@@ -143,14 +143,20 @@
 		<h1>Write Your Story</h1>
 
 		<div class="guest-story-intro">
+			{% if error %}
+				<div class="alert alert-danger">{{ error }}</div>
+				<p>
+					A story with that title already exists. Please change the title slightly and save again.
+				</p>
+			{% endif %}
 			<p>
 				Start with one memory, one photo, one moment, or one thing you care about.
-				            You do not need to be a writer.
+																								            You do not need to be a writer.
 			</p>
 
 			<p>
 				Write your story first. When you are ready to save it, we will help you
-				            sign in or create a free account so your work is not lost.
+																								            sign in or create a free account so your work is not lost.
 			</p>
 		</div>
 
@@ -158,7 +164,7 @@
 
 			<div class="form-group">
 				<label for="title">Story Title</label>
-				<input id="title" name="title" type="text" maxlength="120" required placeholder="Example: Saturday Morning Soccer">
+				<input id="title" name="title" type="text" maxlength="120" required placeholder="Example: Saturday Morning Soccer" value="{{ story.title|default('')|e }}">
 				<div class="help-text">
 					A simple title is fine. You can change it later.
 				</div>
@@ -166,7 +172,7 @@
 
 			<div class="form-group">
 				<label for="summary">Short Summary</label>
-				<textarea id="summary" name="summary" maxlength="500" rows="4" placeholder="One or two lines about your story."></textarea>
+				<textarea id="summary" name="summary" maxlength="500" rows="4" placeholder="One or two lines about your story.">{{ story.summary|default('')|e }}</textarea>
 				<div class="help-text">
 					This appears as a short introduction. It can be very simple.
 				</div>
@@ -175,7 +181,7 @@
 			<div class="story-content">
 				<label for="story-content">Story Content:</label>
 
-				<textarea id="textarea2" class="tinymce" name="content">{{ draft.content|default('') }}</textarea>
+				<textarea id="textarea2" class="tinymce" name="content">{{ story.content|default('')|e }}</textarea>
 
 				<span class="errors">{{ errors.content }}</span>
 			</div>
@@ -192,7 +198,7 @@
 
 			<div class="privacy-note">
 				Your story will not be published anonymously. To protect the site from spam,
-				            stories are saved only after you sign in or create a free account.
+																								            stories are saved only after you sign in or create a free account.
 			</div>
 
 		</form>

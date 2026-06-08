@@ -1,5 +1,25 @@
 <?php
 declare(strict_types=1);
+// temp log
+error_log(
+    'SWS TRACE ' .
+        basename(__FILE__) .
+        ' ' .
+        print_r(
+            [
+                'GET' => $_GET,
+                'POST' => $_POST,
+                'session_id' => session_id(),
+                'id' => $_SESSION['id'] ?? null,
+                'website' => $_SESSION['website'] ?? null,
+                'websiteid' => $_SESSION['websiteid'] ?? null,
+                'menu_website' => $_SESSION['menu_website'] ?? null,
+                'guest_story' => $_SESSION['guest_story'] ?? null,
+                'guest_story_draft' => !empty($_SESSION['guest_story_draft']),
+            ],
+            true,
+        ),
+);
 
 if (empty($_SESSION['id'])) {
     header('Location: ' . DOC_ROOT . 'login?guest_story=1');
@@ -22,11 +42,11 @@ if ($title === '' || $content === '') {
     exit();
 }
 
-$storiesWebsiteId = 1;
+$websiteId = 1;
 
-$_SESSION['website'] = $storiesWebsiteId;
-$_SESSION['websiteid'] = $storiesWebsiteId;
-$_SESSION['menu_website'] = $storiesWebsiteId;
+$_SESSION['website'] = $websiteId;
+$_SESSION['websiteid'] = $websiteId;
+$_SESSION['menu_website'] = $websiteId;
 $_SESSION['guest_story'] = 1;
 
 $memberId = (int) $_SESSION['id'];
@@ -140,19 +160,32 @@ $sql = "
         'none'
     )
 ";
+try {
+    $cms->getDb()->runSql($sql, [
+        'website' => $websiteId,
+        'title' => mb_substr($title, 0, 80),
+        'summary' => mb_substr($summary !== '' ? $summary : '.', 0, 254),
+        'content' => $content,
+        'menu_id' => $menuId,
+        'member_id' => $memberId,
+        'family_id' => $familyId,
+        'seo_title' => mb_substr($seoTitle, 0, 244),
+        'storyorder' => $storyorder,
+    ]);
+} catch (PDOException $e) {
+    if (($e->errorInfo[1] ?? 0) == 1062) {
+        $data = [
+            'website' => $cms->getWebsite()->getById(1),
+            'doc_root' => DOC_ROOT,
+            'error' =>
+                'A story with that title already exists. Please return to the story form, change the title slightly, and save again.',
+        ];
+    }
+    echo $twig->render('guest-story-complete-error.html', $data);
+    exit();
 
-$cms->getDb()->runSql($sql, [
-    'website' => $websiteId,
-    'title' => mb_substr($title, 0, 80),
-    'summary' => mb_substr($summary !== '' ? $summary : '.', 0, 254),
-    'content' => $content,
-    'menu_id' => $menuId,
-    'member_id' => $memberId,
-    'family_id' => $familyId,
-    'seo_title' => mb_substr($seoTitle, 0, 244),
-    'storyorder' => $storyorder,
-]);
-
+    throw $e;
+}
 $storyId = (int) $cms->getDb()->lastInsertId();
 
 unset(

@@ -1,0 +1,18 @@
+{% extends 'layout.html' %}
+
+{% block title %}Story Not Saved
+{% endblock %}
+
+{% block content %}
+	<main>
+		<section class="form-membership">
+			<div class="alert alert-danger">
+				{{ error }}
+			</div>
+
+			<a class="btn btn-primary" href="{{ doc_root }}guest-story">
+				Return to Story Form
+			</a>
+		</section>
+	</main>
+{% endblock %}

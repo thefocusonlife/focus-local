@@ -24,8 +24,10 @@
 
 				<input type="hidden" name="csrf_token" value="{{ csrf_token|e }}">
 				<input type="hidden" name="g-recaptcha-response" value="">
-				<input type="hidden" name="website" id="website" value="{{ website.id }}">
-				<input type="hidden" name="guest_story" value="1">
+				<input type="hidden" name="website" value="{{ website_id }}">
+				{% if guest_story %}
+					<input type="hidden" name="guest_story" value="1">
+				{% endif %}
 
 				<div class="form-group">
 					<label for="login_email">Email</label>
