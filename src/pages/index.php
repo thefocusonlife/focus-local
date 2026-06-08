@@ -38,8 +38,9 @@ $_SESSION['menu_website'] = $websiteId;
 
 $isGuest = empty($_SESSION['id']);
 $isStoriesLandingCandidate = $page === 'index' && ($id === 0 || $id === 1);
+$fromSws = !empty($_GET['from_sws']);
 
-if ($isGuest && $isStoriesLandingCandidate) {
+if ($isGuest && $isStoriesLandingCandidate && !$fromSws) {
     header('Location: ' . DOC_ROOT . 'stories-worth-saving');
     exit();
 }
@@ -104,7 +105,7 @@ if (!empty($_SESSION['flash_success'])) {
  * Stories: use canonical websiteId already resolved above.
  * Do NOT overwrite websiteId from session here.
  */
-$preferredSorttypeId = (int) ($_SESSION['sort_override_global'][$websiteId] ?? 0);
+$preferredSorttypeId = (int) ($_SESSION['sort_override_global'][$websiteId] ?? 1);
 $sorttypeId = $preferredSorttypeId > 0 ? $preferredSorttypeId : null;
 
 $crossWebsite = (int) $websiteId === 1;
