@@ -19,7 +19,6 @@ $story = $cms->getStory()->get($storyId, false);
 if (!$story || (int) $story['member_id'] !== (int) $_SESSION['id']) {
     redirect(DOC_ROOT);
 }
-
-echo $twig->render('mobile-story-image-edit.html', [
-    'story' => $story,
-]);
+$data['story'] = $story; // Story
+$data['website'] = $cms->getWebsite()->getById($story['website']);
+echo $twig->render('mobile-story-image-edit.html', $data);
