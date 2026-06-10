@@ -1,0 +1,42 @@
+{% extends 'layout.html' %}
+
+{% block title %}Edit Story Photo
+{% endblock %}
+
+{% block content %}
+	<section class="guest-story-form-wrap">
+		<h1>Edit Story Photo</h1>
+
+		<p class="help-text">
+			Choose a photo from your phone to add or replace the story image.
+		</p>
+
+		{% if story.image_file %}
+			<div class="form-group">
+				<label>Current image</label>
+				<img src="{{ doc_root }}uploads/{{ story.image_file }}" alt="{{ story.image_alt|e }}" style="max-width:100%;height:auto;border-radius:8px;">
+			</div>
+		{% endif %}
+
+		<form method="post" action="{{ doc_root }}mobile-story-image-save" enctype="multipart/form-data">
+
+			<input type="hidden" name="story_id" value="{{ story.id }}">
+
+			<div class="form-group">
+				<label for="image">Select Photo</label>
+				<input id="image" name="image" type="file" accept="image/*" required>
+			</div>
+
+			<div class="form-group">
+				<label for="alt">Short photo description</label>
+				<input id="alt" name="alt" type="text" maxlength="1000" value="{{ story.image_alt|e }}">
+			</div>
+
+			<button type="submit" class="btn btn-primary">Save Photo</button>
+		</form>
+
+		<p>
+			<a href="{{ doc_root }}story/{{ story.id }}/{{ story.seo_title }}">Back to Story</a>
+		</p>
+	</section>
+{% endblock %}

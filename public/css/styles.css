@@ -1486,15 +1486,14 @@ body .membership-form-wrap textarea {
 
 @media (max-width: 768px) {
   .mobile-disable-edit {
-    pointer-events: none;
+   /* pointer-events: none; */
     opacity: 0.45;
     cursor: not-allowed;
   }
 
   .mobile-disable-edit::after {
-    content: " unavailable on phone";
-    font-size: 0.75em;
-  }
+    content: " photo";
+}
 }
 
 /* FORCE positioning to work in all environments */
