@@ -1,25 +1,7 @@
 <?php
 declare(strict_types=1);
-// temp log
-error_log(
-    'SWS TRACE ' .
-        basename(__FILE__) .
-        ' ' .
-        print_r(
-            [
-                'GET' => $_GET,
-                'POST' => $_POST,
-                'session_id' => session_id(),
-                'id' => $_SESSION['id'] ?? null,
-                'website' => $_SESSION['website'] ?? null,
-                'websiteid' => $_SESSION['websiteid'] ?? null,
-                'menu_website' => $_SESSION['menu_website'] ?? null,
-                'guest_story' => $_SESSION['guest_story'] ?? null,
-                'guest_story_draft' => !empty($_SESSION['guest_story_draft']),
-            ],
-            true,
-        ),
-);
+
+require_once APP_ROOT . '/src/security/redirects.php';
 
 if (empty($_SESSION['id'])) {
     header('Location: ' . DOC_ROOT . 'login?guest_story=1');
@@ -195,5 +177,5 @@ unset(
     $_SESSION['guest_story_login_notice'],
 );
 
-header('Location: ' . DOC_ROOT . 'work/' . $storyId);
+redirect('mobile-story-image-edit', ['id' => $storyId]);
 exit();

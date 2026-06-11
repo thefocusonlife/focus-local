@@ -27,7 +27,6 @@ if (!$story || (int) $story['member_id'] !== $sessionMemberId) {
 
 assertStoryOwnership($cms, $storyId, $sessionMemberId, $isUber);
 
-
 $hasUpload =
     isset($_FILES['image']) &&
     ($_FILES['image']['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_OK &&
@@ -66,14 +65,9 @@ if ($imageId <= 0) {
 }
 
 try {
-
-$result = $cms
-    ->getImageService()
-    ->saveUploadedStoryImage(
-        $_FILES['image'],
-        $imageId,
-        $story['title'] ?? ''
-    );
+    $result = $cms
+        ->getImageService()
+        ->saveUploadedStoryImage($_FILES['image'], $imageId, $story['title'] ?? '');
 
     $sql = 'UPDATE image SET file = :file, alt = :alt WHERE id = :id;';
     $cms->getDb()->runSql($sql, [
@@ -95,7 +89,6 @@ $result = $cms
         'story_id' => $storyId,
         'member_id' => $sessionMemberId,
     ]);
-
 } catch (\Throwable $e) {
     error_log('[mobile-story-image-save] ' . $e->getMessage());
 
@@ -105,4 +98,4 @@ $result = $cms
     ]);
 }
 
-redirect('story/' . $storyId . '/' . $story['seo_title']);
+redirect('member/' . $sessionMemberId);
