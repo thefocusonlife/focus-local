@@ -5,7 +5,7 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<title>Bicycle Community</title>
 
-		<script src="https://cdn.tiny.cloud/1/{{ constant('TINYMCE_API_KEY') }}/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+		<script src="https://cdn.tiny.cloud/1/{{ constant('TINYMCE_API_KEY') }}/tinymce/8/tinymce.min.js" referrerpolicy="origin"></script>
 	</head>
 	<style>
 		.community-form {
@@ -137,22 +137,19 @@
 
 			<script>
 				window.addEventListener('load', function () {
-
 if (window.innerWidth > 768) {
-tinymce.init {
-selector : '#textarea2',
-height : 430,
-menubar : true,
-branding : false,
-plugins : 'anchor autolink link lists searchreplace table wordcount',
-toolbar : 'undo redo | bold italic underline | link | bullist numlist | table | removeformat'
+tinymce.init({
+selector: '#textarea2',
+height: 430,
+menubar: true,
+license_key: 'gpl',
+branding: false,
+plugins: 'anchor autolink link lists searchreplace table wordcount',
+toolbar: 'undo redo | bold italic underline | link | bullist numlist | table | removeformat'
+});
 }
-);
-
-</script>
-					</body>
-				</html>
-			</html>
-		</html>
+});
+			</script>
+		</body>
 	</body>
-</html></html></body></html></body></html></html></body></html></body> </html></body></html></body></html></body></html></body></html></body></html></body></html></main></body></html></body></html></body></html>
+</html></html></html></body></html></body></html></body></html></html> </body></html></body></html></html></body></html></body></html></body></html></body></html></body></html></body></html></body></html></body></html></main></body></html></body></html></body></html>

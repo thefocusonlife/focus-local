@@ -4,7 +4,7 @@
 		<script src="https://js.chargebee.com/v2/chargebee.js" data-cb-site="thefocusonlife-test"></script>
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<script src="https://cdn.tiny.cloud/1/{{ TINYMCE_API_KEY }}/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+		<script src="https://cdn.tiny.cloud/1/{{ TINYMCE_API_KEY }}/tinymce/8/tinymce.min.js" referrerpolicy="origin"></script>
 
 		<!-- Initialize TinyMCE with default settings and custom plugins and toolbars  -->
 
@@ -15,6 +15,7 @@ tinymce.init({selector: 'textarea1', branding: false, plugins: 'anchor emoticons
 // class-based init
 tinymce.init({
 selector: 'textarea.tinymce',
+license_key: 'gpl',
 branding: false,
 
 // 🔧 URL handling
@@ -80,13 +81,14 @@ toolbar: 'undo redo | bold italic underline link | image table | spellcheckdialo
 		{% block content %}{% endblock %}
 
 
-		<script src="https://cdn.tiny.cloud/1/{{ constant('TINYMCE_API_KEY') }}/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+		<script src="https://cdn.tiny.cloud/1/{{ constant('TINYMCE_API_KEY') }}/tinymce/8/tinymce.min.js" referrerpolicy="origin"></script>
 
 
 		<script>
 			if (window.matchMedia("(min-width: 769px)").matches && document.getElementById('story-content') && typeof tinymce !== 'undefined') {
 tinymce.init({
 selector: 'textarea.tinymce',
+license_key: 'gpl',
 plugins: 'anchor autolink charmap codesample emoticons image link lists media searchreplace table visualblocks wordcount checklist mediaembed casechange export formatpainter pageembed linkchecker a11ychecker tinymcespellchecker permanentpen powerpaste advtable advcode editimage tinycomments tableofcontents footnotes mergetags autocorrect typography inlinecss code',
 toolbar: 'undo redo | blocks fontfamily fontsize | bold italic underline strikethrough | link image media table mergetags | addcomment showcomments | spellcheckdialog a11ycheck typography | align lineheight | checklist numlist bullist indent outdent | emoticons charmap | code | removeformat',
 
