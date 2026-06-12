@@ -8,15 +8,42 @@
 			{% if success %}
 				<div class="alert alert-success">{{ success }}</div>
 				<p>
-					<a href="{{ doc_root }}login/{{ website.id }}">Go to Login</a>
+					Your email address has been verified successfully.
 				</p>
+
+				<p>
+					Return to the "Check Your Email" page that is still open in your browser.
+				</p>
+
+				<p>
+					From there, sign in to finish saving your story.
+				</p>
+
+				<p>
+					You may now close this tab.
+				</p>
+
 			{% endif %}
 
 			{% if failure %}
 				<div class="alert alert-danger">{{ failure }}</div>
 				<p>
-					<a href="{{ doc_root }}login/{{ website.id }}">Go to Login</a>
+					Your email address has been verified successfully.
 				</p>
+
+				<p>
+					Return to the "Check Your Email" page that is still open in your browser.
+				</p>
+
+				<p>
+					From there, sign in to finish saving your story.
+				</p>
+
+				<p>
+					You may now close this tab.
+				</p>
+
+
 			{% endif %}
 		</section>
 	</main>

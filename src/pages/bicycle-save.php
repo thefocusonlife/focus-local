@@ -1,10 +1,16 @@
 <?php
 declare(strict_types=1);
+$allowedLocations = ['bend', 'redmond', 'sisters'];
 
+$location = strtolower((string) ($_POST['location'] ?? ($_GET['location'] ?? 'redmond')));
+
+if (!in_array($location, $allowedLocations, true)) {
+    $location = 'redmond';
+}
 require_once APP_ROOT . '/vendor/autoload.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: ' . DOC_ROOT . 'bicycle-submit?website=44');
+    header('Location: ' . DOC_ROOT . 'bicycle-submit?website=44&location=' . urlencode($location));
     exit();
 }
 function logstep(string $message, array $context = []): void
@@ -150,7 +156,7 @@ $notes = trim((string) ($_POST['notes'] ?? ''));
 
 if ($rideDate === '' || $rideType === '') {
     $_SESSION['flash_failure'] = 'Ride date and ride type are required.';
-    header('Location: ' . DOC_ROOT . 'bicycle-submit?website=44');
+    header('Location: ' . DOC_ROOT . 'bicycle-submit?website=44&location=' . urlencode($location));
     exit();
 }
 
@@ -859,14 +865,18 @@ $uploadFileUploadedValue = 0;
 if (!empty($_FILES['gpx_file']['name'])) {
     if (!isset($_FILES['gpx_file']['error']) || $_FILES['gpx_file']['error'] !== UPLOAD_ERR_OK) {
         $_SESSION['flash_failure'] = 'There was a problem uploading the ride file.';
-        header('Location: ' . DOC_ROOT . 'bicycle-submit?website=44');
+        header(
+            'Location: ' . DOC_ROOT . 'bicycle-submit?website=44&location=' . urlencode($location),
+        );
         exit();
     }
 
     $extension = strtolower(pathinfo($_FILES['gpx_file']['name'], PATHINFO_EXTENSION));
     if (!in_array($extension, ['gpx', 'tcx', 'fit'], true)) {
         $_SESSION['flash_failure'] = 'Only GPX, TCX, and FIT files are allowed.';
-        header('Location: ' . DOC_ROOT . 'bicycle-submit?website=44');
+        header(
+            'Location: ' . DOC_ROOT . 'bicycle-submit?website=44&location=' . urlencode($location),
+        );
         exit();
     }
 
@@ -874,7 +884,9 @@ if (!empty($_FILES['gpx_file']['name'])) {
 
     if ((int) $_FILES['gpx_file']['size'] > 15 * 1024 * 1024) {
         $_SESSION['flash_failure'] = 'The ride file is too large. Max size is 15 MB.';
-        header('Location: ' . DOC_ROOT . 'bicycle-submit?website=44');
+        header(
+            'Location: ' . DOC_ROOT . 'bicycle-submit?website=44&location=' . urlencode($location),
+        );
         exit();
     }
 
@@ -884,14 +896,21 @@ if (!empty($_FILES['gpx_file']['name'])) {
         if (!mkdir($uploadDirectory, 0755, true) && !is_dir($uploadDirectory)) {
             $_SESSION['flash_failure'] =
                 'Upload directory could not be created: ' . $uploadDirectory;
-            header('Location: ' . DOC_ROOT . 'bicycle-submit?website=44');
+            header(
+                'Location: ' .
+                    DOC_ROOT .
+                    'bicycle-submit?website=44&location=' .
+                    urlencode($location),
+            );
             exit();
         }
     }
 
     if (!is_writable($uploadDirectory)) {
         $_SESSION['flash_failure'] = 'Upload directory is not writable: ' . $uploadDirectory;
-        header('Location: ' . DOC_ROOT . 'bicycle-submit?website=44');
+        header(
+            'Location: ' . DOC_ROOT . 'bicycle-submit?website=44&location=' . urlencode($location),
+        );
         exit();
     }
 
@@ -901,7 +920,9 @@ if (!empty($_FILES['gpx_file']['name'])) {
     //('MOVE file →', $destinationPath);
     if (!move_uploaded_file($_FILES['gpx_file']['tmp_name'], $destinationPath)) {
         $_SESSION['flash_failure'] = 'Ride file could not be saved.';
-        header('Location: ' . DOC_ROOT . 'bicycle-submit?website=44');
+        header(
+            'Location: ' . DOC_ROOT . 'bicycle-submit?website=44&location=' . urlencode($location),
+        );
         exit();
     }
 
@@ -956,7 +977,9 @@ if (!empty($_FILES['gpx_file']['name'])) {
     } catch (Throwable $e) {
         @unlink($destinationPath);
         $_SESSION['flash_failure'] = 'The ride file could not be parsed: ' . $e->getMessage();
-        header('Location: ' . DOC_ROOT . 'bicycle-submit?website=44');
+        header(
+            'Location: ' . DOC_ROOT . 'bicycle-submit?website=44&location=' . urlencode($location),
+        );
         exit();
     }
 }
@@ -1013,7 +1036,9 @@ $sql = "
         start_lng,
         end_lat,
         end_lng,
-        status
+        status,
+        location
+
     ) VALUES (
         :website_id,
         :member_id,
@@ -1039,7 +1064,8 @@ $sql = "
         :start_lng,
         :end_lat,
         :end_lng,
-        :status
+        :status,
+        :location
     )
 ";
 
@@ -1089,8 +1115,9 @@ $cms->getDb()->runSql($sql, [
     'end_lat' => $endLatValue,
     'end_lng' => $endLngValue,
     'status' => 'published',
+    'location' => $location,
 ]);
 
 $_SESSION['flash_success'] = 'Ride submitted successfully.';
-header('Location: ' . DOC_ROOT . 'index/44');
+header('Location: ' . DOC_ROOT . 'index/44?location=' . urlencode($location));
 exit();

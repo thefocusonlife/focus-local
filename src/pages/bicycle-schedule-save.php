@@ -1,6 +1,12 @@
 <?php
 declare(strict_types=1);
+$allowedLocations = ['bend', 'redmond', 'sisters'];
 
+$location = strtolower((string) ($_POST['location'] ?? ($_GET['location'] ?? 'redmond')));
+
+if (!in_array($location, $allowedLocations, true)) {
+    $location = 'redmond';
+}
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     redirect('index/44');
     exit();
@@ -54,7 +60,8 @@ if ($id > 0) {
             description = :description,
             is_active = :is_active,
             sort_order = :sort_order,
-            member_id = :member_id
+            member_id = :member_id,
+            location = :location
         WHERE id = :id
           AND website_id = :website_id
     ";
@@ -71,9 +78,12 @@ if ($id > 0) {
         'member_id' => $viewerId,
         'id' => $id,
         'website_id' => $websiteId,
+        'location' => $location,
     ]);
 
     $_SESSION['flash_success'] = 'Group ride updated.';
+    redirect('index/44?location=' . urlencode($location));
+    exit();
 } else {
     $sql = "
         INSERT INTO ride_schedule (
@@ -86,7 +96,9 @@ if ($id > 0) {
             start_location,
             description,
             is_active,
-            sort_order
+            sort_order,
+            location
+
         ) VALUES (
             :website_id,
             :member_id,
@@ -97,7 +109,8 @@ if ($id > 0) {
             :start_location,
             :description,
             :is_active,
-            :sort_order
+            :sort_order,
+            :location
         )
     ";
 
@@ -112,9 +125,12 @@ if ($id > 0) {
         'description' => $description !== '' ? $description : null,
         'is_active' => $isActive,
         'sort_order' => $sortOrder,
+        'location' => $location,
     ]);
 
     $_SESSION['flash_success'] = 'Group ride added.';
+    redirect('index/44?location=' . urlencode($location));
+    exit();
 }
 
 redirect('index/44');

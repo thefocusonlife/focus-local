@@ -195,21 +195,37 @@ if (empty($_SESSION) or $_SESSION['id'] == 2) {
         exit();
     }
 }
+/* normalize inconsistent naming conventions */
+$accountId =
+    (int) ($story['account_id'] ??
+        ($story['family_id'] ?? ($authors['account_id'] ?? ($member['account_id'] ?? 0))));
 
-if ($story['storyorder'] < 1) {
-    $storyorder = $cms->getStory()->getstoryorder(intval($authors['id'])); // get last storyorder
-} else {
-    if ($storyorder < 1) {
-        $storyorder = intval($story['storyorder']);
-    }
-}
+$story['account_id'] = $accountId;
+
 $story['website'] = (int) ($_SESSION['website'] ?? 0);
+$story['menu_id'] =
+    (int) ($story['menu_id'] ??
+        ($_GET['menu_id'] ?? ($_POST['menu_id'] ?? ($_SESSION['menu_id'] ?? 0))));
 
-if (empty($storyorder)) {
-    $story['storyorder'] = 1;
-} else {
-    if ($story['storyorder'] < 1) {
-        $story['storyorder'] = intval($storyorder['storyorder']);
+$isNewStory = empty($story['id']);
+
+if ($isNewStory) {
+    $accountId = (int) ($authors['account_id'] ?? 0);
+
+    $story['account_id'] = $accountId;
+    $story['family_id'] = $accountId;
+
+    $story['menu_id'] = (int) ($_GET['menu_id'] ?? ($_POST['menu_id'] ?? ($story['menu_id'] ?? 0)));
+
+    if ($story['menu_id'] < 1 && $accountId > 0) {
+        $story['menu_id'] = $cms->getMenu()->getDefaultMenuIdForAccount($accountId);
+    }
+
+    if ($story['menu_id'] > 0) {
+        $storyorder = $cms->getStory()->getStoryorder($story['menu_id']);
+        $story['storyorder'] = (int) ($storyorder['storyorder'] ?? 10);
+    } else {
+        $story['storyorder'] = 10;
     }
 }
 
@@ -429,8 +445,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 // Save story only if image upload did not fail
                 if (!$uploadFailed) {
+                    $storyorder = $cms->getStory()->getstoryorder((int) $story['menu_id']);
+
+                    error_log('after getStoryorder, raw value=' . print_r($storyorder, true));
                     if ($storyId !== null) {
                         $arguments['id'] = $storyId;
+                        if (empty($arguments['image_id'])) {
+                            $arguments['image_id'] = null;
+                        }
                         $saved = $cms->getStory()->update($arguments);
                     } else {
                         unset($arguments['id']);

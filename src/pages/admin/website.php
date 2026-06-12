@@ -31,6 +31,7 @@ if ($sessionUserId !== 1) {
 // Use $id if router provides it; fallback to $parts[2] (admin/website/{id})
 // ------------------------------------------------------------
 $routeWebsiteId = isset($id) ? (int) $id : 0;
+
 if ($routeWebsiteId <= 0 && isset($parts[2]) && ctype_digit((string) $parts[2])) {
     $routeWebsiteId = (int) $parts[2];
 }
@@ -77,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     if ($routeWebsiteId > 0) {
         $existing = $cms->getWebsite()->get($routeWebsiteId);
         if (!$existing) {
-            redirect('admin/websites/', ['failure' => 'Website not found']);
+            redirect('/admin/websites/', ['failure' => 'Website not found']);
             exit();
         }
         $website = array_merge($website, $existing);
@@ -101,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 $posted = (string) ($_POST['csrf'] ?? '');
 
 if ($posted === '' || !verify_csrf($posted)) {
-    redirect('admin/websites/', ['failure' => 'Security check failed (CSRF).']);
+    redirect('/admin/websites/', ['failure' => 'Security check failed (CSRF).']);
     exit();
 }
 
@@ -111,7 +112,7 @@ $isUpdate = $postId > 0;
 // Deep-link safety (basic): route id must match posted id
 // Create: route=0 post=0 ok. Update: route=4 post=4 ok.
 if ($routeWebsiteId !== $postId) {
-    redirect('admin/websites/', ['failure' => 'Invalid request.']);
+    redirect('/admin/websites/', ['failure' => 'Invalid request.']);
     exit();
 }
 
@@ -120,7 +121,7 @@ $existing = [];
 if ($isUpdate) {
     $existing = $cms->getWebsite()->get($postId);
     if (!$existing) {
-        redirect('admin/websites/', ['failure' => 'Website not found']);
+        redirect('/admin/websites/', ['failure' => 'Website not found']);
         exit();
     }
 }
@@ -201,11 +202,11 @@ if ($isUpdate) {
     $affected = $cms->getWebsite()->update($website);
 
     if ($affected === 0) {
-        redirect('admin/websites/', ['success' => 'No changes to save']);
+        redirect('/admin/websites/', ['success' => 'No changes to save']);
         exit();
     }
 
-    redirect('admin/websites/', ['success' => 'Website saved']);
+    redirect('/admin/websites/', ['success' => 'Website saved']);
     exit();
 }
 
@@ -223,7 +224,8 @@ try {
 
     if ($newWebsiteId === -1) {
         $pdo->rollBack();
-        redirect('admin/websites/', ['failure' => 'Website already exists']);
+
+        redirect('/admin/websites/', ['failure' => 'Website already exists']);
         exit();
     }
     if ($newWebsiteId <= 0) {
@@ -242,12 +244,13 @@ try {
 
     $pdo->commit();
 
-    redirect('admin/websites/', ['success' => 'Website created']);
+    redirect('/admin/websites/', ['success' => 'Website created']);
     exit();
 } catch (\Throwable $e) {
     if ($pdo->inTransaction()) {
         $pdo->rollBack();
     }
-    redirect('admin/websites/', ['failure' => 'Create failed. See debug_create.log']);
+
+    redirect('/admin/websites/', ['failure' => 'Create failed. See debug_create.log']);
     exit();
 }

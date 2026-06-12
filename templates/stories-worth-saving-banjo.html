@@ -1,0 +1,159 @@
+{% extends 'layout.html' %}
+
+{% block title %}The Lonely Banjo
+{% endblock %}
+
+{% block content %}
+
+	<style>
+
+		.featured-story {
+			max-width: 900px;
+			margin: 0 auto;
+			padding: 2rem 1rem 3rem;
+		}
+
+		.featured-story h1 {
+			color: #295073;
+			margin-bottom: 1rem;
+			text-align: center;
+		}
+
+		.featured-image {
+			width: 100%;
+			max-height: 500px;
+			object-fit: cover;
+			border-radius: 10px;
+			margin-bottom: 2rem;
+		}
+
+		.story-content {
+			font-size: 1.1rem;
+			line-height: 1.8;
+		}
+
+		.story-content p {
+			margin-bottom: 1.25rem;
+		}
+
+		.featured-actions {
+			margin-top: 2.5rem;
+			display: flex;
+			gap: 1rem;
+			flex-wrap: wrap;
+		}
+
+		.stories-btn {
+			display: inline-block;
+			background: #295073;
+			color: #fff;
+			text-decoration: none;
+			padding: 0.8rem 1.25rem;
+			border-radius: 8px;
+			font-weight: bold;
+		}
+
+		.stories-btn.primary {
+			background: #a62d2d;
+		}
+
+		.stories-btn:hover {
+			color: #fff;
+		}
+	</style>
+
+	<div class="featured-story">
+
+		```
+		<h1>The Lonely Banjo</h1>
+
+		<img src="{{ doc_root }}img/the-lonely-banjo.jpg" alt="The Lonely Banjo" class="featured-image">
+
+		<div class="story-content">
+			<p>
+				Susannah leaned quietly in the corner, her round face tilted just enough to catch the dim afternoon light. Dust had begun to gather along her rim, soft as neglect, though she still held her shape with a kind of stubborn dignity. She wasn’t alone, not exactly. The cross-country skis stood beside her like tall, silent sentinels—unused, unspoken, equally forgotten. But they were strangers. They had never sung.
+			</p>
+			<p>
+				She missed the songs.
+			</p>
+			<p>
+				There had been a time when her strings hummed daily, when fingers—hesitant at first, then growing surer—pressed and plucked and coaxed music from her wooden body. She remembered laughter, too. That warm room at the community college, where Joe would nod approvingly and say, “Again—this time, let it breathe.” Susannah had liked Joe. He understood her voice.
+			</p>
+			<p>
+				And Missy—oh, Missy. Bright and warm, her laughter spilling between wrong notes and tangled rhythms. Susannah remembered the awkward early attempts, the way both players would pause, laugh, and try again. Missy’s presence felt like sunlight—unexpected and generous. Even the strange little spider she kept nearby seemed to listen.
+			</p>
+			<p>
+				Those were the days when Susannah lived.
+			</p>
+			<p>
+				She remembered trips to Sisters. The gentle drive, the shifting light outside the window, the anticipation. There were evenings filled with halting jam sessions, a beer resting nearby, Kirk smiling quietly while his little pug Millie snuffled around the floor. The music wasn’t perfect, but it was alive. Susannah didn’t need perfection—she needed hands, breath, intention.
+			</p>
+			<p>
+				Now, the corner.
+			</p>
+			<p>
+				Still, it was better than before. She had known the closet—the deep, silent dark where even time seemed to forget itself. There, the abandoned fiddle had been her only companion. They had leaned against each other in shared exile, two instruments holding stories no one asked to hear. The fiddle had whispered once, in the faint creak of wood settling: We were meant for more. Susannah had agreed.
+			</p>
+			<p>
+				At least here, there was light. Occasional movement. The distant murmur of a life still being lived.
+			</p>
+			<p>
+				And then, one day, something changed.
+			</p>
+			<p>
+				A voice.
+			</p>
+			<p>
+				Not music—but memory, spoken aloud.
+			</p>
+			<p>
+				“I heard from Joe.”
+			</p>
+			<p>
+				The words hung in the air, unfamiliar but stirring something deep within Susannah’s frame. Joe. The name alone felt like a tuning fork struck inside her. She listened, as much as an instrument could listen.
+			</p>
+			<p>
+				“He asked if I was still playing.”
+			</p>
+			<p>
+				A pause.
+			</p>
+			<p>
+				“I told him no… but I want to again.”
+			</p>
+			<p>
+				Want.
+			</p>
+			<p>
+				It was a small word, but it trembled with possibility. Susannah felt it ripple through her silent strings. Want meant unfinished. Want meant maybe.
+			</p>
+			<p>
+				She did not move—she could not—but something within her shifted. A quiet readiness. A patience sharpened by hope.
+			</p>
+			<p>
+				She imagined it: fingers brushing away the dust, lifting her gently, hesitantly. A thumb testing a string. The faint, imperfect note ringing out—fragile, but real.
+			</p>
+			<p>
+				She could wait a little longer.
+			</p>
+			<p>
+				After all, she had not forgotten how to sing.
+			</p>
+		</div>
+
+		<div class="featured-actions">
+
+			<a class="stories-btn" href="{{ doc_root }}stories-worth-saving">
+				← Back to Stories Worth Saving
+			</a>
+
+			<a class="stories-btn primary" href="{{ doc_root }}guest-story">
+				Write Your Story
+			</a>
+
+		</div>
+		```
+
+	</div>
+
+{% endblock %}

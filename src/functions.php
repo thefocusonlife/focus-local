@@ -157,3 +157,8 @@ function formatTextWithLinks(string $text): string
 
     return nl2br($linked);
 }
+
+function getScopedWebsiteFilter($websiteId)
+{
+    return $websiteId == 1 ? '' : 'WHERE website_id = ' . intval($websiteId);
+}

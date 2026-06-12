@@ -37,12 +37,17 @@
 			{% if session.role != "family" %}
 				{% if (session.id == story.member_id or session.id == 1) %}
 
-					<a href="{{ doc_root }}work/{{ story.id }}" class="btn btn-primary mobile-disable-edit">
+					<a href="{{ doc_root }}work/{{ story.id }}" class="btn btn-primary desktop-edit-story">
 						EDIT STORY
 					</a>
 
-					<!--<a href="{{ doc_root }}story-family/{{ story.id }}" class="btn btn-primary">Edit Family</a> -->
+					<a href="{{ doc_root }}mobile-story-image-edit?id={{ story.id }}" class="btn btn-primary mobile-edit-photo">
+						EDIT PHOTO
+					</a>
+
 				{% endif %}
+
+				<!--<a href="{{ doc_root }}story-family/{{ story.id }}" class="btn btn-primary">Edit Family</a> -->
 			{% endif %}
 
 

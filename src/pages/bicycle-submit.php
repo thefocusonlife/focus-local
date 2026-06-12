@@ -1,10 +1,27 @@
 <?php
 declare(strict_types=1);
+$allowedLocations = ['bend', 'redmond', 'sisters'];
+
+$location = strtolower((string) ($_GET['location'] ?? 'redmond'));
+
+if (!in_array($location, $allowedLocations, true)) {
+    $location = 'redmond';
+}
 require_once APP_ROOT . '/src/security/guard.php';
 include APP_ROOT . '/src/pages/menu-path.php';
 $data = [];
 $websiteId = (int) ($_GET['website'] ?? 44);
 $data['websiteId'] = $websiteId;
+$allowedLocations = ['bend', 'redmond', 'sisters'];
+
+$location = strtolower((string) ($_GET['location'] ?? 'bend'));
+
+if (!in_array($location, $allowedLocations, true)) {
+    $location = 'bend';
+}
+
+$data['location'] = $location;
+$data['locationName'] = ucfirst($location);
 
 // Keep Phase 1 limited to Bicycle Club site
 if ($websiteId !== 44) {

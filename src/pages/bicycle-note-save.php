@@ -1,6 +1,16 @@
 <?php
 declare(strict_types=1);
 
+// resolve location
+$allowedLocations = ['bend', 'redmond', 'sisters'];
+
+$location = strtolower((string) ($_POST['location'] ?? 'redmond'));
+
+if (!in_array($location, $allowedLocations, true)) {
+    $location = 'redmond';
+}
+error_log('NOTE SAVE resolved location=' . $location);
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     redirect('index/44');
     exit();
@@ -11,7 +21,7 @@ $role = strtolower((string) ($_SESSION['role'] ?? ''));
 
 if ($viewerId <= 0 || $role === 'guest') {
     $_SESSION['return_to'] = '/index/44';
-    $_SESSION['flash_failure'] = 'You must be logged in to manage club notes.';
+    //$_SESSION['flash_failure'] = 'You must be logged in to manage club notes.';
     redirect('login');
     exit();
 }
@@ -38,7 +48,8 @@ if ($id > 0) {
             note_text = :note_text,
             note_date = :note_date,
             is_active = :is_active,
-            member_id = :member_id
+            member_id = :member_id,
+            location = :location
         WHERE id = :id
           AND website_id = :website_id
     ";
@@ -51,6 +62,7 @@ if ($id > 0) {
         'member_id' => $viewerId,
         'id' => $id,
         'website_id' => $websiteId,
+        'location' => $location,
     ]);
 
     $_SESSION['flash_success'] = 'Club note updated.';
@@ -62,14 +74,16 @@ if ($id > 0) {
             title,
             note_text,
             note_date,
-            is_active
+            is_active,
+            location
         ) VALUES (
             :website_id,
             :member_id,
             :title,
             :note_text,
             :note_date,
-            :is_active
+            :is_active,
+            :location
         )
     ";
 
@@ -80,10 +94,11 @@ if ($id > 0) {
         'note_text' => $noteText,
         'note_date' => $noteDate !== '' ? $noteDate : null,
         'is_active' => $isActive,
+        'location' => $location,
     ]);
 
     $_SESSION['flash_success'] = 'Club note added.';
 }
 
-redirect('index/44');
+redirect('index/44?location=' . urlencode($location));
 exit();

@@ -1,0 +1,514 @@
+{% extends 'layout.html' %}
+
+{% block title %}We Weren't Lost
+{% endblock %}
+
+{% block content %}
+
+	<style>
+
+		.featured-story {
+			max-width: 900px;
+			margin: 0 auto;
+			padding: 2rem 1rem 3rem;
+		}
+
+		.featured-story h1 {
+			color: #295073;
+			margin-bottom: 1rem;
+			text-align: center;
+		}
+
+		.featured-image {
+			width: 100%;
+			max-height: 500px;
+			object-fit: cover;
+			border-radius: 10px;
+			margin-bottom: 2rem;
+		}
+
+		.story-content {
+			font-size: 1.1rem;
+			line-height: 1.8;
+		}
+
+		.story-content p {
+			margin-bottom: 1.25rem;
+		}
+
+		.featured-actions {
+			margin-top: 2.5rem;
+			display: flex;
+			gap: 1rem;
+			flex-wrap: wrap;
+		}
+
+		.stories-btn {
+			display: inline-block;
+			background: #295073;
+			color: #fff;
+			text-decoration: none;
+			padding: 0.8rem 1.25rem;
+			border-radius: 8px;
+			font-weight: bold;
+		}
+
+		.stories-btn.primary {
+			background: #a62d2d;
+		}
+
+		.stories-btn:hover {
+			color: #fff;
+		}
+	</style>
+
+	<div class="featured-story">
+
+		```
+		<h1>We Weren't Lost</h1>
+
+		<img src="{{ doc_root }}img/we-weren-t-lost.jpg" alt="We Weren't Lost" class="featured-image">
+
+		<div class="story-content">
+			<p>
+				It had started earlier than it should have.
+			</p>
+			<p>
+				Three in the afternoon.
+			</p>
+			<p>
+				That was enough time.
+			</p>
+			<p>
+				The firebreak ran along the spine of the hills.
+			</p>
+			<p>
+				Wider than the trails. Steeper in places. Winding just enough that you never saw how far it really went.
+			</p>
+			<p>
+				They had followed it before.
+			</p>
+			<p>
+				Just not this far.
+			</p>
+			<p>
+				Tim was a few years younger.
+			</p>
+			<p>
+				That didn’t seem to matter at the start.
+			</p>
+			<p>
+				It rarely did.
+			</p>
+			<p>
+				They climbed steadily.
+			</p>
+			<p>
+				Stopping sometimes. Not for long.
+			</p>
+			<p>
+				Looking back down toward the neighborhood, where everything was still clear and defined. Streets. Houses. The bridge over the channel. The signal at La Crescenta Boulevard.
+			</p>
+			<p>
+				It all looked close.
+			</p>
+			<p>
+				Further than it was.
+			</p>
+			<p>
+				The air cooled faster than expected.
+			</p>
+			<p>
+				The sun slipped behind the ridge on the far side, and the light changed without warning.
+			</p>
+			<p>
+				Not dark.
+			</p>
+			<p>
+				Just… less.
+			</p>
+			<p>
+				“We should head back,” Tim said.
+			</p>
+			<p>
+				There was a way.
+			</p>
+			<p>
+				Back the way they came.
+			</p>
+			<p>
+				Long.
+			</p>
+			<p>
+				Predictable.
+			</p>
+			<p>
+				And then there were the other paths.
+			</p>
+			<p>
+				Not really paths.
+			</p>
+			<p>
+				Openings.
+			</p>
+			<p>
+				Breaks in the brush that angled down toward the neighborhood.
+			</p>
+		</p>
+		Shorter.
+	</p>
+	<p>
+		“Let’s go this way,” he said.
+	</p>
+	<p>
+		It worked at first.
+	</p>
+	<p>
+		The slope was steeper, but manageable. The ground loose in places, but still holding.
+	</p>
+	<p>
+		They moved carefully.
+	</p>
+	<p>
+		Not fast.
+	</p>
+	<p>
+		Then the brush closed in.
+	</p>
+	<p>
+		The openings narrowed.
+	</p>
+	<p>
+		The footing changed.
+	</p>
+	<p>
+		What had been a path became something else.
+	</p>
+	<p>
+		They stopped.
+	</p>
+	<p>
+		Looked back.
+	</p>
+	<p>
+		No clear way up.
+	</p>
+	<p>
+		Looked down.
+	</p>
+	<p>
+		Steeper than it had seemed from above.
+	</p>
+	<p>
+		The light continuing to fade.
+	</p>
+	<p>
+		“We can keep going,” Tim said.
+	</p>
+	Maybe they could.
+</p>
+<p>
+	They didn’t.
+</p>
+<p>
+	They found a small ledge.
+</p>
+<p>
+	Not comfortable.
+</p>
+<p>
+	Just enough.
+</p>
+<p>
+	They sat.
+</p>
+<p>
+	The neighborhood below had started to change.
+</p>
+<p>
+	Lights appearing.
+</p>
+<p>
+	One at a time.
+</p>
+<p>
+	Then more.
+</p>
+<p>
+	They could see the signal at the bridge.
+</p>
+<p>
+	Red.
+</p>
+<p>
+	Then green.
+</p>
+<p>
+	Then red again.
+</p>
+<p>
+	Cars passed.
+</p>
+<p>
+	People moved.
+</p>
+<p>
+	Everything continued.
+</p>
+<p>
+	Up where they were, nothing moved.
+</p>
+<p>
+	It got cold.
+</p>
+<p>
+	Colder than it should have been.
+</p>
+<p>
+	He had a jacket.
+</p>
+<p>
+	A cap with ear flaps.
+</p>
+<p>
+	Tim wasn’t dressed the same.
+</p>
+<p>
+	They shifted position.
+</p>
+<p>
+	Tried to stay warm.
+</p>
+<p>
+	Didn’t talk much at first.
+</p>
+<p>
+	Later, there were a few words.
+</p>
+<p>
+	Not many.
+</p>
+<p>
+	Some of it directed at him.
+</p>
+<p>
+	He was older.
+</p>
+<p>
+	It had been his decision.
+</p>
+<p>
+	He didn’t argue.
+</p>
+<p>
+	Not really.
+</p>
+<p>
+	“We’re not lost,” he said.
+</p>
+<p>
+	It was true.
+</p>
+<p>
+	He knew where they were.
+</p>
+<p>
+	The hills behind their house. The firebreak above. The neighborhood below.
+</p>
+<p>
+	They just couldn’t move.
+</p>
+<p>
+	The night stretched.
+</p>
+<p>
+	Longer than it should have.
+</p>
+<p>
+	No dinner.
+</p>
+<p>
+	No movement.
+</p>
+<p>
+	Just waiting.
+</p>
+<p>
+	At some point, the sounds changed.
+</p>
+<p>
+	Voices.
+</p>
+<p>
+	Distant at first.
+</p>
+<p>
+	Then closer.
+</p>
+<p>
+	Calling out.
+</p>
+<p>
+	They didn’t answer right away.
+</p>
+<p>
+	Not because they didn’t hear.
+</p>
+<p>
+	Just… not right away.
+</p>
+<p>
+	By morning, the light returned slowly.
+</p>
+<p>
+	Enough to see.
+</p>
+<p>
+	Enough to move.
+</p>
+<p>
+	The descent wasn’t a trail.
+</p>
+<p>
+	It just became one.
+</p>
+<p>
+	Step by step.
+</p>
+<p>
+	Careful.
+</p>
+<p>
+	Branches pushing back.
+</p>
+<p>
+	Loose ground giving way underfoot.
+</p>
+<p>
+	Near the bottom, it opened.
+</p>
+<p>
+	Flattened.
+</p>
+<p>
+	The old horse corrals at Camp Max Straus.
+</p>
+<p>
+	Level ground.
+</p>
+<p>
+	That’s when they heard them clearly.
+</p>
+<p>
+	The Sheriff’s Posse.
+</p>
+<p>
+	Voices calling.
+</p>
+<p>
+	Closer now.
+</p>
+<p>
+	They stepped out.
+</p>
+<p>
+	It was already something else by then.
+</p>
+<p>
+	People.
+</p>
+<p>
+	Questions.
+</p>
+<p>
+	Movement.
+</p>
+<p>
+	Back home, it didn’t slow down.
+</p>
+<p>
+	There were pictures.
+</p>
+<p>
+	Front page.
+</p>
+<p>
+	“Boys Found.”
+</p>
+<p>
+	Not stuck.
+</p>
+<p>
+	Not waiting.
+</p>
+<p>
+	Not cold.
+</p>
+<p>
+	Found.
+</p>
+<p>
+	Later, there was more.
+</p>
+<p>
+	Television this time.
+</p>
+<p>
+	Short clips. Questions asked and answered.
+</p>
+<p>
+	Or maybe not asked that way.
+</p>
+<p>
+	A story taking shape.
+</p>
+<p>
+	Cleaner than it had been.
+</p>
+<p>
+	At one point, he heard it.
+</p>
+<p>
+	Something about an owl.
+</p>
+<p>
+	A slingshot.
+</p>
+<p>
+	A quote he hadn’t given.
+</p>
+<p>
+	He didn’t correct it.
+</p>
+<p>
+	Not then.
+</p>
+<p>
+	It had already moved past that.
+</p>
+<p>
+	What stayed was something else.
+</p>
+<p>
+	The lights below.
+</p>
+<p>
+	The long night.
+</p>
+<p>
+	The waiting.
+</p>
+<p>
+	And the certainty.
+</p>
+<p>
+	They hadn’t been lost.
+</p></div><div class="featured-actions">
+
+<a class="stories-btn" href="{{ doc_root }}stories-worth-saving">
+	← Back to Stories Worth Saving
+</a>
+
+<a class="stories-btn primary" href="{{ doc_root }}guest-story">
+	Write Your Story
+</a></div>{% endblock %}

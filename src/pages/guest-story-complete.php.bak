@@ -1,0 +1,35 @@
+<?php
+declare(strict_types=1);
+
+/*
+|--------------------------------------------------------------------------
+| Guest Story Complete
+|--------------------------------------------------------------------------
+|
+| Temporary validation page.
+| Confirms that login succeeded and guest story draft
+| survived authentication.
+|
+*/
+
+if (empty($_SESSION['id'])) {
+    header('Location: ' . DOC_ROOT . 'login');
+    exit();
+}
+
+if (empty($_SESSION['guest_story_draft'])) {
+    header('Location: ' . DOC_ROOT . 'stories-worth-saving');
+    exit();
+}
+
+$websiteId = 1;
+
+$draft = $_SESSION['guest_story_draft'];
+
+$data = [
+    'website_id' => $websiteId,
+    'website' => $websiteId,
+    'draft' => $draft,
+];
+
+echo $twig->render('guest-story-complete.html', $data);

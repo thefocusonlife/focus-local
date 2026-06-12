@@ -30,6 +30,11 @@ story.summary a:hover p {
     color: #295073;
 }
 
+p.credit a:link,
+p.credit a:visited {
+    color: #4a86c5;
+    text-decoration: underline;
+}
 /**********************/
 /* 1:   CORE STYLES   */
 /**********************/
@@ -591,6 +596,17 @@ textarea {
     border-radius: 0.25rem;
 }
 
+.credit a {
+  color: #1a73e8;          /* link blue */
+  text-decoration: underline;
+  font-weight: 500;        /* optional: slightly stronger */
+}
+
+.credit a:hover {
+  text-decoration: underline;
+  opacity: 0.8;
+  cursor: pointer;
+}
 /* ---------- ADMIN FORMS ---------- */
 
 main.admin form {
@@ -1439,6 +1455,7 @@ body .membership-form-wrap textarea {
 /************************************/
 /*      Mobile CSS                  */
 /************************************/
+
 .mobile-work {
   max-width: 420px;
   margin: 0 auto;
@@ -1467,19 +1484,24 @@ body .membership-form-wrap textarea {
   width: 100%;
 }
 
-@media (max-width: 768px) {
-  .mobile-disable-edit {
-    pointer-events: none;
-    opacity: 0.45;
-    cursor: not-allowed;
-  }
-
-  .mobile-disable-edit::after {
-    content: " unavailable on phone";
-    font-size: 0.75em;
-  }
+.mobile-edit-photo {
+    display: none;
 }
 
+.desktop-edit-story {
+    display: inline-block;
+}
+
+@media (max-width: 768px) {
+
+    .desktop-edit-story {
+        display: none;
+    }
+
+    .mobile-edit-photo {
+        display: inline-block;
+    }
+}
 /* FORCE positioning to work in all environments */
 .form-group {
   position: relative !important;
@@ -1498,4 +1520,163 @@ body .membership-form-wrap textarea {
 
 .form-group .forgot-link:hover {
   color: #295073;
+}
+
+.mobile-site-header {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  header .desktop-logo {
+    display: none !important;
+  }
+
+  header .mobile-site-header {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 6px 48px 6px 6px;
+    box-sizing: border-box;
+    border-bottom: 3px solid #7b2ca0;
+    background: #fff;
+  }
+
+  header nav {
+    display: block;
+    width: 100%;
+    margin: 0;
+  }
+*
+  header #menu {
+    display: block !important;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background: #fff;
+  }
+
+@media (max-width: 768px) {
+  header .site-header-container {
+    display: block !important;
+    position: relative !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  header .mobile-site-header {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px;
+    width: 100%;
+    min-height: 60px;
+    padding: 6px 56px 6px 6px;
+    box-sizing: border-box;
+    background: #fff;
+    border-bottom: 3px solid #7b2ca0;
+    overflow: visible !important;
+  }
+
+  header .mobile-site-logo {
+    display: block !important;
+    width: 54px !important;
+    height: 54px !important;
+    object-fit: cover;
+    flex: 0 0 54px;
+  }
+
+  header .mobile-site-title {
+    display: block !important;
+    flex: 1 1 auto;
+    min-width: 0;
+    color: #555;
+    overflow: hidden;
+  }
+
+  header .mobile-site-title strong {
+    display: block !important;
+    font-size: 1rem;
+    line-height: 1.1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  header .mobile-site-title span {
+    display: block !important;
+    font-size: 0.85rem;
+    line-height: 1.1;
+  }
+
+  header nav {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    height: auto !important;
+    clear: both;
+    margin: 0;
+    padding: 0;
+  }
+
+}
+@media (max-width: 768px) {
+  header .site-header-container {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  header .mobile-site-header {
+    order: 1;
+    display: flex !important;
+    width: 100% !important;
+    flex: 0 0 auto !important;
+  }
+
+  header nav {
+    order: 2;
+    display: block !important;
+    width: 100% !important;
+    flex: 0 0 auto !important;
+    position: static !important;
+  }
+/************************************************/
+  header #toggle-navigation {
+    position: absolute !important;
+    top: 8px !important;
+    right: 8px !important;
+  }
+
+  @media (max-width: 768px) {
+  header #menu {
+    display: none !important;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    background: #fff;
+  }
+
+  header #menu.is-active {
+    display: block !important;
+  }
+
+  header #menu li {
+    display: block !important;
+    width: 100%;
+    float: none !important;
+    clear: both !important;
+  }
+
+  header #menu a {
+    display: block !important;
+    width: 100%;
+    padding: 10px 12px;
+    border-bottom: 1px solid #ddd;
+    box-sizing: border-box;
+  }
+}
 }

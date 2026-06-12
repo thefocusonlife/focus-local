@@ -1,0 +1,86 @@
+{% extends 'layout.html' %}
+
+{% block title %}Story Ready{% endblock %}
+
+{% block content %}
+
+<style>
+.story-complete {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+.story-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 1.5rem;
+}
+
+.story-card h1 {
+    color: #295073;
+    margin-top: 0;
+}
+
+.story-preview {
+    background: #f7f4ef;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+
+.story-preview h2 {
+    margin-top: 0;
+}
+
+.stories-btn {
+    display: inline-block;
+    margin-top: 1rem;
+    padding: .8rem 1.2rem;
+    background: #a62d2d;
+    color: #fff;
+    text-decoration: none;
+    border-radius: 8px;
+}
+
+.stories-btn:hover {
+    color: #fff;
+}
+</style>
+
+<div class="story-complete">
+
+    <div class="story-card">
+
+        <h1>Story Ready</h1>
+
+        <p>
+            You are logged in and your story draft was found successfully.
+        </p>
+
+        <p>
+            The next step is to save the draft to the database
+            and open the normal story editor.
+        </p>
+
+        <div class="story-preview">
+
+            <h2>{{ draft.title }}</h2>
+
+            {% if draft.summary %}
+                <p>{{ draft.summary }}</p>
+            {% endif %}
+
+            <p>
+                <strong>Content Length:</strong>
+                {{ draft.content|length }} characters
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

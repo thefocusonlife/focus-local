@@ -4,17 +4,37 @@ declare(strict_types=1);
 use PhpBook\Validate\Validate;
 
 require_once __DIR__ . '/../../config/recaptcha.php';
+$config = $config ?? [];
+
 require_once APP_ROOT . '/src/security/redirects.php';
 require_once APP_ROOT . '/src/tenancy/website_context.php';
 require_once APP_ROOT . '/src/security/guard.php';
 require_once APP_ROOT . '/src/security/csrf.php';
+
 guardPublic();
+
 $csrfFormKey = 'login';
-// (Optional, if you created it already)
-//require_once APP_ROOT . '/src/lib/debug.php';
+$parts = $parts ?? [];
 
 // ----------------------------
-// Tenant context (website)
+// Guest Story context must win
+// ----------------------------
+$isGuestStory =
+    !empty($_GET['guest_story']) ||
+    !empty($_POST['guest_story']) ||
+    !empty($_SESSION['guest_story']) ||
+    !empty($_SESSION['guest_story_draft']);
+
+if ($isGuestStory) {
+    $_SESSION['website'] = 1;
+    $_SESSION['websiteid'] = 1;
+    $_SESSION['menu_website'] = 1;
+    $_SESSION['guest_story'] = 1;
+    setWebsiteCookie('tfol_tid', 1);
+}
+
+// ----------------------------
+// Tenant context
 // ----------------------------
 [$websiteId, $website] = resolveWebsiteId(
     cms: $cms,
@@ -22,13 +42,25 @@ $csrfFormKey = 'login';
     session: $_SESSION,
     cookie: $_COOKIE,
     get: $_GET,
-    email: null, // only allow email override on POST
-    defaultWebsiteId: 0, // force redirect if missing
+    email: null,
+    defaultWebsiteId: 0,
     cookieName: 'tfol_tid',
     persist: true,
 );
 
-if ($websiteId <= 0) {
+// Force website 1 again after resolver in guest-story flow
+if ($isGuestStory) {
+    $websiteId = 1;
+    $website = $cms->getWebsite()->getById(1);
+
+    $_SESSION['website'] = 1;
+    $_SESSION['websiteid'] = 1;
+    $_SESSION['menu_website'] = 1;
+    $_SESSION['guest_story'] = 1;
+    setWebsiteCookie('tfol_tid', 1);
+}
+
+if ($websiteId <= 0 || empty($website['id'])) {
     redirect('index/1', ['failure' => 'Website context missing.']);
     exit();
 }
@@ -39,7 +71,7 @@ if ($websiteId <= 0) {
 $role = (string) ($_SESSION['role'] ?? 'guest');
 if ($role !== 'guest') {
     $sid = (int) ($_SESSION['id'] ?? 0);
-    if ($sid > 0) {
+    if ($sid > 0 && !$isGuestStory) {
         redirect('member/' . $sid);
         exit();
     }
@@ -57,43 +89,65 @@ $showResendVerification = false;
 // POST handler
 // ----------------------------
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    error_log(
+        'SWS TRACE ' .
+            basename(__FILE__) .
+            ' ' .
+            print_r(
+                [
+                    'GET' => $_GET,
+                    'POST' => $_POST,
+                    'session_id' => session_id(),
+                    'id' => $_SESSION['id'] ?? null,
+                    'website' => $_SESSION['website'] ?? null,
+                    'websiteid' => $_SESSION['websiteid'] ?? null,
+                    'menu_website' => $_SESSION['menu_website'] ?? null,
+                    'guest_story' => $_SESSION['guest_story'] ?? null,
+                    'guest_story_draft' => !empty($_SESSION['guest_story_draft']),
+                ],
+                true,
+            ),
+    );
+
     $submittedCsrf = $_POST['csrf_token'] ?? '';
 
     if (!csrf_validate($csrfFormKey, is_string($submittedCsrf) ? $submittedCsrf : null)) {
         error_log('[LOGIN] CSRF validation failed sid=' . session_id());
-
         $errors['message'] =
             'Your form session expired or failed security validation. Please try again.';
-
         csrf_rotate($csrfFormKey);
     }
+
     $email = (string) ($_POST['email'] ?? '');
     $password = (string) ($_POST['password'] ?? '');
-    // --- Website-email suffix routing (e.g. user@gmail.com16) ---
-    $emailWebsiteId = extractWebsiteIdFromWebsiteEmail($email);
 
-    if ($emailWebsiteId !== null && $emailWebsiteId !== (int) $websiteId) {
-        // Validate target website exists
-        $targetWebsite = $cms->getWebsite()->getById($emailWebsiteId);
-        if (empty($targetWebsite) || empty($targetWebsite['id'])) {
-            $errors['message'] = 'Website not found for that login email.';
-        } else {
-            // Switch tenant context NOW (before login2)
-            $websiteId = (int) $targetWebsite['id'];
-            $website = $targetWebsite;
+    // Website-email suffix routing is NOT allowed during guest-story flow
+    $emailWebsiteId = null;
 
-            $_SESSION['website'] = $websiteId;
-            setWebsiteCookie('tfol_tid', $websiteId);
+    if (!$isGuestStory) {
+        $emailWebsiteId = extractWebsiteIdFromWebsiteEmail($email);
 
-            // If you have any tenant-specific initialization beyond $website,
-            // do it here (DB schema switch, config, etc.)
-            // TenantContext::init($websiteId);
+        if ($emailWebsiteId !== null && $emailWebsiteId !== (int) $websiteId) {
+            $targetWebsite = $cms->getWebsite()->getById($emailWebsiteId);
+
+            if (empty($targetWebsite) || empty($targetWebsite['id'])) {
+                $errors['message'] = 'Website not found for that login email.';
+            } else {
+                $websiteId = (int) $targetWebsite['id'];
+                $website = $targetWebsite;
+
+                $_SESSION['website'] = $websiteId;
+                $_SESSION['websiteid'] = $websiteId;
+                $_SESSION['menu_website'] = $websiteId;
+                setWebsiteCookie('tfol_tid', $websiteId);
+            }
         }
     }
 
-    // Never trust posted website; allow mismatch if we re-resolved via email suffix
     $postedWebsiteId = (int) ($_POST['website'] ?? 0);
+
     if (
+        !$isGuestStory &&
         $postedWebsiteId > 0 &&
         $postedWebsiteId !== (int) $website['id'] &&
         $emailWebsiteId === null
@@ -101,23 +155,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $errors['message'] = 'Invalid website context.';
     }
 
-    // -----------------------------
-    // reCAPTCHA v3 verification (fail-fast)
-    // -----------------------------
     if (empty($errors['message'])) {
         $recaptchaToken = (string) ($_POST['g-recaptcha-response'] ?? '');
+
         if ($recaptchaToken === '') {
             $errors['message'] =
                 'Security check token missing. Please refresh the page and try again.';
         } else {
             $secretKey = (string) ($config['recaptcha_secret_key'] ?? '');
+
             if (!verify_recaptcha_v3($recaptchaToken, 'login', $secretKey, 0.1)) {
                 $errors['message'] = 'Login failed security check. Please try again.';
             }
         }
     }
 
-    // Validate email/password (only if security passed)
     if (empty($errors['message'])) {
         $errors['email'] = Validate::isEmail($email) ? '' : 'Please enter a valid email address';
 
@@ -128,13 +180,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <br>And a special character';
 
         $invalid = implode($errors);
+
         if ($invalid) {
             $errors['message'] = 'Please try again.';
         }
     }
 
-    // Attempt login
     $loginEmail = trim($email);
+
     if (empty($errors['message'])) {
         if ($cms->getMember()->isLoginLocked($loginEmail)) {
             $errors['message'] = 'Too many failed login attempts. Please try again later.';
@@ -153,12 +206,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $errors['message'] = 'Please verify your email address before signing in.';
                 $showResendVerification = true;
             } else {
-                // Enforce tenant membership (no fallback)
                 $memberWebsiteId = (int) ($member['website'] ?? 0);
-                if ($memberWebsiteId <= 0 || $memberWebsiteId !== (int) $website['id']) {
+
+                if (
+                    !$isGuestStory &&
+                    ($memberWebsiteId <= 0 || $memberWebsiteId !== (int) $website['id'])
+                ) {
                     $errors['message'] = 'This email not valid for ' . (string) $website['name'];
                 } else {
-                    // ✅ SUCCESS: create session
                     if (session_status() !== PHP_SESSION_ACTIVE) {
                         session_start();
                     }
@@ -173,18 +228,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $cms->getSession()->create($member, (int) $website['id']);
                     $cms->getMember()->clearFailedLogin($loginEmail);
 
-                    // hard-assert the important bits (defensive)
                     $_SESSION['member_id'] = (int) $member['id'];
                     $_SESSION['id'] = (int) $member['id'];
                     $_SESSION['role'] = $role;
                     $_SESSION['account_id'] = (int) ($member['account_id'] ?? $member['id']);
                     $_SESSION['follow_id'] = (int) $_SESSION['account_id'];
 
-                    // Redirect to intended deep-link if present (and safe), else safe fallback
+                    if ($isGuestStory && !empty($_SESSION['guest_story_draft'])) {
+                        $_SESSION['website'] = 1;
+                        $_SESSION['websiteid'] = 1;
+                        $_SESSION['menu_website'] = 1;
+                        $_SESSION['guest_story'] = 1;
+                        setWebsiteCookie('tfol_tid', 1);
+
+                        csrf_rotate($csrfFormKey);
+                        header('Location: ' . DOC_ROOT . 'guest-story-complete');
+                        exit();
+                    }
+
                     $returnTo = (string) ($_SESSION['return_to'] ?? '');
                     unset($_SESSION['return_to']);
 
-                    // Normalize: strip DOC_ROOT prefix if present, so comparisons are consistent
                     if (
                         defined('DOC_ROOT') &&
                         DOC_ROOT !== '' &&
@@ -193,19 +257,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $returnTo = '/' . ltrim(substr($returnTo, strlen(DOC_ROOT)), '/');
                     }
 
-                    // Never redirect to admin pages via deep-link return_to
                     if ($returnTo !== '' && str_starts_with($returnTo, '/admin/')) {
                         $returnTo = '';
                     }
 
-                    // Preserve website context for deep links like /index/44
                     $returnWebsiteId = null;
 
                     if ($returnTo !== '' && preg_match('#^/index/(\\d+)$#', $returnTo, $matches)) {
                         $returnWebsiteId = (int) $matches[1];
                     } elseif ($returnTo !== '') {
-                        $parts = parse_url($returnTo);
-                        parse_str($parts['query'] ?? '', $query);
+                        $returnParts = parse_url($returnTo);
+                        parse_str($returnParts['query'] ?? '', $query);
 
                         if (isset($query['website'])) {
                             $returnWebsiteId = (int) $query['website'];
@@ -224,13 +286,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $_SESSION['menu_website'] = (int) $member['website'];
                     }
 
+                    csrf_rotate($csrfFormKey);
+
                     if ($returnTo !== '') {
-                        csrf_rotate($csrfFormKey);
                         redirect(ltrim($returnTo, '/'));
                         exit();
                     }
 
-                    csrf_rotate($csrfFormKey);
                     redirect('member/' . $member['id']);
                     exit();
                 }
@@ -238,6 +300,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
 // ----------------------------
 // Navigation context
 // ----------------------------
@@ -245,10 +308,21 @@ $sessionId = (int) ($_SESSION['id'] ?? 0);
 
 if ($sessionId === 2 || $sessionId === 0) {
     $memberRow = null;
-    $mem = 1; // default account id for public menus (UberAdmin/shared)
+    $mem = 1;
 } else {
     $memberRow = $cms->getMember()->get($sessionId);
     $mem = $memberRow ? (int) ($memberRow['account_id'] ?? 1) : 1;
+}
+
+if ($isGuestStory) {
+    $websiteId = 1;
+    $website = $cms->getWebsite()->getById(1);
+
+    $_SESSION['website'] = 1;
+    $_SESSION['websiteid'] = 1;
+    $_SESSION['menu_website'] = 1;
+    $_SESSION['guest_story'] = 1;
+    setWebsiteCookie('tfol_tid', 1);
 }
 
 $data = [];
@@ -257,11 +331,14 @@ $data['success'] = $success;
 $data['email'] = $email;
 $data['errors'] = $errors;
 $data['use_recaptcha'] = true;
-$data['recaptcha_site_key'] = $config['recaptcha_site_key'];
+$data['recaptcha_site_key'] = $config['recaptcha_site_key'] ?? '';
 $data['website'] = $website;
-$data['doc_root'] = $config['doc_root'] ?? '/_stage/';
+$data['website_id'] = (int) $website['id'];
+$data['doc_root'] = $config['doc_root'] ?? DOC_ROOT;
 $data['show_resend_verification'] = $showResendVerification;
 $data['csrf_token'] = csrf_token($csrfFormKey);
+$data['login_email'] = $_SESSION['guest_story_email'] ?? $email;
+$data['guest_story'] = $isGuestStory;
 
 echo $twig->render('login.html', $data);
 exit();

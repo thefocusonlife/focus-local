@@ -36,6 +36,15 @@ $_SESSION['website'] = $websiteId;
 $_SESSION['websiteid'] = $websiteId;
 $_SESSION['menu_website'] = $websiteId;
 
+$isGuest = empty($_SESSION['id']);
+$isStoriesLandingCandidate = $page === 'index' && ($id === 0 || $id === 1);
+$fromSws = !empty($_GET['from_sws']);
+
+if ($isGuest && $isStoriesLandingCandidate && !$fromSws) {
+    header('Location: ' . DOC_ROOT . 'stories-worth-saving');
+    exit();
+}
+
 /**
  * Logged-in member is optional context only.
  * Never use member.website to override current browsing website.
@@ -96,10 +105,14 @@ if (!empty($_SESSION['flash_success'])) {
  * Stories: use canonical websiteId already resolved above.
  * Do NOT overwrite websiteId from session here.
  */
-$preferredSorttypeId = (int) ($_SESSION['sort_override_global'][$websiteId] ?? 0);
+$preferredSorttypeId = (int) ($_SESSION['sort_override_global'][$websiteId] ?? 1);
 $sorttypeId = $preferredSorttypeId > 0 ? $preferredSorttypeId : null;
 
-$data['stories'] = $cms->getStory()->getAll3($websiteId, true, null, null, 100, $sorttypeId);
+$crossWebsite = (int) $websiteId === 1;
+
+$data['stories'] = $cms
+    ->getStory()
+    ->getAll3($websiteId, true, null, null, 100, $sorttypeId, $crossWebsite);
 
 /**
  * Bicycle Club module for website 44.
@@ -115,6 +128,22 @@ $data['rideSchedules'] = [];
 $data['rideNotes'] = [];
 
 if ($data['isBicycleClub']) {
+    $allowedLocations = ['bend', 'redmond', 'sisters'];
+
+    $location = strtolower((string) ($_GET['location'] ?? 'redmond'));
+
+    if (!in_array($location, $allowedLocations, true)) {
+        $location = 'redmond';
+    }
+
+    $data['location'] = $location;
+    $data['locationName'] = ucfirst($location);
+    $data['locations'] = [
+        'bend' => 'Bend',
+        'redmond' => 'Redmond',
+        'sisters' => 'Sisters',
+    ];
+
     // Group ride schedule
     $scheduleSql = "
         SELECT
@@ -135,12 +164,14 @@ if ($data['isBicycleClub']) {
         FROM ride_schedule rs
         LEFT JOIN member m ON m.id = rs.member_id
         WHERE rs.website_id = :website_id
-          AND rs.is_active = 1
+        AND rs.is_active = 1
+        AND rs.location = :location
         ORDER BY rs.sort_order ASC, rs.day_of_week ASC, rs.start_time ASC, rs.id ASC
     ";
 
     $scheduleStmt = $cms->getDb()->runSql($scheduleSql, [
         'website_id' => $websiteId,
+        'location' => $location,
     ]);
     $data['rideSchedules'] = $scheduleStmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -161,6 +192,7 @@ if ($data['isBicycleClub']) {
         LEFT JOIN member m ON m.id = rn.member_id
         WHERE rn.website_id = :website_id
           AND rn.is_active = 1
+          AND rn.location = :location
         ORDER BY
             CASE WHEN rn.note_date IS NULL THEN 1 ELSE 0 END,
             rn.note_date DESC,
@@ -170,6 +202,7 @@ if ($data['isBicycleClub']) {
 
     $noteStmt = $cms->getDb()->runSql($noteSql, [
         'website_id' => $websiteId,
+        'location' => $location,
     ]);
     $data['rideNotes'] = $noteStmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -210,12 +243,14 @@ if ($data['isBicycleClub']) {
         LEFT JOIN member m ON m.id = r.member_id
         WHERE r.website_id = :website_id
           AND r.status = 'published'
+          AND r.location = :location
         ORDER BY r.ride_date DESC, r.id DESC
         LIMIT 20
     ";
 
     $rideStmt = $cms->getDb()->runSql($rideSql, [
         'website_id' => $websiteId,
+        'location' => $location,
     ]);
     $data['rides'] = $rideStmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -277,6 +312,10 @@ if (defined('TFOL_ROUTE_DEBUG') && TFOL_ROUTE_DEBUG) {
         'resolved_website_id' => $websiteId,
     ];
 }
-
+$data['locations'] = [
+    'bend' => 'Bend',
+    'redmond' => 'Redmond',
+    'sisters' => 'Sisters',
+];
 echo $twig->render('index.html', $data);
 return;

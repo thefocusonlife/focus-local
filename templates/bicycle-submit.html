@@ -1,103 +1,107 @@
 {% block content %}
 
 	<style>
-
+		<input type="hidden" name="location" value="{{ location }}">
 		.ride-form {
-			display: block;
-			width: 100%;
-		}
-
-		.ride-fields {
-			display: grid;
-			grid-template-columns: 1fr 1fr;
-			gap: 16px 24px;
-			align-items: start;
-			max-width: 1000px;
-		}
-
-		.ride-fields > .form-row {
-			display: flex;
-			flex-direction: column;
-			min-width: 0;
-			margin: 0;
-			float: none;
-			width: auto;
-		}
-
-		.ride-fields > .form-row label {
-			display: block;
-			margin-bottom: 0.35rem;
-			font-weight: 600;
-		}
-
-		.ride-fields input,
-		.ride-fields select {
-			height: 40px;
-			padding: 8px 10px;
-			font-size: 15px;
-		}
-
-		.ride-fields textarea {
-			min-height: 140px;
-			padding: 10px;
-			font-size: 15px;
-		}
-
-		.ride-fields > .form-row.form-row-wide {
-			grid-column: 1 / -1;
-		}
-
-		.form-actions {
-			margin-top: 1rem;
-		}
-
-		.form-actions .btn {
-			display: inline-block;
-			margin-right: 0.5rem;
-			margin-bottom: 0.5rem;
-			vertical-align: middle;
-		}
-
-		@media(max-width: 800px) {
-			.ride-fields {
-				grid-template-columns: 1fr;
-			}
-
-			.ride-fields > .form-row.form-row-wide {
-				grid-column: auto;
-			}
-		}
-		.metrics-grid {
-			display: grid;
-			grid-template-columns: repeat(4, 1fr);
-			gap: 12px;
-			margin: 12px 0;
-		}
-
-		.metrics-grid label {
-			display: block;
-			font-weight: 600;
-			margin-bottom: 4px;
-		}
-
-		.metrics-grid input {
-			width: 100%;
-		}
-
-		@media(max-width: 800px) {
-			.metrics-grid {
-				grid-template-columns: repeat(2, 1fr);
-			}
-		}
-
-		@media(max-width: 500px) {
-			.metrics-grid {
-				grid-template-columns: 1fr;
-			}
-		}
+							display: block;
+							width: 100%;
+						}
+		
+						.ride-fields {
+							display: grid;
+							grid-template-columns: 1fr 1fr;
+							gap: 16px 24px;
+							align-items: start;
+							max-width: 1000px;
+						}
+		
+						.ride-fields > .form-row {
+							display: flex;
+							flex-direction: column;
+							min-width: 0;
+							margin: 0;
+							float: none;
+							width: auto;
+						}
+		
+						.ride-fields > .form-row label {
+							display: block;
+							margin-bottom: 0.35rem;
+							font-weight: 600;
+						}
+		
+						.ride-fields input,
+						.ride-fields select {
+							height: 40px;
+							padding: 8px 10px;
+							font-size: 15px;
+						}
+		
+						.ride-fields textarea {
+							min-height: 140px;
+							padding: 10px;
+							font-size: 15px;
+						}
+		
+						.ride-fields > .form-row.form-row-wide {
+							grid-column: 1 / -1;
+						}
+		
+						.form-actions {
+							margin-top: 1rem;
+						}
+		
+						.form-actions .btn {
+							display: inline-block;
+							margin-right: 0.5rem;
+							margin-bottom: 0.5rem;
+							vertical-align: middle;
+						}
+		
+						@media(max-width: 800px) {
+							.ride-fields {
+								grid-template-columns: 1fr;
+							}
+		
+							.ride-fields > .form-row.form-row-wide {
+								grid-column: auto;
+							}
+						}
+						.metrics-grid {
+							display: grid;
+							grid-template-columns: repeat(4, 1fr);
+							gap: 12px;
+							margin: 12px 0;
+						}
+		
+						.metrics-grid label {
+							display: block;
+							font-weight: 600;
+							margin-bottom: 4px;
+						}
+		
+						.metrics-grid input {
+							width: 100%;
+						}
+		
+						@media(max-width: 800px) {
+							.metrics-grid {
+								grid-template-columns: repeat(2, 1fr);
+							}
+						}
+		
+						@media(max-width: 500px) {
+							.metrics-grid {
+								grid-template-columns: 1fr;
+							}
+						}
 	</style>
-	<h1>Submit Ride</h1>
-	<p>Add a ride for the Bend / Redmond Bicycle Club.</p>
+	<h1>Submit
+		{{ locationName }}
+		Ride</h1>
+	<p>Add a
+		{{ locationName }}
+		ride for the Bend / Redmond Bicycle Club.</p>
 	<main class="container" id="content">
 
 
@@ -110,6 +114,7 @@
 
 
 		<form method="post" action="{{ doc_root }}bicycle-save" enctype="multipart/form-data" class="ride-form">
+			<input type="hidden" name="location" value="{{ location }}">
 
 			<section class="ride-fields">
 				<div class="form-row">
@@ -139,7 +144,7 @@
 
 				<div class="form-row">
 					<label for="start_location">Start Location</label>
-					<input type="text" id="start_location" name="start_location" maxlength="255" placeholder="[Redmond]">
+					<input type="text" id="start_location" name="start_location" maxlength="255" placeholder="[{{ locationName }}]">
 				</div>
 
 				<div class="form-row">
@@ -185,7 +190,7 @@
 				</div>
 
 				<div class="form-row form-row-wide">
-					<label for="gpx_file">GPX File</label>
+					<label for="gpx_file">FIT/GPXFile</label>
 					<input type="file" id="gpx_file" name="gpx_file" accept=".gpx,.tcx,.fit,application/gpx+xml,application/xml,text/xml">
 					<small>Optional. Upload a ride file. Recommended: FIT file. For now GPX / TCX accepted but will be removed.</small>
 				</div>
@@ -193,7 +198,7 @@
 
 			<p class="form-actions">
 				<button type="submit" class="btn btn-primary">Save Ride</button>
-				<a href="{{ doc_root }}index/44" class="btn btn-secondary">Back to Bicycle Club</a>
+				<a href="{{ doc_root }}index/44?location={{ location }}" class="btn btn-secondary">Back to Bicycle Club</a>
 			</p>
 		</form>
 

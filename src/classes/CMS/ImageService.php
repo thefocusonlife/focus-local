@@ -122,10 +122,11 @@ class ImageService
         }
 
         // ---- Build TFOL filename and save as JPG ----
-        $filename = $this->buildFilename($imageId, $storyTitle, 'jpg');
-        $destPath = $this->uploadsDir . $filename;
+        $baseFilename = $this->buildFilename($imageId, $storyTitle, 'jpg');
 
-        $this->normalizeUploadsDir($this->uploadsDir);
+        $filename = preg_replace('/\.jpg$/', '_' . date('YmdHis') . '.jpg', $baseFilename);
+
+        $destPath = $this->uploadsDir . $filename;
 
         if (
             !imagejpeg(

@@ -1,151 +1,181 @@
-{% block content %}
-	<style>
-		.note-form {
-			display: block;
-			width: 100%;
-		}
-
-		.note-fields {
-			display: grid;
-			grid-template-columns: 1fr 1fr;
-			gap: 16px 24px;
-			align-items: start;
-			max-width: 1000px;
-		}
-
-		.note-fields > .form-row {
-			display: flex;
-			flex-direction: column;
-			min-width: 0;
-			margin: 0;
-			float: none;
-			width: auto;
-		}
-
-		.note-fields > .form-row label {
-			display: block;
-			margin-bottom: 0.35rem;
-			font-weight: 600;
-		}
-
-		.note-fields > .form-row input,
-		.note-fields > .form-row select,
-		.note-fields > .form-row textarea {
-			width: 100%;
-			max-width: 100%;
-			box-sizing: border-box;
-			display: block;
-			margin: 0;
-			float: none;
-			height: 40px;
-			padding: 8px 10px;
-			font-size: 15px;
-			border: 1px solid #ccc;
-			border-radius: 4px;
-		}
-
-		/* Large note textarea */
-		.note-fields > .form-row textarea {
-			min-height: 140px;
-			height: auto;
-			padding: 10px;
-		}
-
-		/* Full-width rows */
-		.note-fields > .form-row.form-row-wide {
-			grid-column: 1 / -1;
-		}
-
-		.form-actions {
-			margin-top: 1rem;
-		}
-
-		.form-actions .btn {
-			display: inline-block;
-			margin-right: 0.5rem;
-			margin-bottom: 0.5rem;
-			vertical-align: middle;
-		}
-
-		::placeholder {
-			color: #999;
-			font-style: italic;
-		}
-
-		@media(max-width: 800px) {
-			.note-fields {
-				grid-template-columns: 1fr;
-			}
-
-			.note-fields > .form-row.form-row-wide {
-				grid-column: auto;
-			}
-		}
-		/* Fix checkbox rendering */
-		.schedule-fields input[type="checkbox"],
-		.note-fields input[type="checkbox"] {
-			width: auto;
-			height: auto;
-			transform: scale(1.2);
-			margin-right: 6px;
-		}
-
-		/* Align checkbox label nicely */
-		.schedule-fields label:has(input[type="checkbox"]),
-		.note-fields label:has(input[type="checkbox"]) {
-			display: flex;
-			align-items: center;
-			gap: 6px;
-			font-weight: normal;
-		}
-	</style>
-
-	<main class="container" id="content">
-		<h1>
+<!DOCTYPE html>
+<html lang="en-US">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>
 			{% if mode == 'edit' %}Edit Note{% else %}Add Note
 			{% endif %}
-		</h1>
+		</title>
 
-		{% if failure %}
-			<div class="alert alert-danger">{{ failure }}</div>
-		{% endif %}
 
-		<form method="post" action="{{ doc_root }}bicycle-note-save" class="note-form">
-			<input type="hidden" name="id" value="{{ note.id }}">
-			<input type="hidden" name="website_id" value="{{ websiteId }}">
+		<!-- TinyMCE -->
+		<script src="https://cdn.tiny.cloud/1/{{ constant('TINYMCE_API_KEY') }}/tinymce/8/tinymce.min.js" referrerpolicy="origin"></script>
 
-			<section class="note-fields">
+		<style>
+			.note-form {
+				display: block;
+				width: 100%;
+			}
 
-				<div class="form-row">
-					<label for="title">Title</label>
-					<input type="text" id="title" name="title" value="{{ note.title }}" required>
-				</div>
+			.note-fields {
+				display: grid;
+				grid-template-columns: 1fr 1fr;
+				gap: 16px 24px;
+				align-items: start;
+				max-width: 1000px;
+			}
 
-				<div class="form-row">
-					<label for="sort_order">Sort Order</label>
-					<input type="number" id="sort_order" name="sort_order" value="{{ note.sort_order|default(0) }}">
-				</div>
+			.note-fields > .form-row {
+				display: flex;
+				flex-direction: column;
+				min-width: 0;
+				margin: 0;
+				float: none;
+				width: auto;
+			}
 
-				<div class="form-row form-row-wide">
-					<label for="note_text">Note</label>
-					<textarea id="note_text" name="note_text">{{ note.note_text }}</textarea>
-				</div>
+			.note-fields > .form-row label {
+				display: block;
+				margin-bottom: 0.35rem;
+				font-weight: 600;
+			}
 
-				<div class="form-row">
-					<label>
-						<input type="checkbox" name="is_active" value="1" {% if note.is_active %} checked {% endif %}>
-						Active
-					</label>
-				</div>
+			.note-fields > .form-row input,
+			.note-fields > .form-row select,
+			.note-fields > .form-row textarea {
+				width: 100%;
+				max-width: 100%;
+				box-sizing: border-box;
+				display: block;
+				margin: 0;
+				float: none;
+				height: 40px;
+				padding: 8px 10px;
+				font-size: 15px;
+				border: 1px solid #ccc;
+				border-radius: 4px;
+			}
 
-			</section>
+			/* Large note textarea */
+			.note-fields > .form-row textarea {
+				min-height: 140px;
+				height: auto;
+				padding: 10px;
+			}
 
-			<p class="form-actions">
+			/* Full-width rows */
+			.note-fields > .form-row.form-row-wide {
+				grid-column: 1 / -1;
+			}
+
+			.form-actions {
+				margin-top: 1rem;
+			}
+
+			.form-actions .btn {
+				display: inline-block;
+				margin-right: 0.5rem;
+				margin-bottom: 0.5rem;
+				vertical-align: middle;
+			}
+
+			::placeholder {
+				color: #999;
+				font-style: italic;
+			}
+
+			@media(max-width: 800px) {
+				.note-fields {
+					grid-template-columns: 1fr;
+				}
+
+				.note-fields > .form-row.form-row-wide {
+					grid-column: auto;
+				}
+			}
+			/* Fix checkbox rendering */
+			.schedule-fields input[type="checkbox"],
+			.note-fields input[type="checkbox"] {
+				width: auto;
+				height: auto;
+				transform: scale(1.2);
+				margin-right: 6px;
+			}
+
+			/* Align checkbox label nicely */
+			.schedule-fields label:has(input[type="checkbox"]),
+			.note-fields label:has(input[type="checkbox"]) {
+				display: flex;
+				align-items: center;
+				gap: 6px;
+				font-weight: normal;
+			}
+		</style>
+
+	</head>
+
+	<body>
+
+		<main class="container" id="content">
+			<h1>
+				{% if mode == 'edit' %}Edit Note{% else %}Add Note
+				{% endif %}
+			</h1>
+
+			{% if failure %}
+				<div class="alert alert-danger">{{ failure }}</div>
+			{% endif %}
+
+			<form method="post" action="{{ doc_root }}bicycle-note-save" class="note-form">
+
+				<input type="hidden" name="id" value="{{ note.id }}">
+				<input type="hidden" name="website_id" value="{{ websiteId }}">
+				<input type="hidden" name="location" value="{{ location }}">
+				<section class="note-fields">
+
+					<div class="form-row">
+						<label for="title">Title</label>
+						<input type="text" id="title" name="title" value="{{ note.title }}" required>
+					</div>
+
+					<div class="form-row">
+						<label for="sort_order">Sort Order</label>
+						<input type="number" id="sort_order" name="sort_order" value="{{ note.sort_order|default(0) }}">
+					</div>
+
+					<div class="form-row form-row-wide">
+						<label for="note_text">Note</label>
+						<textarea id="note_text" name="note_text" rows="6">{{ note.note_text|default('') }}</textarea>
+					</div>
+
+					<div class="form-row">
+						<label>
+							<input type="checkbox" name="is_active" value="1" {% if note.is_active %} checked {% endif %}>
+							Active
+						</label>
+					</div>
+
+				</section>
+
 				<button type="submit" class="btn btn-primary">Save Note</button>
-				<a href="{{ doc_root }}index/44" class="btn btn-secondary">
+				<a href="{{ doc_root }}index/44?location={{ location }}" class="btn btn-secondary">
 					Back to Bicycle Club
 				</a>
 			</p>
 		</form>
-	</main>
-{% endblock %}
+	</body>
+</html></main><script>
+document.addEventListener('DOMContentLoaded', function () {
+if (typeof tinymce !== 'undefined') {
+tinymce.init({
+selector: '#note_text',
+height: 260,
+menubar: true,
+license_key: 'gpl',
+branding: false,
+plugins: 'anchor autolink link lists searchreplace table wordcount',
+toolbar: 'undo redo | bold italic underline | link | bullist numlist | table | removeformat'
+});
+}
+});</script></body></html>

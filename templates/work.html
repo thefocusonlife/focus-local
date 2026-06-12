@@ -88,11 +88,11 @@
 						<a href="{{ doc_root }}admin/image-delete/{{story.id}}" class="btn btn-secondary">Delete image</a><br>
 
 						{#	<div class="form-group">
-																																										<label for="landscape">Orientation (1 = Landscape, 0 = Portrait):
-																																										</label>
-																																										<input type="number" name="landscape" id="landscape" value="{{ story.landscape|default(1) }}" class="input-digit" min="0" max="1" step="1">
-																																										<span class="errors">{{ errors.landscape }}</span>
-																																									</div> #}
+																																																<label for="landscape">Orientation (1 = Landscape, 0 = Portrait):
+																																																</label>
+																																																<input type="number" name="landscape" id="landscape" value="{{ story.landscape|default(1) }}" class="input-digit" min="0" max="1" step="1">
+																																																<span class="errors">{{ errors.landscape }}</span>
+																																															</div> #}
 					</div>
 
 					<div class="form-group">
@@ -210,7 +210,7 @@
 
 			<div class="form-group">
 				<label for="storyorder">Order:</label>
-				<input type="number" name="storyorder" id="storyorder" value="{{ story.storyorder|default(1) }}" class="input-digit" min="1" max="999" step="1">
+				<input type="number" name="storyorder" id="storyorder" value="{{ story.storyorder|default(10) }}" class="input-digit" min="1" step="1">
 
 				<span class="errors">{{ errors.storyorder }}</span>
 			</div>

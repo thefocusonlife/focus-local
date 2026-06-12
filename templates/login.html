@@ -24,11 +24,14 @@
 
 				<input type="hidden" name="csrf_token" value="{{ csrf_token|e }}">
 				<input type="hidden" name="g-recaptcha-response" value="">
-				<input type="hidden" name="website" id="website" value="{{ website.id }}">
+				<input type="hidden" name="website" value="{{ website_id }}">
+				{% if guest_story %}
+					<input type="hidden" name="guest_story" value="1">
+				{% endif %}
 
 				<div class="form-group">
 					<label for="login_email">Email</label>
-					<input id="login_email" name="email" type="email" value="{{ email|default('')|e }}" autocomplete="username" required>
+					<input id="login_email" name="email" type="email" value="{{ login_email|default('') }}" autocomplete="username" required>
 				</div>
 
 				<div class="login-card">
@@ -39,7 +42,7 @@
 
 						<div class="password-wrap">
 							<input id="login_password" name="password" type="password" autocomplete="current-password" required>
-							<button type="button" class="pw-toggle" aria-label="Show password">👁</button>
+							<button type="button" class="pw-toggle" aria-label="Show password" aria-pressed="false" data-toggle-password="#login_password">👁</button>
 						</div>
 					</div>
 
