@@ -36,8 +36,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // If data is not valid
         $errors['message'] = 'Please try again.'; // Store error message
     } else {
-        //temp log
-        error_log('LOGIN-SAVE return_to=' . ($_SESSION['return_to'] ?? 'EMPTY'));
         // 1. Stories Worth Saving special flow first
         if (!empty($_GET['guest_story']) || !empty($_SESSION['guest_story_draft'])) {
             redirect('guest-story-complete');
