@@ -29,13 +29,13 @@
 				<div class="bicycle-club-header">
 					<h2>{{ locationName }}
 						Group Ride Schedule</h2>
-					{% if session.id == 1 or session.id == 339 %}
-						<div class="bicycle-club-actions">
-							<a href="{{ doc_root }}bicycle-schedule-add?location={{ location }}" class="btn btn-primary">
-								Add Group Ride
-							</a>
-						</div>
-					{% endif %}
+
+					<div class="bicycle-club-actions">
+						<a href="{{ doc_root }}bicycle-schedule-add?location={{ location }}" class="btn btn-primary">
+							Add Group Ride
+						</a>
+					</div>
+
 				</div>
 
 

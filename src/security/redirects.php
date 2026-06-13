@@ -49,6 +49,23 @@ function denyAccessHard(): void
 }
 
 /**
+ * Return to calling form when interrupted with log-in or register
+ */
+function setReturnTo(string $path): void
+{
+    $_SESSION['return_to'] = $path;
+}
+
+function consumeReturnTo(?string $fallback = null): string
+{
+    $returnTo = $_SESSION['return_to'] ?? ($fallback ?? DOC_ROOT . 'member');
+
+    unset($_SESSION['return_to']);
+
+    return $returnTo;
+}
+
+/**
  * Redirect to member home (post-login safe landing)
  */
 function redirectToMemberHome(): void

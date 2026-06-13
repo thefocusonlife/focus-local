@@ -467,8 +467,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         if ($imageId > 0 && $alt !== '') {
                             $cms->getStory()->altUpdate($imageId, $alt);
                         }
+                        $menuId = (int) ($_POST['menu_id'] ?? ($_GET['menu_id'] ?? 0));
 
-                        redirect('admin/stories/', ['success' => 'Story saved']);
+                        if ($menuId > 0) {
+                            redirect('menu/' . $menuId, ['success' => 'Story saved']);
+                            exit();
+                        }
+
+                        redirect('member', ['success' => 'Story saved']);
+                        exit();
                     } else {
                         $errors['warning'] = 'Story could not be saved';
                     }

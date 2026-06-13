@@ -36,11 +36,26 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         // If data is not valid
         $errors['message'] = 'Please try again.'; // Store error message
     } else {
-        $$isGuestStory =
-            !empty($_GET['guest_story']) ||
-            !empty($_POST['guest_story']) ||
-            !empty($_SESSION['guest_story']);
+        //temp log
+        error_log('LOGIN-SAVE return_to=' . ($_SESSION['return_to'] ?? 'EMPTY'));
+        // 1. Stories Worth Saving special flow first
+        if (!empty($_GET['guest_story']) || !empty($_SESSION['guest_story_draft'])) {
+            redirect('guest-story-complete');
+            exit();
+        }
 
+        // 2. Universal return_to flow second
+        if (!empty($_SESSION['return_to'])) {
+            $returnTo = (string) $_SESSION['return_to'];
+            unset($_SESSION['return_to']);
+
+            header('Location: ' . $returnTo);
+            exit();
+        }
+
+        // 3. Normal/default login behavior last
+        redirect('member');
+        exit();
         $website = (string) ($isGuestStory ? 1 : $_POST['website'] ?? 1);
         $member = $cms->getMember()->login($email, $website, $password); // Get member details
         if ($member and $member['role'] == 'suspended') {
@@ -51,8 +66,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $errors['message'] =
                 'Membership pending.  Use Contact Us to inquire about your registration.'; // Store message
         } elseif ($member) {
-            //var_dump_pre($member);
-            //echo "login -87";
             // Otherwise for members
             $cms->getSession()->create($member, $website); // Create session
             redirect('member/' . $member['id']); // Redirect to their page

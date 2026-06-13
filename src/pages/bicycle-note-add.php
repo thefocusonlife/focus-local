@@ -12,11 +12,12 @@ $viewerId = (int) ($_SESSION['id'] ?? 0);
 $role = strtolower((string) ($_SESSION['role'] ?? ''));
 
 if ($viewerId <= 0 || $role === 'guest') {
-    $_SESSION['return_to'] = '/index/44';
-    //$_SESSION['flash_failure'] = 'You must be logged in to manage club notes.';
+    $_SESSION['return_to'] = DOC_ROOT . 'bicycle-note-add?location=' . urlencode($location);
+
     redirect('login');
     exit();
 }
+
 require_once APP_ROOT . '/src/security/guard.php';
 include APP_ROOT . '/src/pages/menu-path.php';
 $data = [

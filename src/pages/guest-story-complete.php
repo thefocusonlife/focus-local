@@ -4,7 +4,8 @@ declare(strict_types=1);
 require_once APP_ROOT . '/src/security/redirects.php';
 
 if (empty($_SESSION['id'])) {
-    header('Location: ' . DOC_ROOT . 'login?guest_story=1');
+    $_SESSION['return_to'] = DOC_ROOT . 'guest-story-complete';
+    header('Location: ' . DOC_ROOT . 'login');
     exit();
 }
 
