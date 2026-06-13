@@ -1,7 +1,5 @@
 <?php
 declare(strict_types=1);
-// temp log
-error_log('ENTERED bicycle-schedule-add.php');
 
 $allowedLocations = ['bend', 'redmond', 'sisters'];
 
@@ -13,10 +11,8 @@ if (!in_array($location, $allowedLocations, true)) {
 
 $viewerId = (int) ($_SESSION['id'] ?? 0);
 $role = strtolower((string) ($_SESSION['role'] ?? ''));
-// temp log
-$_SESSION['return_to'] = DOC_ROOT . 'bicycle-schedule-add?location=' . urlencode($location);
 
-error_log('SET return_to=' . ($_SESSION['return_to'] ?? 'EMPTY'));
+$_SESSION['return_to'] = DOC_ROOT . 'bicycle-schedule-add?location=' . urlencode($location);
 
 /* if ($viewerId <= 0 || $role === 'guest') {
     $_SESSION['return_to'] = '/index/44';
