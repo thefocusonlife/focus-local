@@ -60,6 +60,13 @@ body.splash-active {
 .hidden {
     display: none;
 }
+
+.small-print {
+    font-size: 0.85rem;
+    color: #666;
+    margin: 0.5rem 0;
+}
+
 /**********************/
 /* 2:   TYPOGRAPHY    */
 /**********************/
@@ -1678,5 +1685,6 @@ body .membership-form-wrap textarea {
     border-bottom: 1px solid #ddd;
     box-sizing: border-box;
   }
+}
 }
 }
