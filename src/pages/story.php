@@ -37,9 +37,20 @@ if ($websiteId <= 0) {
 $website = $cms->getWebsite()->getById($websiteId);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // If form submitted
-    // Always normalize comment to a string to avoid PHP warnings
-    // Normalize comment first
+    $viewerId = (int) ($_SESSION['id'] ?? 0);
+
+    if ($viewerId <= 2) {
+        http_response_code(403);
+        exit('You must be logged in to make a comment.');
+    }
+
+    if ((int) ($story['allow_comment'] ?? 0) !== 1) {
+        http_response_code(403);
+        exit('Comments are closed for this story.');
+    }
+
+    // existing comment code continues here...
+
     $comment = isset($_POST['comment']) ? trim((string) $_POST['comment']) : '';
 
     // Configure HTMLPurifier with custom cache directory
@@ -47,7 +58,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $config->set('HTML.Allowed', 'br,b,i,a[href]');
 
     // NEW: Tell HTMLPurifier where to store serialized definitions
-    $cacheDir = $_SERVER['DOCUMENT_ROOT'] . '/focus-local/var/log/htmlpurifier';
+    $cacheDir = APP_ROOT . '/var/cache/htmlpurifier';
+
+    if (!is_dir($cacheDir)) {
+        mkdir($cacheDir, 0755, true);
+    }
+
+    $config->set('Cache.SerializerPath', $cacheDir);
     $config->set('Cache.SerializerPath', $cacheDir);
 
     $purifier = new HTMLPurifier($config);
@@ -61,7 +78,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     if ($error === '') {
         // If no error, save
-        $arguments = [1, $comment, $story['id'], $cms->getSession()->id];
+        $arguments = [
+            'website' => (int) $story['website'],
+            'comment' => $comment,
+            'story_id' => (int) $story['id'],
+            'member_id' => $viewerId,
+        ];
         $cms->getComment()->create($arguments); // Create comment
         redirect($path); // Reload page
     }
@@ -93,14 +115,14 @@ if (empty($_SESSION)) {
 $data['navigation'] = $cms->getMenu()->getAll2($member['id'], $mem); // Get menus
 $data['story'] = $story; // Story
 $data['section'] = $story['menu_id']; // Current menu
-$data['comments'] = $cms->getComment()->getAll($id); // Get comments
+$data['comments'] = $cms->getComment()->getAll($storyId);
 $data['website'] = $cms->getWebsite()->getById($story['website']);
 // Image panel: default minimized, remember per session
 $data['image_panel_minimized'] = (bool) ($_SESSION['ui']['image_panel_minimized'] ?? true);
 
 if ($cms->getSession()->id > 0) {
     // If user logged in
-    $data['liked'] = $cms->getLike()->get([$id, $cms->getSession()->id]); // Did user like?
+    $data['liked'] = $cms->getLike()->get([$storyId, $cms->getSession()->id]);
     $data['error'] = $error ?? null; // Comment error
 }
 
