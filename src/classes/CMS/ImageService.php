@@ -43,8 +43,17 @@ class ImageService
         }
 
         $mime = $this->detectMime($file['tmp_name']);
+
+        $heicTypes = ['image/heic', 'image/heif', 'image/heic-sequence', 'image/heif-sequence'];
+
+        if (in_array($mime, $heicTypes, true)) {
+            throw new \RuntimeException(
+                'iPhone HEIC photos are not supported yet. Please choose Most Compatible/JPEG on your iPhone or export the photo as JPG before uploading.',
+            );
+        }
+
         if (!in_array($mime, MEDIA_TYPES, true)) {
-            throw new RuntimeException('Unsupported image type: ' . $mime);
+            throw new \RuntimeException('Unsupported image type: ' . $mime);
         }
 
         // ---- Load image with GD (based on real MIME) ----
@@ -168,6 +177,9 @@ class ImageService
             'image/webp' => function_exists('imagecreatefromwebp')
                 ? @imagecreatefromwebp($tmpPath)
                 : false,
+            // HEIC/HEIF cannot be decoded by GD in current PHP/GD.
+            'image/heic', 'image/heif', 'image/heic-sequence', 'image/heif-sequence' => false,
+
             default => false,
         };
     }
@@ -196,6 +208,15 @@ class ImageService
         }
 
         $mime = $this->detectMime($file['tmp_name']);
+
+        $heicTypes = ['image/heic', 'image/heif', 'image/heic-sequence', 'image/heif-sequence'];
+
+        if (in_array($mime, $heicTypes, true)) {
+            throw new \RuntimeException(
+                'iPhone HEIC photos are not supported yet. Please choose Most Compatible/JPEG on your iPhone or export the photo as JPG before uploading.',
+            );
+        }
+
         if (!in_array($mime, MEDIA_TYPES, true)) {
             throw new \RuntimeException('Unsupported image type: ' . $mime);
         }

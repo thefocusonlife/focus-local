@@ -429,9 +429,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     } catch (\Throwable $e) {
                         $msg = $e->getMessage();
 
-                        if (str_contains($msg, 'Unsupported image type')) {
+                        if (
+                            str_contains($msg, 'HEIC') ||
+                            str_contains($msg, 'HEIF') ||
+                            str_contains($msg, 'iPhone HEIC')
+                        ) {
+                            $errors['warning'] = $msg;
+                        } elseif (str_contains($msg, 'Unsupported image type')) {
                             $errors['warning'] =
-                                'Invalid image type. Please upload a JPG or PNG image.';
+                                'Invalid image type. Please upload a JPG, PNG, GIF, or WEBP image.';
                         } elseif (str_contains($msg, 'File too large')) {
                             $errors['warning'] = $msg;
                         } else {
