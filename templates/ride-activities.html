@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en-US">
+	<style>
+		.form-group {
+			margin-bottom: 1rem;
+			text-align: left;
+		}
+
+		.form-group label {
+			display: block;
+			font-weight: 600;
+			margin-bottom: 0.35rem;
+		}
+
+		.form-group input,
+		.form-group select,
+		.form-group textarea {
+			width: 100%;
+			box-sizing: border-box;
+			padding: 0.6rem;
+			border: 1px solid #cccccc;
+			border-radius: 6px;
+			font-size: 1rem;
+		}
+
+		.button {
+			margin-top: 0.5rem;
+		}
+	</style>
+	<head>
+		<meta charset="UTF-8">
+		<title>Ride Activities</title>
+	</head>
+	<body>
+		<main class="container">
+			<input type="hidden" name="location" value="{{ location }}">
+
+			<p>
+				<a href="{{ doc_root }}index/44?location={{ location }}">Back to Bicycle Club</a>
+			</p>
+
+			<section class="ride-activities">
+				<h1>Ride Activities</h1>
+
+				<p class="ride-activities-intro">
+					Many cyclists already track their rides with Strava, Ride with GPS, or Garmin Connect.
+																																													This page helps Bend / Redmond Bicycle Club members find those services and share ride
+																																													activity links with the club.
+				</p>
+
+				<div class="ride-activity-card">
+					<h2>Share a Recent Ride</h2>
+				</div>
+
+				<div class="ride-activity-links">
+					<a href="https://www.strava.com" target="_blank" rel="noopener">
+						🚴 Strava
+					</a>
+					<p>Open the activity and copy the URL from the address bar.</p>
+					<a href="https://ridewithgps.com" target="_blank" rel="noopener">
+						🗺️ Ride with GPS
+					</a>
+					<p>Open the ride or route and copy the URL from the address bar.</p>
+
+					<a href="https://connect.garmin.com" target="_blank" rel="noopener">
+						⌚ Garmin Connect
+					</a>
+					<p>Open the activity, choose Share if necessary, and copy the activity URL.</p>
+				</div>
+
+				<p class="ride-activities-note">
+					Tip: Make sure the ride or route is public before sharing the link.
+				</p>
+
+				<form method="post" action="{{ doc_root }}ride-activity-save">
+
+					<input type="hidden" name="location" value="{{ location }}">
+					<input type="hidden" name="member_id" value="{{ session.id }}">
+
+					<div class="ride-activity-card">
+						<h2>Share a Recent Ride</h2>
+
+						<p>
+							Logged in as:
+							<strong>{{ session.first_name }}
+								{{ session.last_name }}</strong>
+						</p>
+
+						<div class="form-group">
+							<label for="service">Service</label>
+							<select id="service" name="service" required>
+								<option value="">Select Service</option>
+								<option value="strava">Strava</option>
+								<option value="rwgps">Ride with GPS</option>
+								<option value="garmin">Garmin Connect</option>
+							</select>
+						</div>
+
+						<div class="form-group">
+							<label for="activity_url">Ride URL</label>
+							<input type="url" id="activity_url" name="activity_url" maxlength="500" required placeholder="Paste the ride or route URL here">
+						</div>
+
+						<div class="form-group">
+							<label for="title">Ride Title</label>
+							<input type="text" id="title" name="title" maxlength="120" placeholder="Example: Saturday Ride to Sisters">
+						</div>
+
+						<div class="form-group">
+							<label for="notes">Notes</label>
+							<textarea id="notes" name="notes" rows="4" maxlength="1000" placeholder="Optional comments about the ride, route, weather, group size, etc."></textarea>
+						</div>
+
+						<button type="submit" class="button">
+							Save Ride Activity
+						</button>
+
+					</div>
+					<div class="ride-activity-card ride-activity-list">
+						<h2>Recent Ride Activities</h2>
+
+						{% if activities %}
+							<ul class="ride-activity-items">
+								{% for activity in activities %}
+									<li class="ride-activity-item">
+										<div class="ride-activity-title">
+											<strong>
+												{% if activity.title %}
+													{{ activity.title }}
+												{% else %}
+													Shared Ride Activity
+												{% endif %}
+											</strong>
+										</div>
+
+										<div class="ride-activity-meta">
+											{{ activity.member_name }}
+											·
+											{{ activity.service|capitalize }}
+											{% if activity.created %}
+												·
+												{{ activity.created|date('M j, Y') }}
+											{% endif %}
+										</div>
+
+										{% if activity.notes %}
+											<p class="ride-activity-notes">
+												{{ activity.notes }}
+											</p>
+										{% endif %}
+
+										<p>
+											<a href="{{ activity.activity_url }}" target="_blank" rel="noopener">
+												View Ride Activity
+											</a>
+										</p>
+									</li>
+								{% endfor %}
+							</ul>
+						{% else %}
+							<p>No ride activities have been shared yet.</p>
+						{% endif %}
+					</div>
+
+				</section>
+
+
+			</form>
+
+
+		</main>
+	</body>
+</html>
