@@ -5,43 +5,22 @@ guardPublic();
 
 $terms[] = null;
 
-$data['term'] = filter_input(INPUT_GET, 'term');
-$x = $data['term'];
-if ($x != null) {
-    $terms = explode('+', $x);
-}
-$data['term1'] = $terms[0];
-if (!empty($terms[1])) {
-    $data['term2'] = $terms[1];
-}
+$term = trim((string) filter_input(INPUT_GET, 'term'));
+$data['term'] = $term;
 
-$data['show'] = filter_input(INPUT_GET, 'show', FILTER_VALIDATE_INT) ?? 3; // Limit
-$data['from'] = filter_input(INPUT_GET, 'from', FILTER_VALIDATE_INT) ?? 0; // Offset
+$data['show'] = filter_input(INPUT_GET, 'show', FILTER_VALIDATE_INT) ?? 3;
+$data['from'] = filter_input(INPUT_GET, 'from', FILTER_VALIDATE_INT) ?? 0;
 
-$data['count'] = 0; // Set count to 0
-$data['stories'] = []; // Set stories to empty array
+$data['count'] = 0;
+$data['stories'] = [];
 
-if ($data['term1']) {
-    if (!isset($data['term2'])) {
-        // If no search term
-        $data['count'] = $cms->getStory()->searchCount($data['term1']); // Get number of matches
-    } else {
-        $data['count'] = $cms->getStory()->searchCount1($data['term1'], $data['term2']);
-    }
+if ($term !== '') {
+    $data['count'] = $cms->getStory()->searchCount($term);
+
     if ($data['count'] > 0) {
-        if (!isset($data['term2'])) {
-            // If there are matches
-            $data['stories'] = $cms
-                ->getStory()
-                ->search($data['term1'], $data['show'], $data['from']); // Get matches
-        } else {
-            $data['stories'] = $cms
-                ->getStory()
-                ->search1($data['term1'], $data['term2'], $data['show'], $data['from']);
-        }
+        $data['stories'] = $cms->getStory()->search($term, $data['show'], $data['from']);
     }
 }
-
 if ($data['count'] > $data['show']) {
     // If more than 3 results
     $data['total_pages'] = ceil($data['count'] / $data['show']); // Total pages

@@ -483,137 +483,114 @@ AND (:crossWebsite = 1 OR a.website = :website)
     // Get number of search matches
     public function searchCount(string $term): int
     {
-        $arguments['term1'] = $arguments['term2'] = $arguments['term3'] = $arguments['term4'] =
-            '%' . $term . '%'; // Add wildcards to search term
-        $sql = "SELECT COUNT(title)
-                FROM story
-                WHERE story.published = 1 AND  story.title   LIKE :term1
-                  OR story.published = 1 AND  story.summary  LIKE :term2
-                  OR story.published = 1 AND  story.content LIKE :term3
-                  OR story.published = 1 AND story.keyword LIKE :term4;";
-        // SQL to count matches
-        return $this->db->runSql($sql, $arguments)->fetchColumn(); // Return number of matches
-    }
+        $term = trim($term);
+        $isPhrase = str_contains($term, ' ');
 
-    // Get number of search matches
-    public function searchCount1(string $term1, $term2): int
-    {
-        //$arguments['term1'] = $arguments['term2'] = $arguments['term3'] = $arguments['term4'] = '%' . $term1 . '%'; // Add wildcards to search term
-        //$arguments['term5'] = $arguments['term6'] = $arguments['term7'] = $arguments['term8'] = '%' . $term2 . '%'; // Add wildcards to search term
-        $arguments['term4'] = '%' . $term1 . '%'; // Add wildcards to search term
-        $arguments['term8'] = '%' . $term2 . '%'; // Add wildcards to search term
+        if ($isPhrase) {
+            $arguments = [
+                'term1' => '%' . $term . '%',
+                'term2' => '%' . $term . '%',
+                'term3' => '%' . $term . '%',
+                'term4' => '%' . $term . '%',
+            ];
 
-        $sql = "SELECT COUNT(title)
-                FROM story
-                WHERE
-                /* (story.published = 1 AND  story.title   LIKE :term1
-                  OR story.published = 1 AND  story.summary  LIKE :term2
-                  OR story.published = 1 AND  story.content LIKE :term3
-                  OR story.published = 1 AND story.keyword LIKE :term4)
-                  */
-                  (story.published = 1 AND story.keyword LIKE :term4
-                  AND
-                  story.published = 1 AND story.keyword LIKE :term8);";
-        /*(story.published = 1 AND  story.title   LIKE :term5
-                  OR story.published = 1 AND  story.summary  LIKE :term6
-                  OR story.published = 1 AND  story.content LIKE :term7
-                  OR story.published = 1 AND story.keyword LIKE :term8);";
-                */
+            $operatorSql = "
+               a.title   LIKE :term1
+            OR a.summary LIKE :term2
+            OR a.content LIKE :term3
+            OR a.keyword LIKE :term4
+        ";
+        } else {
+            $arguments = [
+                'term1' => $term,
+                'term2' => $term,
+                'term3' => $term,
+                'term4' => $term,
+            ];
 
-        // SQL to count matches
-        return $this->db->runSql($sql, $arguments)->fetchColumn(); // Return number of matches
+            $operatorSql = "
+               a.title   REGEXP CONCAT('[[:<:]]', :term1, '[[:>:]]')
+            OR a.summary REGEXP CONCAT('[[:<:]]', :term2, '[[:>:]]')
+            OR a.content REGEXP CONCAT('[[:<:]]', :term3, '[[:>:]]')
+            OR a.keyword REGEXP CONCAT('[[:<:]]', :term4, '[[:>:]]')
+        ";
+        }
+
+        $sql = "SELECT COUNT(a.id)
+              FROM story AS a
+             WHERE a.published = 1
+               AND ($operatorSql);";
+
+        return (int) $this->db->runSql($sql, $arguments)->fetchColumn();
     }
 
     // Get story summaries of search matches
     public function search(string $term, int $show = 30, int $from = 0): array
     {
-        $arguments['term1'] = $arguments['term2'] = $arguments['term3'] = $arguments['term4'] =
-            '%' . $term . '%'; // Add wildcards to search term
-        $arguments['show'] = $show; // Number of results to show
-        $arguments['from'] = $from; // Number of results to skip
-        $sql = "SELECT a.id,a.website, a.title, a.summary, a.created, a.menu_id, a.member_id, a.family_id, a.published,
-                        a.seo_title, a.storyorder, a.landscape, a.allow_comment, a.keyword, a.blog,
-                        c.name     AS menu,
-                        c.seo_name AS seo_menu,
-                        m.forename, m.surname,
-                        CONCAT(m.forename, ' ', m.surname) AS author,
-                        i.file      AS image_file,
-                        i.alt       AS image_alt,
-                        (SELECT COUNT(story_id)
-                           FROM likes
-                          WHERE likes.story_id = a.id) AS likes,
-                        (SELECT COUNT(story_id)
-                           FROM comment
-                          WHERE comment.story_id = a.id) AS comments
+        $term = trim($term);
+        $isPhrase = str_contains($term, ' ');
 
-                   FROM story     AS a
-                   JOIN menu    AS c    ON a.menu_id = c.id
-                   JOIN member      AS m    ON a.member_id   = m.id
-                   LEFT JOIN image  AS i    ON a.image_id    = i.id
+        if ($isPhrase) {
+            $arguments = [
+                'term1' => '%' . $term . '%',
+                'term2' => '%' . $term . '%',
+                'term3' => '%' . $term . '%',
+                'term4' => '%' . $term . '%',
+                'show' => $show,
+                'from' => $from,
+            ];
 
-                  WHERE
-                     (a.published = 1 AND a.title   LIKE :term1)
-                     OR (a.published = 1 AND a.summary   LIKE :term2)
-                     OR (a.published = 1 AND a.content   LIKE :term3)
-                     OR (a.published = 1 AND a.keyword   LIKE :term4)
+            $operatorSql = "
+               a.title   LIKE :term1
+            OR a.summary LIKE :term2
+            OR a.content LIKE :term3
+            OR a.keyword LIKE :term4
+        ";
+        } else {
+            $arguments = [
+                'term1' => $term,
+                'term2' => $term,
+                'term3' => $term,
+                'term4' => $term,
+                'show' => $show,
+                'from' => $from,
+            ];
 
-                  ORDER BY a.id DESC
-                  LIMIT :show
-                  OFFSET :from;"; // SQL to get story summaries
-        return $this->db->runSql($sql, $arguments)->fetchAll(); // Return story summaries
+            $operatorSql = "
+               a.title   REGEXP CONCAT('[[:<:]]', :term1, '[[:>:]]')
+            OR a.summary REGEXP CONCAT('[[:<:]]', :term2, '[[:>:]]')
+            OR a.content REGEXP CONCAT('[[:<:]]', :term3, '[[:>:]]')
+            OR a.keyword REGEXP CONCAT('[[:<:]]', :term4, '[[:>:]]')
+        ";
+        }
+
+        $sql = "SELECT a.id, a.website, a.title, a.summary, a.created, a.menu_id,
+                   a.member_id, a.family_id, a.published, a.seo_title,
+                   a.storyorder, a.landscape, a.allow_comment, a.keyword, a.blog,
+                   c.name AS menu,
+                   c.seo_name AS seo_menu,
+                   m.forename, m.surname,
+                   CONCAT(m.forename, ' ', m.surname) AS author,
+                   i.file AS image_file,
+                   i.alt AS image_alt,
+                   (SELECT COUNT(story_id)
+                      FROM likes
+                     WHERE likes.story_id = a.id) AS likes,
+                   (SELECT COUNT(story_id)
+                      FROM comment
+                     WHERE comment.story_id = a.id) AS comments
+              FROM story AS a
+              JOIN menu AS c ON a.menu_id = c.id
+              JOIN member AS m ON a.member_id = m.id
+              LEFT JOIN image AS i ON a.image_id = i.id
+             WHERE a.published = 1
+               AND ($operatorSql)
+             ORDER BY a.id DESC
+             LIMIT :show
+            OFFSET :from;";
+
+        return $this->db->runSql($sql, $arguments)->fetchAll();
     }
-
-    // Get story summaries of search matches with + connector
-    public function search1(string $term1, string $term2, int $show = 30, int $from = 0): array
-    {
-        //$arguments['term1'] = $arguments['term2'] = $arguments['term3'] = $arguments['term4'] = '%' . $term1 . '%'; // Add wildcards to search term
-        //$arguments['term5'] = $arguments['term6'] = $arguments['term7'] = $arguments['term8']  = '%' . $term2 . '%';
-        $arguments['term4'] = '%' . $term1 . '%'; // Add wildcards to search term
-        $arguments['term8'] = '%' . $term2 . '%';
-
-        $arguments['show'] = $show; // Number of results to show
-        $arguments['from'] = $from; // Number of results to skip
-        $sql = "SELECT a.id,a.website, a.title, a.summary, a.created, a.menu_id, a.member_id, a.family_id, a.published,
-                           a.seo_title, a.storyorder, a.landscape, a.allow_comment, a.keyword, blog,
-                           c.name     AS menu,
-                           c.seo_name AS seo_menu,
-                           m.forename, m.surname,
-                           CONCAT(m.forename, ' ', m.surname) AS author,
-                           i.file      AS image_file,
-                           i.alt       AS image_alt,
-                           (SELECT COUNT(story_id)
-                              FROM likes
-                             WHERE likes.story_id = a.id) AS likes,
-                           (SELECT COUNT(story_id)
-                              FROM comment
-                             WHERE comment.story_id = a.id) AS comments
-
-                      FROM story     AS a
-                      JOIN menu    AS c    ON a.menu_id = c.id
-                      JOIN member      AS m    ON a.member_id   = m.id
-                      LEFT JOIN image  AS i    ON a.image_id    = i.id
-
-                     WHERE
-                     (a.published = 1 AND a.keyword   LIKE :term4
-                     AND
-                     a.published = 1 AND a.keyword   LIKE :term8)
-           /*             ((a.published = 1 AND a.title   LIKE :term1)
-                        OR (a.published = 1 AND a.summary   LIKE :term2)
-                        OR (a.published = 1 AND a.content   LIKE :term3)
-                        OR (a.published = 1 AND a.keyword   LIKE :term4))
-                       AND
-                       ((a.published = 1 AND a.title   LIKE :term5)
-                        OR (a.published = 1 AND a.summary   LIKE :term6)
-                        OR (a.published = 1 AND a.content   LIKE :term7)
-                        OR (a.published = 1 AND a.keyword   LIKE :term8))
-            */
-                     ORDER BY a.id DESC
-                     LIMIT :show
-                     OFFSET :from;";
-        // SQL to get story summaries
-        return $this->db->runSql($sql, $arguments)->fetchAll(); // Return story summaries
-    }
-
     //Get Story Order
     public function getStoryorder(int $menu_id)
     {
