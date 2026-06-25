@@ -9,6 +9,15 @@ php_flag   display_errors      on
 php_flag   log_errors          on
 
 RewriteEngine On
+##############################################################################
+# IMPORTANT
+# Preserve the tfol.org -> thefocusonlife.org redirect.
+# TinyMCE is licensed for thefocusonlife.org; the short domain is used only
+# for marketing and must always redirect here before PHP executes.
+##############################################################################
+
+RewriteCond %{HTTP_HOST} ^(www\.)?tfol\.org$ [NC]
+RewriteRule ^(.*)$ https://thefocusonlife.org/$1 [R=302,L]
 
 # If the request is a real file or directory, serve it normally
 RewriteCond %{REQUEST_FILENAME} -f [OR]
