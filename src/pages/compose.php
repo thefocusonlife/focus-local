@@ -31,6 +31,17 @@ $message = [
     'request' => '',
 ];
 
+$replyToId = !empty($_GET['reply_to']) ? (int) $_GET['reply_to'] : 0;
+$replyToMessage = false;
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST' && $replyToId > 0) {
+    $replyToMessage = $cms->getNote()->getMessageForMember($replyToId, $memberId);
+
+    if ($replyToMessage) {
+        $message['to_id'] = (int) $replyToMessage['from_id'];
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $message['to_id'] = (int) ($_POST['to_id'] ?? 0);
     $message['request'] = trim((string) ($_POST['request'] ?? ''));
@@ -77,6 +88,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $data['member'] = $member;
 $data['members'] = $cms->getMember()->getMessageRecipients();
 $data['message'] = $message;
+$data['cancel_href'] = 'inbox';
+if ($replyToId > 0) {
+    $data['cancel_href'] = 'message/' . $replyToId;
+}
 $data['errors'] = $errors;
 $data['website'] = $cms->getWebsite()->getById((int) $member['website']);
 

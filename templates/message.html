@@ -24,10 +24,9 @@
 			</div>
 		</section>
 
-		<p>
-			<a href="{{ doc_root }}inbox" class="btn btn-primary">
-				Back to Inbox
-			</a>
+		<p class="messaging-nav">
+			<a href="{{ doc_root }}compose?reply_to={{ message.id }}" class="btn btn-primary">Reply</a>
+			<a href="{{ doc_root }}inbox" class="btn btn-primary">Back to Inbox</a>
 		</p>
 
 	</main>
