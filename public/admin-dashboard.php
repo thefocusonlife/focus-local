@@ -67,11 +67,11 @@ declare(strict_types=1) ?>
 <div class="subtitle">Focus-Local / XAMPP development shortcuts</div>
 
 <div class="grid">
+<div class="card">
+    <h2>Database</h2>
+    <a href="http://localhost/phpmyadmin" target="_blank">phpMyAdmin Local</a>
 
-    <div class="card">
-        <h2>Database</h2>
-        <a href="http://localhost/phpmyadmin" target="_blank">phpMyAdmin</a>
-    </div>
+</div>
 
     <div class="card">
         <h2>TFOL Sites</h2>
@@ -94,10 +94,16 @@ declare(strict_types=1) ?>
     </div>
 
     <div class="card">
-        <h2>System</h2>
-        <a href="http://localhost" target="_blank">XAMPP Dashboard</a>
-        <a href="http://localhost/phpinfo.php" target="_blank">phpinfo()</a>
-    </div>
+    <h2>System</h2>
+    <a href="http://localhost" target="_blank">XAMPP Dashboard</a>
+    <a href="http://localhost/phpinfo.php" target="_blank">phpinfo()</a>
+    <a href="https://thefocusonlife.org:2083" target="_blank">Production cPanel</a>
+</div>
+
+<div class="card">
+    <h2>Code</h2>
+    <a href="https://github.com/YOUR-GITHUB-USERNAME/YOUR-REPOSITORY-NAME" target="_blank">GitHub Repository</a>
+</div>
 
 </div>
 

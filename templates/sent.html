@@ -1,0 +1,50 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+
+	<main class="messaging-page" id="content">
+
+		<h1>Sent</h1>
+
+		{% if success %}
+			<p class="alert alert-success">{{ success }}</p>
+		{% endif %}
+
+		{% if failure %}
+			<p class="alert alert-danger">{{ failure }}</p>
+		{% endif %}
+		<p class="messaging-nav">
+			<a href="{{ doc_root }}compose" class="btn btn-primary">Compose</a>
+			<a href="{{ doc_root }}inbox" class="btn btn-primary">Inbox</a>
+		</p>
+		{% if messages %}
+			<table class="messaging-table">
+				<thead>
+					<tr>
+						<th>To</th>
+						<th>Message</th>
+						<th>Date</th>
+					</tr>
+				</thead>
+				<tbody>
+					{% for message in messages %}
+						<tr>
+							<td>{{ message.to_name }}</td>
+							<td>
+								<a href="{{ doc_root }}message/{{ message.id }}">
+									{% set preview = message.request|striptags|trim %}
+									{{ preview|length > 100 ? preview|slice(0, 100) ~ '...' : preview }}
+								</a>
+							</td>
+							<td>{{ message.request_date|date('m/d/Y') }}</td>
+						</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		{% else %}
+			<p>You have not sent any messages yet.</p>
+		{% endif %}
+
+	</main>
+
+{% endblock %}

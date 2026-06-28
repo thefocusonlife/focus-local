@@ -35,10 +35,11 @@
 			Follow ID:
 			<br>
 			<input type="text" name="to_family_id" readonly value={{ to_family_id }} id="to_family_id class=" form-control" readonly>
-																								      <span class=" errors">{{ errors.account_id }}</span>
+																												      <span class=" errors">{{ errors.account_id }}</span>
 	</div>
 	<div class="form-group">
-
+		<input type="hidden" name="website" value="{{ website.id }}">
+		<input type="hidden" name="to_member" value="{{ to_member }}">
 		<input type="hidden" name="from_member" id="from_member" class="form-control" value="{{ from_member }}" readonly>
 		<span class="errors">{{ errors.from_member.id }}</span>
 	</div>
@@ -54,7 +55,7 @@
 	From Follow ID:
 	<br>
 	<input type="text" name="family_id" value={{ family_id }} id="family_id class=" form-control" readonly>
-												      <span class=" errors">{{ errors.account_id }}</span></div><div class="form-group">
+														      <span class=" errors">{{ errors.account_id }}</span></div><div class="form-group">
 <input type="hidden" name="noteid" value="{{ noteid }}" id="noteid" class="form-control" readonly>
 <span class="errors">{{ errors.noteid }}</span></div><div class="form-group">
 

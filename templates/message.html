@@ -1,0 +1,35 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+
+	<main class="messaging-page" id="content">
+
+		<h1>Message</h1>
+
+		<section class="message-card">
+			<p>
+				<strong>From:</strong>
+				{{ message.from_name }}</p>
+			<p>
+				<strong>To:</strong>
+				{{ message.to_name }}</p>
+			<p>
+				<strong>Date:</strong>
+				{{ message.request_date|date('F j, Y') }}</p>
+
+			<hr>
+
+			<div class="message-body">
+				{{ message.request|nl2br }}
+			</div>
+		</section>
+
+		<p>
+			<a href="{{ doc_root }}inbox" class="btn btn-primary">
+				Back to Inbox
+			</a>
+		</p>
+
+	</main>
+
+{% endblock %}

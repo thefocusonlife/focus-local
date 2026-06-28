@@ -1,0 +1,48 @@
+{% extends 'layout.html' %}
+{% block content %}
+	<main class="messaging-page" id="content">
+
+		<h1>Compose Message</h1>
+
+		{% if errors.warning %}
+			<p class="alert alert-danger">{{ errors.warning }}</p>
+		{% endif %}
+
+		<form action="{{ doc_root }}compose" method="POST" class="compose-form">
+
+			<div class="form-group">
+				<label for="to_id">To</label>
+				<select id="to_id" name="to_id" required>
+					<option value="">Choose member</option>
+					{% for person in members %}
+						{% if person.id != member.id %}
+							<option value="{{ person.id }}" {% if message.to_id == person.id %} selected {% endif %}>
+								{{ person.forename }}
+								{{ person.surname }}
+								— Website
+								{{ person.website }}
+							</option>
+						{% endif %}
+					{% endfor %}
+				</select>
+				{% if errors.to_id %}
+					<p class="error">{{ errors.to_id }}</p>
+				{% endif %}
+			</div>
+
+			<div class="form-group">
+				<label for="request">Message</label>
+				<textarea id="request" name="request" rows="8" required>{{ message.request }}</textarea>
+				{% if errors.request %}
+					<p class="error">{{ errors.request }}</p>
+				{% endif %}
+			</div>
+
+			<button type="submit" class="btn btn-primary">Send Message</button>
+			<a href="{{ doc_root }}inbox" class="btn btn-danger">Cancel</a>
+
+		</form>
+
+	</main>
+
+{% endblock %}

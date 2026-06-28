@@ -1688,3 +1688,92 @@ body .membership-form-wrap textarea {
 }
 }
 }
+/* Member Messaging */
+
+.messaging-page {
+    max-width: 900px;
+    margin: 2rem auto;
+}
+
+.messaging-nav {
+    margin: 0.75rem 0 1.5rem;
+}
+
+.messaging-nav .btn {
+    margin-right: 0.4rem;
+}
+
+.messaging-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.messaging-table th,
+.messaging-table td {
+    padding: 0.75rem;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid #ddd;
+}
+
+.messaging-table th:nth-child(1),
+.messaging-table td:nth-child(1) {
+    width: 22%;
+}
+
+.messaging-table th:nth-child(2),
+.messaging-table td:nth-child(2) {
+    width: 58%;
+}
+
+.messaging-table th:nth-child(3),
+.messaging-table td:nth-child(3) {
+    width: 20%;
+}
+
+.messaging-table a {
+    display: block;
+    line-height: 1.4;
+}
+
+.message-card {
+    max-width: 760px;
+    line-height: 1.5;
+}
+
+.message-meta {
+    margin-bottom: 1rem;
+}
+
+.message-body {
+    white-space: normal;
+    line-height: 1.6;
+    margin-top: 1rem;
+}
+
+.compose-form {
+    max-width: 720px;
+}
+
+.compose-form select,
+.compose-form textarea {
+    width: 100%;
+}
+.messaging-page {
+    column-count: 1;
+    margin: 2rem auto;
+    max-width: 900px;
+}
+
+.messaging-table tr.message-unread td {
+    font-weight: 700;
+}
+
+.messaging-table tr.message-read td {
+    font-weight: 400;
+}
+
+.messaging-table tr.message-unread a {
+    font-weight: 700;
+}

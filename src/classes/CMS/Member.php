@@ -1120,4 +1120,17 @@ class Member
             'email_master' => strtolower(trim($emailMaster)),
         ]);
     }
+
+    public function getMessageRecipients(): array
+    {
+        $sql = "SELECT id, forename, surname, website
+              FROM member
+             WHERE forename <> 'Uber'
+             and role<>'Guest'
+             and member.id<>3
+             and member.status = 'active'
+             ORDER BY surname, forename";
+
+        return $this->db->runSql($sql)->fetchAll();
+    }
 }

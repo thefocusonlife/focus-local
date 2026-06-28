@@ -7,6 +7,12 @@ require_once APP_ROOT . '/src/security/guard.php';
 guardMember();
 
 // Initialize variables needed for the HTML page
+$id = !empty($parts[2]) ? (int) $parts[2] : 0;
+
+if ($id <= 0) {
+    include APP_ROOT . '/src/pages/page-not-found.php';
+    return;
+}
 
 $note = [
     'id' => 0,
@@ -34,14 +40,16 @@ $from_id = $cms->getSession()->id;
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // If form was posted
     // $note['to_id']       = intval($_POST['to_member']);      // Get to member id
-    $note['from_id'] = intval($_POST['from_member']); // Get from member id
-    $note['to_name'] = $_POST['to_membername']; // Get to name
-    $note['from_name'] = $_POST['from_membername']; // Get from name
-    $note['note_type'] = intval($_POST['noteid']); // Get notetype
-    $note['request'] = $_POST['request']; // Get request
-    $note['family_id'] = intval($_POST['family_id']); // Get family id
-    $note['to_family_id'] = intval($_POST['to_family_id']);
-    $note['allow'] = intval($_POST['allow']); // Get allow
+    $note['website'] = (int) ($_POST['website'] ?? 1);
+    $note['from_id'] = (int) $_POST['from_member'];
+    $note['to_id'] = (int) $_POST['to_member'];
+    $note['to_name'] = $_POST['to_membername'];
+    $note['from_name'] = $_POST['from_membername'];
+    $note['note_type'] = (int) $_POST['noteid'];
+    $note['request'] = $_POST['request'];
+    $note['family_id'] = (int) $_POST['family_id'];
+    $note['to_family_id'] = (int) $_POST['to_family_id'];
+    $note['allow'] = (int) $_POST['allow'];
 
     // Validate form data
     $errors['request'] = Validate::isText($note['request'], 0, 1000)
@@ -54,7 +62,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $errors['warning'] = 'Please correct form errors'; // Store a warning
     } else {
         // Otherwise
-        $result = $cms->getNewnote()->create($note); // Create a new request notfication
+
+        $result = $cms->getNote()->create($note);
         if ($result === false) {
             // If result is false
             $errors['warning'] = 'Please correct form errors'; // Store a warning
@@ -71,11 +80,12 @@ if (!$from_member) {
     // If array is empty
     include APP_ROOT . '/src/pages/page-not-found.php'; // Page not found
 }
-$notes = $cms->getNewnote()->get($from_id);
+$notes = $cms->getNote()->get($from_id);
 $notetype = $cms->getNotetype()->get(1);
 $to_membername = $to_member['forename'] . ' ' . $to_member['surname'];
 $from_membername = $from_member['forename'] . ' ' . $from_member['surname'];
 //$data['navigation']  = $cms->getMenu()->getAll();             // Get menus not necessary?
+$data['website'] = $cms->getWebsite()->getById((int) $from_member['website']);
 $data['to_member'] = $to_member['id'];
 $data['from_member'] = $from_member['id'];
 $data['to_membername'] = $to_membername;

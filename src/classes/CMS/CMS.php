@@ -275,13 +275,8 @@ class CMS
     }
     public function getNotes()
     {
-        if ($this->notes === null) {
-            // If $notification property null
-            $this->notes = new Notes($this->db); // Create notification object
-        }
-        return $this->notes; // Return notification object
+        return $this->getNote();
     }
-
     public function getNewNote()
     {
         if ($this->newnote === null) {
@@ -340,5 +335,10 @@ class CMS
 
         header('Location: ' . $url);
         exit();
+    }
+
+    public function getUnreadMessageCount(int $memberId): int
+    {
+        return $this->getNote()->getUnreadCount($memberId);
     }
 }

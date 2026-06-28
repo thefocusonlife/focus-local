@@ -58,6 +58,14 @@ $twig->addGlobal('request_uri', $_SERVER['REQUEST_URI'] ?? '');
 $session = $cms->getSession();
 $twig->addGlobal('session', $session);
 
+$unreadMessages = 0;
+
+if (!empty($session->id)) {
+    $unreadMessages = $cms->getNote()->countUnreadMessages((int) $session->id);
+}
+
+$twig->addGlobal('unread_messages', $unreadMessages);
+
 $twig->addGlobal('id', $id ?? null);
 $twig->addGlobal('websiteId', $id ?? null);
 

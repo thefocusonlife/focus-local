@@ -3,30 +3,19 @@
 require_once APP_ROOT . '/src/security/guard.php';
 guardMember();
 
-if (!empty($parts[2])) {
-    $id = intval($parts[2]);
-}
+$id = !empty($parts[2]) ? (int) $parts[2] : 0;
 
-/*
-$myArray = false;
-if (!is_array($myArray)) {
-    $myArray = array();
-}
-$myArray[0] = 'value';
-*/
+if ($id > 0) {
+    $note = $cms->getNote()->getById($id);
 
-if (!empty($parts[2])) {
-    $note = $cms->getNotes()->getById($id);
-    if (!is_array($note['allow'])) {
-        $note['allow'] = [];
+    if (!$note) {
+        redirect('admin/notes/', ['failure' => 'Note not found']);
     }
 
-    $note['allow'] = 1;
-    $note['reply_date'] = date('Y-m-d');
-    $cms->getNotes()->update($note); // Update note in database  <<< need to unset joined and member
-    redirect('member/' . $note['from_id'] . '/', ['success' => 'FOLLOW ALLOWED']); // Redirect with message
-}
+    $cms->getNote()->approve($id);
 
+    redirect('member/' . $note['from_id'] . '/', ['success' => 'FOLLOW ALLOWED']);
+}
 //is_admin($session->role);
 $member = intval($_SESSION['id']);
 $member2 = $cms->getMember()->get($member);
@@ -34,7 +23,7 @@ $data['success'] = $_GET['success'] ?? null; // Check for success message
 $data['failure'] = $_GET['failure'] ?? null; // Check for failure message
 $data['member'] = $member2;
 $data['members'] = $cms->getMember()->getAll();
-$data['notes'] = $cms->getNotes()->getAll($member2['id']); // Get notes by member
+$data['notes'] = $cms->getNote()->getAll($member2['id']);
 $data['website'] = $cms->getWebsite()->getById($member2['website']);
 
 echo $twig->render('admin/notes.html', $data);

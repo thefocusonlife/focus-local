@@ -1,209 +1,345 @@
 <?php
-namespace PhpBook\CMS; // Declare namespace
+declare(strict_types=1);
+
+namespace PhpBook\CMS;
 
 class Note
 {
-    public $id; // Store follow id
-    public $note_type;
-    public $from_id;
-    public $from_name;
-    public $to_id;
-    public $to_name;
-    public $family_id;
-    public $request;
-    public $allow;
-    public $request_date;
-    public $reply_date;
-    public $notetype;
+    protected Database $db;
 
-    protected $db; // Holds ref to Database object
+    private const NOTE_TYPE_FOLLOW = 1;
+
+    private const NOTE_TYPE_MESSAGE = 2;
 
     public function __construct(Database $db)
     {
-        $this->db = $db; // Add ref to Database object
+        $this->db = $db;
     }
 
-    // Get individual note by id
-    public function get(int $id)
+    public function getInbox(int $memberId): array
     {
-        $sql = "SELECT id, website, note_type, from_id, from_name, to_id, to_name, family_id, to_family_id, request,allow, request_date, reply_date
+        $sql = "SELECT id, website, note_type, from_id, from_name, to_id, to_name,
+                   family_id, to_family_id, request, allow, request_date, reply_date
+              FROM note
+             WHERE to_id = :member_id
+               AND note_type = :note_type
+          ORDER BY request_date DESC, id DESC";
+
+        return $this->db
+            ->runSql($sql, [
+                'member_id' => $memberId,
+                'note_type' => self::NOTE_TYPE_MESSAGE,
+            ])
+            ->fetchAll();
+    }
+
+    public function getSent(int $memberId): array
+    {
+        $sql = "SELECT id, website, note_type, from_id, from_name, to_id, to_name,
+                   family_id, to_family_id, request, allow, request_date, reply_date
+              FROM note
+             WHERE from_id = :member_id
+               AND note_type = 2
+          ORDER BY request_date DESC, id DESC";
+
+        return $this->db
+            ->runSql($sql, [
+                'member_id' => $memberId,
+            ])
+            ->fetchAll();
+    }
+
+    public function getMessageForMember(int $messageId, int $memberId): array|false
+    {
+        $sql = "SELECT id, website, note_type, from_id, from_name, to_id, to_name,
+                   family_id, to_family_id, request, allow, request_date, reply_date
+              FROM note
+             WHERE id = :id
+               AND note_type = 2
+               AND (to_id = :to_id OR from_id = :from_id)";
+
+        return $this->db
+            ->runSql($sql, [
+                'id' => $messageId,
+                'to_id' => $memberId,
+                'from_id' => $memberId,
+            ])
+            ->fetch();
+    }
+
+    public function getById(int $id): array|false
+    {
+        $sql = "SELECT id, website, note_type, from_id, from_name, to_id, to_name,
+                       family_id, to_family_id, request, allow, request_date, reply_date
                   FROM note
-                 WHERE from_id = :id;"; // SQL to get follow
-        return $this->db->runSql($sql, $id)->fetch(); // Return follow
-    }
-    public function getById(int $id)
-    {
-        $arguments = [$id];
-        $sql = "SELECT id, website, note_type, from_id, from_name, to_id, to_name, family_id, to_family_id,  request,allow, request_date, reply_date
-                FROM note
-                WHERE id = :id"; // SQL to get note by primary index
-        return $this->db->runSql($sql, $arguments)->fetch(); // Return member
-    }
-    // Get details of all follows
-    public function getAllTo(int $id): array
-    {
-        $arguments = [$id];
-        $sql = "SELECT id, website, note_type, from_id, from_name, to_id, to_name, family_id, to_family_id, request, allow, request_date, reply_date
-            FROM note
-            WHERE (to_id = :id)
-            ORDER BY request_date DESC; "; // SQL to get all notes for a to_id Descinding
-        return $this->db->runSql($sql, $arguments)->fetchAll(); // Return all follows
-    }
-    // Get details of all follows
-    public function getAllFrom(int $id): array
-    {
-        $arguments = [$id];
+                 WHERE id = :id";
 
-        $sql = "SELECT id, website, note_type, from_id, from_name, to_id, to_name, family_id, to_family_id, request, allow, request_date, reply_date
-        FROM note
-        WHERE (from_id = :id)
-        ORDER BY request_date DESC; "; // SQL to get all notes for a from_id  Descending
-        return $this->db->runSql($sql, $arguments)->fetchAll(); // Return all follows
+        return $this->db->runSql($sql, ['id' => $id])->fetch();
     }
 
-    // Get number of notifications
-    public function count(): int
+    public function getByFromId(int $memberId): array
     {
-        $sql = "SELECT COUNT(id) FROM note
-                WHERE follow.f_id = $_SESSION[id];"; // SQL to count follows by Session_id
-        return $this->db->runSql($sql)->fetchColumn(); // Return menu count
-    }
-    // Get details of all follows
-    public function getAll(int $id): array
-    {
-        $arguments = [];
+        $sql = "SELECT id, website, note_type, from_id, from_name, to_id, to_name,
+                       family_id, to_family_id, request, allow, request_date, reply_date
+                  FROM note
+                 WHERE from_id = :member_id
+              ORDER BY request_date DESC, id DESC";
 
-        $sql = "SELECT id, website, note_type, from_id, from_name, to_id, to_name, family_id, to_family_id, request, allow, request_date, reply_date
-        FROM note
-        WHERE 1";
-        return $this->db->runSql($sql, $arguments)->fetchAll(); // Return all follows
+        return $this->db->runSql($sql, ['member_id' => $memberId])->fetchAll();
+    }
+
+    public function getByToId(int $memberId): array
+    {
+        $sql = "SELECT id, website, note_type, from_id, from_name, to_id, to_name,
+                       family_id, to_family_id, request, allow, request_date, reply_date
+                  FROM note
+                 WHERE to_id = :member_id
+              ORDER BY request_date DESC, id DESC";
+
+        return $this->db->runSql($sql, ['member_id' => $memberId])->fetchAll();
+    }
+
+    public function getForMember(int $memberId): array
+    {
+        $sql = "SELECT id, website, note_type, from_id, from_name, to_id, to_name,
+                       family_id, to_family_id, request, allow, request_date, reply_date
+                  FROM note
+                 WHERE from_id = :from_id
+                    OR to_id   = :to_id
+              ORDER BY request_date DESC, id DESC";
+
+        return $this->db
+            ->runSql($sql, [
+                'from_id' => $memberId,
+                'to_id' => $memberId,
+            ])
+            ->fetchAll();
+    }
+
+    public function getApprovedFollowsFromMember(int $memberId): array
+    {
+        $sql = "SELECT id, website, note_type, from_id, from_name, to_id, to_name,
+                       family_id, to_family_id, request, allow, request_date, reply_date
+                  FROM note
+                 WHERE from_id = :member_id
+                   AND note_type = :note_type
+                   AND allow = 1
+              ORDER BY to_name ASC";
+
+        return $this->db
+            ->runSql($sql, [
+                'member_id' => $memberId,
+                'note_type' => self::NOTE_TYPE_FOLLOW,
+            ])
+            ->fetchAll();
+    }
+
+    public function countForMember(int $memberId): int
+    {
+        $sql = "SELECT COUNT(id)
+                  FROM note
+                 WHERE to_id = :member_id
+                   AND allow = 0";
+
+        return (int) $this->db->runSql($sql, ['member_id' => $memberId])->fetchColumn();
+    }
+
+    public function create(array $note): bool
+    {
+        try {
+            $sql = "INSERT INTO note
+                    (website, note_type, from_id, from_name, to_id, to_name,
+                     family_id, to_family_id, allow, request)
+                    VALUES
+                    (:website, :note_type, :from_id, :from_name, :to_id, :to_name,
+                     :family_id, :to_family_id, :allow, :request)";
+
+            $this->db->runSql($sql, $note);
+            return true;
+        } catch (\PDOException $e) {
+            if (($e->errorInfo[1] ?? null) === 1062) {
+                return false;
+            }
+            throw $e;
+        }
     }
 
     public function update(array $note): bool
     {
         try {
-            // Try to update data
-            $this->db->beginTransaction(); // Start transaction
-
             $sql = "UPDATE note
-                   SET id = :id, website = :website, note_type = :note_type, from_id = :from_id, from_name = :from_name, to_id = :to_id, to_name = :to_name,
-                    family_id = :family_id, to_family_id = :to_family_id, request = :request, allow = :allow, request_date = :request_date, reply_date = :reply_date
-                       WHERE id = :id;"; // SQL statement
+                       SET website      = :website,
+                           note_type    = :note_type,
+                           from_id      = :from_id,
+                           from_name    = :from_name,
+                           to_id        = :to_id,
+                           to_name      = :to_name,
+                           family_id    = :family_id,
+                           to_family_id = :to_family_id,
+                           request      = :request,
+                           allow        = :allow,
+                           request_date = :request_date,
+                           reply_date   = :reply_date
+                     WHERE id = :id";
 
-            $arguments = $note;
-            $this->db->runSql($sql, $arguments)->rowCount(); // Update Note
-            $this->db->commit(); // Commit transaction
-            return true; // Update worked
+            $this->db->runSql($sql, $note);
+            return true;
         } catch (\PDOException $e) {
-            // If PDOException was raised
-            $this->db->rollBack(); // Rollback transaction
-
-            if ($e->errorInfo[1] === 1062) {
-                // If an integrity constraint
-                return false; // Return false
-            } else {
-                // For all other reasons
-
-                throw $e;
-                // Re-throw exception
+            if (($e->errorInfo[1] ?? null) === 1062) {
+                return false;
             }
+            throw $e;
         }
     }
 
-    // Create a new note
-    public function create(array $note): bool
+    public function approve(int $id): bool
     {
-        try {
-            $this->db->beginTransaction(); // Start
-            $sql = "INSERT INTO note (website, note_type, from_id, from_name, to_id, to_name, family_id, to_family_id, allow, request)
-         VALUES (:website, :note_type, :from_id, :from_name, :to_id, :to_name, :family_id, :to_family_id, :allow, :request);";
-            $this->db->runSql($sql, $note); // SQL to add new note
-            $this->db->commit(); // Commit ransaction
-            return true; // Return true
-        } catch (\PDOException $e) {
-            $this->db->rollBack(); // If PDOException thrown
-            if ($e->errorInfo[1] === 1062) {
-                // If error indicates duplicate entry
-                return false; // Return false to indicate duplicate name
-            }
+        $sql = "UPDATE note
+                   SET allow = 1,
+                       reply_date = CURRENT_DATE
+                 WHERE id = :id";
 
-            throw $e; // Re-throw exception
-        }
+        $this->db->runSql($sql, ['id' => $id]);
+        return true;
     }
 
-    // Delete existing note
     public function delete(int $id): bool
     {
         try {
-            // Try to delete note
-            $sql = "DELETE FROM note
-             WHERE id = :id;"; // SQL to delete note
-            $this->db->runSql($sql, [$id]); // Delete note
-            return true; // It worked, return true
+            $sql = 'DELETE FROM note WHERE id = :id';
+            $this->db->runSql($sql, ['id' => $id]);
+            return true;
         } catch (\PDOException $e) {
-            // If exception was thrown
-            if ($e->errorInfo[1] === 1451) {
-                // If error is integrity constraint
-                return false; // Return false indicating stories exist in this menu
-            } else {
-                // If any other exception
-                throw $e; // Re-throw exception
+            if (($e->errorInfo[1] ?? null) === 1451) {
+                return false;
             }
+            throw $e;
         }
     }
 
-    /**
-     * Returns the list of allowed "Family/Account" ids (to_family_id) that this member
-     * is approved to follow (one-sided outgoing follows).
-     *
-     * Each row: ['account_id' => int, 'account_name' => string]
-     */
     public function getAllowedFollowAccounts(
         int $websiteId,
         int $memberId,
-        int $noteTypeFollow = 1,
+        int $noteTypeFollow = self::NOTE_TYPE_FOLLOW,
     ): array {
         if ($websiteId <= 0 || $memberId <= 0) {
             return [];
         }
 
         $sql = "SELECT DISTINCT
-              n.to_family_id AS account_id,
-              n.to_name      AS account_name
-            FROM note n
-            WHERE n.website   = :website
-              AND n.note_type = :note_type_follow
-              AND n.from_id   = :member_id
-              AND n.allow     = 1
-              AND n.to_family_id > 0
-            ORDER BY n.to_name";
+                       to_family_id AS account_id,
+                       to_name      AS account_name
+                  FROM note
+                 WHERE website = :website
+                   AND note_type = :note_type
+                   AND from_id = :member_id
+                   AND allow = 1
+                   AND to_family_id > 0
+              ORDER BY to_name";
 
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute([
-            ':website' => $websiteId,
-            ':note_type_follow' => $noteTypeFollow,
-            ':member_id' => $memberId,
-        ]);
+        $rows = $this->db
+            ->runSql($sql, [
+                'website' => $websiteId,
+                'note_type' => $noteTypeFollow,
+                'member_id' => $memberId,
+            ])
+            ->fetchAll();
 
-        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-        if (!is_array($rows)) {
-            return [];
+        foreach ($rows as &$row) {
+            $row['account_id'] = (int) $row['account_id'];
+            $row['account_name'] = (string) $row['account_name'];
         }
-
-        // Normalize types
-        foreach ($rows as &$r) {
-            $r['account_id'] = (int) ($r['account_id'] ?? 0);
-            $r['account_name'] = (string) ($r['account_name'] ?? '');
-        }
-        unset($r);
-
-        // Drop any junk rows (extra defensive)
-        $rows = array_values(
-            array_filter($rows, static function ($r) {
-                return !empty($r['account_id']) && $r['account_id'] > 0;
-            }),
-        );
 
         return $rows;
+    }
+
+    // Legacy method names — keep existing code from breaking
+
+    public function get(int $id): array
+    {
+        return $this->getByFromId($id);
+    }
+
+    public function getAllTo(int $id): array
+    {
+        return $this->getByToId($id);
+    }
+
+    public function getAllFrom(int $id): array
+    {
+        return $this->getByFromId($id);
+    }
+
+    public function getAll(int $id = 0): array
+    {
+        if ($id > 0) {
+            return $this->getForMember($id);
+        }
+
+        $sql = "SELECT id, website, note_type, from_id, from_name, to_id, to_name,
+                       family_id, to_family_id, request, allow, request_date, reply_date
+                  FROM note
+              ORDER BY request_date DESC, id DESC";
+
+        return $this->db->runSql($sql)->fetchAll();
+    }
+
+    public function getByAllowed(int $id): array
+    {
+        return $this->getApprovedFollowsFromMember($id);
+    }
+
+    public function count(): int
+    {
+        $memberId = (int) ($_SESSION['id'] ?? 0);
+        return $memberId > 0 ? $this->countForMember($memberId) : 0;
+    }
+
+    public function createMessage(array $message): bool
+    {
+        $message['note_type'] = 2;
+        $message['allow'] = 0;
+
+        return $this->create($message);
+    }
+
+    public function countUnreadMessages(int $memberId): int
+    {
+        $sql = "SELECT COUNT(id)
+              FROM note
+             WHERE to_id = :member_id
+               AND note_type = 2
+               AND allow = 0";
+
+        return (int) $this->db
+            ->runSql($sql, [
+                'member_id' => $memberId,
+            ])
+            ->fetchColumn();
+    }
+
+    public function getUnreadCount(int $memberId): int
+    {
+        $sql = "SELECT COUNT(*)
+            FROM note
+            WHERE to_member_id = :member_id
+              AND notetype_id = 2
+              AND is_read = 0
+              AND deleted_to = 0";
+
+        return (int) $this->db
+            ->runSql($sql, [
+                'member_id' => $memberId,
+            ])
+            ->fetchColumn();
+    }
+
+    public function markRead(int $id): void
+    {
+        $sql = "UPDATE note
+               SET allow = 1
+             WHERE id = :id";
+
+        $this->db->runSql($sql, ['id' => $id]);
     }
 }

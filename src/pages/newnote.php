@@ -174,7 +174,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $errors['warning'] = 'Please correct form errors'; // Store a warning
     } else {
         // Otherwise
-        $result = $cms->getNewnote()->create($note); // Create a new request notfication
+        $result = $cms->getNote()->create($note); // Create a new request notfication
         if ($result === false) {
             // If result is false
             $errors['warning'] = 'Please correct form errors';
@@ -195,8 +195,7 @@ if (!$from_member) {
     // If array is empty
     include APP_ROOT . '/src/pages/page-not-found.php'; // Page not found
 }
-$notes = $cms->getNewnote()->get($from_id);
-// $notes2 = $cms->getNewnote()->get($to_id);
+$notes = $cms->getNote()->get($from_id);
 
 $notetype = 1;
 
