@@ -35,6 +35,15 @@ $slug = trim((string) $slug, "/ \t\n\r\0\x0B");
 */
 $guideCards = [
     [
+        'slug' => 'stories-worth-saving',
+        'title' => 'Stories Worth Saving',
+        'subtitle' => 'Start Here',
+        'summary' =>
+            'Discover how personal memories become stories, why the four featured stories are arranged the way they are, and how to begin your own.',
+        'icon' => '📖',
+    ],
+
+    [
         'slug' => 'top-bar',
         'title' => 'The Top Bar',
         'subtitle' => 'Member menu and quick actions',
@@ -48,6 +57,14 @@ $guideCards = [
         'subtitle' => 'Main site sections',
         'summary' => 'Understand Guide, Focus, Get Focused, About, FAQ, and Resources.',
         'icon' => '🗂️',
+    ],
+    [
+        'slug' => 'write-your-story',
+        'title' => 'Write Your Story',
+        'subtitle' => 'Add your first memory',
+        'summary' =>
+            'Learn how to begin with a simple memory, save your first story, and return later to revise or add photos.',
+        'icon' => '✍️',
     ],
     [
         'slug' => 'browsing-stories',
