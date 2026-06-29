@@ -19,16 +19,17 @@ class Note
     public function getInbox(int $memberId): array
     {
         $sql = "SELECT id, website, note_type, from_id, from_name, to_id, to_name,
-                   family_id, to_family_id, request, allow, request_date, reply_date
+                   family_id, to_family_id, request, allow, request_date, reply_date,
+                   deleted_by_sender, deleted_by_recipient
               FROM note
              WHERE to_id = :member_id
-               AND note_type = :note_type
+                AND note_type = 2
+                AND deleted_by_recipient = 0
           ORDER BY request_date DESC, id DESC";
 
         return $this->db
             ->runSql($sql, [
                 'member_id' => $memberId,
-                'note_type' => self::NOTE_TYPE_MESSAGE,
             ])
             ->fetchAll();
     }
@@ -39,7 +40,8 @@ class Note
                    family_id, to_family_id, request, allow, request_date, reply_date
               FROM note
              WHERE from_id = :member_id
-               AND note_type = 2
+                AND note_type = 2
+                AND deleted_by_sender = 0
           ORDER BY request_date DESC, id DESC";
 
         return $this->db
@@ -334,12 +336,74 @@ class Note
             ->fetchColumn();
     }
 
-    public function markRead(int $id): void
+    /**
+     * Mark a message as read.
+     */
+    public function markRead(int $id): bool
     {
         $sql = "UPDATE note
-               SET allow = 1
-             WHERE id = :id";
+               SET allow = 1,
+                   reply_date = CURDATE()
+             WHERE id = :id
+               AND note_type = 2";
 
-        $this->db->runSql($sql, ['id' => $id]);
+        $this->db->runSql($sql, [
+            'id' => $id,
+        ]);
+
+        return true;
+    }
+
+    /**
+     * Remove a message from the recipient's Inbox.
+     * (Soft delete)
+     */
+    public function deleteFromInbox(int $id): bool
+    {
+        $sql = "UPDATE note
+               SET deleted_by_recipient = 1
+             WHERE id = :id
+               AND note_type = 2";
+
+        $this->db->runSql($sql, [
+            'id' => $id,
+        ]);
+
+        return true;
+    }
+
+    /**
+     * Remove a message from the sender's Sent folder.
+     * (Soft delete)
+     */
+    public function deleteFromSent(int $id): bool
+    {
+        $sql = "UPDATE note
+               SET deleted_by_sender = 1
+             WHERE id = :id
+               AND note_type = 2";
+
+        $this->db->runSql($sql, [
+            'id' => $id,
+        ]);
+
+        return true;
+    }
+
+    /**
+     * Permanently remove messages that both sender and recipient deleted.
+     */
+    public function purgeDeleted(): int
+    {
+        $sql = "DELETE FROM note
+             WHERE note_type = :note_type
+               AND deleted_by_sender = 1
+               AND deleted_by_recipient = 1";
+
+        return $this->db
+            ->runSql($sql, [
+                'note_type' => self::NOTE_TYPE_MESSAGE,
+            ])
+            ->rowCount();
     }
 }

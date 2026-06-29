@@ -27,8 +27,9 @@ if (!$message) {
 }
 
 // Mark message as read
-if ((int) $message['allow'] === 0) {
+if ((int) $message['to_id'] === $memberId && (int) $message['allow'] === 0) {
     $cms->getNote()->markRead((int) $message['id']);
+    $message['allow'] = 1; // Keep local copy in sync
 }
 
 $data['member'] = $member;

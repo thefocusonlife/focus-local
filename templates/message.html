@@ -26,9 +26,16 @@
 
 		<p class="messaging-nav">
 			<a href="{{ doc_root }}compose?reply_to={{ message.id }}" class="btn btn-primary">Reply</a>
+			{% if message.to_id == session.id %}
+				<a href="{{ doc_root }}message-delete/{{ message.id }}" class="btn btn-danger">
+					Delete
+				</a>
+			{% elseif message.from_id == session.id %}
+				<a href="{{ doc_root }}message-delete-sent/{{ message.id }}" class="btn btn-danger">
+					Delete
+				</a>
+			{% endif %}
 			<a href="{{ doc_root }}inbox" class="btn btn-primary">Back to Inbox</a>
 		</p>
-
-	</main>
-
-{% endblock %}
+	</p>
+</main>{% endblock %}
