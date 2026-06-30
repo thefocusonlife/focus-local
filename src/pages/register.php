@@ -105,7 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     $plans = $cms->getMember()->getPlans();
 }
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $websiteId = (int) ($_POST['website'] ?? ($_SESSION['website'] ?? 1));
     if ($websiteId <= 0) {
         $websiteId = 1;
@@ -143,6 +143,21 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         exit();
     }
 
+    $honeypot = trim((string) ($_POST['company'] ?? ''));
+
+    if ($honeypot !== '') {
+        error_log(
+            '[REGISTER] honeypot blocked' .
+                ' ip=' .
+                ($_SERVER['REMOTE_ADDR'] ?? 'unknown') .
+                ' website=' .
+                ($_POST['website'] ?? 'unknown'),
+        );
+
+        http_response_code(403);
+        exit();
+    }
+
     $lockKey = 'register_submit_lock';
     $now = microtime(true);
     $windowSeconds = 3.0; // block duplicates within 3 seconds
@@ -168,20 +183,47 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // reCAPTCHA v3 verification
     // -----------------------------
     $recaptchaToken = $_POST['g-recaptcha-response'] ?? '';
-    // error_log('REGISTER recaptcha token: ' . substr($recaptchaToken, 0, 40));
 
     if (empty($recaptchaToken)) {
-        // Front-end didn't provide a token at all
+        error_log(
+            '[RECAPTCHA] missing token' .
+                ' ip=' .
+                ($_SERVER['REMOTE_ADDR'] ?? 'unknown') .
+                ' website=' .
+                ($_POST['website'] ?? 'unknown') .
+                ' email=' .
+                strtolower(trim((string) ($_POST['email'] ?? ''))),
+        );
+
         $errors['warning'] = 'Security check token missing. Please refresh the page and try again.';
     } else {
         $secretKey = $config['recaptcha_secret_key'] ?? '';
 
-        // Use a slightly lower threshold for login to reduce false negatives
-        if (!verify_recaptcha_v3($recaptchaToken, 'register', $secretKey, 0.1)) {
-            // reCAPTCHA failed – do NOT attempt login
-            $errors['message'] = 'register failed security check. Please try again.';
-        } // end verify_recaptcha_v3()
-    } // end empty token check
+        // Raised to 0.7 on 6/29/26
+        if (!verify_recaptcha_v3($recaptchaToken, 'register', $secretKey, 0.7)) {
+            error_log(
+                '[RECAPTCHA] FAILED' .
+                    ' ip=' .
+                    ($_SERVER['REMOTE_ADDR'] ?? 'unknown') .
+                    ' website=' .
+                    ($_POST['website'] ?? 'unknown') .
+                    ' email=' .
+                    strtolower(trim((string) ($_POST['email'] ?? ''))),
+            );
+
+            $errors['message'] = 'Registration failed security check. Please try again.';
+        } else {
+            error_log(
+                '[RECAPTCHA] PASSED' .
+                    ' ip=' .
+                    ($_SERVER['REMOTE_ADDR'] ?? 'unknown') .
+                    ' website=' .
+                    ($_POST['website'] ?? 'unknown') .
+                    ' email=' .
+                    strtolower(trim((string) ($_POST['email'] ?? ''))),
+            );
+        }
+    }
 
     // If form was posted
     // Get form data
@@ -198,7 +240,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // TFOL rule: suffix email for non-main websites (login email is the UNIQUE key)
     $emailForLogin = $websiteId > 1 ? $emailBase . $websiteId : $emailBase;
-    error_log('[REGISTER] email_config keys: ' . implode(', ', array_keys($email_config)));
 
     // Basic MX validation
     if ($emailBase !== '' && empty($errors['email'])) {

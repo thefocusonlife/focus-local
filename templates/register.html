@@ -27,6 +27,12 @@
 					<div class="alert alert-danger">{{ errors.master }}</div>
 				{% endif %}
 
+				<div class="hp-field" aria-hidden="true">
+					<label for="company">Company</label>
+					<input type="text" id="company" name="company" value="" tabindex="-1" autocomplete="off">
+				</div>
+
+
 				<div class="form-group">
 					<label for="forename">Forename:</label>
 					<input type="text" name="forename" id="forename" value="{{ values.forename|default('')|e }}" class="form-control">
