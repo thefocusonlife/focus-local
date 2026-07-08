@@ -128,7 +128,15 @@ $data['rideSchedules'] = [];
 $data['rideNotes'] = [];
 
 if ($data['isBicycleClub']) {
-    $allowedLocations = ['bend', 'redmond', 'sisters'];
+    $allowedLocations = [
+        'bend',
+        'redmond',
+        'sisters',
+        'madras',
+        'prineville',
+        'lapine',
+        'centraloregon',
+    ];
 
     $location = strtolower((string) ($_GET['location'] ?? 'redmond'));
 
@@ -142,6 +150,10 @@ if ($data['isBicycleClub']) {
         'bend' => 'Bend',
         'redmond' => 'Redmond',
         'sisters' => 'Sisters',
+        'madras' => 'Madras',
+        'prineville' => 'Prineville',
+        'lapine' => 'La Pine',
+        'centraloregon' => 'Central Oregon',
     ];
 
     // Group ride schedule
@@ -175,7 +187,7 @@ if ($data['isBicycleClub']) {
     ]);
     $data['rideSchedules'] = $scheduleStmt->fetchAll(PDO::FETCH_ASSOC);
 
-    // Club notes
+    // Community Notes
     $noteSql = "
         SELECT
             rn.id,
@@ -316,6 +328,10 @@ $data['locations'] = [
     'bend' => 'Bend',
     'redmond' => 'Redmond',
     'sisters' => 'Sisters',
+    'madras' => 'Madras',
+    'prineville' => 'Prineville',
+    'lapine' => 'La Pine',
+    'centraloregon' => 'Central Oregon',
 ];
 echo $twig->render('index.html', $data);
 return;

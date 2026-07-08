@@ -1,6 +1,14 @@
 <?php
 declare(strict_types=1);
-$allowedLocations = ['bend', 'redmond', 'sisters'];
+$allowedLocations = [
+    'bend',
+    'redmond',
+    'sisters',
+    'madras',
+    'prineville',
+    'lapine',
+    'centraloregon',
+];
 
 $location = strtolower((string) ($_POST['location'] ?? ($_GET['location'] ?? 'redmond')));
 

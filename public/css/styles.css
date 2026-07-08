@@ -734,6 +734,12 @@ textarea#content {
     }
 }
 
+.location-divider {
+    color: #777;
+    font-size: 0.9em;
+    font-weight: bold;
+    margin: 0 8px;
+}
 /* Keep forgot password aligned with password label */
 
 

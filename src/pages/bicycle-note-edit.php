@@ -1,6 +1,14 @@
 <?php
 declare(strict_types=1);
-$allowedLocations = ['bend', 'redmond', 'sisters'];
+$allowedLocations = [
+    'bend',
+    'redmond',
+    'sisters',
+    'madras',
+    'prineville',
+    'lapine',
+    'centraloregon',
+];
 
 $location = strtolower((string) ($_GET['location'] ?? 'redmond'));
 
@@ -13,7 +21,7 @@ $role = strtolower((string) ($_SESSION['role'] ?? ''));
 
 if ($viewerId <= 0 || $role === 'guest') {
     $_SESSION['return_to'] = '/index/44';
-    //$_SESSION['flash_failure'] = 'You must be logged in to manage club notes.';
+    //$_SESSION['flash_failure'] = 'You must be logged in to manage Community Notes.';
     redirect('login');
     exit();
 }

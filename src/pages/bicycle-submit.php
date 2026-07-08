@@ -1,6 +1,14 @@
 <?php
 declare(strict_types=1);
-$allowedLocations = ['bend', 'redmond', 'sisters'];
+$allowedLocations = [
+    'bend',
+    'redmond',
+    'sisters',
+    'madras',
+    'prineville',
+    'lapine',
+    'centraloregon',
+];
 
 $location = strtolower((string) ($_GET['location'] ?? 'redmond'));
 
@@ -12,7 +20,15 @@ include APP_ROOT . '/src/pages/menu-path.php';
 $data = [];
 $websiteId = (int) ($_GET['website'] ?? 44);
 $data['websiteId'] = $websiteId;
-$allowedLocations = ['bend', 'redmond', 'sisters'];
+$allowedLocations = [
+    'bend',
+    'redmond',
+    'sisters',
+    'madras',
+    'prineville',
+    'lapine',
+    'centraloregon',
+];
 
 $location = strtolower((string) ($_GET['location'] ?? 'bend'));
 

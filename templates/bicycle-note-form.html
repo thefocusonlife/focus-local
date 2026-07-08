@@ -140,6 +140,11 @@
 					</div>
 
 					<div class="form-row">
+						<label for="note_date">Event Date</label>
+						<input type="date" id="note_date" name="note_date" value="{% if note.note_date %}{{ note.note_date|date('Y-m-d') }}{% endif %}">
+					</div>
+
+					<div class="form-row">
 						<label for="sort_order">Sort Order</label>
 						<input type="number" id="sort_order" name="sort_order" value="{{ note.sort_order|default(0) }}">
 					</div>
@@ -160,7 +165,7 @@
 
 				<button type="submit" class="btn btn-primary">Save Note</button>
 				<a href="{{ doc_root }}index/44?location={{ location }}" class="btn btn-secondary">
-					Back to Bicycle Club
+					Back to COBC
 				</a>
 			</p>
 		</form>

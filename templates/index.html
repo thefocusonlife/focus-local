@@ -20,12 +20,19 @@
 					<strong>Choose Ride Area:</strong>
 
 					{% for key, name in locations %}
+
+						{% if key == 'centraloregon' %}
+							<br>
+							<span class="location-divider">| Regional |</span>
+							<br>
+						{% endif %}
+
 						<a href="{{ doc_root }}index/44?location={{ key }}" class="{% if location == key %}active{% endif %}">
 							{{ name }}
 						</a>
+
 					{% endfor %}
 				</div>
-
 				<div class="bicycle-club-header">
 					<h2>{{ locationName }}
 						Group Ride Schedule</h2>
@@ -87,17 +94,17 @@
 
 			<section class="bicycle-club-module">
 				<div class="bicycle-club-header">
-					<h2>Club Notes</h2>
+					<h2>Community Notes</h2>
 					<p>Current member notes and ride updates.</p>
 				</div>
 				<div class="bicycle-club-actions">
 					<a href="{{ doc_root }}bicycle-note-add/{{ note.id }}?location={{ location }}" class="btn btn-primary">
-						Add Club Note
+						ADD COMMUNITY NOTE
 					</a>
 				</div>
 				{% if rideNotes is empty %}
 					<div class="bicycle-empty-state">
-						<p>No club notes yet.</p>
+						<p>No Community Notes yet.</p>
 					</div>
 				{% else %}
 					<div class="ride-note-list">
@@ -106,10 +113,13 @@
 								<header class="ride-note-header">
 									<h3>{{ note.title }}</h3>
 									<div class="ride-note-date">
+
+										<strong>Event Date</strong><br>
+
 										{% if note.note_date %}
-											{{ note.note_date|date('F j, Y') }}
+											{{ note.note_date|date('l, F j, Y') }}
 										{% else %}
-											{{ note.created|date('F j, Y') }}
+											<em>No date specified</em>
 										{% endif %}
 									</div>
 								</header>
@@ -127,7 +137,7 @@
 								{% if session.id %}
 									<div class="bicycle-club-actions">
 										<a href="{{ doc_root }}bicycle-note-edit/{{ note.id }}?location={{ location }}" class="btn btn-primary">
-											Edit Club Note
+											EDIT COMMUNITY NOTE
 										</a>
 									</div>
 								{% endif %}
@@ -139,12 +149,12 @@
 
 			<section class="bicycle-club-module">
 				<div class="bicycle-club-header">
-					<h2>Bicycle Club Rides</h2>
-					<p>Recent rides from Bend / Redmond BC members.</p>
+					<h2>Ride Reports</h2>
+					<p>Recent ride reports from community members.</p>
 
 					<div class="bicycle-club-actions">
 						<a href="{{ doc_root }}bicycle-submit?website=44&location={{ location }}" class="btn btn-primary">
-							Submit Ride
+							SHARE A RIDE
 						</a>
 					</div>
 				</div>

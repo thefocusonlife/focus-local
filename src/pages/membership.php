@@ -155,7 +155,7 @@ if ($websiteId !== 44) {
         I understand that bicycling involves risk of injury, accident, or death.
         I voluntarily participate in club rides and activities at my own risk.
         I agree to ride responsibly, follow traffic laws, wear a helmet, and release
-        the Bend / Redmond Bicycle Club, organizers, ride leaders, volunteers, and
+        the Central Oregon Bicycle Community, organizers, ride leaders, volunteers, and
         associated website operators from liability to the fullest extent allowed by law.
     </p>
 
