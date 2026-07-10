@@ -73,7 +73,7 @@ if ($id > 0) {
         'location' => $location,
     ]);
 
-    $_SESSION['flash_success'] = 'Club note updated.';
+    $_SESSION['flash_success'] = 'Community note updated.';
 } else {
     $sql = "
         INSERT INTO ride_note (
@@ -105,7 +105,7 @@ if ($id > 0) {
         'location' => $location,
     ]);
 
-    $_SESSION['flash_success'] = 'Club note added.';
+    $_SESSION['flash_success'] = 'Community note added.';
 }
 
 redirect('index/44?location=' . urlencode($location));
