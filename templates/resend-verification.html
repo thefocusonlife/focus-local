@@ -6,7 +6,9 @@
 			<h1>Resend Verification Email</h1>
 
 			{% if success %}
-				<div class="alert alert-success">{{ success }}</div>
+				<div class="alert alert-success">
+					{{ success|e|nl2br }}
+				</div>
 			{% endif %}
 
 			{% if errors.warning %}
@@ -22,7 +24,7 @@
 				<div class="form-group">
 					<p class="small">
 						Enter your main email address used for verification, not the website-specific login email.
-								For example: use
+														For example: use
 						<strong>name@example.com</strong>, not
 						<strong>name@example.com17</strong>.
 					</p>

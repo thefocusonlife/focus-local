@@ -7,9 +7,10 @@
 		{% endif %}
 
 		{% if success %}
-			<div class="alert alert-success">{{ success }}</div>
+			<div class="alert alert-success">
+				{{ success|e|nl2br }}
+			</div>
 		{% endif %}
-
 		{{ include('story-summaries.html') }}
 
 		{% if isBicycleClub %}

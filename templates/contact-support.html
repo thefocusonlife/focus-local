@@ -18,7 +18,9 @@
 					<div class="alert alert-danger">{{ errors.warning }}</div>
 				{% endif %}
 				{% if success %}
-					<div class="alert alert-success">{{ success }}</div>
+					<div class="alert alert-success">
+						{{ success|e|nl2br }}
+					</div>
 				{% endif %}
 
 				<div class="form-group">

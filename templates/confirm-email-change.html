@@ -6,7 +6,9 @@
 			<h1>Confirm Email Change</h1>
 
 			{% if success %}
-				<div class="alert alert-success">{{ success }}</div>
+				<div class="alert alert-success">
+					{{ success|e|nl2br }}
+				</div>
 				<p>
 					<a href="{{ doc_root }}login/{{ website.id }}">Go to Login</a>
 				</p>

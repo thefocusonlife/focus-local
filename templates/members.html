@@ -5,7 +5,9 @@
 		<section class="header">
 			<h1>Members</h1>
 			{% if success %}
-				<div class="alert alert-success">{{ success }}</div>
+				<div class="alert alert-success">
+					{{ success|e|nl2br }}
+				</div>
 			{% endif %}
 			{% if failure %}
 				<div class="alert alert-danger">{{ failure }}</div>

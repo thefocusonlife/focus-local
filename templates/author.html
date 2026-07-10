@@ -38,12 +38,14 @@
 				{% if (session.id != member.id  and session.id != 1 and session.id != 2) %}
 					<p></p>
 					<!--		<a href="{{ doc_root }}newnote/{{ member.id }}" class="btn btn-primary">
-																															FOLLOW REQUEST
-																														</a> -->
+																																				FOLLOW REQUEST
+																																			</a> -->
 				{% endif %}
 
 				{% if success %}
-					<div class="alert alert-success">{{ success }}</div>
+					<div class="alert alert-success">
+						{{ success|e|nl2br }}
+					</div>
 				{% endif %}
 				{% if session.id == member.id or session.id == 0 %}
 

@@ -12,7 +12,9 @@
 				<div class="alert alert-danger">{{ errors.warning }}</div>
 			{% endif %}
 			{% if success %}
-				<div class="alert alert-success">{{ success }}</div>
+				<div class="alert alert-success">
+					{{ success|e|nl2br }}
+				</div>
 			{% endif %}
 			<input type="hidden" name="csrf_token" value="{{ csrf_token }}">
 			<div class="hp-field" aria-hidden="true">

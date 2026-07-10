@@ -6,7 +6,9 @@
 			<h1>Email Verification</h1>
 
 			{% if success %}
-				<div class="alert alert-success">{{ success }}</div>
+				<div class="alert alert-success">
+					{{ success|e|nl2br }}
+				</div>
 				<p>
 					Your email address has been verified successfully.
 				</p>

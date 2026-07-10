@@ -27,7 +27,9 @@
 				<img src="{{ doc_root }}img/person.png" alt="person.png" class="profile"><br>
 			{% endif %}
 			{% if success %}
-				<div class="alert alert-success">{{ success }}</div>
+				<div class="alert alert-success">
+					{{ success|e|nl2br }}
+				</div>
 			{% endif %}
 
 			<table class="table table-striped">
