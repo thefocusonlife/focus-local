@@ -12,23 +12,36 @@ class Quickguide // Define Session class
         $this->db = $db; // Add ref to Database object
     }
 
-    /*Get individual guidetext by id
-    public function get(int $id)
+    public function getOne(int $websiteId = 0): array
     {
-        $sql = "SELECT guidetext
+        if ($websiteId > 0) {
+            $sql = "SELECT *
                   FROM quickguide
-                                        // SQL to get pagelimit
-        return $this->db->runSql($sql, [$id])->fetch();  // Return pagelimit
-    }
-*/
-    // Get quickguide te
-    public function getOne(): array|false
-    {
-        $sql = "SELECT guidetext
-            FROM quickguide
-            WHERE active = 1
-            ORDER BY RAND()
-            LIMIT 1";
-        return $this->db->runSql($sql)->fetch();
+                 WHERE active = 1
+                   AND website = :website
+              ORDER BY RAND()
+                 LIMIT 1";
+
+            $statement = $this->db->runSql($sql, [
+                'website' => $websiteId,
+            ]);
+
+            $guide = $statement->fetch();
+
+            if (!empty($guide)) {
+                return $guide;
+            }
+        }
+
+        $sql = "SELECT *
+              FROM quickguide
+             WHERE active = 1
+               AND website = 0
+          ORDER BY RAND()
+             LIMIT 1";
+
+        $statement = $this->db->runSql($sql);
+
+        return $statement->fetch() ?: [];
     }
 }

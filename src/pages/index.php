@@ -96,7 +96,7 @@ if (!empty($_SESSION['flash_success'])) {
     $data['failure'] = (string) $_SESSION['flash_failure'];
     unset($_SESSION['flash_failure']);
 } else {
-    $guide = $cms->getQuickguide()->getOne();
+    $guide = $cms->getQuickguide()->getOne($websiteId);
     if (!empty($guide['guidetext'])) {
         $data['success'] = $guide['guidetext'];
     }
@@ -324,6 +324,21 @@ if (defined('TFOL_ROUTE_DEBUG') && TFOL_ROUTE_DEBUG) {
         'resolved_website_id' => $websiteId,
     ];
 }
+
+$cobcView = $_GET['view'] ?? ($_SESSION['cobc_view'] ?? 'community');
+
+if ((int) $websiteId === 44) {
+    if (!in_array($cobcView, ['community', 'member'], true)) {
+        $cobcView = 'community';
+    }
+
+    $_SESSION['cobc_view'] = $cobcView;
+} else {
+    $cobcView = null;
+}
+$data['cobc_view'] = $cobcView;
+//$data['show_cobc_cards'] = (int) $websiteId === 44 && $cobcView === 'community';
+
 $data['locations'] = [
     'bend' => 'Bend',
     'redmond' => 'Redmond',
@@ -333,5 +348,6 @@ $data['locations'] = [
     'lapine' => 'La Pine',
     'centraloregon' => 'Central Oregon',
 ];
+
 echo $twig->render('index.html', $data);
 return;

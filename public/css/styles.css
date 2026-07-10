@@ -841,6 +841,9 @@ nav.pagination {
     border-color: #c3e6cb;
 }
 
+.alert-success {
+    white-space: pre-line;
+}
 /**********************/
 /* 6: ADMIN           */
 /**********************/
