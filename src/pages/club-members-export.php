@@ -13,7 +13,7 @@ if ($viewerId <= 0 || $role === 'guest') {
     exit();
 }
 
-$websiteId = (int) ($_GET['website'] ?? 44);
+$websiteId = (int) ($_GET['website'] ?? ($_SESSION['website'] ?? 1));
 if ($websiteId !== 44) {
     $websiteId = 44;
 }

@@ -1,7 +1,7 @@
 <?php
 declare(strict_types=1);
 
-$websiteId = (int) ($_GET['website'] ?? 44);
+$websiteId = (int) ($_GET['website'] ?? ($_SESSION['website'] ?? 1));
 if ($websiteId !== 44) {
     $websiteId = 44;
 }

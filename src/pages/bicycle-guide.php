@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 require_once APP_ROOT . '/src/security/guard.php';
 
-$websiteId = (int) ($_GET['website'] ?? ($_SESSION['website'] ?? 44));
+$websiteId = (int) ($_GET['website'] ?? ($_SESSION['website'] ?? 1));
 
 if ($websiteId !== 44) {
     $websiteId = 44;

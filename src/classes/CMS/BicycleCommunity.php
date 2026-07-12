@@ -16,7 +16,7 @@ class BicycleCommunity
         $this->db = $db;
     }
 
-    public function getByWebsiteId(int $websiteId = 44, int $limit = 8): array
+    public function getByWebsiteId(int $websiteId, int $limit = 8): array
     {
         $limit = max(1, (int) $limit);
 

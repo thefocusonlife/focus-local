@@ -68,7 +68,7 @@ class Club_members
         ";
 
         return $this->db->runSql($sql, [
-            'website_id' => $data['website_id'] ?? 44,
+            'website_id' => $data['website_id'] ?? 1,
             'first_name' => $data['first_name'] ?? '',
             'last_name' => $data['last_name'] ?? '',
             'address1' => $data['address1'] ?? '',

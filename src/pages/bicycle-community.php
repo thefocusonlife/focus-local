@@ -29,7 +29,7 @@ if ($viewerId <= 0 || $role === 'guest') {
 
 $data = [];
 
-$websiteId = (int) ($_GET['website'] ?? ($_SESSION['website'] ?? 44));
+$websiteId = (int) ($_GET['website'] ?? ($_SESSION['website'] ?? 1));
 if ($websiteId !== 44) {
     $websiteId = 44;
 }

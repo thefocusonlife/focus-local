@@ -127,7 +127,7 @@ function reverseGeocodeNominatim(float $lat, float $lng): ?string
     return null;
 }
 
-$websiteId = (int) ($_POST['website_id'] ?? 44);
+$websiteId = (int) ($_POST['website_id'] ?? ($_GET['website'] ?? ($_SESSION['website'] ?? 1)));
 if ($websiteId !== 44) {
     $websiteId = 44;
 }
