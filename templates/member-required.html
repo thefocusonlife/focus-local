@@ -1,0 +1,41 @@
+{% extends 'layout.html' %}
+
+{% block title %}Member Account Required
+{% endblock %}
+
+{% block content %}
+
+	<main class="container" id="content">
+
+		<section class="member-required">
+
+			<h1>TFOL Member Account Required</h1>
+
+			<p>{{ reason|e }}</p>
+
+			<p>
+				Already have a TFOL account? Log in to continue.
+				                New to TFOL? Registration is free.
+			</p>
+
+			<div class="member-required-actions">
+				<a class="button" href="{{ login_url }}">
+					Log In
+				</a>
+
+				<a class="button" href="{{ register_url }}">
+					Register
+				</a>
+			</div>
+
+			<p class="member-required-cancel">
+				<a href="{{ cancel_url }}">
+					Return without continuing
+				</a>
+			</p>
+
+		</section>
+
+	</main>
+
+{% endblock %}

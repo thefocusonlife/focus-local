@@ -1792,3 +1792,60 @@ body .membership-form-wrap textarea {
 .messaging-table tr.message-unread a {
     font-weight: 700;
 }
+
+/* Member-required gateway */
+main#content .member-required {
+    display: block;
+    grid-column: 1 / -1;
+    width: min(100%, 620px);
+    margin: 3rem auto;
+    padding: 2rem;
+    text-align: center;
+    background: #f3f6f5;
+    border: 1px solid #d5dcda;
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+main#content .member-required h1 {
+    margin: 0 0 1.25rem;
+}
+
+main#content .member-required p {
+    margin: 0 0 1.25rem;
+}
+
+main#content .member-required-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin: 1.75rem 0;
+}
+
+main#content .member-required-actions a {
+    display: inline-block;
+    padding: 0.65rem 1.25rem;
+    color: #fff;
+    background: #285a80;
+    border-radius: 5px;
+    text-decoration: none;
+}
+
+main#content .member-required-actions a:hover {
+    background: #1f4766;
+}
+
+main#content .member-required-cancel {
+    margin-bottom: 0;
+}
+
+@media (max-width: 520px) {
+    main#content .member-required {
+        margin: 1.5rem auto;
+        padding: 1.25rem;
+    }
+
+    main#content .member-required-actions {
+        flex-direction: column;
+    }
+}
