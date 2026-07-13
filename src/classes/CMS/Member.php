@@ -1133,4 +1133,22 @@ class Member
 
         return $this->db->runSql($sql)->fetchAll();
     }
+
+    /**
+     * Determine whether a member belongs to a website.
+     */
+    public function isMemberOfWebsite(int $memberId, int $websiteId): bool
+    {
+        $sql = "SELECT COUNT(*)
+              FROM member
+             WHERE id = :member_id
+               AND website = :website_id";
+
+        $statement = $this->db->runSql($sql, [
+            'member_id' => $memberId,
+            'website_id' => $websiteId,
+        ]);
+
+        return (int) $statement->fetchColumn() > 0;
+    }
 }

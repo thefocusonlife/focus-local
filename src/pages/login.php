@@ -11,6 +11,16 @@ require_once APP_ROOT . '/src/tenancy/website_context.php';
 require_once APP_ROOT . '/src/security/guard.php';
 require_once APP_ROOT . '/src/security/csrf.php';
 
+//$websiteId = (int) ($_SESSION['return_website'] ?? ($_SESSION['website'] ?? 1));
+$websiteId = (int) ($_SESSION['return_website'] ?? ($_SESSION['website'] ?? 1));
+
+$showLoginForm = isset($_GET['member_required']) && $_GET['member_required'] === '1';
+
+if (!empty($_SESSION['return_to']) && !$showLoginForm) {
+    header('Location: ' . DOC_ROOT . 'member-required/' . $websiteId);
+    exit();
+}
+
 guardPublic();
 
 $csrfFormKey = 'login';
