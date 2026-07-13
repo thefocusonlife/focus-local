@@ -1,5 +1,6 @@
 <?php
 declare(strict_types=1);
+
 $allowedLocations = [
     'bend',
     'redmond',
@@ -17,12 +18,32 @@ if (!in_array($location, $allowedLocations, true)) {
 }
 
 $viewerId = (int) ($_SESSION['id'] ?? 0);
-$role = strtolower((string) ($_SESSION['role'] ?? ''));
+$role = strtolower((string) ($_SESSION['role'] ?? 'guest'));
 
-if ($viewerId <= 0 || $role === 'guest') {
+$isLoggedIn = $viewerId > 0 && $role !== 'guest';
+/*
+ * Step 1: Send guests through the Member Required gateway.
+ */
+if (!$isLoggedIn) {
+    $_SESSION['member_required'] = true;
+    $_SESSION['return_website'] = 44;
     $_SESSION['return_to'] = DOC_ROOT . 'bicycle-note-add?location=' . urlencode($location);
+    $_SESSION['member_required_reason'] =
+        'Adding a community note requires membership in the Central Oregon Bicycle Community.';
 
-    redirect('login');
+    header('Location: ' . DOC_ROOT . 'login/44');
+    exit();
+}
+
+/*
+ * Step 2: Require Website 44 membership.
+ */
+if (!$cms->getMember()->isMemberOfWebsite($viewerId, 44)) {
+    $_SESSION['flash_failure'] =
+        'This feature requires Central Oregon Bicycle Community membership. ' .
+        'Please Log Out, then click Register for a FREE COBC account.';
+
+    header('Location: ' . DOC_ROOT . 'index/44?location=' . urlencode($location));
     exit();
 }
 
