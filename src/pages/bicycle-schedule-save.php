@@ -21,12 +21,30 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $viewerId = (int) ($_SESSION['id'] ?? 0);
-$role = strtolower((string) ($_SESSION['role'] ?? ''));
+$role = strtolower((string) ($_SESSION['role'] ?? 'guest'));
 
-if ($viewerId <= 0 || $role === 'guest') {
-    $_SESSION['return_to'] = '/index/44';
-    $_SESSION['flash_failure'] = 'You must be logged in to manage group rides.';
-    redirect('login');
+$isLoggedIn = $viewerId > 0 && $role !== 'guest';
+
+/*
+ * Protect direct POST requests as well as the form controller.
+ */
+if (!$isLoggedIn) {
+    $_SESSION['member_required'] = true;
+    $_SESSION['return_website'] = 44;
+    $_SESSION['return_to'] = DOC_ROOT . 'bicycle-schedule-add?location=' . urlencode($location);
+    $_SESSION['member_required_reason'] =
+        'Adding a group ride requires membership in the Central Oregon Bicycle Community.';
+
+    header('Location: ' . DOC_ROOT . 'login/44');
+    exit();
+}
+
+if (!$cms->getMember()->isMemberOfWebsite($viewerId, 44)) {
+    $_SESSION['flash_failure'] =
+        'This feature requires Central Oregon Bicycle Community membership. ' .
+        'Please Log Out, then click Register for a FREE COBC account.';
+
+    header('Location: ' . DOC_ROOT . 'index/44?location=' . urlencode($location));
     exit();
 }
 
@@ -34,7 +52,8 @@ $groupRideManagerId = 339;
 
 if ($viewerId !== 1 && $viewerId !== $groupRideManagerId) {
     $_SESSION['flash_failure'] = 'You do not have permission to manage group rides.';
-    redirect('index/44');
+
+    header('Location: ' . DOC_ROOT . 'index/44?location=' . urlencode($location));
     exit();
 }
 
@@ -52,10 +71,12 @@ $sortOrder = (int) ($_POST['sort_order'] ?? 0);
 
 if ($title === '' || $dayOfWeek === '' || $startTime === '') {
     $_SESSION['flash_failure'] = 'Title, day, and start time are required.';
-    redirect($id > 0 ? 'bicycle-schedule-edit/' . $id : 'bicycle-schedule-add');
+
+    $formUrl = $id > 0 ? 'bicycle-schedule-edit/' . $id : 'bicycle-schedule-add';
+
+    redirect($formUrl . '?location=' . urlencode($location));
     exit();
 }
-
 if ($id > 0) {
     $sql = "
         UPDATE ride_schedule
