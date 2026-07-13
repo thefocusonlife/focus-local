@@ -21,7 +21,6 @@ $viewerId = (int) ($_SESSION['id'] ?? 0);
 $role = strtolower((string) ($_SESSION['role'] ?? 'guest'));
 
 $isLoggedIn = $viewerId > 0 && $role !== 'guest';
-
 /*
  * Step 1: Send guests through the Member Required gateway.
  */
