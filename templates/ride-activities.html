@@ -44,8 +44,8 @@
 
 				<p class="ride-activities-intro">
 					Many cyclists already track their rides with Strava, Ride with GPS, or Garmin Connect.
-																																																												This page helps Community members find those services and share a ride
-																																																												activity links with the club.
+																																																																																										This page helps Community members find those services and share a ride
+																																																																																										activity links with the club.
 				</p>
 
 				<div class="ride-activity-card">
@@ -114,7 +114,9 @@
 						<button type="submit" class="button">
 							Save Ride Activity
 						</button>
-
+						<a href="{{ doc_root }}index/44?location={{ location }}" class="btn btn-secondary">
+							Back to COBC
+						</a>
 					</div>
 					<div class="ride-activity-card ride-activity-list">
 						<h2>Recent Ride Activities</h2>
@@ -153,6 +155,14 @@
 											<a href="{{ activity.activity_url }}" target="_blank" rel="noopener">
 												View Ride Activity
 											</a>
+										</p>
+										<p>
+											{% if session.id == ride.member_id or session.role in ['admin', 'uber'] %}
+												<a class="button button-small button-danger" href="{{ doc_root }}ride-activity-delete/{{ activity.id }}?location={{ location|url_encode }}" onclick="return confirm('Delete this ride report?');">
+													Delete Ride
+												</a>
+											{% endif %}
+
 										</p>
 									</li>
 								{% endfor %}
