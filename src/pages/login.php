@@ -11,7 +11,6 @@ require_once APP_ROOT . '/src/tenancy/website_context.php';
 require_once APP_ROOT . '/src/security/guard.php';
 require_once APP_ROOT . '/src/security/csrf.php';
 
-//$websiteId = (int) ($_SESSION['return_website'] ?? ($_SESSION['website'] ?? 1));
 $websiteId = (int) ($_SESSION['return_website'] ?? ($_SESSION['website'] ?? 1));
 
 $showLoginForm = isset($_GET['member_required']) && $_GET['member_required'] === '1';
@@ -74,7 +73,43 @@ if ($websiteId <= 0 || empty($website['id'])) {
     redirect('index/1', ['failure' => 'Website context missing.']);
     exit();
 }
+$websiteId = isset($id) && is_numeric($id) ? (int) $id : (int) ($_SESSION['website'] ?? 1);
 
+if ($websiteId < 1) {
+    $websiteId = 1;
+}
+
+/*
+ * A normal navigation-bar login is not part of an interrupted
+ * member-required workflow.
+ */
+$directLogin = isset($_GET['direct']) && $_GET['direct'] === '1';
+
+if ($directLogin) {
+    unset(
+        $_SESSION['member_required'],
+        $_SESSION['member_required_reason'],
+        $_SESSION['return_website'],
+        $_SESSION['return_to'],
+    );
+}
+$showLoginForm = isset($_GET['member_required']) && $_GET['member_required'] === '1';
+
+if (
+    !empty($_SESSION['member_required']) &&
+    !empty($_SESSION['return_to']) &&
+    !$showLoginForm &&
+    !$directLogin
+) {
+    $requiredWebsiteId = (int) ($_SESSION['return_website'] ?? $websiteId);
+
+    if ($requiredWebsiteId < 1) {
+        $requiredWebsiteId = $websiteId;
+    }
+
+    header('Location: ' . DOC_ROOT . 'member-required/' . $requiredWebsiteId);
+    exit();
+}
 // ----------------------------
 // Redirect away if already logged in
 // ----------------------------
@@ -202,7 +237,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     !$isGuestStory &&
                     ($memberWebsiteId <= 0 || $memberWebsiteId !== (int) $website['id'])
                 ) {
-                    $errors['message'] = 'This email not valid for ' . (string) $website['name'];
+                    $errors['message'] =
+                        'This email is not valid for ' .
+                        (string) $website['name'] .
+                        '. Click Register for a free account.';
                 } else {
                     if (session_status() !== PHP_SESSION_ACTIVE) {
                         session_start();
