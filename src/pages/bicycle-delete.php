@@ -47,12 +47,19 @@ if (!$cms->getMember()->isMemberOfWebsite($viewerId, 44)) {
     exit();
 }
 
-$rideId = (int) ($id ?? 0);
+$rideId = (int) ($_POST['ride_id'] ?? 0);
+
+if ($rideId <= 0) {
+    $_SESSION['flash_failure'] = 'Invalid ride.';
+    redirect('index/44?location=' . urlencode($location));
+    exit();
+}
 
 $stmt = $cms->getDb()->runSql(
     'SELECT member_id
-       FROM ride_activity_link
+       FROM ride
       WHERE id = :id
+        AND website_id = 44
       LIMIT 1',
     ['id' => $rideId],
 );
@@ -65,23 +72,16 @@ if (!$ride) {
     exit();
 }
 
-$isAdmin = in_array(strtolower($_SESSION['role'] ?? ''), ['admin', 'uber'], true);
 $isOwner = (int) $ride['member_id'] === $viewerId;
+$isUber = $viewerId === 1;
 
-if (!$isOwner) {
-    $_SESSION['flash_failure'] = 'You do not have permission to edit this ride.';
-
-    redirect('index/44?location=' . urlencode($location));
-    exit();
-}
-
-if ((int) $ride['member_id'] !== $viewerId && !$isAdmin) {
+if (!$isOwner && !$isUber) {
     $_SESSION['flash_failure'] = 'You do not have permission to delete this ride.';
     redirect('index/44?location=' . urlencode($location));
     exit();
 }
 
-$cms->getDb()->runSql('DELETE FROM ride_activity_link WHERE id = :id', ['id' => $rideId]);
+$cms->getDb()->runSql('DELETE FROM ride WHERE id = :id', ['id' => $rideId]);
 
 $_SESSION['flash_success'] = 'Ride deleted.';
 redirect('index/44?location=' . urlencode($location));

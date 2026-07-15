@@ -145,4 +145,69 @@ class Ride
 
         return [implode(' AND ', $where), $params];
     }
+    /**
+     * Get one ride belonging to Website 44.
+     */
+    public function getOne(int $rideId, int $websiteId = 44): array
+    {
+        $sql = "
+        SELECT *
+        FROM ride
+        WHERE id = :id
+          AND website_id = :website_id
+        LIMIT 1
+    ";
+
+        $statement = $this->db->runSql($sql, [
+            'id' => $rideId,
+            'website_id' => $websiteId,
+        ]);
+
+        return $statement->fetch() ?: [];
+    }
+
+    /**
+     * Update the editable fields for a ride.
+     */
+    public function update(int $rideId, int $websiteId, array $ride): bool
+    {
+        $sql = "
+        UPDATE ride
+        SET ride_date = :ride_date,
+            start_time = :start_time,
+            title = :title,
+            ride_type = :ride_type,
+            start_location = :start_location,
+            distance_miles = :distance_miles,
+            elapsed_minutes = :elapsed_minutes,
+            elevation_gain_ft = :elevation_gain_ft,
+            avg_speed_mph = :avg_speed_mph,
+            avg_power_watts = :avg_power_watts,
+            avg_heart_rate = :avg_heart_rate,
+            notes = :notes,
+            location = :location
+        WHERE id = :id
+          AND website_id = :website_id
+    ";
+
+        $statement = $this->db->runSql($sql, [
+            'ride_date' => $ride['ride_date'],
+            'start_time' => $ride['start_time'],
+            'title' => $ride['title'],
+            'ride_type' => $ride['ride_type'],
+            'start_location' => $ride['start_location'],
+            'distance_miles' => $ride['distance_miles'],
+            'elapsed_minutes' => $ride['elapsed_minutes'],
+            'elevation_gain_ft' => $ride['elevation_gain_ft'],
+            'avg_speed_mph' => $ride['avg_speed_mph'],
+            'avg_power_watts' => $ride['avg_power_watts'],
+            'avg_heart_rate' => $ride['avg_heart_rate'],
+            'notes' => $ride['notes'],
+            'location' => $ride['location'],
+            'id' => $rideId,
+            'website_id' => $websiteId,
+        ]);
+
+        return $statement->rowCount() >= 0;
+    }
 }

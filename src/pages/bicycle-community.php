@@ -68,10 +68,20 @@ if ($id > 0) {
         ->fetch();
 
     if ($existing) {
+        $isOwner = (int) $existing['member_id'] === $viewerId;
+        $isUberMember = $viewerId === 1;
+
+        if (!$isOwner && !$isUberMember) {
+            $_SESSION['flash_failure'] = 'You do not have permission to edit this Community Item.';
+
+            redirect('index/44?location=' . urlencode($location));
+            exit();
+        }
+
         $data['community'] = $existing;
     } else {
         $_SESSION['flash_failure'] = 'Community item not found.';
-        redirect('index/44');
+        redirect('index/44?location=' . urlencode($location));
         exit();
     }
 }

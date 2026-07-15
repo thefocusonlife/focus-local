@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en-US">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+		<script src="https://cdn.tiny.cloud/1/{{ constant('TINYMCE_API_KEY') }}/tinymce/8/tinymce.min.js" referrerpolicy="origin"></script>
+	</head>
+	<style>
+		.ride-form {
+			display: block;
+			width: 100%;
+		}
+
+		.ride-fields {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 16px 24px;
+			align-items: start;
+			max-width: 1000px;
+		}
+
+		.ride-fields > .form-row {
+			display: flex;
+			flex-direction: column;
+			min-width: 0;
+			margin: 0;
+			float: none;
+			width: auto;
+		}
+
+		.ride-fields > .form-row label {
+			display: block;
+			margin-bottom: 0.35rem;
+			font-weight: 600;
+		}
+
+		.ride-fields input,
+		.ride-fields select {
+			height: 40px;
+			padding: 8px 10px;
+			font-size: 15px;
+			box-sizing: border-box;
+			width: 100%;
+		}
+
+		.ride-fields textarea {
+			min-height: 140px;
+			padding: 10px;
+			font-size: 15px;
+			box-sizing: border-box;
+			width: 100%;
+		}
+
+		.ride-fields > .form-row.form-row-wide {
+			grid-column: 1 / -1;
+		}
+
+		.metrics-grid {
+			grid-column: 1 / -1;
+			display: grid;
+			grid-template-columns: repeat(4, 1fr);
+			gap: 12px;
+			margin: 12px 0;
+		}
+
+		.metrics-grid label {
+			display: block;
+			font-weight: 600;
+			margin-bottom: 4px;
+		}
+
+		.metrics-grid input {
+			width: 100%;
+		}
+
+		.form-actions {
+			margin-top: 1rem;
+		}
+
+		.form-actions .btn {
+			display: inline-block;
+			margin-right: 0.5rem;
+			margin-bottom: 0.5rem;
+			vertical-align: middle;
+		}
+
+		.danger-zone {
+			max-width: 1000px;
+			margin-top: 2rem;
+			padding-top: 1rem;
+			border-top: 1px solid #ccc;
+		}
+
+		@media(max-width: 800px) {
+			.ride-fields {
+				grid-template-columns: 1fr;
+			}
+
+			.ride-fields > .form-row.form-row-wide,
+			.metrics-grid {
+				grid-column: auto;
+			}
+
+			.metrics-grid {
+				grid-template-columns: repeat(2, 1fr);
+			}
+		}
+
+		@media(max-width: 500px) {
+			.metrics-grid {
+				grid-template-columns: 1fr;
+			}
+		}
+	</style>
+
+	<main class="container" id="content">
+
+		<h1>Edit
+			{{ locationName }}
+			Ride</h1>
+
+		<p>
+			Update this ride for the Central Oregon Bicycle Community.
+		</p>
+
+		<main class="container bicycle-edit-page" id="content">
+
+			{% if failure %}
+				<div class="alert alert-danger">
+					{{ failure|e|nl2br }}
+				</div>
+			{% endif %}
+
+			{% if success %}
+				<div class="alert alert-success">
+					{{ success|e|nl2br }}
+				</div>
+			{% endif %}
+
+			<form method="post" action="{{ doc_root }}bicycle-update" class="ride-form">
+
+				<input type="hidden" name="ride_id" value="{{ ride.id }}">
+
+				<input type="hidden" name="location" value="{{ location }}">
+
+				<section class="ride-fields">
+
+					<div class="form-row">
+						<label for="title">Ride Title</label>
+
+						<input type="text" id="title" name="title" maxlength="255" value="{{ ride.title|default('')|e }}">
+					</div>
+
+					<div class="form-row">
+						<label for="ride_date">Ride Date</label>
+
+						<input type="date" id="ride_date" name="ride_date" value="{{ ride.ride_date|date('Y-m-d') }}" required>
+					</div>
+
+					<div class="form-row">
+						<label for="ride_type">Ride Type</label>
+
+						<select id="ride_type" name="ride_type" required>
+
+							<option value="">Select one</option>
+
+							{% for type in [
+                            'Road',
+                            'Gravel',
+                            'Mountain Bike',
+                            'Virtual',
+                            'Hybrid',
+                            'Casual',
+                            'Commute',
+                            'Event'
+                        ] %}
+								<option value="{{ type }}" {% if ride.ride_type == type %} selected {% endif %}>
+									{{ type }}
+								</option>
+							{% endfor %}
+						</select>
+					</div>
+
+					<div class="form-row">
+						<label for="start_location">Start Location</label>
+
+						<input type="text" id="start_location" name="start_location" maxlength="255" value="{{ ride.start_location|default('')|e }}">
+					</div>
+
+					<div class="form-row">
+						<label for="distance_miles">Distance (miles)</label>
+
+						<input type="number" id="distance_miles" name="distance_miles" min="0" step="0.01" value="{{ ride.distance_miles|default('') }}">
+					</div>
+
+					<div class="form-row">
+						<label for="elapsed_minutes">
+							Elapsed Time (minutes)
+						</label>
+
+						<input type="number" id="elapsed_minutes" name="elapsed_minutes" min="0" step="1" value="{{ ride.elapsed_minutes|default('') }}">
+					</div>
+
+					<div class="form-row">
+						<label for="elevation_gain_ft">
+							Elevation Gain (ft)
+						</label>
+
+						<input type="number" id="elevation_gain_ft" name="elevation_gain_ft" min="0" step="1" value="{{ ride.elevation_gain_ft|default('') }}">
+					</div>
+
+					<div class="metrics-grid">
+
+						<div>
+							<label for="manual_start_time">Start Time</label>
+
+							<input type="time" id="manual_start_time" name="manual_start_time" value="{% if ride.start_time %}{{ ride.start_time|date('H:i') }}{% endif %}">
+						</div>
+
+						<div>
+							<label for="avg_speed_mph">Avg Speed</label>
+
+							<input type="number" id="avg_speed_mph" step="0.01" name="avg_speed_mph" value="{{ ride.avg_speed_mph|default('') }}">
+						</div>
+
+						<div>
+							<label for="avg_power_watts">
+								Avg Power (W)
+							</label>
+
+							<input type="number" id="avg_power_watts" name="avg_power_watts" value="{{ ride.avg_power_watts|default('') }}">
+						</div>
+
+						<div>
+							<label for="avg_heart_rate">
+								Avg Heart Rate
+							</label>
+
+							<input type="number" id="avg_heart_rate" name="avg_heart_rate" value="{{ ride.avg_heart_rate|default('') }}">
+						</div>
+
+					</div>
+
+					<div class="form-row form-row-wide">
+						<label for="notes">Notes</label>
+
+						<textarea id="notes" name="notes" rows="5" maxlength="5000">{{ ride.notes|default('')|e }}</textarea>
+					</div>
+
+					{% if ride.gpx_uploaded %}
+						<div class="form-row form-row-wide">
+							<p>
+								<strong>Ride file:</strong>
+								A FIT/GPX file is already attached.
+							</p>
+						</div>
+					{% endif %}
+
+				</section>
+
+				<p class="form-actions">
+					<button type="submit" class="btn btn-primary">
+						Save Ride Changes
+					</button>
+
+					<a href="{{ doc_root }}index/44?location={{ location|url_encode }}" class="btn btn-secondary">
+						Back to COBC
+					</a>
+				</p>
+
+			</form>
+
+
+			<hr>
+
+			<section class="danger-zone">
+				<h3>Delete This Ride</h3>
+
+				<p>
+					Deleting this ride cannot be undone.
+				</p>
+
+				<form method="post" action="{{ doc_root }}bicycle-delete" onsubmit="return confirm('Delete this ride permanently?');">
+
+					<input type="hidden" name="ride_id" value="{{ ride.id }}">
+					<input type="hidden" name="location" value="{{ location }}">
+
+					<button type="submit" class="btn btn-danger">
+						Delete Ride
+					</button>
+				</form>
+			</section>
+
+		</main>

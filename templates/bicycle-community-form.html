@@ -125,6 +125,46 @@
 								Back to COBC
 							</a>
 						</p>
+
+						<hr>
+
+						<form
+							method="post" action="{{ doc_root }}bicycle-community-save" class="community-form">
+
+							{# all edit fields #}
+
+							<p class="form-actions">
+								<button type="submit" class="btn btn-primary">
+									Save Community Item
+								</button>
+
+								<a href="{{ doc_root }}index/44?location={{ location|url_encode }}" class="btn btn-secondary">
+									Cancel
+								</a>
+							</p>
+
+						</form>
+
+						<hr>
+
+						<section class="danger-zone">
+							<h3>Delete This Community Item</h3>
+
+							<p>Deleting this Community Item cannot be undone.</p>
+
+							<form method="post" action="{{ doc_root }}bicycle-community-delete" onsubmit="return confirm('Delete this Community Item permanently?');">
+
+								<input type="hidden" name="id" value="{{ community.id }}">
+
+								<input type="hidden" name="location" value="{{ location }}">
+
+								<button type="submit" class="btn btn-danger">
+									Delete Community Item
+								</button>
+							</form>
+						</section>
+
+
 					</div>
 
 					<div class="community-right">
