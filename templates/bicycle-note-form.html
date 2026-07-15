@@ -168,7 +168,26 @@
 					Back to COBC
 				</a>
 			</p>
+			<hr>
 		</form>
+		<hr>
+
+		<section class="danger-zone">
+			<h3>Delete This Community Note</h3>
+
+			<p>Deleting this Community Note cannot be undone.</p>
+
+			<form method="post" action="{{ doc_root }}bicycle-note-delete" onsubmit="return confirm('Delete this Community Note permanently?');">
+
+				<input type="hidden" name="id" value="{{ note.id }}">
+
+				<input type="hidden" name="location" value="{{ location }}">
+
+				<button type="submit" class="btn btn-danger">
+					Delete Community Note
+				</button>
+			</form>
+		</section>
 	</body>
 </html></main><script>
 document.addEventListener('DOMContentLoaded', function () {
