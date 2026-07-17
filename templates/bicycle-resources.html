@@ -1,0 +1,380 @@
+<style>
+	.bicycle-resources-page {
+		display: block;
+		grid-column: 1 / -1;
+		width: 100%;
+		max-width: 1100px;
+		margin: 0 auto;
+		box-sizing: border-box;
+	}
+
+	.resources-introduction {
+		margin-bottom: 2rem;
+	}
+
+	.resources-introduction h1 {
+		margin-bottom: 0.75rem;
+	}
+
+	.resources-introduction p {
+		max-width: 850px;
+		margin-bottom: 0.75rem;
+		line-height: 1.5;
+	}
+
+	.resource-section {
+		margin: 0 0 2.5rem;
+	}
+
+	.resource-section h2 {
+		margin-bottom: 1rem;
+		padding-bottom: 0.4rem;
+		border-bottom: 1px solid #ccc;
+	}
+
+	.resource-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 1.25rem;
+	}
+
+	.resource-card {
+		display: flex;
+		flex-direction: column;
+		min-width: 0;
+		padding: 1.25rem;
+		background: #f7f8f8;
+		border: 1px solid #d5d8da;
+		border-radius: 7px;
+		box-sizing: border-box;
+	}
+
+	.resource-card h3 {
+		margin: 0 0 0.65rem;
+	}
+
+	.resource-card p {
+		margin: 0 0 1rem;
+		line-height: 1.45;
+	}
+
+	.resource-card-actions {
+		margin-top: auto;
+	}
+
+	.resource-card-actions a {
+		margin-right: 0.5rem;
+		margin-bottom: 0.35rem;
+	}
+
+	.resource-area {
+		margin-bottom: 0.75rem;
+		font-size: 0.9rem;
+		font-weight: 600;
+	}
+
+	.external-link-note {
+		margin-top: 2rem;
+		padding: 1rem;
+		background: #f5f5f5;
+		border-left: 4px solid #295073;
+		line-height: 1.45;
+	}
+
+	.resources-back {
+		margin-top: 1.5rem;
+	}
+
+	@media(max-width: 760px) {
+		.resource-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+
+	/* Override TFOL's parent content grid on the Resources page */
+	main#content.resources-layout {
+		display: block !important;
+		grid-template-columns: none !important;
+		grid-auto-columns: auto !important;
+		grid-auto-flow: initial !important;
+		width: 100% !important;
+		max-width: 1100px;
+		margin: 0 auto;
+		box-sizing: border-box;
+	}
+
+	main#content.resources-layout > * {
+		width: 100%;
+		max-width: none;
+		grid-column: 1 / -1 !important;
+	}
+
+	/* Resource page sections */
+	.resources-layout .resources-introduction {
+		display: block;
+		margin-bottom: 2rem;
+	}
+
+	.resources-layout .resource-section {
+		display: block;
+		width: 100%;
+		margin-bottom: 2.5rem;
+	}
+
+	.resources-layout .resource-grid {
+		display: grid !important;
+		grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+		gap: 1.25rem;
+		width: 100%;
+	}
+
+	.resources-layout .resource-card {
+		display: flex;
+		flex-direction: column;
+		width: auto;
+		min-width: 0;
+		padding: 1.25rem;
+		background: #f7f8f8;
+		border: 1px solid #d5d8da;
+		border-radius: 7px;
+		box-sizing: border-box;
+	}
+
+	.resources-layout .external-link-note,
+	.resources-layout .resources-back {
+		display: block;
+		width: 100%;
+	}
+
+	@media(max-width: 760px) {
+		.resources-layout .resource-grid {
+			grid-template-columns: 1fr !important;
+		}
+	}
+</style>
+
+<main class="container resources-layout" id="content">
+
+	<header class="resources-introduction">
+		<h1>Central Oregon Bicycle Resources</h1>
+
+		<p>
+			Discover bicycle clubs, organizations, routes, shops, and other
+																																					            cycling resources serving Central Oregon.
+		</p>
+
+		<p>
+			Each listing may link to a TFOL information page, the resource’s
+																																					            official website, or both.
+		</p>
+	</header>
+	<p class="resources-back">
+		<a class="btn btn-secondary" href="{{ doc_root }}index/44?location={{ location|url_encode }}">
+			Back to COBC
+		</a>
+	</p>
+	{# =========================================================
+															       AREA BICYCLE CLUBS
+															       Add additional club cards inside this resource-grid.
+															       ========================================================= #}
+
+	<section class="resource-section">
+		<h2>Area Bicycle Clubs</h2>
+
+		<div class="resource-grid">
+
+			<article class="resource-card">
+				<h3>Central Oregon Wheelers</h3>
+
+				<div class="resource-area">
+					Central Oregon
+				</div>
+
+				<p>
+					A recreational cycling club offering organized road, gravel, and mountain bike rides throughout Central Oregon. New riders are welcome. Visitors may participate in one ride using a free guest membership before joining the club.Organized rides and social cycling opportunities for riders
+																																																											                    throughout Central Oregon.
+				</p>
+
+				<div
+					class="resource-card-actions">
+					{#
+																																																											                    Replace # with the TFOL story URL when available.
+																																																											                    #}
+					<a class="btn btn-primary" href="#">
+						Learn More
+					</a>
+
+					{#
+																																																											                    Replace # with the club's official website.
+																																																											                    #}
+					<a class="btn btn-secondary" href="https://cowheelers.com/" target="_blank" rel="noopener noreferrer">
+						Visit Official Website
+					</a>
+				</div>
+			</article>
+
+			{#
+																																					            COPY THIS ARTICLE BLOCK TO ADD ANOTHER CLUB:
+			
+																																					            <article class="resource-card">
+																																					                <h3>Club Name</h3>
+			
+																																					                <div class="resource-area">
+																																					                    Area Served
+																																					                </div>
+			
+																																					                <p>
+																																					                    Short factual description of the club.
+																																					                </p>
+			
+																																					                <div class="resource-card-actions">
+																																					                    <a class="btn btn-primary"
+																																					                       href="{{ doc_root }}story/STORY_ID">
+																																					                        Learn More
+																																					                    </a>
+			
+																																					                    <a class="btn btn-secondary"
+																																					                       href="https://example.org"
+																																					                       target="_blank"
+																																					                       rel="noopener noreferrer">
+																																					                        Official Website
+																																					                    </a>
+																																					                </div>
+																																					            </article>
+																																					            #}
+
+		</div>
+	</section>
+
+	{# =========================================================
+															       ROUTES AND TRAILS
+															       ========================================================= #}
+
+	<section class="resource-section">
+		<h2>Routes and Trail Information</h2>
+
+		<div class="resource-grid">
+
+			<article class="resource-card">
+				<h3>Oregon Scenic Bikeways</h3>
+
+				<div class="resource-area">
+					Oregon
+				</div>
+
+				<p>
+					Information about Oregon’s designated scenic cycling routes,
+																																																											                    including route descriptions and planning information.
+				</p>
+
+				<div class="resource-card-actions">
+					<a class="btn btn-primary" href="#">
+						Learn More
+					</a>
+
+					<a class="btn btn-secondary" href="#" target="_blank" rel="noopener noreferrer">
+						Official Website
+					</a>
+				</div>
+			</article>
+
+		</div>
+	</section>
+	<article class="resource-card">
+
+		<h3>Ride with GPS</h3>
+
+		<div class="resource-area">
+			Worldwide
+		</div>
+
+		<p>
+			Plan, discover, navigate, and share bicycle routes. Ride with GPS
+															        includes thousands of public routes throughout Central Oregon and is
+															        one of the most widely used route-planning tools for recreational
+															        cyclists.
+		</p>
+
+		<div
+			class="resource-card-actions">
+
+			{# Future TFOL story #}
+			<a class="btn btn-primary" href="#">
+				Learn More
+			</a>
+
+			<a class="btn btn-secondary" href="https://ridewithgps.com" target="_blank" rel="noopener noreferrer">
+				Official Website
+			</a>
+
+		</div>
+
+	</article>
+	{# =========================================================
+															       CYCLING ORGANIZATIONS
+															       ========================================================= #}
+
+	<section class="resource-section">
+		<h2>Cycling Organizations</h2>
+
+		<div class="resource-grid">
+
+			<article class="resource-card">
+				<h3>Add a Cycling Organization</h3>
+
+				<p>
+					Advocacy groups, trail organizations, event organizers, and
+																																																											                    other groups supporting Central Oregon cycling can be listed here.
+				</p>
+
+				<div class="resource-card-actions">
+					<a class="btn btn-primary" href="{{ doc_root }}bicycle-community?website=44&location={{ location|url_encode }}">
+						Suggest a Resource
+					</a>
+				</div>
+			</article>
+
+		</div>
+	</section>
+
+	{# =========================================================
+															       BIKE SHOPS AND SERVICES
+															       ========================================================= #}
+
+	<section class="resource-section">
+		<h2>Bike Shops and Services</h2>
+
+		<div class="resource-grid">
+
+			<article class="resource-card">
+				<h3>Local Bicycle Shops</h3>
+
+				<p>
+					Bicycle sales, service, repairs, fitting, equipment, and
+																																																											                    local riding information.
+				</p>
+
+				<div class="resource-card-actions">
+					<a class="btn btn-primary" href="#">
+						View Shops
+					</a>
+				</div>
+			</article>
+
+		</div>
+	</section>
+
+	<aside class="external-link-note">
+		<strong>External websites:</strong>
+		These links are provided as a community resource. COBC is not affiliated
+																										        with or responsible for the content, schedules, membership requirements,
+																										        services, or policies of the listed organizations unless specifically stated.
+	</aside>
+
+	<p class="resources-back">
+		<a class="btn btn-secondary" href="{{ doc_root }}index/44?location={{ location|url_encode }}">
+			Back to COBC
+		</a>
+	</p>
+
+</main>
