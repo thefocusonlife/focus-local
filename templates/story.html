@@ -23,13 +23,13 @@
 					{% else %}
 						<img src="{{ doc_root }}uploads/blank.png" alt="">
 					{% endif %}
-					<?php if ($story['id'] == 1581): ?>
-					<p class="text-center mt-2">
-						<a class="btn btn-outline-secondary btn-sm" href="{{ doc_root }}/uploads/cowsriding.jpg" target="_blank">
-							View Full Image
-						</a>
-					</p>
-					<?php endif; ?>
+					{% if story.id == 1581 %}
+						<p class="text-center mt-2">
+							<a class="btn btn-outline-secondary btn-sm" href="{{ doc_root }}uploads/cowsriding.jpg" target="_blank" rel="noopener noreferrer">
+								View Full Image
+							</a>
+						</p>
+					{% endif %}
 
 				</section>
 				<section class="text">
