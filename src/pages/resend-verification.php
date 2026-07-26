@@ -25,7 +25,6 @@ function sendVerificationEmail(
 
     $safeName = trim($forename) !== '' ? trim($forename) : 'there';
 
-    // HTML version (clickable link)
     $htmlMessage = <<<HTML
     <p>Hi {$safeName},</p>
 
@@ -40,10 +39,37 @@ function sendVerificationEmail(
     <p>Focus on Life</p>
     HTML;
 
+    $recipientDomain = strtolower(substr(strrchr($toEmail, '@') ?: '', 1));
+
+    error_log(
+        sprintf(
+            '[EMAIL_VERIFY][RESEND] Preparing mail host=%s recipient_domain=%s sender=%s email_class=%s',
+            $_SERVER['HTTP_HOST'] ?? 'unknown',
+            $recipientDomain !== '' ? $recipientDomain : 'unknown',
+            $emailConfig['admin_email'] ?? 'not-configured',
+            \PhpBook\Email\Email::class,
+        ),
+    );
+
     $mail = new \PhpBook\Email\Email($emailConfig);
 
-    // Assuming your Email class supports HTML + AltBody
+    error_log(
+        sprintf(
+            '[EMAIL_VERIFY][RESEND] Calling sendEmail host=%s recipient_domain=%s',
+            $_SERVER['HTTP_HOST'] ?? 'unknown',
+            $recipientDomain !== '' ? $recipientDomain : 'unknown',
+        ),
+    );
+
     $mail->sendEmail($emailConfig['admin_email'], $toEmail, $subject, $htmlMessage);
+
+    error_log(
+        sprintf(
+            '[EMAIL_VERIFY][RESEND] sendEmail returned without exception host=%s recipient_domain=%s',
+            $_SERVER['HTTP_HOST'] ?? 'unknown',
+            $recipientDomain !== '' ? $recipientDomain : 'unknown',
+        ),
+    );
 }
 $email = '';
 $errors = [];

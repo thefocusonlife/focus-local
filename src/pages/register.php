@@ -22,30 +22,46 @@ function sendVerificationEmail(
 ): void {
     $subject = 'Verify your Focus on Life account';
 
-    $safeName = trim($forename) !== '' ? trim($forename) : 'there';
+    $safeName = htmlspecialchars(
+        trim($forename) !== '' ? trim($forename) : 'there',
+        ENT_QUOTES,
+        'UTF-8',
+    );
 
-    $message = <<<TEXT
-    Hi {$safeName},
+    $safeVerifyUrl = htmlspecialchars($verifyUrl, ENT_QUOTES, 'UTF-8');
 
-    Thanks for creating an account at theFocusOnLife.org.
+    $htmlMessage = <<<HTML
+    <p>Hi {$safeName},</p>
 
-    Please verify your email address by clicking the link below:
+    <p>Thanks for creating an account at theFocusOnLife.org.</p>
 
-    {$verifyUrl}
+    <p>Please verify your email address by clicking the button below:</p>
 
-    This link will expire in 24 hours.
+    <p>
+        <a href="{$safeVerifyUrl}"
+           style="display:inline-block;padding:10px 16px;background:#24547a;color:#ffffff;text-decoration:none;border-radius:4px;">
+            Verify your email
+        </a>
+    </p>
 
-    If you did not create this account, you can ignore this email.
+    <p>If the button does not work, copy and paste this address into your browser:</p>
 
-    Focus on Life
-    https://thefocusonlife.org
-    contact@thefocusonlife.org
-    TEXT;
+    <p>{$safeVerifyUrl}</p>
+
+    <p>This link will expire in 24 hours.</p>
+
+    <p>If you did not create this account, you can ignore this email.</p>
+
+    <p>
+        Focus on Life<br>
+        <a href="https://thefocusonlife.org">thefocusonlife.org</a><br>
+        <a href="mailto:contact@thefocusonlife.org">contact@thefocusonlife.org</a>
+    </p>
+    HTML;
 
     $mail = new \PhpBook\Email\Email($emailConfig);
 
-    // sender, recipient, subject, message
-    $mail->sendEmail($emailConfig['admin_email'], $toEmail, $subject, $message);
+    $mail->sendEmail($emailConfig['admin_email'], $toEmail, $subject, $htmlMessage);
 }
 guardPublic();
 $csrfFormKey = 'register';
@@ -437,10 +453,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // SUCCESS: create email verification token + send mail
     try {
-        $newUserId =
-            $websiteId > 1 && $masterUserId > 0
-                ? $masterUserId
-                : (int) $cms->getMember()->getIdByEmail($emailForLogin);
+        $newUserId = (int) $cms->getMember()->getIdByEmail($emailForLogin);
+
+        error_log(
+            sprintf(
+                '[REGISTER] Verification target website_id=%d master_user_id=%d new_user_id=%d email_for_login=%s',
+                $websiteId,
+                $masterUserId,
+                $newUserId,
+                $emailForLogin,
+            ),
+        );
 
         if ($newUserId <= 0) {
             throw new RuntimeException('Could not resolve newly created member ID.');
@@ -463,7 +486,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         $verifyUrl = $baseUrl . '/verify-email?token=' . urlencode($rawToken);
 
+        // temp log
+        $recipientDomain = strtolower(substr(strrchr($emailBase, '@') ?: '', 1));
+
+        error_log(
+            sprintf(
+                '[REGISTER] Sending verification email host=%s recipient=%s domain=%s base_url=%s verify_url=%s',
+                $_SERVER['HTTP_HOST'] ?? 'unknown',
+                $emailBase,
+                $recipientDomain,
+                $baseUrl,
+                $verifyUrl,
+            ),
+        );
+
         sendVerificationEmail($email_config, $emailBase, $params['forename'], $verifyUrl);
+
+        // temp log
+        error_log(
+            sprintf('[REGISTER] sendVerificationEmail() returned successfully for %s', $emailBase),
+        );
+
         $_SESSION['guest_story_email'] = $emailBase;
         $_SESSION['guest_story_register_email'] = $emailBase;
         if (!empty($_SESSION['guest_story_draft'])) {
@@ -472,9 +515,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         unset($_SESSION['flash_failure']);
-        $_SESSION['flash_success'] =
-            'Registration successful. Please check your email and click the verification link before signing in.';
+        unset($_SESSION['flash_failure']);
 
+        $_SESSION['flash_success'] =
+            'Registration successful! Please check your email and click the verification link before signing in. ' .
+            'If you don\'t see the email within a few minutes, please check your Spam or Junk folder.';
         error_log(
             '[REGISTER] SUCCESS + verification email sent -> redirecting to ' .
                 DOC_ROOT .
@@ -489,7 +534,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $messages[] =
             'Your account was created, but the verification email could not be sent. Please contact us if you do not receive it.';
         error_log(
-            '[REGISTER] Verification email send failed for ' . $emailBase . ': ' . $e->getMessage(),
+            sprintf(
+                '[REGISTER] Verification email FAILED host=%s recipient=%s message=%s',
+                $_SERVER['HTTP_HOST'] ?? 'unknown',
+                $emailBase,
+                $e->getMessage(),
+            ),
         );
         unset($_SESSION['flash_success']);
         $_SESSION['flash_failure'] =
