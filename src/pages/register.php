@@ -515,40 +515,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
 
         unset($_SESSION['flash_failure']);
-        unset($_SESSION['flash_failure']);
 
         $_SESSION['flash_success'] =
             'Registration successful! Please check your email and click the verification link before signing in. ' .
             'If you don\'t see the email within a few minutes, please check your Spam or Junk folder.';
+
         error_log(
             '[REGISTER] SUCCESS + verification email sent -> redirecting to ' .
                 DOC_ROOT .
                 'index/' .
                 $websiteId,
         );
-
-        unset($_SESSION['register_submit_lock']);
-        csrf_rotate($csrfFormKey);
-        tfol_redirect(DOC_ROOT . 'index/' . $websiteId, 303);
-    } catch (Throwable $e) {
-        $messages[] =
-            'Your account was created, but the verification email could not be sent. Please contact us if you do not receive it.';
+    } catch (\Throwable $e) {
         error_log(
-            sprintf(
-                '[REGISTER] Verification email FAILED host=%s recipient=%s message=%s',
-                $_SERVER['HTTP_HOST'] ?? 'unknown',
-                $emailBase,
+            '[REGISTER] Verification email failed for ' .
+                $emailBase .
+                ' | ' .
+                get_class($e) .
+                ' | ' .
                 $e->getMessage(),
-            ),
         );
-        unset($_SESSION['flash_success']);
-        $_SESSION['flash_failure'] =
-            'Your account was created, but the verification email could not be sent. Please contact us if you do not receive it.';
 
-        unset($_SESSION['register_submit_lock']);
-        tfol_redirect(DOC_ROOT . 'index/' . $websiteId, 303);
+        unset($_SESSION['flash_success']);
+
+        $_SESSION['flash_failure'] = 'Email send failed: ' . $e->getMessage();
     }
+
+    unset($_SESSION['register_submit_lock']);
+    csrf_rotate($csrfFormKey);
+    tfol_redirect(DOC_ROOT . 'index/' . $websiteId, 303);
 }
+
 $path = mb_strtolower(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/');
 $path = substr($path, strlen(DOC_ROOT));
 $path = trim($path, '/');
