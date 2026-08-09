@@ -13,7 +13,7 @@ class Member
     // Get individual member by id
     public function get(int $id)
     {
-        $sql = "SELECT id, website, forename, surname, email, email_master, joined, picture, role, status, account_id, photo_limit, agegroup, plan, pagelimit,sorttype,  publik, termsok,public_ride_leaderboard
+        $sql = "SELECT id, website, forename, surname, email, email_master, joined, picture, role, isUberAdmin, status, account_id, photo_limit, agegroup, plan, pagelimit,sorttype, publik, termsok,public_ride_leaderboard
                   FROM member
                  WHERE id = :id;"; // SQL to get member
         return $this->db->runSql($sql, [$id])->fetch(); // Return member
@@ -82,7 +82,7 @@ class Member
     {
         $arguments['email'] = $email;
         $arguments['website'] = $website;
-        $sql = "SELECT id, website, forename, surname, joined, email, email_master, password, picture, role, status, account_id, photo_limit, agegroup, plan, pagelimit,sorttype,  publik, termsok
+        $sql = "SELECT id, website, forename, surname, joined, email, email_master, password, picture, role, isUberAdmin, status, account_id, photo_limit, agegroup, plan, pagelimit,sorttype, publik, termsok
                   FROM member
                  WHERE email = :email
                  AND website = :website;"; // SQL to collect member data
@@ -110,7 +110,7 @@ class Member
         $arguments['email'] = $email;
 
         $sql = "SELECT id, website, forename, surname, joined, email, email_master, password,
-                   picture, role, status, account_id, photo_limit, agegroup, plan,
+           picture, role, isUberAdmin, status, account_id, photo_limit, agegroup, plan,
                    pagelimit, sorttype, publik, termsok, email_verified, email_verified_at,
                    failed_login_attempts, last_failed_login, lock_until
               FROM member

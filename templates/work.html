@@ -88,11 +88,11 @@
 						<a href="{{ doc_root }}admin/image-delete/{{story.id}}" class="btn btn-secondary">Delete image</a><br>
 
 						{#	<div class="form-group">
-																																																<label for="landscape">Orientation (1 = Landscape, 0 = Portrait):
-																																																</label>
-																																																<input type="number" name="landscape" id="landscape" value="{{ story.landscape|default(1) }}" class="input-digit" min="0" max="1" step="1">
-																																																<span class="errors">{{ errors.landscape }}</span>
-																																															</div> #}
+																																																												<label for="landscape">Orientation (1 = Landscape, 0 = Portrait):
+																																																												</label>
+																																																												<input type="number" name="landscape" id="landscape" value="{{ story.landscape|default(1) }}" class="input-digit" min="0" max="1" step="1">
+																																																												<span class="errors">{{ errors.landscape }}</span>
+																																																											</div> #}
 					</div>
 
 					<div class="form-group">
@@ -109,6 +109,21 @@
 						<span class="errors">{{ errors.allow_comment }}</span>
 					</div>
 
+				{% endif %}
+
+
+				{% if isUberAdmin %}
+					<div class="form-group">
+						<label for="original_image_file">
+							Original Full-Size Image
+						</label>
+
+						<input type="text" name="original_image_file" id="original_image_file" value="{{ story.original_image_file|default('')|e }}" maxlength="255" placeholder="example.jpg" class="form-control">
+
+						<small class="form-text">
+							Optional filename of the full-size image stored in /originals.
+						</small>
+					</div>
 				{% endif %}
 			</div>
 			<!-- end #image-panel-body -->

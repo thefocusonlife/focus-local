@@ -84,7 +84,26 @@
 				</div>
 
 				<input type="hidden" name="website_id" value="{{ website.id|default(0) }}">
+				<div class="form-group">
+					<label for="uber_id">Primary Website Account</label>
 
+					<select name="uber_id" id="uber_id" class="form-control">
+						<option value="">-- None --</option>
+
+						{% for member in website_members %}
+							<option value="{{ member.id }}" {% if website.uber_id == member.id %} selected {% endif %}>
+								{{ member.id }}
+								-
+								{{ member.forename }}
+								{{ member.surname }}
+							</option>
+						{% endfor %}
+					</select>
+
+					<small class="form-text">
+						Primary account used by Uber Admin when creating stories for this website.
+					</small>
+				</div>
 				<div class="form-group">
 					<label for="sorttype">Sort Type</label>
 

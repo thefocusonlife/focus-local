@@ -65,6 +65,7 @@ $errors = [
     'name' => '',
     'image_file' => '',
     'image_alt' => '',
+
     'non_members' => 0,
 ];
 
@@ -83,11 +84,17 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         }
         $website = array_merge($website, $existing);
     }
+    $websiteMembers = [];
+
+    if ($routeWebsiteId > 0) {
+        $websiteMembers = $cms->getMember()->getAll2($routeWebsiteId);
+    }
 
     $data = array_merge($data, [
         'website' => $website,
         'errors' => $errors,
         'sorttypes' => $sorttypes,
+        'website_members' => $websiteMembers,
         'csrf_token' => generate_csrf_token(),
     ]);
 
@@ -141,6 +148,10 @@ $website = $isUpdate
     ];
 
 $website['id'] = $postId;
+
+$website['uber_id'] =
+    isset($_POST['uber_id']) && $_POST['uber_id'] !== '' ? (int) $_POST['uber_id'] : null;
+
 $website['name'] = trim((string) ($_POST['name'] ?? ''));
 $website['sorttype'] = (int) ($_POST['sorttype'] ?? $website['sorttype']);
 $website['non_members'] = isset($_POST['non_members']) ? 1 : 0;
@@ -186,10 +197,17 @@ $errors['name'] = Validate::isText($website['name'], 1, 254)
 if (!empty($errors['name']) || !empty($errors['image_file'])) {
     $errors['warning'] = 'Please correct form errors.';
 
+    $websiteMembers = [];
+
+    if ($routeWebsiteId > 0) {
+        $websiteMembers = $cms->getMember()->getAll2($routeWebsiteId);
+    }
+
     $data = array_merge($data, [
         'website' => $website,
         'errors' => $errors,
         'sorttypes' => $sorttypes,
+        'website_members' => $websiteMembers,
         'csrf_token' => generate_csrf_token(),
     ]);
 

@@ -61,6 +61,7 @@ class Session // Define Session class
             $_SESSION['id'] = (int) $member['id'];
             $_SESSION['forename'] = (string) ($member['forename'] ?? '');
             $_SESSION['role'] = (string) ($member['role'] ?? 'guest');
+            $_SESSION['isUberAdmin'] = (int) ($member['isUberAdmin'] ?? 0);
             $_SESSION['account_id'] = (int) ($member['account_id'] ?? 0);
             $_SESSION['landscape'] = true;
             $_SESSION['follow_id'] = (int) ($member['account_id'] ?? 0);
@@ -86,6 +87,7 @@ class Session // Define Session class
         $_SESSION['id'] = 2;
         $_SESSION['forename'] = 'Guest';
         $_SESSION['role'] = 'guest';
+        $_SESSION['isUberAdmin'] = 0;
         $_SESSION['account_id'] = 1;
         $_SESSION['landscape'] = true;
         $_SESSION['follow_id'] = 0;
@@ -166,6 +168,7 @@ class Session // Define Session class
         unset(
             $_SESSION['forename'],
             $_SESSION['role'],
+            $_SESSION['isUberAdmin'],
             $_SESSION['account_id'],
             $_SESSION['member'],
             $_SESSION['member_id'],
@@ -191,8 +194,8 @@ class Session // Define Session class
         $_SESSION['id'] = 2;
         $_SESSION['forename'] = 'Guest';
         $_SESSION['role'] = 'guest';
+        $_SESSION['isUberAdmin'] = 0;
         $_SESSION['account_id'] = 1;
-
         // Other defaults your app expects
         $_SESSION['landscape'] = $_SESSION['landscape'] ?? true;
         $_SESSION['follow_id'] = 0;

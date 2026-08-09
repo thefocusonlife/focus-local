@@ -79,16 +79,17 @@ class Story
     // Get individual story
     public function get(int $id, bool $published)
     {
-        $sql = "SELECT a.id, a.website, a.title, a.summary, a.content, a.created, a.menu_id, a.member_id, a.family_id, a.published, a.seo_title,
-                     a.storyorder, a.landscape, a.allow_comment, a.keyword, a.blog,
-                       c.name AS menu,
-                       c.seo_name AS seo_menu,
-                       m.forename, m.surname,
-                       CONCAT(m.forename, ' ', m.surname) AS author,
-                       i.id       AS image_id,
-                       i.file     AS image_file,
-                       i.alt      AS image_alt,
-
+        $sql = "SELECT a.id, a.website, a.title, a.summary, a.content, a.created, a.menu_id, a.member_id, a.family_id,
+               a.original_image_file,
+               a.published, a.seo_title,
+               a.storyorder, a.landscape, a.allow_comment, a.keyword, a.blog,
+               c.name AS menu,
+               c.seo_name AS seo_menu,
+               m.forename, m.surname,
+               CONCAT(m.forename, ' ', m.surname) AS author,
+               i.id       AS image_id,
+               i.file     AS image_file,
+               i.alt      AS image_alt,
                        (SELECT COUNT(story_id)
                           FROM likes
                          WHERE likes.story_id = a.id) AS likes,
@@ -656,12 +657,12 @@ AND (:crossWebsite = 1 OR a.website = :website)
         unset($story['id'], $story['image_file'], $story['image_alt']);
 
         $sql = "INSERT INTO story (
-                website, title, summary, content, menu_id, member_id, family_id,
-                image_id, published, seo_title, storyorder, landscape, allow_comment, keyword, blog
-            ) VALUES (
-                :website, :title, :summary, :content, :menu_id, :member_id, :family_id,
-                :image_id, :published, :seo_title, :storyorder, :landscape, :allow_comment, :keyword, :blog
-            );";
+        website, title, summary, content, menu_id, member_id, family_id,
+        image_id, original_image_file, published, seo_title, storyorder, landscape, allow_comment, keyword, blog
+    ) VALUES (
+        :website, :title, :summary, :content, :menu_id, :member_id, :family_id,
+        :image_id, :original_image_file, :published, :seo_title, :storyorder, :landscape, :allow_comment, :keyword, :blog
+    );";
 
         $params = [
             'website' => (int) ($story['website'] ?? 0),
@@ -672,6 +673,9 @@ AND (:crossWebsite = 1 OR a.website = :website)
             'member_id' => (int) ($story['member_id'] ?? 0),
             'family_id' => (int) ($story['family_id'] ?? 0),
             'image_id' => !empty($story['image_id']) ? (int) $story['image_id'] : null,
+            'original_image_file' => !empty($story['original_image_file'])
+                ? trim((string) $story['original_image_file'])
+                : null,
             'published' => (int) ($story['published'] ?? 0),
             'seo_title' => $story['seo_title'] ?? '',
             'storyorder' => (int) ($story['storyorder'] ?? 10),
@@ -703,22 +707,23 @@ AND (:crossWebsite = 1 OR a.website = :website)
         );
 
         $sql = "UPDATE story
-       SET website = :website,
-           title = :title,
-           summary = :summary,
-           content = :content,
-           menu_id = :menu_id,
-           member_id = :member_id,
-           family_id = :family_id,
-           image_id = :image_id,
-           published = :published,
-           seo_title = :seo_title,
-           storyorder = :storyorder,
-           landscape = :landscape,
-           allow_comment = :allow_comment,
-           keyword = :keyword,
-           blog = :blog
-     WHERE id = :id;";
+   SET website = :website,
+       title = :title,
+       summary = :summary,
+       content = :content,
+       menu_id = :menu_id,
+       member_id = :member_id,
+       family_id = :family_id,
+       image_id = :image_id,
+       original_image_file = :original_image_file,
+       published = :published,
+       seo_title = :seo_title,
+       storyorder = :storyorder,
+       landscape = :landscape,
+       allow_comment = :allow_comment,
+       keyword = :keyword,
+       blog = :blog
+ WHERE id = :id;";
 
         $params = [
             'id' => (int) $story['id'],
@@ -730,6 +735,9 @@ AND (:crossWebsite = 1 OR a.website = :website)
             'member_id' => (int) ($story['member_id'] ?? 0),
             'family_id' => (int) ($story['family_id'] ?? 0),
             'image_id' => !empty($story['image_id']) ? (int) $story['image_id'] : null,
+            'original_image_file' => !empty($story['original_image_file'])
+                ? trim((string) $story['original_image_file'])
+                : null,
             'published' => (int) ($story['published'] ?? 0),
             'seo_title' => $story['seo_title'] ?? '',
             'storyorder' => (int) ($story['storyorder'] ?? 0),

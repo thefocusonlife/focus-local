@@ -9,7 +9,7 @@ require_once APP_ROOT . '/src/security/redirects.php';
 guardMember();
 
 $sessionMemberId = (int) ($_SESSION['id'] ?? 0);
-$isUber = isset($_SESSION['role']) && $_SESSION['role'] === 'uber';
+$isUberAdmin = !empty($_SESSION['isUberAdmin']);
 
 $storyId = (int) ($_POST['story_id'] ?? 0);
 
@@ -19,13 +19,12 @@ if ($storyId < 1) {
 
 $story = $cms->getStory()->get($storyId, false);
 
-if (!$story || (int) $story['member_id'] !== $sessionMemberId) {
-    if (!$isUber) {
-        redirect(DOC_ROOT);
-    }
+if (!$story) {
+    redirect(DOC_ROOT);
+    exit();
 }
 
-assertStoryOwnership($cms, $storyId, $sessionMemberId, $isUber);
+assertStoryOwnership($cms, $storyId, $sessionMemberId, $isUberAdmin);
 
 $hasUpload =
     isset($_FILES['image']) &&

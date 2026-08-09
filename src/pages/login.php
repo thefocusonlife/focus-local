@@ -225,9 +225,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $showResendVerification = true;
             } else {
                 $memberWebsiteId = (int) ($member['website'] ?? 0);
-
+                $isUberAdmin = !empty($member['isUberAdmin']);
                 if (
                     !$isGuestStory &&
+                    !$isUberAdmin &&
                     ($memberWebsiteId <= 0 || $memberWebsiteId !== (int) $website['id'])
                 ) {
                     $errors['message'] =
@@ -247,6 +248,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     );
 
                     $cms->getSession()->create($member, (int) $website['id']);
+
+                    if ($isUberAdmin) {
+                        $_SESSION['website'] = (int) $website['id'];
+                        $_SESSION['websiteid'] = (int) $website['id'];
+                        $_SESSION['menu_website'] = (int) $website['id'];
+
+                        setWebsiteCookie('tfol_tid', (int) $website['id']);
+                    }
+
                     $cms->getMember()->clearFailedLogin($loginEmail);
 
                     $_SESSION['member_id'] = (int) $member['id'];
@@ -302,9 +312,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $_SESSION['websiteid'] = $returnWebsiteId;
                         $_SESSION['menu_website'] = $returnWebsiteId;
                     } else {
-                        $_SESSION['website'] = (int) $member['website'];
-                        $_SESSION['websiteid'] = (int) $member['website'];
-                        $_SESSION['menu_website'] = (int) $member['website'];
+                        $targetWebsiteId = $isUberAdmin
+                            ? (int) $website['id']
+                            : (int) $member['website'];
+
+                        $_SESSION['website'] = $targetWebsiteId;
+                        $_SESSION['websiteid'] = $targetWebsiteId;
+                        $_SESSION['menu_website'] = $targetWebsiteId;
                     }
 
                     csrf_rotate($csrfFormKey);

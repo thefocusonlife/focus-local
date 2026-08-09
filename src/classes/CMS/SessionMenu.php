@@ -27,6 +27,7 @@ class Session // Define Session class
         $_SESSION['id'] = $member['id']; // Add member id to session
         $_SESSION['forename'] = $member['forename ']; // Add forename to session
         $_SESSION['role'] = $member['role']; // Add role to session
+        $_SESSION['isUberAdmin'] = (int) ($member['isUberAdmin'] ?? 0);
         $_SESSION['account_id'] = $member['account_id']; // Add member id to session
         $_SESSION['website'] = $member['website'] ?? 1;
     }

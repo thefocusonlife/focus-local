@@ -54,6 +54,7 @@ $story = [
     'family_id' => 0,
     'menu_id' => 0,
     'image_id' => null,
+    'original_image_file' => null,
     'published' => 0,
     'image_file' => '',
     'image_alt' => '',
@@ -87,6 +88,8 @@ if ($sessionMemberId <= 0) {
     $sessionMemberId = (int) ($_SESSION['id'] ?? 0);
 }
 
+$isUberAdmin = !empty($_SESSION['isUberAdmin']);
+
 // If this page requires login (admin/work), fail fast
 // Treat 0 (no session) and 2 (guest account) as not logged in
 if ($sessionMemberId <= 0 || $sessionMemberId === 2) {
@@ -115,9 +118,6 @@ if ($id > 0) {
     }
 
     // ---- Permission guard (author OR scoped-admin OR uber/future) ----
-    $role = (string) ($_SESSION['role'] ?? 'guest');
-    $isUber = $role === 'uber'; // future
-    $isAdmin = $role === 'admin' || $isUber;
 
     $member = $cms->getMember()->get($sessionMemberId);
     if (!$member || !is_array($member)) {
@@ -129,7 +129,7 @@ if ($id > 0) {
     $storyWebsiteId = (int) ($story['website'] ?? ($story['website_id'] ?? 0));
     $memberWebsiteId = (int) ($member['website'] ?? 0);
 
-    $canEdit = $storyOwnerId === $sessionMemberId;
+    $canEdit = $storyOwnerId === $sessionMemberId || $isUberAdmin;
 
     if (!$canEdit) {
         include APP_ROOT . '/src/pages/page-not-found.php';
@@ -164,10 +164,23 @@ if ($sessionMemberId === 0) {
 }
 
 if ($story['id'] == false) {
-    $authors = $cms->getMember()->get($_SESSION['id']);
+    if ($isUberAdmin) {
+        $websiteAuthorId = (int) ($website['uber_id'] ?? 0);
+
+        if ($websiteAuthorId <= 0) {
+            $errors['warning'] = 'This website does not have a Primary Website Account assigned.';
+            $authors = [];
+        } else {
+            $authors = $cms->getMember()->get($websiteAuthorId);
+
+            $story['member_id'] = $websiteAuthorId;
+            $story['family_id'] = (int) ($authors['account_id'] ?? $websiteAuthorId);
+        }
+    } else {
+        $authors = $cms->getMember()->get($sessionMemberId);
+    }
 } else {
     $authors = $cms->getMember()->get($story['member_id']);
-    // Get all members
 }
 //$menus       = $cms->getMenu()->getAll2($_SESSION['website'],$_SESSION['account_id']);                    // Get menus
 $menus = $cms->getMenu()->getAll2($authors['website'], $authors['account_id']); // Get menus
@@ -177,7 +190,11 @@ if (!$member || !is_array($member)) {
     exit();
 }
 if ($story['id'] == false) {
-    $families = $cms->getMember()->get($member['account_id']);
+    $familyId = (int) ($authors['account_id'] ?? 0);
+
+    $story['family_id'] = $familyId;
+    $families = $cms->getMember()->get($familyId);
+
     $photocount = 0;
 } else {
     $families = $cms->getMember()->get($story['family_id']);
@@ -233,17 +250,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Form submitted
 
     // ---- WRITE BOUNDARY (must be first meaningful enforcement) ----
-
-    $role = (string) ($_SESSION['role'] ?? 'guest');
-    $isUber = $role === 'uber';
-
+    $storyId = (int) ($id ?? 0);
     // Enforce ownership for edits (owner or uber). For create: force author.
-    $storyId = !empty($story['id']) ? (int) $story['id'] : null;
     if ($storyId > 0) {
-        assertStoryOwnership($cms, $storyId, (int) $sessionMemberId, $isUber);
+        assertStoryOwnership($cms, $storyId, (int) $sessionMemberId, $isUberAdmin);
     } else {
-        // Create mode: force author to session member to prevent spoofing
-        $story['member_id'] = (int) $sessionMemberId;
+        if ($isUberAdmin) {
+            $websiteAuthorId = (int) ($website['uber_id'] ?? 0);
+
+            if ($websiteAuthorId <= 0) {
+                $errors['warning'] =
+                    'This website does not have a Primary Website Account assigned.';
+            } else {
+                $story['member_id'] = $websiteAuthorId;
+            }
+        } else {
+            // Normal create mode: force author to logged-in member
+            $story['member_id'] = (int) $sessionMemberId;
+        }
     }
 
     // Only handle save when the Save button was used
@@ -269,17 +293,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ? (int) $_POST['image_id']
                     : $story['image_id'] ?? null;
 
+            if ($isUberAdmin) {
+                $originalImageFile = trim((string) ($_POST['original_image_file'] ?? ''));
+
+                $story['original_image_file'] =
+                    $originalImageFile !== '' ? $originalImageFile : null;
+            }
+
+            $story['title'] = $_POST['title'] ?? '';
+
             $story['title'] = $_POST['title'] ?? '';
             $story['summary'] = $_POST['summary'] ?? '';
             $story['content'] = $_POST['content'] ?? '.';
 
             // Force author: never trust POST member_id
             if (!empty($story['id'])) {
-                // editing: keep the owner from the loaded record
+                // Editing: keep the owner from the loaded record
                 $story['member_id'] = (int) ($story['member_id'] ?? 0);
             } else {
-                // creating: force to logged-in user
-                $story['member_id'] = (int) $sessionMemberId;
+                // Creating
+                if ($isUberAdmin) {
+                    $story['member_id'] = (int) ($website['uber_id'] ?? 0);
+                } else {
+                    $story['member_id'] = (int) $sessionMemberId;
+                }
             }
 
             $story['family_id'] = isset($_POST['family_id'])
@@ -532,6 +569,7 @@ if ($websiteId <= 0) {
 
 $data['website'] = $cms->getWebsite()->getById($websiteId) ?: [];
 $data['csrf_token'] = generate_csrf_token();
+$data['isUberAdmin'] = $isUberAdmin;
 
 // Image panel UI state (default minimized)
 $data['image_panel_minimized'] = (bool) ($_SESSION['ui']['image_panel_minimized'] ?? true);
@@ -575,7 +613,6 @@ if (defined('DEV') && DEV) {
     $data['debug_panel'] = $debugPanel;
 }
 
-$template = $isMobileRoute ? 'work-mobile.html' : 'work.html';
 $template = $isMobileRoute ? 'work-mobile.html' : 'work.html';
 
 echo $twig->render($template, $data);

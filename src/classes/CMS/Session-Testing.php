@@ -55,6 +55,7 @@ class Session // Define Session class
             $_SESSION['id'] = $member['id']; // Add member id to session
             $_SESSION['forename'] = $member['forename']; // Add forename to session
             $_SESSION['role'] = $member['role']; // Add role to session
+            $_SESSION['isUberAdmin'] = (int) ($member['isUberAdmin'] ?? 0);
             $_SESSION['account_id'] = $member['account_id']; // Add account_id to session
             $_SESSION['landscape'] = true;
             $_SESSION['follow_id'] = $member['account_id']; // Add account_id to session
@@ -66,6 +67,7 @@ class Session // Define Session class
             $_SESSION['id'] = 0; // Add member id to session
             $_SESSION['forename'] = ''; // Add forename to session
             $_SESSION['role'] = 'public'; // Add role to session
+            $_SESSION['isUberAdmin'] = 0;
             $_SESSION['account_id'] = 1; // Add account_id to session
             $_SESSION['landscape'] = true;
             $_SESSION['follow_id'] = 0; // Add account_id to session
