@@ -23,28 +23,10 @@
 					{% else %}
 						<img src="{{ doc_root }}uploads/blank.png" alt="">
 					{% endif %}
-					{% if story.id == 1581 %}
+					{% if originalImageExists %}
 						<p class="text-center mt-2">
-							<a class="btn btn-outline-secondary btn-sm" href="{{ doc_root }}uploads/cowsriding.jpg" target="_blank" rel="noopener noreferrer">
-								View Full Image
-							</a>
-						</p>
-					{% elseif story.id == 1634 %}
-						<p class="text-center mt-2">
-							<a class="btn btn-outline-secondary btn-sm" href="{{ doc_root }}uploads/cardiackids.jpg" target="_blank" rel="noopener noreferrer">
-								View Full Image
-							</a>
-						</p>
-					{% elseif story.id == 1651 %}
-						<p class="text-center mt-2">
-							<a class="btn btn-outline-secondary btn-sm" href="{{ doc_root }}uploads/mountainmen.jpg" target="_blank" rel="noopener noreferrer">
-								View Full Image
-							</a>
-						</p>
-					{% elseif story.id == 1652 %}
-						<p class="text-center mt-2">
-							<a class="btn btn-outline-secondary btn-sm" href="{{ doc_root }}uploads/gravelriding.jpg" target="_blank" rel="noopener noreferrer">
-								View Full Image
+							<a class="btn btn-outline-secondary btn-sm" href="{{ doc_root }}originals/{{ originalImageFile|e }}" target="_blank" rel="noopener noreferrer">
+								View Full-Size Image
 							</a>
 						</p>
 					{% endif %}

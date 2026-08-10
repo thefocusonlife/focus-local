@@ -36,6 +36,21 @@ if ($websiteId <= 0) {
 }
 $website = $cms->getWebsite()->getById($websiteId);
 
+// Original full-size image
+$originalImageFile = trim((string) ($story['original_image_file'] ?? ''));
+
+$originalImagePath = '';
+$originalImageExists = false;
+
+if ($originalImageFile !== '') {
+    // Filename only - no paths allowed
+    $originalImageFile = basename($originalImageFile);
+
+    $originalImagePath = APP_ROOT . '/public/originals/' . $originalImageFile;
+
+    $originalImageExists = is_file($originalImagePath);
+}
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $viewerId = (int) ($_SESSION['id'] ?? 0);
 
@@ -113,7 +128,9 @@ if (empty($_SESSION)) {
 }
 
 $data['navigation'] = $cms->getMenu()->getAll2($member['id'], $mem); // Get menus
-$data['story'] = $story; // Story
+$data['story'] = $story;
+$data['originalImageFile'] = $originalImageFile;
+$data['originalImageExists'] = $originalImageExists;
 $data['section'] = $story['menu_id']; // Current menu
 $data['comments'] = $cms->getComment()->getAll($storyId);
 $data['website'] = $cms->getWebsite()->getById($story['website']);
