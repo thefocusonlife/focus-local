@@ -353,11 +353,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ? ''
                 : 'Title should be 1 - 80 characters.';
 
-            $errors['summary'] = Validate::isText($story['summary'], 1, 254)
+            $errors['summary'] = Validate::isText($story['summary'], 0, 254)
                 ? ''
                 : 'Summary should be 0 - 254 characters.';
 
-            $errors['content'] = Validate::isText($story['content'], 1, 100000)
+            $errors['content'] = Validate::isText($story['content'], 0, 100000)
                 ? ''
                 : 'Content should be 0 - 100,000 characters.';
 
