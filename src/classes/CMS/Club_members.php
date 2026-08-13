@@ -23,8 +23,12 @@ class Club_members
     public function create(array $data)
     {
         $websiteId = (int) ($data['website_id'] ?? 0);
+
         $memberId = (int) ($data['member_id'] ?? 0);
 
+        if ($memberId < 1 || $memberId === 2) {
+            throw new \InvalidArgumentException('A registered member account is required.');
+        }
         if ($websiteId < 1) {
             throw new \InvalidArgumentException(
                 'A valid website ID is required to create a club member.',
@@ -84,7 +88,7 @@ class Club_members
 
         return $this->db->runSql($sql, [
             'website_id' => $websiteId,
-            'member_id' => $memberId > 0 ? $memberId : null,
+            'member_id' => $memberId,
             'first_name' => trim($data['first_name'] ?? ''),
             'last_name' => trim($data['last_name'] ?? ''),
             'email' => trim($data['email'] ?? ''),
