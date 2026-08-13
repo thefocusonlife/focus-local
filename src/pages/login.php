@@ -107,9 +107,22 @@ if (
 // Redirect away if already logged in
 // ----------------------------
 $role = (string) ($_SESSION['role'] ?? 'guest');
+
 if ($role !== 'guest') {
     $sid = (int) ($_SESSION['id'] ?? 0);
+
     if ($sid > 0 && !$isGuestStory) {
+        $membershipWebsiteId = (int) ($_SESSION['membership_application_website'] ?? 0);
+
+        $sessionWebsiteId = (int) ($_SESSION['website'] ?? 0);
+
+        if ($membershipWebsiteId > 0 && $membershipWebsiteId === $sessionWebsiteId) {
+            unset($_SESSION['membership_application_website']);
+
+            redirect('membership?website=' . $membershipWebsiteId);
+            exit();
+        }
+
         redirect('member/' . $sid);
         exit();
     }
@@ -279,6 +292,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     $returnTo = (string) ($_SESSION['return_to'] ?? '');
                     unset($_SESSION['return_to']);
+
+                    $membershipWebsiteId = (int) ($_SESSION['membership_application_website'] ?? 0);
+
+                    if (
+                        $returnTo === '' &&
+                        $membershipWebsiteId > 0 &&
+                        $membershipWebsiteId === (int) ($member['website'] ?? 0)
+                    ) {
+                        $returnTo = '/membership?website=' . $membershipWebsiteId;
+                    }
+
+                    unset($_SESSION['membership_application_website']);
+
+                    $membershipWebsiteId = (int) ($_SESSION['membership_application_website'] ?? 0);
+
+                    if (
+                        $returnTo === '' &&
+                        $membershipWebsiteId > 0 &&
+                        $membershipWebsiteId === (int) ($member['website'] ?? 0)
+                    ) {
+                        $returnTo = '/membership?website=' . $membershipWebsiteId;
+                    }
+
+                    unset($_SESSION['membership_application_website']);
 
                     if (
                         defined('DOC_ROOT') &&

@@ -1,37 +1,48 @@
 <?php
+
 declare(strict_types=1);
 
 require_once APP_ROOT . '/src/security/guard.php';
 
-//guardMember();
-
-$viewerId = (int) ($_SESSION['id'] ?? 0);
-$role = strtolower((string) ($_SESSION['role'] ?? ''));
-
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    redirect('bicycle-community?website=44');
+    redirect('websites');
     exit();
 }
 
-$websiteId = (int) ($_POST['website_id'] ?? 44);
+$websiteId = filter_input(INPUT_POST, 'website_id', FILTER_VALIDATE_INT);
 
-if ($websiteId !== 44) {
-    $websiteId = 44;
+if (!$websiteId || $websiteId < 1) {
+    $_SESSION['flash_failure'] = 'A valid club website is required.';
+    redirect('websites');
+    exit();
+}
+
+$membershipUrl = 'membership?website=' . $websiteId;
+$viewerId = (int) ($_SESSION['id'] ?? 0);
+$role = strtolower((string) ($_SESSION['role'] ?? 'guest'));
+
+$isGuest = $viewerId < 1 || $viewerId === 2 || $role === 'guest';
+
+if ($isGuest) {
+    $_SESSION['return_to'] = DOC_ROOT . 'membership?website=' . $websiteId;
+
+    $_SESSION['flash_failure'] = 'Please register or log in before applying for club membership.';
+
+    redirect('register/' . $websiteId);
+    exit();
 }
 
 $required = [
     'first_name' => 'First name is required.',
     'last_name' => 'Last name is required.',
     'email' => 'Email is required.',
-    'phone' => 'Phone is required.',
-    'emergency_name' => 'Emergency contact name is required.',
-    'emergency_phone' => 'Emergency contact phone is required.',
+    'date_of_birth' => 'Date of birth is required.',
 ];
 
 foreach ($required as $field => $message) {
     if (trim((string) ($_POST[$field] ?? '')) === '') {
         $_SESSION['flash_failure'] = $message;
-        redirect('membership/44');
+        redirect($membershipUrl);
         exit();
     }
 }
@@ -40,48 +51,113 @@ $email = trim((string) ($_POST['email'] ?? ''));
 
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
     $_SESSION['flash_failure'] = 'Please enter a valid email address.';
-    redirect('membership/44');
+
+    redirect($membershipUrl);
     exit();
 }
 
-if (empty($_POST['liability_release_accepted'])) {
-    $_SESSION['flash_failure'] = 'You must accept the liability release.';
-    redirect('membership/44');
+$dateOfBirth = trim((string) ($_POST['date_of_birth'] ?? ''));
+
+$birthDate = \DateTimeImmutable::createFromFormat('!Y-m-d', $dateOfBirth);
+
+$dateErrors = \DateTimeImmutable::getLastErrors();
+
+$dateIsInvalid =
+    $birthDate === false ||
+    (is_array($dateErrors) && ($dateErrors['warning_count'] > 0 || $dateErrors['error_count'] > 0));
+
+if ($dateIsInvalid) {
+    $_SESSION['flash_failure'] = 'Please enter a valid date of birth.';
+
+    redirect($membershipUrl);
     exit();
+}
+
+$today = new \DateTimeImmutable('today');
+
+if ($birthDate > $today) {
+    $_SESSION['flash_failure'] = 'Date of birth cannot be in the future.';
+
+    redirect($membershipUrl);
+    exit();
+}
+
+$adultCutoff = $today->modify('-18 years');
+$isMinor = $birthDate > $adultCutoff;
+
+$guardianName = trim((string) ($_POST['guardian_name'] ?? ''));
+
+$guardianEmail = trim((string) ($_POST['guardian_email'] ?? ''));
+
+$guardianPhone = trim((string) ($_POST['guardian_phone'] ?? ''));
+
+$emergencyName = trim((string) ($_POST['emergency_name'] ?? ''));
+
+$emergencyPhone = trim((string) ($_POST['emergency_phone'] ?? ''));
+
+$parentalAuthorizationAccepted = !empty($_POST['parental_authorization_accepted']);
+
+if ($isMinor) {
+    $minorRequired = [
+        $guardianName => 'Parent or guardian name is required.',
+        $guardianEmail => 'Parent or guardian email is required.',
+        $guardianPhone => 'Parent or guardian phone is required.',
+        $emergencyName => 'Emergency contact name is required.',
+        $emergencyPhone => 'Emergency contact phone is required.',
+    ];
+
+    foreach ($minorRequired as $value => $message) {
+        if ($value === '') {
+            $_SESSION['flash_failure'] = $message;
+            redirect($membershipUrl);
+            exit();
+        }
+    }
+
+    if (!filter_var($guardianEmail, FILTER_VALIDATE_EMAIL)) {
+        $_SESSION['flash_failure'] = 'Please enter a valid parent or guardian email address.';
+
+        redirect($membershipUrl);
+        exit();
+    }
+
+    if (!$parentalAuthorizationAccepted) {
+        $_SESSION['flash_failure'] = 'A parent or guardian must authorize membership for a minor.';
+
+        redirect($membershipUrl);
+        exit();
+    }
 }
 
 $data = [
     'website_id' => $websiteId,
+    'member_id' => $viewerId,
     'first_name' => trim((string) ($_POST['first_name'] ?? '')),
     'last_name' => trim((string) ($_POST['last_name'] ?? '')),
-    'address1' => trim((string) ($_POST['address1'] ?? '')),
-    'address2' => trim((string) ($_POST['address2'] ?? '')),
-    'city' => trim((string) ($_POST['city'] ?? '')),
-    'state' => trim((string) ($_POST['state'] ?? '')),
-    'zip' => trim((string) ($_POST['zip'] ?? '')),
     'email' => $email,
     'phone' => trim((string) ($_POST['phone'] ?? '')),
-    'emergency_name' => trim((string) ($_POST['emergency_name'] ?? '')),
-    'emergency_phone' => trim((string) ($_POST['emergency_phone'] ?? '')),
+    'date_of_birth' => $dateOfBirth,
+    'guardian_name' => $isMinor ? $guardianName : null,
+    'guardian_email' => $isMinor ? $guardianEmail : null,
+    'guardian_phone' => $isMinor ? $guardianPhone : null,
+    'emergency_name' => $emergencyName,
+    'emergency_phone' => $emergencyPhone,
     'emergency_relationship' => trim((string) ($_POST['emergency_relationship'] ?? '')),
-    'primary_ride_type' => trim((string) ($_POST['primary_ride_type'] ?? '')),
-    'other_ride_type' => trim((string) ($_POST['other_ride_type'] ?? '')),
-    'riding_level' => trim((string) ($_POST['riding_level'] ?? '')),
-    'preferred_distance' => trim((string) ($_POST['preferred_distance'] ?? '')),
-    'medical_notes' => trim((string) ($_POST['medical_notes'] ?? '')),
-    'liability_release_accepted' => 1,
+    'parental_authorization_accepted' => $isMinor && $parentalAuthorizationAccepted ? 1 : 0,
+    'membership_status' => 'pending',
 ];
 
 try {
     $cms->getClubMembers()->create($data);
 
-    $_SESSION['flash_success'] = 'Membership form submitted successfully.';
-    redirect('membership/44?success=1');
+    $_SESSION['flash_success'] = 'Your membership application was submitted successfully.';
+    redirect($membershipUrl . '&success=1');
     exit();
-} catch (Throwable $e) {
+} catch (\Throwable $e) {
     error_log('[club-members-save] ' . $e->getMessage());
 
-    $_SESSION['flash_failure'] = 'Unable to save membership form. Please try again.';
-    redirect('membership/44');
+    $_SESSION['flash_failure'] = 'Unable to save your membership application. Please try again.';
+
+    redirect($membershipUrl);
     exit();
 }

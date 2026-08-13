@@ -7,7 +7,7 @@ if ($websiteId <= 0) {
     $websiteId = 1;
 }
 unset($_SESSION['return_to']);
-
+unset($_SESSION['membership_application_website']);
 $cms->getSession()->resetToGuest($websiteId, true);
 redirect('index/' . $websiteId);
 exit();
