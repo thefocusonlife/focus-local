@@ -23,6 +23,38 @@ if ($isGuest) {
     redirect('register/' . $websiteId);
     exit();
 }
+
+$viewer = $cms->getMember()->get($viewerId);
+$viewerWebsiteId = (int) ($viewer['website'] ?? 0);
+
+if (!$viewer || $viewerWebsiteId !== $websiteId) {
+    $_SESSION['flash_failure'] = 'This account does not belong to the selected club website.';
+
+    $safeWebsiteId = $viewerWebsiteId > 0 ? $viewerWebsiteId : 1;
+
+    redirect('index/' . $safeWebsiteId);
+    exit();
+}
+
+$membership = $cms->getClubMembers()->getByMemberId($viewerId, $websiteId);
+
+$isEdit = $membership !== null;
+
+function membershipValue(?array $membership, string $field): string
+{
+    return htmlspecialchars((string) ($membership[$field] ?? ''), ENT_QUOTES, 'UTF-8');
+}
+
+$statusLabels = [
+    'pending' => 'Pending Review',
+    'active' => 'Active',
+    'inactive' => 'Inactive',
+    'declined' => 'Declined',
+];
+
+$membershipStatus = (string) ($membership['membership_status'] ?? 'pending');
+
+$membershipStatusLabel = $statusLabels[$membershipStatus] ?? ucfirst($membershipStatus);
 ?>
 
 <style>
@@ -91,15 +123,90 @@ if ($isGuest) {
 .membership-form-wrap .success {
     color: #176b2c;
 }
+
+.membership-summary {
+    margin: 18px 0;
+    padding: 12px 16px;
+    background: #f4f4f4;
+    border-left: 4px solid #555;
+}
+
+.membership-summary p {
+    margin: 5px 0;
+}
+
+@media print {
+    body {
+        background: #fff;
+    }
+
+    header,
+    nav,
+    footer,
+    .screen-only,
+    .success,
+    .error {
+        display: none !important;
+    }
+
+    .membership-form-wrap {
+        max-width: none;
+        margin: 0;
+        padding: 0;
+        border: 0;
+    }
+
+    .membership-form-wrap input {
+        max-width: none;
+        padding: 2px 0;
+        border: 0;
+        border-bottom: 1px solid #777;
+        background: transparent;
+    }
+
+    .membership-form-wrap input[type="checkbox"] {
+        width: auto;
+    }
+
+    .guardian-section {
+        break-inside: avoid;
+    }
+}
 </style>
 
 <div class="membership-form-wrap">
-    <h1>Club Membership Application</h1>
+    <h1>
+    <?= $isEdit ? 'Your Club Membership' : 'Club Membership Application' ?>
+</h1>
 
+<?php if ($isEdit): ?>
+    <div class="membership-summary">
+        <p>
+            <strong>Status:</strong>
+            <?= htmlspecialchars($membershipStatusLabel, ENT_QUOTES, 'UTF-8') ?>
+        </p>
+
+        <p>
+            <strong>Submitted:</strong>
+            <?= membershipValue($membership, 'created_at') ?>
+        </p>
+
+        <p>
+            <strong>Last Updated:</strong>
+            <?= membershipValue($membership, 'updated_at') ?>
+        </p>
+    </div>
+
+    <p class="screen-only">
+        You may update the information below or print a copy
+        of your application.
+    </p>
+<?php else: ?>
     <p>
         Complete this form to apply for club membership.
         New applications are reviewed before becoming active.
     </p>
+<?php endif; ?>
 
     <?php if (!empty($_SESSION['flash_success'])): ?>
         <p class="success">
@@ -132,6 +239,7 @@ if ($isGuest) {
             id="first_name"
             type="text"
             name="first_name"
+            value="<?= membershipValue($membership, 'first_name') ?>"
             maxlength="100"
             required
         >
@@ -141,6 +249,7 @@ if ($isGuest) {
             id="last_name"
             type="text"
             name="last_name"
+            value="<?= membershipValue($membership, 'last_name') ?>"
             maxlength="100"
             required
         >
@@ -150,6 +259,7 @@ if ($isGuest) {
             id="email"
             type="email"
             name="email"
+            value="<?= membershipValue($membership, 'email') ?>"
             maxlength="255"
             required
         >
@@ -159,6 +269,7 @@ if ($isGuest) {
             id="phone"
             type="tel"
             name="phone"
+            value="<?= membershipValue($membership, 'phone') ?>"
             maxlength="30"
         >
 
@@ -167,6 +278,7 @@ if ($isGuest) {
             id="date_of_birth"
             type="date"
             name="date_of_birth"
+            value="<?= membershipValue($membership, 'date_of_birth') ?>"
             max="<?= date('Y-m-d') ?>"
             required
         >
@@ -191,6 +303,7 @@ if ($isGuest) {
                 id="guardian_name"
                 type="text"
                 name="guardian_name"
+                value="<?= membershipValue($membership, 'guardian_name') ?>"
                 maxlength="200"
             >
 
@@ -201,6 +314,7 @@ if ($isGuest) {
                 id="guardian_email"
                 type="email"
                 name="guardian_email"
+                value="<?= membershipValue($membership, 'guardian_email') ?>"
                 maxlength="255"
             >
 
@@ -211,6 +325,7 @@ if ($isGuest) {
                 id="guardian_phone"
                 type="tel"
                 name="guardian_phone"
+                value="<?= membershipValue($membership, 'guardian_phone') ?>"
                 maxlength="30"
             >
 
@@ -227,6 +342,7 @@ if ($isGuest) {
                 id="emergency_name"
                 type="text"
                 name="emergency_name"
+                value="<?= membershipValue($membership, 'emergency_name') ?>"
                 maxlength="200"
             >
 
@@ -237,6 +353,7 @@ if ($isGuest) {
                 id="emergency_phone"
                 type="tel"
                 name="emergency_phone"
+                value="<?= membershipValue($membership, 'emergency_phone') ?>"
                 maxlength="30"
             >
 
@@ -247,6 +364,7 @@ if ($isGuest) {
                 id="emergency_relationship"
                 type="text"
                 name="emergency_relationship"
+                value="<?= membershipValue($membership, 'emergency_relationship') ?>"
                 maxlength="100"
             >
 
@@ -256,6 +374,7 @@ if ($isGuest) {
                     type="checkbox"
                     name="parental_authorization_accepted"
                     value="1"
+                    <?= !empty($membership['parental_authorization_accepted']) ? 'checked' : '' ?>
                 >
                 I am the applicant’s parent or legal guardian, and I
                 authorize the applicant to participate in club
@@ -263,12 +382,18 @@ if ($isGuest) {
             </label>
         </div>
 
-        <button type="submit">
-            Submit Membership Application
+        <button type="submit" class="screen-only">
+             <?= $isEdit ? 'Update Membership Application' : 'Submit Membership Application' ?>
         </button>
 
-        <button type="button" onclick="window.print()">
-            Print
+        <?php if ($isEdit): ?>
+        <button
+          type="button"
+          class="screen-only"
+          onclick="window.print()"
+        >
+          Print Membership Application
         </button>
+<?php endif; ?>
     </form>
 </div>

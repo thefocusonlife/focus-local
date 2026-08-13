@@ -148,21 +148,121 @@ class Club_members
             return null;
         }
 
-        $rows = $this->db->runSql(
+        $stmt = $this->db->runSql(
             "
-            SELECT *
-            FROM club_members
-            WHERE id = :id
-              AND website_id = :website_id
-            LIMIT 1
-            ",
+        SELECT *
+        FROM club_members
+        WHERE id = :id
+          AND website_id = :website_id
+        LIMIT 1
+        ",
             [
                 'id' => $id,
                 'website_id' => $websiteId,
             ],
         );
 
-        return $rows[0] ?? null;
+        if (!$stmt instanceof \PDOStatement) {
+            return null;
+        }
+
+        $membership = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        return $membership !== false ? $membership : null;
+    }
+
+    /**
+     * Get a club membership by TFOL member and website.
+     */
+    public function getByMemberId(int $memberId, int $websiteId)
+    {
+        if ($memberId < 1 || $memberId === 2 || $websiteId < 1) {
+            return null;
+        }
+
+        $stmt = $this->db->runSql(
+            "
+        SELECT *
+        FROM club_members
+        WHERE member_id = :member_id
+          AND website_id = :website_id
+        LIMIT 1
+        ",
+            [
+                'member_id' => $memberId,
+                'website_id' => $websiteId,
+            ],
+        );
+
+        if (!$stmt instanceof \PDOStatement) {
+            return null;
+        }
+
+        $membership = $stmt->fetch(\PDO::FETCH_ASSOC);
+
+        return $membership !== false ? $membership : null;
+    }
+    /**
+     * Update a member's own club membership application.
+     *
+     * Membership status is deliberately not changed here.
+     *
+     * @param array $data
+     */
+    public function updateByMemberId(int $memberId, int $websiteId, array $data)
+    {
+        if ($memberId < 1 || $memberId === 2 || $websiteId < 1) {
+            throw new \InvalidArgumentException(
+                'A registered member and valid website are required.',
+            );
+        }
+
+        $parentalAuthorizationAccepted = !empty($data['parental_authorization_accepted']);
+
+        $sql = "
+        UPDATE club_members
+        SET first_name = :first_name,
+            last_name = :last_name,
+            email = :email,
+            phone = :phone,
+            date_of_birth = :date_of_birth,
+            guardian_name = :guardian_name,
+            guardian_email = :guardian_email,
+            guardian_phone = :guardian_phone,
+            emergency_name = :emergency_name,
+            emergency_phone = :emergency_phone,
+            emergency_relationship = :emergency_relationship,
+            parental_authorization_accepted =
+                :parental_authorization_accepted,
+            parental_authorization_accepted_at =
+                :parental_authorization_accepted_at,
+            updated_at = NOW()
+        WHERE member_id = :member_id
+          AND website_id = :website_id
+        LIMIT 1
+    ";
+
+        return $this->db->runSql($sql, [
+            'first_name' => trim($data['first_name'] ?? ''),
+            'last_name' => trim($data['last_name'] ?? ''),
+            'email' => trim($data['email'] ?? ''),
+            'phone' => $this->nullableString($data['phone'] ?? null),
+            'date_of_birth' => $this->nullableString($data['date_of_birth'] ?? null),
+            'guardian_name' => $this->nullableString($data['guardian_name'] ?? null),
+            'guardian_email' => $this->nullableString($data['guardian_email'] ?? null),
+            'guardian_phone' => $this->nullableString($data['guardian_phone'] ?? null),
+            'emergency_name' => $this->nullableString($data['emergency_name'] ?? null),
+            'emergency_phone' => $this->nullableString($data['emergency_phone'] ?? null),
+            'emergency_relationship' => $this->nullableString(
+                $data['emergency_relationship'] ?? null,
+            ),
+            'parental_authorization_accepted' => $parentalAuthorizationAccepted ? 1 : 0,
+            'parental_authorization_accepted_at' => $parentalAuthorizationAccepted
+                ? date('Y-m-d H:i:s')
+                : null,
+            'member_id' => $memberId,
+            'website_id' => $websiteId,
+        ]);
     }
 
     /**

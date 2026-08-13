@@ -32,6 +32,18 @@ if ($isGuest) {
     exit();
 }
 
+$viewer = $cms->getMember()->get($viewerId);
+$viewerWebsiteId = (int) ($viewer['website'] ?? 0);
+
+if (!$viewer || $viewerWebsiteId !== $websiteId) {
+    $_SESSION['flash_failure'] = 'This account does not belong to the selected club website.';
+
+    $safeWebsiteId = $viewerWebsiteId > 0 ? $viewerWebsiteId : 1;
+
+    redirect('index/' . $safeWebsiteId);
+    exit();
+}
+
 $required = [
     'first_name' => 'First name is required.',
     'last_name' => 'Last name is required.',
@@ -99,21 +111,36 @@ $parentalAuthorizationAccepted = !empty($_POST['parental_authorization_accepted'
 
 if ($isMinor) {
     $minorRequired = [
-        $guardianName => 'Parent or guardian name is required.',
-        $guardianEmail => 'Parent or guardian email is required.',
-        $guardianPhone => 'Parent or guardian phone is required.',
-        $emergencyName => 'Emergency contact name is required.',
-        $emergencyPhone => 'Emergency contact phone is required.',
+        [
+            'value' => $guardianName,
+            'message' => 'Parent or guardian name is required.',
+        ],
+        [
+            'value' => $guardianEmail,
+            'message' => 'Parent or guardian email is required.',
+        ],
+        [
+            'value' => $guardianPhone,
+            'message' => 'Parent or guardian phone is required.',
+        ],
+        [
+            'value' => $emergencyName,
+            'message' => 'Emergency contact name is required.',
+        ],
+        [
+            'value' => $emergencyPhone,
+            'message' => 'Emergency contact phone is required.',
+        ],
     ];
 
-    foreach ($minorRequired as $value => $message) {
-        if ($value === '') {
-            $_SESSION['flash_failure'] = $message;
+    foreach ($minorRequired as $requiredField) {
+        if ($requiredField['value'] === '') {
+            $_SESSION['flash_failure'] = $requiredField['message'];
+
             redirect($membershipUrl);
             exit();
         }
     }
-
     if (!filter_var($guardianEmail, FILTER_VALIDATE_EMAIL)) {
         $_SESSION['flash_failure'] = 'Please enter a valid parent or guardian email address.';
 
@@ -148,9 +175,18 @@ $data = [
 ];
 
 try {
-    $cms->getClubMembers()->create($data);
+    $existingMembership = $cms->getClubMembers()->getByMemberId($viewerId, $websiteId);
 
-    $_SESSION['flash_success'] = 'Your membership application was submitted successfully.';
+    if ($existingMembership) {
+        $cms->getClubMembers()->updateByMemberId($viewerId, $websiteId, $data);
+
+        $_SESSION['flash_success'] = 'Your membership application was updated successfully.';
+    } else {
+        $cms->getClubMembers()->create($data);
+
+        $_SESSION['flash_success'] = 'Your membership application was submitted successfully.';
+    }
+
     redirect($membershipUrl . '&success=1');
     exit();
 } catch (\Throwable $e) {
