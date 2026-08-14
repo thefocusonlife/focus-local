@@ -13,6 +13,14 @@ if ($viewerId <= 0 || $role === 'guest') {
     exit();
 }
 
+$allowedMemberAdmins = [1, 3, 339];
+
+if (!in_array($viewerId, $allowedMemberAdmins, true)) {
+    $_SESSION['flash_failure'] = 'You do not have permission to export club members.';
+    redirect('index');
+    exit();
+}
+
 $websiteId = (int) ($_GET['website'] ?? 44);
 if ($websiteId !== 44) {
     $websiteId = 44;
