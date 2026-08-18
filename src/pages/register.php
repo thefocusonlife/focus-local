@@ -14,6 +14,8 @@ require_once APP_ROOT . '/src/security/csrf.php';
 /** @var array $email_config */
 /** @var \Twig\Environment $twig */
 /** @var mixed $cms */
+$policyVersion = 'v1.0-2026-08-18';
+
 function sendVerificationEmail(
     array $emailConfig,
     string $toEmail,
@@ -107,7 +109,7 @@ $last_id = 0;
 $lastid = 0;
 $menuId = (int) ($menuId ?? 0);
 $confirm = [];
-
+$policyAccepted = false;
 if ($menuId <= 0) {
     // Fallback: choose a sensible default menu id for this member/website
     // (see Option B below for how to do this properly)
@@ -122,6 +124,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $policyAccepted = isset($_POST['policy_accept']) && (string) $_POST['policy_accept'] === '1';
     $websiteId = (int) ($_POST['website'] ?? ($_SESSION['website'] ?? 1));
     if ($websiteId <= 0) {
         $websiteId = 1;
@@ -154,6 +157,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $data['recaptcha_site_key'] = $config['recaptcha_site_key'];
         csrf_rotate($csrfFormKey);
         $data['csrf_token'] = csrf_token($csrfFormKey);
+        $data['policy_accept'] = false;
+        $data['policy_version'] = $policyVersion;
         unset($_SESSION['register_submit_lock']);
         echo $twig->render('register.html', $data);
         exit();
@@ -305,12 +310,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'pagelimit' => 50,
         'sorttype' => (int) $cms->getSorttype()->getDefaultIdForMenu($menuId),
         'publik' => 1,
-        'termsok' => 0,
+        'termsok' => $policyAccepted ? 1 : 0,
+        'policy_version' => $policyAccepted ? $policyVersion : null,
+        'policy_accepted_at' => $policyAccepted ? date('Y-m-d H:i:s') : null,
         'status' => 'active',
         'email_verified' => 0,
         'email_verified_at' => null,
     ];
     // Validate form data
+    if ($params['agegroup'] === 1) {
+        $errors['agegroup'] =
+            'Registration is currently limited to people who are at least 18 years old.';
+    }
+
     $errors['forename'] = Validate::isText($params['forename'], 1, 254)
         ? ''
         : 'Forename must be 1-254 characters';
@@ -328,7 +340,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 A lowercase letter<br>An uppercase letter<br>A number
                 <br>And a special character';
     $errors['confirm'] = $params['password'] === $confirm ? '' : 'Passwords do not match';
-
+    $errors['policy_accept'] = $policyAccepted
+        ? ''
+        : 'You must confirm your age and accept the Terms of Use and Privacy Policy.';
     // After you finish populating $errors from all validations
     $hasErrors = false;
     foreach ($errors as $msg) {
@@ -356,6 +370,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         unset($data['values']['password'], $data['values']['confirm']);
 
         $data['errors'] = $errors;
+        $data['policy_accept'] = $policyAccepted;
+        $data['policy_version'] = $policyVersion;
         $data['csrf_token'] = csrf_token($csrfFormKey);
         $data['use_recaptcha'] = true;
         $data['recaptcha_site_key'] = $config['recaptcha_site_key'];
@@ -428,6 +444,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $data['agegroups'] = $cms->getMember()->getAgegroups();
             $data['plans'] = $cms->getMember()->getPlans();
             $data['errors'] = $errors;
+            $data['policy_accept'] = $policyAccepted;
+            $data['policy_version'] = $policyVersion;
             $data['csrf_token'] = csrf_token($csrfFormKey);
             $data['use_recaptcha'] = true;
             $data['recaptcha_site_key'] = $config['recaptcha_site_key'];
@@ -583,6 +601,7 @@ $data['website'] = $website;
 $data['use_recaptcha'] = true;
 $data['recaptcha_site_key'] = $config['recaptcha_site_key'];
 $data['csrf_token'] = csrf_token($csrfFormKey);
-
+$data['policy_accept'] = $policyAccepted;
+$data['policy_version'] = $policyVersion;
 echo $twig->render('register.html', $data);
 exit();

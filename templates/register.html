@@ -107,8 +107,23 @@
 				<input type="hidden" name="website" value="{{ website.id }}">
 				<input type="hidden" name="photo_limit" value="150" id="photo_limit">
 				<input type="hidden" name="publik" value="{{ publik|default('1')|e }}" id="publik">
-				<input type="hidden" name="termsok" value="{{ termsok|default('0')|e }}" id="termsok">
+				<div class="form-check terms-acceptance">
+					<input class="form-check-input" id="policy_accept" name="policy_accept" type="checkbox" value="1" {% if policy_accept %} checked {% endif %} required>
 
+					<label class="form-check-label" for="policy_accept">
+						I confirm that I am at least 18 years old, that the information
+																				I provided is accurate, and that I have read and agree to the
+					</label>
+
+					<a href="{{ doc_root }}terms" target="_blank" rel="noopener noreferrer">Terms of Use</a>
+					and
+					<a href="{{ doc_root }}privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>.
+					{% if errors.policy_accept %}
+						<div class="invalid-feedback d-block">
+							{{ errors.policy_accept }}
+						</div>
+					{% endif %}
+				</div>
 				<input type="submit" class="btn btn-primary" value="Register">
 			</form>
 		</section>

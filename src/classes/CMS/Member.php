@@ -179,6 +179,10 @@ class Member
             'sorttype' => (int) ($member['sorttype'] ?? 1),
             'publik' => (int) ($member['publik'] ?? 1),
             'termsok' => (int) ($member['termsok'] ?? 0),
+            'policy_version' => isset($member['policy_version'])
+                ? (string) $member['policy_version']
+                : null,
+            'policy_accepted_at' => $member['policy_accepted_at'] ?? null,
             'email_verified' => (int) ($member['email_verified'] ?? 0),
             'email_verified_at' => $member['email_verified_at'] ?? null,
         ];
@@ -186,7 +190,15 @@ class Member
         if ($params['website'] <= 0 || $params['email'] === '' || $params['password'] === '') {
             return false;
         }
-
+        if (
+            $params['termsok'] !== 1 ||
+            empty($params['policy_version']) ||
+            empty($params['policy_accepted_at'])
+        ) {
+            throw new \InvalidArgumentException(
+                'Policy acceptance, version, and acceptance date are required.',
+            );
+        }
         $params['password'] = password_hash($params['password'], PASSWORD_DEFAULT);
 
         error_log('[MEMBER create] ENTERED create()');
@@ -215,6 +227,8 @@ class Member
                     sorttype,
                     publik,
                     termsok,
+                    policy_version,
+                    policy_accepted_at,
                     email_verified,
                     email_verified_at
                 )
@@ -235,6 +249,8 @@ class Member
                     :sorttype,
                     :publik,
                     :termsok,
+                    :policy_version,
+                    :policy_accepted_at,
                     :email_verified,
                     :email_verified_at
                 );
