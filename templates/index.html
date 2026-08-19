@@ -6,6 +6,12 @@
 			<div class="alert alert-danger">{{ failure }}</div>
 		{% endif %}
 
+		{% if notice %}
+			<div class="alert alert-warning">
+				{{ notice|e|nl2br }}
+			</div>
+		{% endif %}
+
 		{% if success %}
 			<div class="alert alert-success">
 				{{ success|e|nl2br }}

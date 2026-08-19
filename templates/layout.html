@@ -15,7 +15,7 @@
 		name="description" content="{% block description %}HHT Consulting{% endblock %}">
 
 		{# Styles / fonts #}
-		<link rel="stylesheet" type="text/css" href="{{ doc_root }}css/styles.css?v=20260724">
+		<link rel="stylesheet" type="text/css" href="{{ doc_root }}css/styles.css?v=2026081902">
 		<link rel="preconnect" href="https://fonts.gstatic.com">
 		<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap">
 		<link
@@ -180,14 +180,14 @@ toolbar: 'undo redo | bold italic underline link | image table | spellcheckdialo
 			<script>
 				document.addEventListener('click', function (e) {
 const btn = e.target.closest('[data-toggle-password]');
-if (! btn)
+if (! btn) 
 return;
 
 
 
 const sel = btn.getAttribute('data-toggle-password');
 const input = document.querySelector(sel);
-if (! input)
+if (! input) 
 return;
 
 
@@ -205,7 +205,7 @@ btn.setAttribute('aria-label', isHidden ? 'Hide password' : 'Show password');
 				<script>
 					document.addEventListener('DOMContentLoaded', function () {
 const forms = document.querySelectorAll('form[data-recaptcha-action]');
-if (! forms.length)
+if (! forms.length) 
 return;
 
 
@@ -215,7 +215,7 @@ const action = form.getAttribute('data-recaptcha-action') || '';
 
 form.addEventListener('submit', function (e) {
 const existing = form.querySelector('input[name="g-recaptcha-response"]');
-if (existing && existing.value)
+if (existing && existing.value) 
 return;
 
 
@@ -251,7 +251,7 @@ form.submit();
 			<script>
 				(function () {
 const splash = document.getElementById('splashScreen');
-if (! splash)
+if (! splash) 
 return;
 
 

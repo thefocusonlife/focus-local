@@ -19,26 +19,49 @@ function sendPasswordResetEmail(
 ): void {
     $subject = 'Reset your Focus on Life password';
 
-    $safeName = trim($forename) !== '' ? trim($forename) : 'there';
+    $name = trim($forename) !== '' ? trim($forename) : 'there';
+    $safeName = htmlspecialchars($name, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+    $safeUrl = htmlspecialchars($resetUrl, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 
-    $message = <<<TEXT
-    Hi {$safeName},
+    $message = <<<HTML
+    <p>Hi {$safeName},</p>
 
-    We received a request to reset your password.
+    <p>We received a request to reset your Focus on Life password.</p>
 
-    Please click the link below to choose a new password:
+    <p>Please click the button below to choose a new password:</p>
 
-    {$resetUrl}
+    <p>
+        <a href="{$safeUrl}"
+           style="display:inline-block;
+                  padding:12px 20px;
+                  background-color:#28577d;
+                  color:#ffffff;
+                  text-decoration:none;
+                  border-radius:4px;
+                  font-weight:bold;">
+            Reset your password
+        </a>
+    </p>
 
-    This link will expire in 1 hour.
+    <p>If the button does not work, copy and paste this address into your browser:</p>
 
-    If you did not request a password reset, you can ignore this email.
+    <p style="overflow-wrap:anywhere; word-break:break-word;">
+        <a href="{$safeUrl}">{$safeUrl}</a>
+    </p>
 
-    Focus on Life
-    TEXT;
+    <p>This link will expire in 1 hour.</p>
+
+    <p>If you did not request a password reset, you can ignore this email.</p>
+
+    <p>
+        Focus on Life<br>
+        thefocusonlife.org
+    </p>
+    HTML;
 
     $mail = new \PhpBook\Email\Email($emailConfig);
     $result = $mail->sendEmail($emailConfig['admin_email'], $toEmail, $subject, $message);
+
     error_log('[PASSWORD LOST] mail result=' . var_export($result, true));
 }
 

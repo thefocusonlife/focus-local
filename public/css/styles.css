@@ -841,6 +841,13 @@ nav.pagination {
     border-color: #c3e6cb;
 }
 
+.alert-warning {
+    background-color: #fff3cd;
+    border: 2px solid #d6a800;
+    color: #4f3b00;
+    font-weight: 600;
+}
+
 
 /**********************/
 /* 6: ADMIN           */

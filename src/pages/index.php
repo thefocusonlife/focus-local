@@ -4,11 +4,13 @@ declare(strict_types=1);
 $data = [];
 $guidetext = '';
 
+$routePage = (string) ($page ?? 'index');
+$routeId = (int) ($id ?? 0);
 /**
  * Resolve canonical website for this request.
  * Route wins. Then session. Then default 1.
  */
-$websiteId = (int) ($id ?? 0);
+$websiteId = $routeId;
 
 if ($websiteId <= 0) {
     $websiteId = (int) ($_SESSION['website'] ?? 0);
@@ -37,10 +39,12 @@ $_SESSION['websiteid'] = $websiteId;
 $_SESSION['menu_website'] = $websiteId;
 
 $isGuest = empty($_SESSION['id']);
-$isStoriesLandingCandidate = $page === 'index' && ($id === 0 || $id === 1);
+$isStoriesLandingCandidate = $routePage === 'index' && ($routeId === 0 || $routeId === 1);
 $fromSws = !empty($_GET['from_sws']);
 
-if ($isGuest && $isStoriesLandingCandidate && !$fromSws) {
+$hasFlashMessage = !empty($_SESSION['flash_success']) || !empty($_SESSION['flash_failure']);
+
+if ($isGuest && $isStoriesLandingCandidate && !$fromSws && !$hasFlashMessage) {
     header('Location: ' . DOC_ROOT . 'stories-worth-saving');
     exit();
 }
@@ -89,8 +93,11 @@ if ($websiteId > 1 && $viewerId <= 0 && empty($website['non_members'])) {
 /**
  * Flash/quickguide.
  */
-if (!empty($_SESSION['flash_success'])) {
-    $data['failure'] = (string) $_SESSION['flash_success'];
+if (!empty($_SESSION['flash_notice'])) {
+    $data['notice'] = (string) $_SESSION['flash_notice'];
+    unset($_SESSION['flash_notice']);
+} elseif (!empty($_SESSION['flash_success'])) {
+    $data['success'] = (string) $_SESSION['flash_success'];
     unset($_SESSION['flash_success']);
 } elseif (!empty($_SESSION['flash_failure'])) {
     $data['failure'] = (string) $_SESSION['flash_failure'];

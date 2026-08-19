@@ -534,7 +534,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         unset($_SESSION['flash_failure']);
 
-        $_SESSION['flash_success'] =
+        $_SESSION['flash_notice'] =
             'Registration successful! Please check your email and click the verification link before signing in. ' .
             'If you don\'t see the email within a few minutes, please check your Spam or Junk folder.';
 
@@ -554,7 +554,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $e->getMessage(),
         );
 
-        unset($_SESSION['flash_success']);
+        unset($_SESSION['flash_notice']);
 
         $_SESSION['flash_failure'] = 'Email send failed: ' . $e->getMessage();
     }
