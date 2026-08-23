@@ -277,6 +277,45 @@ if ($data['isBicycleClub']) {
 }
 
 /**
+ * Central Oregon Chess module for website 51.
+ */
+$data['isChessClub'] = $websiteId === 51;
+$data['chessSchedules'] = [];
+
+if ($data['isChessClub']) {
+    $chessScheduleSql = "
+        SELECT
+            cs.id,
+            cs.website_id,
+            cs.member_id,
+            cs.title,
+            cs.event_date,
+            cs.start_time,
+            cs.end_time,
+            cs.location,
+            cs.description,
+            cs.is_active,
+            cs.created,
+            cs.updated,
+            m.forename,
+            m.surname
+        FROM chess_schedule cs
+        LEFT JOIN member m ON m.id = cs.member_id
+        WHERE cs.website_id = :website_id
+          AND cs.is_active = 1
+          AND cs.event_date >= CURRENT_DATE
+        ORDER BY
+            cs.event_date ASC,
+            cs.start_time ASC,
+            cs.id ASC
+    ";
+
+    $chessScheduleStmt = $cms->getDb()->runSql($chessScheduleSql, ['website_id' => $websiteId]);
+
+    $data['chessSchedules'] = $chessScheduleStmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+/**
  * Navigation.
  */
 $data['navigation'] = $cms->getMenu()->getAll2($websiteId, 1);

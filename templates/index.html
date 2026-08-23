@@ -19,6 +19,77 @@
 		{% endif %}
 		{{ include('story-summaries.html') }}
 
+		{% if isChessClub %}
+			<section class="chess-club-module">
+				<div class="chess-club-header">
+					<div>
+						<h2>Scheduled Chess Nights</h2>
+						<p>Upcoming opportunities to play chess in person or online.</p>
+					</div>
+
+					{% set viewer_id = session.id|default(0) %}
+
+					{% if viewer_id == 1 %}
+						<div class="chess-club-actions">
+							<a href="{{ doc_root }}chess-schedule-add" class="btn btn-primary">
+								Add Chess Night
+							</a>
+						</div>
+					{% endif %}
+				</div>
+
+				{% if chessSchedules is empty %}
+					<div class="chess-empty-state">
+						<p>No Chess Nights are currently scheduled.</p>
+					</div>
+				{% else %}
+					<div class="chess-schedule-list">
+						{% for schedule in chessSchedules %}
+							<article class="chess-schedule-card">
+								<header class="chess-schedule-header">
+									<div>
+										<h3>{{ schedule.title }}</h3>
+
+										<div class="chess-schedule-date">
+											{{ schedule.event_date|date('l, F j, Y') }}
+										</div>
+									</div>
+
+									<div class="chess-schedule-time">
+										{{ schedule.start_time|date('g:i A') }}
+
+										{% if schedule.end_time %}
+											–
+											{{ schedule.end_time|date('g:i A') }}
+										{% endif %}
+									</div>
+								</header>
+
+								<div class="chess-schedule-location">
+									<strong>Location:</strong>
+									{{ schedule.location }}
+								</div>
+
+								{% if schedule.description %}
+									<div class="chess-schedule-notes">
+										{{ schedule.description|e|nl2br }}
+									</div>
+								{% endif %}
+
+								{% if viewer_id == 1 %}
+									<div class="chess-club-actions">
+										<a href="{{ doc_root }}chess-schedule-edit/{{ schedule.id }}" class="btn btn-secondary">
+											Edit Chess Night
+										</a>
+									</div>
+								{% endif %}
+							</article>
+						{% endfor %}
+					</div>
+				{% endif %}
+			</section>
+		{% endif %}
+
 		{% if isBicycleClub %}
 
 			<section class="bicycle-club-module">

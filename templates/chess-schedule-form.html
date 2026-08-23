@@ -1,0 +1,201 @@
+{% extends 'layout.html' %}
+{% block content %}
+	<style>
+		.chess-schedule-form {
+			display: block;
+			width: 100%;
+		}
+
+		.chess-schedule-fields {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 16px 24px;
+			align-items: start;
+			max-width: 1000px;
+		}
+
+		.chess-schedule-fields > .form-row {
+			display: flex;
+			flex-direction: column;
+			min-width: 0;
+			margin: 0;
+			float: none;
+			width: auto;
+		}
+
+		.chess-schedule-fields > .form-row label {
+			display: block;
+			margin-bottom: 0.35rem;
+			font-weight: 600;
+		}
+
+		.chess-schedule-fields > .form-row input,
+		.chess-schedule-fields > .form-row textarea {
+			display: block;
+			width: 100%;
+			max-width: 100%;
+			box-sizing: border-box;
+			margin: 0;
+			float: none;
+			padding: 8px 10px;
+			font-size: 15px;
+			border: 1px solid #ccc;
+			border-radius: 4px;
+		}
+
+		.chess-schedule-fields > .form-row input {
+			height: 40px;
+		}
+
+		.chess-schedule-fields > .form-row textarea {
+			min-height: 140px;
+			height: auto;
+			padding: 10px;
+		}
+
+		.chess-schedule-fields > .form-row.form-row-wide {
+			grid-column: 1 / -1;
+		}
+
+		.chess-schedule-fields input[type="checkbox"] {
+			width: auto;
+			height: auto;
+			transform: scale(1.2);
+			margin-right: 6px;
+		}
+
+		.chess-schedule-fields label:has(input[type="checkbox"]) {
+			display: flex;
+			align-items: center;
+			gap: 6px;
+			font-weight: normal;
+		}
+
+		.chess-schedule-fields .chess-active-label {
+			display: flex !important;
+			flex-direction: row !important;
+			align-items: center !important;
+			gap: 8px !important;
+		}
+
+		.chess-schedule-fields .chess-active-label input[type="checkbox"] {
+			position: static !important;
+			display: inline-block !important;
+			width: auto !important;
+			height: auto !important;
+			margin: 0 !important;
+			flex: 0 0 auto;
+		}
+
+		.chess-schedule-fields .chess-active-label span {
+			display: inline-block;
+		}
+
+		.form-actions {
+			margin-top: 1rem;
+		}
+
+		.form-actions .btn {
+			display: inline-block;
+			margin-right: 0.5rem;
+			margin-bottom: 0.5rem;
+			vertical-align: middle;
+		}
+
+		@media(max-width: 800px) {
+			.chess-schedule-fields {
+				grid-template-columns: 1fr;
+			}
+
+			.chess-schedule-fields > .form-row.form-row-wide {
+				grid-column: auto;
+			}
+		}
+	</style>
+
+	<main class="container1 chess-schedule-page" id="content">
+		<h1>
+			{% if mode == 'edit' %}
+				Edit Chess Night
+			{% else %}
+				Add Chess Night
+			{% endif %}
+		</h1>
+
+		{% if failure %}
+			<div class="alert alert-danger">{{ failure }}</div>
+		{% endif %}
+
+		<form method="post" action="{{ doc_root }}chess-schedule-save" class="chess-schedule-form">
+
+			<input type="hidden" name="id" value="{{ schedule.id }}">
+			<input type="hidden" name="website_id" value="{{ websiteId }}">
+
+			<section class="chess-schedule-fields">
+				<div class="form-row">
+					<label for="title">Title</label>
+					<input type="text" id="title" name="title" value="{{ schedule.title }}" required>
+				</div>
+
+				<div class="form-row">
+					<label for="event_date">Event Date</label>
+					<input type="date" id="event_date" name="event_date" value="{{ schedule.event_date }}" required>
+				</div>
+
+				<div class="form-row">
+					<label for="start_time">Start Time</label>
+					<input type="time" id="start_time" name="start_time" value="{{ schedule.start_time|slice(0, 5) }}" required>
+				</div>
+
+				<div class="form-row">
+					<label for="end_time">Ending Time (optional)</label>
+					<input type="time" id="end_time" name="end_time" value="{{ schedule.end_time|slice(0, 5) }}">
+				</div>
+
+				<div class="form-row form-row-wide">
+					<label for="location">Location</label>
+					<input type="text" id="location" name="location" value="{{ schedule.location }}" placeholder="Building, street address, Chess.com, or Lichess" required>
+				</div>
+
+				<div class="form-row form-row-wide">
+					<label for="description">Comments or Special Instructions</label>
+					<textarea id="description" name="description" rows="5">{{ schedule.description }}</textarea>
+				</div>
+
+				<label class="chess-active-label">
+					<input type="checkbox" name="is_active" value="1" {% if schedule.is_active %} checked {% endif %}>
+					<span>Active</span>
+				</label>
+			</div>
+		</section>
+
+		<p class="form-actions">
+			<button type="submit" class="btn btn-primary">
+				Save Chess Night
+			</button>
+
+			<a href="{{ doc_root }}index/51" class="btn btn-secondary">
+				Back to Central Oregon Chess
+			</a>
+		</p>
+	</form>
+
+	{% if mode == 'edit' %}
+		<hr>
+
+		<section class="danger-zone">
+			<h3>Delete This Chess Night</h3>
+
+			<p>Deleting this scheduled Chess Night cannot be undone.</p>
+
+			<form method="post" action="{{ doc_root }}chess-schedule-delete" onsubmit="return confirm('Delete this Chess Night permanently?');">
+
+				<input type="hidden" name="id" value="{{ schedule.id }}">
+
+				<button type="submit" class="btn btn-danger">
+					Delete Chess Night
+				</button>
+			</form>
+		</section>
+	{% endif %}
+</main>{% endblock %}
