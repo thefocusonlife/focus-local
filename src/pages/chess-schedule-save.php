@@ -29,10 +29,13 @@ if ($viewerId !== 1) {
     exit();
 }
 
+$allowedAreas = ['Bend', 'Redmond', 'Prineville', 'Central Oregon', 'Online'];
+
 $id = (int) ($_POST['id'] ?? 0);
 $websiteId = 51;
 
 $title = trim((string) ($_POST['title'] ?? ''));
+$area = trim((string) ($_POST['area'] ?? ''));
 $eventDate = trim((string) ($_POST['event_date'] ?? ''));
 $startTime = trim((string) ($_POST['start_time'] ?? ''));
 $endTime = trim((string) ($_POST['end_time'] ?? ''));
@@ -85,6 +88,12 @@ if ($endTime !== '' && $endTime <= $startTime) {
     exit();
 }
 
+if (!in_array($area, $allowedAreas, true)) {
+    $_SESSION['flash_failure'] = 'Please select a valid Chess area.';
+    redirect($formUrl);
+    exit();
+}
+
 if ($id > 0) {
     $existingStmt = $cms->getDb()->runSql(
         'SELECT id
@@ -107,6 +116,7 @@ if ($id > 0) {
     $cms->getDb()->runSql(
         'UPDATE chess_schedule
             SET title = :title,
+                area = :area,
                 event_date = :event_date,
                 start_time = :start_time,
                 end_time = :end_time,
@@ -118,6 +128,7 @@ if ($id > 0) {
             AND website_id = :website_id',
         [
             'title' => $title,
+            'area' => $area,
             'event_date' => $eventDate,
             'start_time' => $startTime,
             'end_time' => $endTime !== '' ? $endTime : null,
@@ -140,6 +151,7 @@ $cms->getDb()->runSql(
         website_id,
         member_id,
         title,
+        area,
         event_date,
         start_time,
         end_time,
@@ -150,6 +162,7 @@ $cms->getDb()->runSql(
         :website_id,
         :member_id,
         :title,
+        :area,
         :event_date,
         :start_time,
         :end_time,
@@ -161,6 +174,7 @@ $cms->getDb()->runSql(
         'website_id' => $websiteId,
         'member_id' => $viewerId,
         'title' => $title,
+        'area' => $area,
         'event_date' => $eventDate,
         'start_time' => $startTime,
         'end_time' => $endTime !== '' ? $endTime : null,

@@ -43,6 +43,7 @@ $data = [
     'schedule' => [
         'id' => null,
         'title' => '',
+        'area' => 'Central Oregon',
         'event_date' => date('Y-m-d'),
         'start_time' => '',
         'end_time' => '',

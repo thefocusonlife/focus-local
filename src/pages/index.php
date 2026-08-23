@@ -289,6 +289,7 @@ if ($data['isChessClub']) {
             cs.website_id,
             cs.member_id,
             cs.title,
+            cs.area,
             cs.event_date,
             cs.start_time,
             cs.end_time,
