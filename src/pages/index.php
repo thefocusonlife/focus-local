@@ -102,7 +102,7 @@ if (!empty($_SESSION['flash_notice'])) {
 } elseif (!empty($_SESSION['flash_failure'])) {
     $data['failure'] = (string) $_SESSION['flash_failure'];
     unset($_SESSION['flash_failure']);
-} else {
+} elseif ((int) $websiteId !== 51) {
     $guide = $cms->getQuickguide()->getOne($websiteId);
     if (!empty($guide['guidetext'])) {
         $data['success'] = $guide['guidetext'];
@@ -283,6 +283,7 @@ $data['isChessClub'] = $websiteId === 51;
 $data['chessSchedules'] = [];
 $data['chessNotes'] = [];
 $data['chessMeetups'] = [];
+$data['chessCommunityItems'] = [];
 $data['canAddChessMeetup'] = false;
 
 if ($data['isChessClub']) {
@@ -388,6 +389,34 @@ if ($data['isChessClub']) {
     $chessMeetupStmt = $cms->getDb()->runSql($chessMeetupSql, ['website_id' => $websiteId]);
 
     $data['chessMeetups'] = $chessMeetupStmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Optional Chess Community items
+    $chessCommunitySql = "
+        SELECT
+            cc.id,
+            cc.website_id,
+            cc.member_id,
+            cc.title,
+            cc.category,
+            cc.url,
+            cc.summary,
+            cc.is_active,
+            cc.sort_order,
+            cc.created,
+            cc.updated
+        FROM chess_community cc
+        WHERE cc.website_id = :website_id
+          AND cc.is_active = 1
+        ORDER BY
+            cc.sort_order ASC,
+            cc.created DESC,
+            cc.id DESC
+        LIMIT 20
+    ";
+
+    $chessCommunityStmt = $cms->getDb()->runSql($chessCommunitySql, ['website_id' => $websiteId]);
+
+    $data['chessCommunityItems'] = $chessCommunityStmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 /**

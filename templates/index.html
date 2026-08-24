@@ -17,7 +17,9 @@
 				{{ success|e|nl2br }}
 			</div>
 		{% endif %}
+
 		{{ include('story-summaries.html') }}
+
 
 		{% if isChessClub %}
 			<section class="chess-club-module">
@@ -237,10 +239,81 @@
 									</div>
 								{% endif %}
 							</article>
+
 						{% endfor %}
 					</div>
 				{% endif %}
+
+
 			</section>
+			<section class="chess-club-module">
+				<div class="chess-club-header">
+					<div>
+						<h2>Community</h2>
+						<p>Membership, club information, results, stories, and resources.</p>
+					</div>
+
+
+				</div>
+
+				<h3>Club Links</h3>
+
+				<ul class="chess-community-links">
+					<li>
+						<a href="{{ doc_root }}membership?website=51">
+							♟️ Membership Application
+						</a>
+					</li>
+
+					<li>
+						👥 Membership List
+						<em>— Coming Soon</em>
+					</li>
+
+					<li>
+						🏆 Leaderboard
+						<em>— Coming Soon</em>
+					</li>
+
+					<li>
+						📘 Mission
+						<em>— Coming Soon</em>
+					</li>
+
+					<li>
+						🌐 Resources
+						<em>— Coming Soon</em>
+					</li>
+				</ul>
+
+				{% if chessCommunityItems is not empty %}
+					<h3>Community Items</h3>
+
+					<ul class="chess-community-items">
+						{% for item in chessCommunityItems %}
+							<li>
+								<div class="chess-community-category">
+									<strong>{{ item.category }}</strong>
+								</div>
+
+								<div class="chess-community-title">
+									<a href="{{ item.url }}" {% if item.url starts with 'http://' or item.url starts with 'https://' %} target="_blank" rel="noopener" {% endif %}>
+										{{ item.title }}
+									</a>
+								</div>
+
+								{% if item.summary %}
+									<div class="chess-community-summary">
+										{{ item.summary|e|nl2br }}
+									</div>
+								{% endif %}
+
+							</li>
+						{% endfor %}
+					</ul>
+				{% endif %}
+			</section>
+
 		{% endif %}
 
 		{% if isBicycleClub %}
@@ -312,7 +385,6 @@
 
 								{% if session.id %}
 									<div class="bicycle-club-actions">
-										{% set viewer_id = session.id|default(0) %}
 
 										{% set can_manage_schedule = viewer_id > 0
                       and (viewer_id == schedule.member_id or viewer_id == 1) %}
