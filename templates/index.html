@@ -93,6 +93,62 @@
 					</div>
 				{% endif %}
 			</section>
+
+			<section class="chess-club-module">
+				<div class="chess-club-header">
+					<div>
+						<h2>Club Notes</h2>
+						<p>Schedule changes, activities, events, and club announcements.</p>
+					</div>
+
+					{% if viewer_id == 1 %}
+						<div class="chess-club-actions">
+							<a href="{{ doc_root }}chess-note-add" class="btn btn-primary">
+								Add Club Note
+							</a>
+						</div>
+					{% endif %}
+				</div>
+
+				{% if chessNotes is empty %}
+					<div class="chess-empty-state">
+						<p>No Club Notes are currently posted.</p>
+					</div>
+				{% else %}
+					<div class="chess-note-list">
+						{% for note in chessNotes %}
+							<article class="chess-note-card">
+								<header class="chess-note-header">
+									<h3>{{ note.title }}</h3>
+
+									{% if note.note_date %}
+										<div class="chess-note-date">
+											{{ note.note_date|date('l, F j, Y') }}
+										</div>
+									{% endif %}
+								</header>
+
+								<div class="chess-note-area">
+									<strong>Area:</strong>
+									{{ note.area }}
+								</div>
+
+								<div class="chess-note-text">
+									{{ note.note_text|e|nl2br }}
+								</div>
+
+								{% if viewer_id == 1 %}
+									<div class="chess-club-actions">
+										<a href="{{ doc_root }}chess-note-edit/{{ note.id }}" class="btn btn-secondary">
+											Edit Club Note
+										</a>
+									</div>
+								{% endif %}
+							</article>
+						{% endfor %}
+					</div>
+				{% endif %}
+			</section>
 		{% endif %}
 
 		{% if isBicycleClub %}

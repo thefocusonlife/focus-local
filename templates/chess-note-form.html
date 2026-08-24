@@ -1,0 +1,195 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+	<style>
+		.chess-note-form {
+			display: block;
+			width: 100%;
+		}
+
+		.chess-note-fields {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 16px 24px;
+			align-items: start;
+			max-width: 1000px;
+		}
+
+		.chess-note-fields > .form-row {
+			display: flex;
+			flex-direction: column;
+			min-width: 0;
+			margin: 0;
+			float: none;
+			width: auto;
+		}
+
+		.chess-note-fields > .form-row label {
+			display: block;
+			margin-bottom: 0.35rem;
+			font-weight: 600;
+		}
+
+		.chess-note-fields > .form-row input,
+		.chess-note-fields > .form-row select,
+		.chess-note-fields > .form-row textarea {
+			display: block;
+			width: 100%;
+			max-width: 100%;
+			box-sizing: border-box;
+			margin: 0;
+			float: none;
+			padding: 8px 10px;
+			font-size: 15px;
+			border: 1px solid #ccc;
+			border-radius: 4px;
+		}
+
+		.chess-note-fields > .form-row input,
+		.chess-note-fields > .form-row select {
+			height: 40px;
+		}
+
+		.chess-note-fields > .form-row textarea {
+			min-height: 180px;
+			height: auto;
+			padding: 10px;
+		}
+
+		.chess-note-fields > .form-row.form-row-wide {
+			grid-column: 1 / -1;
+		}
+
+		.chess-note-active-label {
+			display: flex !important;
+			flex-direction: row !important;
+			align-items: center !important;
+			gap: 8px !important;
+		}
+
+		.chess-note-active-label input[type="checkbox"] {
+			position: static !important;
+			display: inline-block !important;
+			width: auto !important;
+			height: auto !important;
+			margin: 0 !important;
+			flex: 0 0 auto;
+		}
+
+		.chess-note-active-label span {
+			display: inline-block;
+		}
+
+		.form-actions {
+			margin-top: 1rem;
+		}
+
+		.form-actions .btn {
+			display: inline-block;
+			margin-right: 0.5rem;
+			margin-bottom: 0.5rem;
+			vertical-align: middle;
+		}
+
+		@media(max-width: 800px) {
+			.chess-note-fields {
+				grid-template-columns: 1fr;
+			}
+
+			.chess-note-fields > .form-row.form-row-wide {
+				grid-column: auto;
+			}
+		}
+	</style>
+
+	<main class="container1 chess-note-page" id="content">
+		<h1>
+			{% if mode == 'edit' %}
+				Edit Club Note
+			{% else %}
+				Add Club Note
+			{% endif %}
+		</h1>
+
+		{% if failure %}
+			<div class="alert alert-danger">{{ failure }}</div>
+		{% endif %}
+
+		<form method="post" action="{{ doc_root }}chess-note-save" class="chess-note-form">
+
+			<input type="hidden" name="id" value="{{ note.id }}">
+			<input type="hidden" name="website_id" value="{{ websiteId }}">
+
+			<section class="chess-note-fields">
+				<div class="form-row">
+					<label for="title">Title</label>
+					<input type="text" id="title" name="title" value="{{ note.title }}" required>
+				</div>
+
+				<div class="form-row">
+					<label for="area">Area</label>
+
+					<select id="area" name="area" required>
+						{% for area in [
+							'Bend',
+							'Redmond',
+							'Prineville',
+							'Central Oregon',
+							'Online'
+						] %}
+							<option value="{{ area }}" {% if note.area == area %} selected {% endif %}>
+								{{ area }}
+							</option>
+						{% endfor %}
+					</select>
+				</div>
+
+				<div class="form-row">
+					<label for="note_date">Event or Effective Date (optional)</label>
+					<input type="date" id="note_date" name="note_date" value="{{ note.note_date }}">
+				</div>
+
+				<div class="form-row form-row-wide">
+					<label for="note_text">Club Note</label>
+					<textarea id="note_text" name="note_text" rows="7" required>{{ note.note_text }}</textarea>
+				</div>
+
+				<div class="form-row">
+					<label class="chess-note-active-label">
+						<input type="checkbox" name="is_active" value="1" {% if note.is_active %} checked {% endif %}>
+						<span>Active</span>
+					</label>
+				</div>
+			</section>
+
+			<p class="form-actions">
+				<button type="submit" class="btn btn-primary">
+					Save Club Note
+				</button>
+
+				<a href="{{ doc_root }}index/51" class="btn btn-secondary">
+					Back to Central Oregon Chess
+				</a>
+			</p>
+		</form>
+
+		{% if mode == 'edit' %}
+			<hr>
+
+			<section class="danger-zone">
+				<h3>Delete This Club Note</h3>
+
+				<p>Deleting this Club Note cannot be undone.</p>
+
+				<form method="post" action="{{ doc_root }}chess-note-delete" onsubmit="return confirm('Delete this Club Note permanently?');">
+
+					<input type="hidden" name="id" value="{{ note.id }}">
+
+					<button type="submit" class="btn btn-danger">
+						Delete Club Note
+					</button>
+				</form>
+			</section>
+		{% endif %}
+	</main>
+{% endblock %}

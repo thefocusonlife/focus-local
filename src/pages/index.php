@@ -281,6 +281,7 @@ if ($data['isBicycleClub']) {
  */
 $data['isChessClub'] = $websiteId === 51;
 $data['chessSchedules'] = [];
+$data['chessNotes'] = [];
 
 if ($data['isChessClub']) {
     $chessScheduleSql = "
@@ -314,6 +315,37 @@ if ($data['isChessClub']) {
     $chessScheduleStmt = $cms->getDb()->runSql($chessScheduleSql, ['website_id' => $websiteId]);
 
     $data['chessSchedules'] = $chessScheduleStmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Club Notes
+    $chessNoteSql = "
+        SELECT
+            cn.id,
+            cn.website_id,
+            cn.member_id,
+            cn.title,
+            cn.area,
+            cn.note_date,
+            cn.note_text,
+            cn.is_active,
+            cn.created,
+            cn.updated,
+            m.forename,
+            m.surname
+        FROM chess_note cn
+        LEFT JOIN member m ON m.id = cn.member_id
+        WHERE cn.website_id = :website_id
+          AND cn.is_active = 1
+        ORDER BY
+            CASE WHEN cn.note_date IS NULL THEN 1 ELSE 0 END,
+            cn.note_date DESC,
+            cn.updated DESC,
+            cn.id DESC
+        LIMIT 10
+    ";
+
+    $chessNoteStmt = $cms->getDb()->runSql($chessNoteSql, ['website_id' => $websiteId]);
+
+    $data['chessNotes'] = $chessNoteStmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 /**
