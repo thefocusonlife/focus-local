@@ -147,6 +147,98 @@
 							</article>
 						{% endfor %}
 					</div>
+
+				{% endif %}
+			</section>
+			<section class="chess-club-module">
+				<div class="chess-club-header">
+					<div>
+						<h2>Chess Game Meetups</h2>
+						<p>Arrange an in-person or online game with another member.</p>
+					</div>
+
+					{% if canAddChessMeetup %}
+						<div class="chess-club-actions">
+							<a href="{{ doc_root }}chess-meetup-add" class="btn btn-primary">
+								Add Meetup
+							</a>
+						</div>
+					{% endif %}
+				</div>
+
+				{% if chessMeetups is empty %}
+					<div class="chess-empty-state">
+						<p>No Chess Game Meetups are currently posted.</p>
+					</div>
+				{% else %}
+					<div class="chess-meetup-list">
+						{% for meetup in chessMeetups %}
+							<article class="chess-meetup-card">
+								<header class="chess-meetup-header">
+									<h3>{{ meetup.title }}</h3>
+
+									<div class="chess-meetup-date">
+										{{ meetup.meetup_date|date('l, F j, Y') }}
+									</div>
+
+									<div class="chess-meetup-time">
+										{{ meetup.start_time|date('g:i A') }}
+
+										{% if meetup.end_time %}
+											–
+											{{ meetup.end_time|date('g:i A') }}
+										{% endif %}
+									</div>
+								</header>
+
+								<div class="chess-meetup-status">
+									<strong>Status:</strong>
+									{{ meetup.status }}
+								</div>
+
+								<div class="chess-meetup-format">
+									<strong>Format:</strong>
+									{{ meetup.meetup_type }}
+								</div>
+
+								<div class="chess-meetup-area">
+									<strong>Area:</strong>
+									{{ meetup.area }}
+								</div>
+
+								<div class="chess-meetup-location">
+									<strong>Location:</strong>
+									{{ meetup.location }}
+								</div>
+
+								{% if meetup.player_level %}
+									<div class="chess-meetup-level">
+										<strong>Playing Level:</strong>
+										{{ meetup.player_level }}
+									</div>
+								{% endif %}
+
+								{% if meetup.description %}
+									<div class="chess-meetup-description">
+										{{ meetup.description|e|nl2br }}
+									</div>
+								{% endif %}
+
+								{% set can_manage_meetup =
+									viewer_id == 1 or
+									viewer_id == meetup.member_id
+								%}
+
+								{% if can_manage_meetup %}
+									<div class="chess-club-actions">
+										<a href="{{ doc_root }}chess-meetup-edit/{{ meetup.id }}" class="btn btn-secondary">
+											Edit Meetup
+										</a>
+									</div>
+								{% endif %}
+							</article>
+						{% endfor %}
+					</div>
 				{% endif %}
 			</section>
 		{% endif %}

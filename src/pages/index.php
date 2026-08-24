@@ -282,8 +282,16 @@ if ($data['isBicycleClub']) {
 $data['isChessClub'] = $websiteId === 51;
 $data['chessSchedules'] = [];
 $data['chessNotes'] = [];
+$data['chessMeetups'] = [];
+$data['canAddChessMeetup'] = false;
 
 if ($data['isChessClub']) {
+    $chessViewerId = (int) ($_SESSION['id'] ?? 0);
+
+    $data['canAddChessMeetup'] =
+        $chessViewerId === 1 ||
+        ($chessViewerId > 0 && $cms->getMember()->isMemberOfWebsite($chessViewerId, 51));
+
     $chessScheduleSql = "
         SELECT
             cs.id,
@@ -346,6 +354,40 @@ if ($data['isChessClub']) {
     $chessNoteStmt = $cms->getDb()->runSql($chessNoteSql, ['website_id' => $websiteId]);
 
     $data['chessNotes'] = $chessNoteStmt->fetchAll(PDO::FETCH_ASSOC);
+
+    // Chess Game Meetups
+    $chessMeetupSql = "
+        SELECT
+            cm.id,
+            cm.website_id,
+            cm.member_id,
+            cm.title,
+            cm.area,
+            cm.meetup_type,
+            cm.meetup_date,
+            cm.start_time,
+            cm.end_time,
+            cm.location,
+            cm.player_level,
+            cm.description,
+            cm.status,
+            cm.is_active,
+            cm.created,
+            cm.updated
+        FROM chess_meetup cm
+        WHERE cm.website_id = :website_id
+          AND cm.is_active = 1
+          AND cm.meetup_date >= CURRENT_DATE
+        ORDER BY
+            cm.meetup_date ASC,
+            cm.start_time ASC,
+            cm.id ASC
+        LIMIT 10
+    ";
+
+    $chessMeetupStmt = $cms->getDb()->runSql($chessMeetupSql, ['website_id' => $websiteId]);
+
+    $data['chessMeetups'] = $chessMeetupStmt->fetchAll(PDO::FETCH_ASSOC);
 }
 
 /**

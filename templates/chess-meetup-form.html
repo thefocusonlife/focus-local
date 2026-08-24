@@ -1,0 +1,251 @@
+{% extends 'layout.html' %}
+
+{% block content %}
+	<style>
+		.chess-meetup-form {
+			display: block;
+			width: 100%;
+		}
+
+		.chess-meetup-fields {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 16px 24px;
+			align-items: start;
+			max-width: 1000px;
+		}
+
+		.chess-meetup-fields > .form-row {
+			display: flex;
+			flex-direction: column;
+			min-width: 0;
+			margin: 0;
+			float: none;
+			width: auto;
+		}
+
+		.chess-meetup-fields > .form-row label {
+			display: block;
+			margin-bottom: 0.35rem;
+			font-weight: 600;
+		}
+
+		.chess-meetup-fields > .form-row input,
+		.chess-meetup-fields > .form-row select,
+		.chess-meetup-fields > .form-row textarea {
+			display: block;
+			width: 100%;
+			max-width: 100%;
+			box-sizing: border-box;
+			margin: 0;
+			float: none;
+			padding: 8px 10px;
+			font-size: 15px;
+			border: 1px solid #ccc;
+			border-radius: 4px;
+		}
+
+		.chess-meetup-fields > .form-row input,
+		.chess-meetup-fields > .form-row select {
+			height: 40px;
+		}
+
+		.chess-meetup-fields > .form-row textarea {
+			min-height: 140px;
+			height: auto;
+		}
+
+		.chess-meetup-fields > .form-row.form-row-wide {
+			grid-column: 1 / -1;
+		}
+
+		.chess-meetup-active-label {
+			display: flex !important;
+			flex-direction: row !important;
+			align-items: center !important;
+			gap: 8px !important;
+		}
+
+		.chess-meetup-active-label input[type="checkbox"] {
+			position: static !important;
+			display: inline-block !important;
+			width: auto !important;
+			height: auto !important;
+			margin: 0 !important;
+			flex: 0 0 auto;
+		}
+
+		.form-actions {
+			margin-top: 1rem;
+		}
+
+		.form-actions .btn {
+			display: inline-block;
+			margin-right: 0.5rem;
+			margin-bottom: 0.5rem;
+		}
+
+		@media(max-width: 800px) {
+			.chess-meetup-fields {
+				grid-template-columns: 1fr;
+			}
+
+			.chess-meetup-fields > .form-row.form-row-wide {
+				grid-column: auto;
+			}
+		}
+	</style>
+
+	<main class="container1 chess-meetup-page" id="content">
+		<h1>
+			{% if mode == 'edit' %}
+				Edit Chess Game Meetup
+			{% else %}
+				Add Chess Game Meetup
+			{% endif %}
+		</h1>
+
+		<p>
+			For in-person games, please use a public meeting place rather
+						than a home address.
+		</p>
+
+		{% if failure %}
+			<div class="alert alert-danger">{{ failure }}</div>
+		{% endif %}
+
+		<form method="post" action="{{ doc_root }}chess-meetup-save" class="chess-meetup-form">
+
+			<input type="hidden" name="id" value="{{ meetup.id }}">
+			<input type="hidden" name="website_id" value="{{ websiteId }}">
+
+			<section class="chess-meetup-fields">
+				<div class="form-row">
+					<label for="title">Title</label>
+					<input type="text" id="title" name="title" value="{{ meetup.title }}" required>
+				</div>
+
+				<div class="form-row">
+					<label for="area">Area</label>
+					<select id="area" name="area" required>
+						{% for area in [
+							'Bend',
+							'Redmond',
+							'Prineville',
+							'Central Oregon',
+							'Online'
+						] %}
+							<option value="{{ area }}" {% if meetup.area == area %} selected {% endif %}>
+								{{ area }}
+							</option>
+						{% endfor %}
+					</select>
+				</div>
+
+				<div class="form-row">
+					<label for="meetup_type">Format</label>
+					<select id="meetup_type" name="meetup_type" required>
+						{% for type in [
+							'In Person',
+							'Chess.com',
+							'Lichess',
+							'Other Online'
+						] %}
+							<option value="{{ type }}" {% if meetup.meetup_type == type %} selected {% endif %}>
+								{{ type }}
+							</option>
+						{% endfor %}
+					</select>
+				</div>
+
+				<div class="form-row">
+					<label for="meetup_date">Meetup Date</label>
+					<input type="date" id="meetup_date" name="meetup_date" value="{{ meetup.meetup_date }}" required>
+				</div>
+
+				<div class="form-row">
+					<label for="start_time">Start Time</label>
+					<input type="time" id="start_time" name="start_time" value="{{ meetup.start_time|slice(0, 5) }}" required>
+				</div>
+
+				<div class="form-row">
+					<label for="end_time">Ending Time (optional)</label>
+					<input type="time" id="end_time" name="end_time" value="{{ meetup.end_time|slice(0, 5) }}">
+				</div>
+
+				<div class="form-row form-row-wide">
+					<label for="location">Location or Online Meeting Information</label>
+					<input type="text" id="location" name="location" value="{{ meetup.location }}" placeholder="Public venue, Chess.com, Lichess, or other online location" required>
+				</div>
+
+				<div class="form-row">
+					<label for="player_level">Preferred Playing Level (optional)</label>
+					<select id="player_level" name="player_level">
+						<option value="">Any playing level</option>
+
+						{% for level in [
+							'Beginner',
+							'Intermediate',
+							'Advanced'
+						] %}
+							<option value="{{ level }}" {% if meetup.player_level == level %} selected {% endif %}>
+								{{ level }}
+							</option>
+						{% endfor %}
+					</select>
+				</div>
+
+				<div class="form-row">
+					<label for="status">Status</label>
+					<select id="status" name="status" required>
+						{% for status in ['Open', 'Filled'] %}
+							<option value="{{ status }}" {% if meetup.status == status %} selected {% endif %}>
+								{{ status }}
+							</option>
+						{% endfor %}
+					</select>
+				</div>
+
+				<div class="form-row form-row-wide">
+					<label for="description">Comments or Instructions</label>
+					<textarea id="description" name="description" rows="6">{{ meetup.description }}</textarea>
+				</div>
+
+				<div class="form-row">
+					<label class="chess-meetup-active-label">
+						<input type="checkbox" name="is_active" value="1" {% if meetup.is_active %} checked {% endif %}>
+						<span>Active</span>
+					</label>
+				</div>
+			</section>
+
+			<p class="form-actions">
+				<button type="submit" class="btn btn-primary">
+					Save Meetup
+				</button>
+
+				<a href="{{ doc_root }}index/51" class="btn btn-secondary">
+					Back to Central Oregon Chess
+				</a>
+			</p>
+		</form>
+
+		{% if mode == 'edit' %}
+			<hr>
+
+			<section class="danger-zone">
+				<h3>Delete This Meetup</h3>
+				<p>Deleting this Meetup cannot be undone.</p>
+
+				<form method="post" action="{{ doc_root }}chess-meetup-delete" onsubmit="return confirm('Delete this Meetup permanently?');">
+
+					<input type="hidden" name="id" value="{{ meetup.id }}">
+
+					<button type="submit" class="btn btn-danger">
+						Delete Meetup
+					</button>
+				</form>
+			</section>
+		{% endif %}
+	</main>
+{% endblock %}
