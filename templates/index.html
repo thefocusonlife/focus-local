@@ -266,8 +266,14 @@
 					</li>
 
 					<li>
-						👥 Membership List
-						<em>— Coming Soon</em>
+						{% if viewer_id == 1 %}
+							<a href="{{ doc_root }}club-members-admin?website=51">
+								👥 Membership Administration
+							</a>
+						{% else %}
+							👥 Membership List
+							<em>— Coming Soon</em>
+						{% endif %}
 					</li>
 
 					<li>

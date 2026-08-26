@@ -123,6 +123,11 @@ if ($role !== 'guest') {
             exit();
         }
 
+        if ($sessionWebsiteId === 51) {
+            redirect('index/51');
+            exit();
+        }
+
         redirect('member/' . $sid);
         exit();
     }
@@ -362,6 +367,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     if ($returnTo !== '') {
                         redirect(ltrim($returnTo, '/'));
+                        exit();
+                    }
+
+                    $loginWebsiteId = (int) ($_SESSION['website'] ?? 1);
+
+                    if ($loginWebsiteId === 51) {
+                        redirect('index/51');
                         exit();
                     }
 

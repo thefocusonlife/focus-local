@@ -34,8 +34,9 @@ if ($isGuest) {
 
 $viewer = $cms->getMember()->get($viewerId);
 $viewerWebsiteId = (int) ($viewer['website'] ?? 0);
+$isUberAdmin = $viewerId === 1;
 
-if (!$viewer || $viewerWebsiteId !== $websiteId) {
+if (!$viewer || (!$isUberAdmin && $viewerWebsiteId !== $websiteId)) {
     $_SESSION['flash_failure'] = 'This account does not belong to the selected club website.';
 
     $safeWebsiteId = $viewerWebsiteId > 0 ? $viewerWebsiteId : 1;
