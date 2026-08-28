@@ -1,0 +1,95 @@
+{% extends 'layout.html' %}
+
+{% block title %}Chess Membership List
+{% endblock %}
+
+{% block description %}
+	Active members of Central Oregon Chess
+{% endblock %}
+
+{% block content %}
+	<style>
+		.chess-members-directory {
+			max-width: 760px;
+			margin: 30px auto;
+			padding: 24px;
+			background: #ffffff;
+			border: 1px solid #cccccc;
+		}
+
+		.chess-members-directory h1 {
+			margin-top: 0;
+		}
+
+		.chess-members-intro {
+			margin-bottom: 24px;
+		}
+
+		.chess-members-list {
+			margin: 0;
+			padding: 0;
+			list-style: none;
+		}
+
+		.chess-member {
+			display: flex;
+			justify-content: space-between;
+			gap: 20px;
+			padding: 12px 0;
+			border-bottom: 1px solid #dddddd;
+		}
+
+		.chess-member-name {
+			font-weight: bold;
+		}
+
+		.chess-member-since {
+			color: #555555;
+			white-space: nowrap;
+		}
+
+		@media(max-width: 600px) {
+			.chess-member {
+				display: block;
+			}
+
+			.chess-member-since {
+				margin-top: 4px;
+			}
+		}
+	</style>
+
+	<main class="chess-members-directory">
+		<p>
+			<a href="{{ doc_root }}index/51">
+				← Back to Central Oregon Chess
+			</a>
+		</p>
+
+		<h1>Chess Membership List</h1>
+
+		<p class="chess-members-intro">
+			Active members of Central Oregon Chess.
+		</p>
+
+		{% if members %}
+			<ul class="chess-members-list">
+				{% for member in members %}
+					<li class="chess-member">
+						<span class="chess-member-name">
+							{{ member.first_name|e }}
+							{{ member.last_name|e }}
+						</span>
+
+						<span class="chess-member-since">
+							Member since
+							{{ member.created_at|date('F j, Y') }}
+						</span>
+					</li>
+				{% endfor %}
+			</ul>
+		{% else %}
+			<p>No active members are currently listed.</p>
+		{% endif %}
+	</main>
+{% endblock %}

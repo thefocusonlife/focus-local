@@ -270,9 +270,13 @@
 							<a href="{{ doc_root }}club-members-admin?website=51">
 								👥 Membership Administration
 							</a>
+						{% elseif viewer_id > 0 %}
+							<a href="{{ doc_root }}chess-members">
+								👥 Membership List
+							</a>
 						{% else %}
 							👥 Membership List
-							<em>— Coming Soon</em>
+							<em>— Login Required</em>
 						{% endif %}
 					</li>
 

@@ -340,4 +340,38 @@ class Club_members
 
         return $value === '' ? null : $value;
     }
+
+    /**
+     * Get active adult members for a privacy-safe club directory.
+     *
+     * Only fields approved for member-facing display are selected.
+     */
+    public function getActiveDirectory(int $websiteId)
+    {
+        if ($websiteId < 1) {
+            throw new \InvalidArgumentException(
+                'A valid website ID is required to retrieve the member directory.',
+            );
+        }
+
+        return $this->db->runSql(
+            "
+            SELECT
+                first_name,
+                last_name,
+                created_at
+            FROM club_members
+            WHERE website_id = :website_id
+              AND membership_status = 'active'
+              AND (
+                  date_of_birth IS NULL
+                  OR date_of_birth <= DATE_SUB(CURDATE(), INTERVAL 18 YEAR)
+              )
+            ORDER BY last_name ASC, first_name ASC
+            ",
+            [
+                'website_id' => $websiteId,
+            ],
+        );
+    }
 }
