@@ -1,0 +1,193 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+	{% if mode == 'edit' %}
+		Edit Chess Tournament
+	{% else %}
+		Add Chess Tournament
+	{% endif %}
+{% endblock %}
+
+{% block content %}
+	<style>
+		.chess-tournament-page {
+			max-width: 900px;
+			margin: 30px auto;
+		}
+
+		.chess-tournament-form {
+			display: block;
+			width: 100%;
+		}
+
+		.chess-tournament-fields {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 16px 24px;
+			align-items: start;
+		}
+
+		.chess-tournament-fields .form-row {
+			display: flex;
+			flex-direction: column;
+			min-width: 0;
+		}
+
+		.chess-tournament-fields .form-row-wide {
+			grid-column: 1 / -1;
+		}
+
+		.chess-tournament-fields label {
+			margin-bottom: 0.35rem;
+			font-weight: 600;
+		}
+
+		.chess-tournament-fields input,
+		.chess-tournament-fields select,
+		.chess-tournament-fields textarea {
+			width: 100%;
+			box-sizing: border-box;
+			padding: 8px 10px;
+			font-size: 15px;
+			border: 1px solid #cccccc;
+			border-radius: 4px;
+		}
+
+		.chess-tournament-fields input,
+		.chess-tournament-fields select {
+			height: 40px;
+		}
+
+		.chess-tournament-fields textarea {
+			min-height: 140px;
+		}
+
+		.chess-tournament-active {
+			display: flex !important;
+			flex-direction: row !important;
+			align-items: center;
+			gap: 8px;
+		}
+
+		.chess-tournament-active input {
+			width: auto;
+			height: auto;
+		}
+
+		.form-actions {
+			margin-top: 20px;
+		}
+
+		@media(max-width: 700px) {
+			.chess-tournament-fields {
+				grid-template-columns: 1fr;
+			}
+
+			.chess-tournament-fields .form-row-wide {
+				grid-column: auto;
+			}
+		}
+	</style>
+
+	<main class="container1 chess-tournament-page" id="content">
+		<h1>
+			{% if mode == 'edit' %}
+				Edit Chess Tournament
+			{% else %}
+				Add Chess Tournament
+			{% endif %}
+		</h1>
+
+		<p>
+			Only published tournaments contribute to the Chess leaderboard.
+		</p>
+
+		{% if failure %}
+			<div class="alert alert-danger">
+				{{ failure|e }}
+			</div>
+		{% endif %}
+
+		{% if success %}
+			<div class="alert alert-success">
+				{{ success|e }}
+			</div>
+		{% endif %}
+
+		<form method="post" action="{{ doc_root }}chess-tournament-save" class="chess-tournament-form">
+			<input type="hidden" name="csrf_token" value="{{ csrf_token|e }}">
+
+			<input type="hidden" name="id" value="{{ tournament.id }}">
+
+			<input type="hidden" name="website_id" value="{{ websiteId }}">
+
+			<section class="chess-tournament-fields">
+				<div class="form-row form-row-wide">
+					<label for="name">Tournament Name</label>
+					<input type="text" id="name" name="name" maxlength="150" value="{{ tournament.name|e }}" required>
+				</div>
+
+				<div class="form-row">
+					<label for="tournament_date">Tournament Date</label>
+					<input type="date" id="tournament_date" name="tournament_date" value="{{ tournament.tournament_date|e }}" required>
+				</div>
+
+				<div class="form-row">
+					<label for="area">Area</label>
+					<select id="area" name="area" required>
+						{% for area in areas %}
+							<option value="{{ area|e }}" {% if tournament.area == area %} selected {% endif %}>
+								{{ area|e }}
+							</option>
+						{% endfor %}
+					</select>
+				</div>
+
+				<div class="form-row form-row-wide">
+					<label for="location">Location</label>
+					<input type="text" id="location" name="location" maxlength="255" value="{{ tournament.location|e }}" placeholder="Tournament venue or online service" required>
+				</div>
+
+				<div class="form-row">
+					<label for="status">Status</label>
+					<select id="status" name="status" required>
+						{% for status in statuses %}
+							<option value="{{ status|e }}" {% if tournament.status == status %} selected {% endif %}>
+								{{ status|e }}
+							</option>
+						{% endfor %}
+					</select>
+				</div>
+
+				<div class="form-row">
+					<label class="chess-tournament-active">
+						<input type="checkbox" name="is_active" value="1" {% if tournament.is_active %} checked {% endif %}>
+						<span>Active</span>
+					</label>
+				</div>
+
+				<div class="form-row form-row-wide">
+					<label for="notes">Tournament Notes</label>
+					<textarea id="notes" name="notes" rows="6">{{ tournament.notes|e }}</textarea>
+				</div>
+			</section>
+
+			<p class="form-actions">
+				<button type="submit" class="btn btn-primary">
+					Save Tournament
+				</button>
+
+				<a href="{{ doc_root }}index/51" class="btn btn-secondary">
+					Back to Central Oregon Chess
+				</a>
+
+				{% if mode == 'edit' %}
+					<a href="{{ doc_root }}chess-tournament-results/{{ tournament.id }}" class="btn btn-secondary">
+						Manage Tournament Results
+					</a>
+				{% endif %}
+			</p>
+
+		</form>
+	</main>
+{% endblock %}

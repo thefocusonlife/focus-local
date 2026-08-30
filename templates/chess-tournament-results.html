@@ -1,0 +1,297 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+	Manage Tournament Results
+{% endblock %}
+
+{% block content %}
+	<style>
+		.chess-results-page {
+			max-width: 1000px;
+			margin: 30px auto;
+		}
+
+		.chess-results-summary {
+			margin-bottom: 24px;
+			padding: 16px;
+			background: #f4f4f4;
+			border-left: 4px solid #555555;
+		}
+
+		.chess-result-form {
+			margin-bottom: 30px;
+			padding: 20px;
+			background: #ffffff;
+			border: 1px solid #cccccc;
+		}
+
+		.chess-result-fields {
+			display: grid;
+			grid-template-columns: 2fr repeat(4, 1fr);
+			gap: 14px;
+			align-items: end;
+		}
+
+		.chess-result-fields .form-row {
+			display: flex;
+			flex-direction: column;
+			min-width: 0;
+		}
+
+		.chess-result-fields label {
+			margin-bottom: 0.35rem;
+			font-weight: 600;
+		}
+
+		.chess-result-fields input,
+		.chess-result-fields select {
+			width: 100%;
+			height: 40px;
+			box-sizing: border-box;
+			padding: 8px;
+		}
+
+		.chess-results-table {
+			width: 100%;
+			border-collapse: collapse;
+			background: #ffffff;
+		}
+
+		.chess-results-table th,
+		.chess-results-table td {
+			padding: 9px;
+			border: 1px solid #cccccc;
+			text-align: left;
+		}
+
+		.chess-results-table th {
+			background: #eeeeee;
+		}
+
+		.chess-results-actions {
+			margin-top: 20px;
+		}
+
+		@media(max-width: 800px) {
+			.chess-result-fields {
+				grid-template-columns: 1fr 1fr;
+			}
+
+			.chess-result-fields .player-field {
+				grid-column: 1 / -1;
+			}
+
+			.chess-results-table {
+				display: block;
+				overflow-x: auto;
+			}
+		}
+	</style>
+
+	<main class="container1 chess-results-page" id="content">
+		<h1>Manage Tournament Results</h1>
+
+		<section class="chess-results-summary">
+			<h2>{{ tournament.name|e }}</h2>
+
+			<p>
+				<strong>Date:</strong>
+				{{ tournament.tournament_date|date('F j, Y') }}
+			</p>
+
+			<p>
+				<strong>Area:</strong>
+				{{ tournament.area|e }}
+			</p>
+
+			<p>
+				<strong>Location:</strong>
+				{{ tournament.location|e }}
+			</p>
+
+			<p>
+				<strong>Status:</strong>
+				{{ tournament.status|e }}
+			</p>
+
+			{% if tournament.status != 'Published' %}
+				<p>
+					<em>
+						This tournament will not affect the leaderboard
+																		until its status is Published.
+					</em>
+				</p>
+			{% endif %}
+		</section>
+
+		{% if failure %}
+			<div class="alert alert-danger">
+				{{ failure|e }}
+			</div>
+		{% endif %}
+
+		{% if success %}
+			<div class="alert alert-success">
+				{{ success|e }}
+			</div>
+		{% endif %}
+
+		<section class="chess-result-form">
+			<h2>
+				{% if editingResult.id %}
+					Edit Participant Result
+				{% else %}
+					Add Participant Result
+				{% endif %}
+			</h2>
+
+			<form method="post" action="{{ doc_root }}chess-tournament-result-save">
+				<input type="hidden" name="csrf_token" value="{{ csrf_token|e }}">
+
+				<input type="hidden" name="tournament_id" value="{{ tournament.id }}">
+
+				<input type="hidden" name="result_id" value="{{ editingResult.id }}">
+
+				<div class="chess-result-fields">
+					<div class="form-row player-field">
+						<label for="member_id">Player</label>
+
+						<select id="member_id" name="member_id" required>
+							<option value="">
+								Select an active Chess member
+							</option>
+
+							{% for player in players %}
+								<option value="{{ player.member_id }}" {% if editingResult.member_id == player.member_id %} selected {% endif %}>
+									{{ player.first_name|e }}
+									{{ player.last_name|e }}
+								</option>
+							{% endfor %}
+						</select>
+					</div>
+
+					<div class="form-row">
+						<label for="wins">Wins</label>
+						<input type="number" id="wins" name="wins" min="0" max="999" value="{{ editingResult.wins }}" required>
+					</div>
+
+					<div class="form-row">
+						<label for="draws">Draws</label>
+						<input type="number" id="draws" name="draws" min="0" max="999" value="{{ editingResult.draws }}" required>
+					</div>
+
+					<div class="form-row">
+						<label for="losses">Losses</label>
+						<input type="number" id="losses" name="losses" min="0" max="999" value="{{ editingResult.losses }}" required>
+					</div>
+
+					<div class="form-row">
+						<label for="final_place">
+							Final Place
+						</label>
+
+						<input type="number" id="final_place" name="final_place" min="1" max="999" value="{{ editingResult.final_place }}" placeholder="Optional">
+					</div>
+				</div>
+
+				<p class="chess-results-actions">
+					<button type="submit" class="btn btn-primary">
+						{% if editingResult.id %}
+							Update Result
+						{% else %}
+							Add Result
+						{% endif %}
+					</button>
+
+					{% if editingResult.id %}
+						<a href="{{ doc_root }}chess-tournament-results/{{ tournament.id }}" class="btn btn-secondary">
+							Cancel Edit
+						</a>
+					{% endif %}
+				</p>
+			</form>
+		</section>
+
+		<section>
+			<h2>Entered Results</h2>
+
+			{% if results %}
+				<table class="chess-results-table">
+					<thead>
+						<tr>
+							<th>Place</th>
+							<th>Player</th>
+							<th>Games</th>
+							<th>Wins</th>
+							<th>Draws</th>
+							<th>Losses</th>
+							<th>Points</th>
+							<th>Manage</th>
+						</tr>
+					</thead>
+
+					<tbody>
+						{% for result in results %}
+							<tr>
+								<td>
+									{{ result.final_place ?: '—' }}
+								</td>
+
+								<td>
+									{{ result.first_name|e }}
+									{{ result.last_name|e }}
+								</td>
+
+								<td>
+									{{
+										result.wins +
+										result.draws +
+										result.losses
+									}}
+								</td>
+
+								<td>{{ result.wins }}</td>
+								<td>{{ result.draws }}</td>
+								<td>{{ result.losses }}</td>
+
+								<td>
+									{{ result.points|number_format(1) }}
+								</td>
+
+								<td>
+									<a href="{{ doc_root }}chess-tournament-results/{{ tournament.id }}?result={{ result.id }}">
+										Edit
+									</a>
+
+									<form method="post" action="{{ doc_root }}chess-tournament-result-delete" style="display: inline;" onsubmit="return confirm('Delete this participant result?');">
+										<input type="hidden" name="csrf_token" value="{{ delete_csrf_token|e }}">
+
+										<input type="hidden" name="tournament_id" value="{{ tournament.id }}">
+
+										<input type="hidden" name="result_id" value="{{ result.id }}">
+
+										<button type="submit" class="btn btn-danger">
+											Delete
+										</button>
+									</form>
+								</td>
+							</tr>
+						{% endfor %}
+					</tbody>
+				</table>
+			{% else %}
+				<p>No participant results have been entered.</p>
+			{% endif %}
+		</section>
+
+		<p class="chess-results-actions">
+			<a href="{{ doc_root }}chess-tournament-edit/{{ tournament.id }}" class="btn btn-secondary">
+				Back to Tournament
+			</a>
+
+			<a href="{{ doc_root }}index/51" class="btn btn-secondary">
+				Back to Central Oregon Chess
+			</a>
+		</p>
+	</main>
+{% endblock %}

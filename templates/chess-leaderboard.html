@@ -1,0 +1,310 @@
+{% extends 'layout.html' %}
+
+{% block title %}
+	Chess Leaderboard
+{% endblock %}
+
+{% block content %}
+	<style>
+		.chess-leaderboard-page {
+			max-width: 1100px;
+			margin: 30px auto;
+		}
+
+		.leaderboard-intro {
+			margin-bottom: 22px;
+			padding: 16px;
+			background: #f4f4f4;
+			border-left: 4px solid #555555;
+		}
+
+		.leaderboard-filters {
+			display: flex;
+			flex-wrap: wrap;
+			gap: 8px;
+			margin: 20px 0;
+		}
+
+		.leaderboard-filters a {
+			display: inline-block;
+			padding: 7px 11px;
+			border: 1px solid #777777;
+			border-radius: 4px;
+			text-decoration: none;
+		}
+
+		.leaderboard-filters a.active {
+			color: #ffffff;
+			background: #24557a;
+			border-color: #24557a;
+		}
+
+		.chess-leaderboard-table,
+		.chess-tournament-admin-table {
+			width: 100%;
+			border-collapse: collapse;
+			background: #ffffff;
+		}
+
+		.chess-leaderboard-table th,
+		.chess-leaderboard-table td,
+		.chess-tournament-admin-table th,
+		.chess-tournament-admin-table td {
+			padding: 9px;
+			border: 1px solid #cccccc;
+			text-align: left;
+		}
+
+		.chess-leaderboard-table th,
+		.chess-tournament-admin-table th {
+			background: #eeeeee;
+		}
+
+		.leaderboard-rank {
+			font-weight: bold;
+			text-align: center !important;
+		}
+
+		.leaderboard-number {
+			text-align: right !important;
+		}
+
+		.chess-leaderboard-admin {
+			margin-top: 40px;
+			padding-top: 24px;
+			border-top: 2px solid #999999;
+		}
+
+		.chess-leaderboard-actions {
+			margin: 18px 0;
+		}
+
+		.tournament-status {
+			font-weight: bold;
+		}
+
+		.tournament-inactive {
+			color: #8b0000;
+		}
+
+		@media(max-width: 800px) {
+			.chess-leaderboard-table,
+			.chess-tournament-admin-table {
+				display: block;
+				overflow-x: auto;
+			}
+		}
+	</style>
+
+	<main class="container1 chess-leaderboard-page" id="content">
+		<p>
+			<a href="{{ doc_root }}index/51">
+				← Back to Central Oregon Chess
+			</a>
+		</p>
+
+		<h1>
+			Central Oregon Chess Leaderboard —
+			{% if selectedArea %}
+				{{ selectedArea|e }}
+			{% else %}
+				Overall
+			{% endif %}
+		</h1>
+
+		<section class="leaderboard-intro">
+			<p>
+				The leaderboard includes official Central Oregon Chess
+																								tournaments with Published status.
+			</p>
+
+			<p>
+				<strong>Scoring:</strong>
+				1 point for a win, ½ point for a draw, and 0 points
+																								for a loss.
+			</p>
+
+			<p>
+				Players are ranked by cumulative points, followed by
+																								score percentage and total wins.
+			</p>
+		</section>
+
+		{% if failure %}
+			<div class="alert alert-danger">
+				{{ failure|e }}
+			</div>
+		{% endif %}
+
+		{% if success %}
+			<div class="alert alert-success">
+				{{ success|e }}
+			</div>
+		{% endif %}
+
+		<nav class="leaderboard-filters" aria-label="Leaderboard area">
+			<a href="{{ doc_root }}chess-leaderboard" class="{% if not selectedArea %}active{% endif %}">
+				Overall
+			</a>
+
+			{% for area in filterAreas %}
+				<a href="{{ doc_root }}chess-leaderboard?area={{ area|url_encode }}" class="{% if selectedArea == area %}active{% endif %}">
+					{{ area|e }}
+				</a>
+			{% endfor %}
+		</nav>
+
+		{% if leaderboard %}
+			<table class="chess-leaderboard-table">
+				<thead>
+					<tr>
+						<th>Rank</th>
+						<th>Player</th>
+						<th>Tournaments</th>
+						<th>Games</th>
+						<th>Wins</th>
+						<th>Draws</th>
+						<th>Losses</th>
+						<th>Points</th>
+						<th>Score %</th>
+					</tr>
+				</thead>
+
+				<tbody>
+					{% for player in leaderboard %}
+						<tr>
+							<td class="leaderboard-rank">
+								{{ player.rank }}
+							</td>
+
+							<td>
+								<strong>
+									{{ player.first_name|e }}
+									{{ player.last_name|e }}
+								</strong>
+							</td>
+
+							<td class="leaderboard-number">
+								{{ player.tournaments_played }}
+							</td>
+
+							<td class="leaderboard-number">
+								{{ player.games_played }}
+							</td>
+
+							<td class="leaderboard-number">
+								{{ player.wins }}
+							</td>
+
+							<td class="leaderboard-number">
+								{{ player.draws }}
+							</td>
+
+							<td class="leaderboard-number">
+								{{ player.losses }}
+							</td>
+
+							<td class="leaderboard-number">
+								{{ player.points|number_format(1) }}
+							</td>
+
+							<td class="leaderboard-number">
+								{{ player.score_percentage|number_format(1) }}%
+							</td>
+						</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		{% else %}
+			<p>
+				No published tournament results are available
+				{% if selectedArea %}
+					for
+					{{ selectedArea|e }}
+				{% endif %}.
+			</p>
+		{% endif %}
+
+		{% if canManageLeaderboard %}
+			<section class="chess-leaderboard-admin">
+				<h2>Tournament Administration</h2>
+
+				<p class="chess-leaderboard-actions">
+					<a href="{{ doc_root }}chess-tournament-add" class="btn btn-primary">
+						Add Tournament
+					</a>
+				</p>
+
+				{% if tournaments %}
+					<table class="chess-tournament-admin-table">
+						<thead>
+							<tr>
+								<th>Date</th>
+								<th>Tournament</th>
+								<th>Area</th>
+								<th>Status</th>
+								<th>Participants</th>
+								<th>Manage</th>
+							</tr>
+						</thead>
+
+						<tbody>
+							{% for tournament in tournaments %}
+								<tr>
+									<td>
+										{{ tournament.tournament_date|date('M j, Y') }}
+									</td>
+
+									<td>
+										<strong>
+											{{ tournament.name|e }}
+										</strong>
+
+										<br>
+
+										{{ tournament.location|e }}
+									</td>
+
+									<td>
+										{{ tournament.area|e }}
+									</td>
+
+									<td>
+										<span class="tournament-status">
+											{{ tournament.status|e }}
+										</span>
+
+										{% if not tournament.is_active %}
+											<br>
+											<span class="tournament-inactive">
+												Inactive
+											</span>
+										{% endif %}
+									</td>
+
+									<td>
+										{{ tournament.participant_count }}
+									</td>
+
+									<td>
+										<a href="{{ doc_root }}chess-tournament-edit/{{ tournament.id }}">
+											Edit
+										</a>
+
+										&nbsp;|&nbsp;
+
+										<a href="{{ doc_root }}chess-tournament-results/{{ tournament.id }}">
+											Results
+										</a>
+									</td>
+								</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				{% else %}
+					<p>No Chess tournaments have been created.</p>
+				{% endif %}
+			</section>
+		{% endif %}
+	</main>
+{% endblock %}

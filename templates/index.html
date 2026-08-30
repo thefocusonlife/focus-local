@@ -281,8 +281,14 @@
 					</li>
 
 					<li>
-						🏆 Leaderboard
-						<em>— Coming Soon</em>
+						{% if viewer_id > 0 %}
+							<a href="{{ doc_root }}chess-leaderboard">
+								🏆 Leaderboard
+							</a>
+						{% else %}
+							🏆 Leaderboard
+							<em>— Login Required</em>
+						{% endif %}
 					</li>
 
 					<li>
@@ -291,8 +297,10 @@
 					</li>
 
 					<li>
-						🌐 Resources
-						<em>— Coming Soon</em>
+						🌐
+						<a href="{{ doc_root }}chess-resources?website=51">
+							Resources
+						</a>
 					</li>
 				</ul>
 

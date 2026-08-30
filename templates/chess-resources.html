@@ -1,0 +1,186 @@
+<style>
+	.bicycle-resources-page {
+		display: block;
+		grid-column: 1 / -1;
+		width: 100%;
+		max-width: 1100px;
+		margin: 0 auto;
+		box-sizing: border-box;
+	}
+
+	.resources-introduction {
+		margin-bottom: 2rem;
+	}
+
+	.resources-introduction h1 {
+		margin-bottom: 0.75rem;
+	}
+
+	.resources-introduction p {
+		max-width: 850px;
+		margin-bottom: 0.75rem;
+		line-height: 1.5;
+	}
+
+	.resource-section {
+		margin: 0 0 2.5rem;
+	}
+
+	.resource-section h2 {
+		margin-bottom: 1rem;
+		padding-bottom: 0.4rem;
+		border-bottom: 1px solid #ccc;
+	}
+
+	.resource-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 1.25rem;
+	}
+
+	.resource-card {
+		display: flex;
+		flex-direction: column;
+		min-width: 0;
+		padding: 1.25rem;
+		background: #f7f8f8;
+		border: 1px solid #d5d8da;
+		border-radius: 7px;
+		box-sizing: border-box;
+	}
+
+	.resource-card h3 {
+		margin: 0 0 0.65rem;
+	}
+
+	.resource-card p {
+		margin: 0 0 1rem;
+		line-height: 1.45;
+	}
+
+	.resource-card-actions {
+		margin-top: auto;
+	}
+
+	.resource-card-actions a {
+		margin-right: 0.5rem;
+		margin-bottom: 0.35rem;
+	}
+
+	.resource-area {
+		margin-bottom: 0.75rem;
+		font-size: 0.9rem;
+		font-weight: 600;
+	}
+
+	.external-link-note {
+		margin-top: 2rem;
+		padding: 1rem;
+		background: #f5f5f5;
+		border-left: 4px solid #295073;
+		line-height: 1.45;
+	}
+
+	.resources-back {
+		margin-top: 1.5rem;
+	}
+
+	@media(max-width: 760px) {
+		.resource-grid {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>
+
+<main class="container resources-layout" id="content">
+
+	<header class="resources-introduction">
+		<h1>Central Oregon Chess Resources</h1>
+
+		<p>
+			Explore online playing, practice, learning, tournament, and
+																			organizational resources for chess players in Central Oregon.
+		</p>
+
+		<p>
+			Each listing may link to a TFOL information page, the resource’s
+																			official website, or both.
+		</p>
+	</header>
+
+	<p class="resources-back">
+		<a class="btn btn-secondary" href="{{ doc_root }}index/51">
+			Back to Central Oregon Chess
+		</a>
+	</p>
+
+	<section class="resource-section">
+		<h2>Play and Practice</h2>
+
+		<div class="resource-grid">
+
+			<article class="resource-card">
+				<h3>Chess.com</h3>
+
+				<div class="resource-area">
+					Online Chess Platform
+				</div>
+
+				<p>
+					Play live or correspondence games, solve puzzles, take
+																															lessons, analyze completed games, and participate in
+																															online tournaments.
+				</p>
+
+				<div class="resource-card-actions">
+					<a class="btn btn-primary" href="{{ doc_root }}story/1722/chesscom">
+						Learn More
+					</a>
+
+					<a class="btn btn-secondary" href="https://www.chess.com/" target="_blank" rel="noopener noreferrer">
+						Official Website
+					</a>
+				</div>
+			</article>
+
+			<article class="resource-card">
+				<h3>Lichess.org</h3>
+
+				<div class="resource-area">
+					Free Online Chess Platform
+				</div>
+
+				<p>
+					Play online games, practice with puzzles, analyze games,
+																															create studies, and participate in tournaments on a free,
+																															open-source chess platform.
+				</p>
+
+				<div class="resource-card-actions">
+					<a class="btn btn-primary" href="{{ doc_root }}story/1723">
+						Learn More
+					</a>
+
+					<a class="btn btn-secondary" href="https://lichess.org/" target="_blank" rel="noopener noreferrer">
+						Official Website
+					</a>
+				</div>
+			</article>
+
+		</div>
+	</section>
+
+	<aside class="external-link-note">
+		<strong>External websites:</strong>
+		These links are provided as a community resource. Central Oregon Chess
+													is not affiliated with or responsible for the content, services,
+													policies, or activities of the listed organizations.
+	</aside>
+
+	<p class="resources-back">
+		<a class="btn btn-secondary" href="{{ doc_root }}index/51">
+			Back to Central Oregon Chess
+		</a>
+	</p>
+
+</main>
