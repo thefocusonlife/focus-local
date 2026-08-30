@@ -15,13 +15,29 @@ if (!$_SESSION['id']) {
 $data['success'] = $_GET['success'] ?? null; // Check for success message
 $data['failure'] = $_GET['failure'] ?? null; // Check for failure message
 
-if ($_SESSION['id'] == 1) {
-    $data['stories'] = $cms->getStory()->getAll2($website['id'], null, null, null); // Get all stories for Uber
-    //$cms()->getSession->create(0,website['id']);
-} else {
+$visibility = strtolower(trim((string) ($_GET['visibility'] ?? 'all')));
+
+if (!in_array($visibility, ['all', 'public', 'private'], true)) {
+    $visibility = 'all';
+}
+
+$published = match ($visibility) {
+    'public' => 1,
+    'private' => 0,
+    default => null,
+};
+
+$data['visibility'] = $visibility;
+if ((int) $_SESSION['id'] === 1) {
+    // Uber Admin: retrieve stories across all active websites.
     $data['stories'] = $cms
         ->getStory()
-        ->getAll3(intval($website['id']), null, null, intval($_SESSION['id']));
+        ->getAll3((int) $website['id'], $published, null, null, 300, null, true);
+} else {
+    // Other administrators: remain restricted to their website and authorship.
+    $data['stories'] = $cms
+        ->getStory()
+        ->getAll3((int) $website['id'], $published, null, (int) $_SESSION['id']);
 }
 
 $data['website'] = $website;

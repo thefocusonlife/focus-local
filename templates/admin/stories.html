@@ -21,6 +21,19 @@
 			{% endif %}
 		</section>
 
+		<div class="mb-3">
+			<a href="{{ doc_root }}admin/stories?visibility=all" class="btn {{ visibility == 'all' ? 'btn-primary' : 'btn-secondary' }}">
+				All
+			</a>
+
+			<a href="{{ doc_root }}admin/stories?visibility=private" class="btn {{ visibility == 'private' ? 'btn-primary' : 'btn-secondary' }}">
+				Private
+			</a>
+
+			<a href="{{ doc_root }}admin/stories?visibility=public" class="btn {{ visibility == 'public' ? 'btn-primary' : 'btn-secondary' }}">
+				Public
+			</a>
+		</div>
 
 		<table class="table">
 
@@ -64,7 +77,7 @@
 							{% endif %}
 						</td>
 						<td>
-							{% if session.id == story.member_id %}
+							{% if session.id == story.member_id or session.id == 1 %}
 								<a href="{{ doc_root }}work/{{ story.id }}" class="btn btn-primary">edit</a>
 							{% endif %}
 						</td>

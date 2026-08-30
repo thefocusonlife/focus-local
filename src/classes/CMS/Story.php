@@ -350,8 +350,9 @@ class Story
         $arguments['menu'] = $arguments['menu1'] = $menu; // Menu id
         $arguments['member'] = $arguments['member1'] = $member; // Author id
         $arguments['website'] = $website;
-        $arguments['crossWebsite'] = $crossWebsite ? 1 : 0; // (optional; see below)
-
+        $arguments['crossWebsite'] = $crossWebsite ? 1 : 0;
+        $arguments['published'] = $published;
+        $arguments['published1'] = $published;
         //$arguments = array($website);
         // Setup file
         $path = mb_strtolower(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/');
@@ -404,8 +405,9 @@ LEFT JOIN image AS i ON a.image_id    = i.id
 
 WHERE w.is_active = 1
 AND (a.menu_id = :menu OR :menu1 is null)
-AND (a.member_id   = :member   OR :member1   is null)
+AND (a.member_id = :member OR :member1 IS NULL)
 AND (:crossWebsite = 1 OR a.website = :website)
+AND (:published1 IS NULL OR a.published = :published)
 ";
         $sessionRole = (string) ($_SESSION['role'] ?? 'guest');
         $sessionMemberId = (int) ($_SESSION['id'] ?? 0);
@@ -460,7 +462,7 @@ AND (:crossWebsite = 1 OR a.website = :website)
         $requestedLimit = (int) ($arguments['limit'] ?? ($limit ?? 12));
 
         if ($role === 'admin') {
-            $maxLimit = 100;
+            $maxLimit = 300;
         } else {
             $maxLimit = max(1, (int) ($menuTileLimit ?? 51));
         }

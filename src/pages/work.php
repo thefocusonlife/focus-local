@@ -327,7 +327,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ? (int) $_POST['menu_id']
                 : $story['menu_id'] ?? 0;
 
-            $story['published'] = !empty($_POST['published']) ? 1 : 0;
+            // Only Uber Admin may make a story public.
+            // Stories saved by general members are always private.
+            $story['published'] = $isUberAdmin && !empty($_POST['published']) ? 1 : 0;
+
             $story['seo_title'] = create_seo_name($story['title']);
 
             $story['storyorder'] = isset($_POST['storyorder'])
