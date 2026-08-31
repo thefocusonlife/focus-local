@@ -685,6 +685,7 @@ AND (:reviewRequested = 0 OR a.review_requested_at IS NOT NULL)
             'original_image_file' => !empty($story['original_image_file'])
                 ? trim((string) $story['original_image_file'])
                 : null,
+            'published' => (int) ($story['published'] ?? 0),
             'review_requested_at' => !empty($story['review_requested_at'])
                 ? (string) $story['review_requested_at']
                 : null,
