@@ -26,6 +26,10 @@
 				All
 			</a>
 
+			<a href="{{ doc_root }}admin/stories?visibility=review" class="btn {{ visibility == 'review' ? 'btn-primary' : 'btn-secondary' }}">
+				Review Requested
+			</a>
+
 			<a href="{{ doc_root }}admin/stories?visibility=private" class="btn {{ visibility == 'private' ? 'btn-primary' : 'btn-secondary' }}">
 				Private
 			</a>
@@ -46,7 +50,7 @@
 				<th>Created</th>
 				<th>Menu</th>
 				<th>Order</th>
-				<th>Public</th>
+				<th>Status</th>
 				<th>Edit Story</th>
 				<th>Delete</th>
 			</tr>
@@ -70,10 +74,13 @@
 						<td>{{ story.menu_id }}</td>
 						<td>{{ story.storyorder }}</td>
 						<td>
-							{% if story.published  %}
-								Yes
+							{% if story.published %}
+								Public
+							{% elseif story.review_requested_at %}
+								Review Requested<br>
+								<small>{{ story.review_requested_at|date('M d Y g:i a') }}</small>
 							{% else %}
-								No
+								Private Draft
 							{% endif %}
 						</td>
 						<td>

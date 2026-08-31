@@ -17,29 +17,39 @@ $data['failure'] = $_GET['failure'] ?? null; // Check for failure message
 
 $visibility = strtolower(trim((string) ($_GET['visibility'] ?? 'all')));
 
-if (!in_array($visibility, ['all', 'public', 'private'], true)) {
+if (!in_array($visibility, ['all', 'review', 'public', 'private'], true)) {
     $visibility = 'all';
 }
 
 $published = match ($visibility) {
     'public' => 1,
-    'private' => 0,
+    'private', 'review' => 0,
     default => null,
 };
+
+$reviewRequested = $visibility === 'review';
 
 $data['visibility'] = $visibility;
 if ((int) $_SESSION['id'] === 1) {
     // Uber Admin: retrieve stories across all active websites.
     $data['stories'] = $cms
         ->getStory()
-        ->getAll3((int) $website['id'], $published, null, null, 300, null, true);
+        ->getAll3((int) $website['id'], $published, null, null, 300, null, true, $reviewRequested);
 } else {
     // Other administrators: remain restricted to their website and authorship.
     $data['stories'] = $cms
         ->getStory()
-        ->getAll3((int) $website['id'], $published, null, (int) $_SESSION['id']);
+        ->getAll3(
+            (int) $website['id'],
+            $published,
+            null,
+            (int) $_SESSION['id'],
+            300,
+            null,
+            false,
+            $reviewRequested,
+        );
 }
-
 $data['website'] = $website;
 
 echo $twig->render('admin/stories.html', $data); // Render Twig template

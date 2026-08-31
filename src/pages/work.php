@@ -56,6 +56,7 @@ $story = [
     'image_id' => null,
     'original_image_file' => null,
     'published' => 0,
+    'review_requested_at' => null,
     'image_file' => '',
     'image_alt' => '',
     'storyorder' => 0,
@@ -327,9 +328,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ? (int) $_POST['menu_id']
                 : $story['menu_id'] ?? 0;
 
-            // Only Uber Admin may make a story public.
-            // Stories saved by general members are always private.
-            $story['published'] = $isUberAdmin && !empty($_POST['published']) ? 1 : 0;
+            $saveAction = (string) ($_POST['update'] ?? 'draft');
+
+            if ($isUberAdmin) {
+                // Only Uber Admin may publish.
+                $story['published'] = !empty($_POST['published']) ? 1 : 0;
+
+                // Publishing completes the review request. If the admin keeps the
+                // story private, preserve its existing review-request state.
+                if ($story['published'] === 1) {
+                    $story['review_requested_at'] = null;
+                }
+            } else {
+                // General members can save drafts or request review, but not publish.
+                $story['published'] = 0;
+                $story['review_requested_at'] =
+                    $saveAction === 'request_review' ? date('Y-m-d H:i:s') : null;
+            }
 
             $story['seo_title'] = create_seo_name($story['title']);
 
@@ -515,12 +530,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
                         $menuId = (int) ($_POST['menu_id'] ?? ($_GET['menu_id'] ?? 0));
 
-                        if ($menuId > 0) {
-                            redirect('menu/' . $menuId, ['success' => 'Story saved']);
+                        if (!$isUberAdmin) {
+                            $successMessage =
+                                $saveAction === 'request_review'
+                                    ? 'Story saved and review requested'
+                                    : 'Draft saved';
+
+                            redirect('member', ['success' => $successMessage]);
                             exit();
                         }
 
-                        redirect('member', ['success' => 'Story saved']);
+                        $adminVisibility = match (true) {
+                            (int) ($story['published'] ?? 0) === 1 => 'public',
+                            !empty($story['review_requested_at']) => 'review',
+                            default => 'private',
+                        };
+
+                        redirect('admin/stories/', [
+                            'visibility' => $adminVisibility,
+                            'success' => 'Story saved',
+                        ]);
                         exit();
                     } else {
                         $errors['warning'] = 'Story could not be saved';

@@ -81,7 +81,7 @@ class Story
     {
         $sql = "SELECT a.id, a.website, a.title, a.summary, a.content, a.created, a.menu_id, a.member_id, a.family_id,
                a.original_image_file,
-               a.published, a.seo_title,
+               a.published,  a.review_requested_at, a.seo_title,
                a.storyorder, a.landscape, a.allow_comment, a.keyword, a.blog,
                c.name AS menu,
                c.seo_name AS seo_menu,
@@ -346,6 +346,7 @@ class Story
         $limit = 300,
         $sorttypeId = null,
         $crossWebsite = false,
+        $reviewRequested = false,
     ): array {
         $arguments['menu'] = $arguments['menu1'] = $menu; // Menu id
         $arguments['member'] = $arguments['member1'] = $member; // Author id
@@ -353,6 +354,7 @@ class Story
         $arguments['crossWebsite'] = $crossWebsite ? 1 : 0;
         $arguments['published'] = $published;
         $arguments['published1'] = $published;
+        $arguments['reviewRequested'] = $reviewRequested ? 1 : 0;
         //$arguments = array($website);
         // Setup file
         $path = mb_strtolower(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/');
@@ -380,7 +382,7 @@ class Story
             $arguments['limit'] = $_SESSION['pagelimit'];
         }
 
-        $sql = "SELECT a.id, a.website, a.title, a.summary, a.created, a.family_id, a.menu_id, a.member_id, a.family_id, a.published,
+        $sql = "SELECT a.id, a.website, a.title, a.summary, a.created, a.family_id, a.menu_id, a.member_id, a.family_id, a.published, a.review_requested_at,
 a.seo_title, a.storyorder,a.landscape, a.allow_comment, keyword, a.blog,
 c.name AS menu,
 c.seo_name AS seo_menu,
@@ -408,6 +410,7 @@ AND (a.menu_id = :menu OR :menu1 is null)
 AND (a.member_id = :member OR :member1 IS NULL)
 AND (:crossWebsite = 1 OR a.website = :website)
 AND (:published1 IS NULL OR a.published = :published)
+AND (:reviewRequested = 0 OR a.review_requested_at IS NOT NULL)
 ";
         $sessionRole = (string) ($_SESSION['role'] ?? 'guest');
         $sessionMemberId = (int) ($_SESSION['id'] ?? 0);
@@ -436,7 +439,9 @@ AND (:published1 IS NULL OR a.published = :published)
         }
         $effectiveSorttype =
             (int) ($sorttypeId ?? ($_SESSION['sorttype'] ?? TFOL_DEFAULT_SORTTYPE_ID));
-        $orderBy = $this->orderByForSorttype($effectiveSorttype);
+        $orderBy = $reviewRequested
+            ? 'ORDER BY a.review_requested_at DESC, a.id DESC'
+            : $this->orderByForSorttype($effectiveSorttype);
         $role = strtolower((string) ($_SESSION['role'] ?? 'guest'));
         $requestedLimit = (int) ($arguments['limit'] ?? ($args['limit'] ?? ($limit ?? 12)));
 
@@ -660,10 +665,12 @@ AND (:published1 IS NULL OR a.published = :published)
 
         $sql = "INSERT INTO story (
         website, title, summary, content, menu_id, member_id, family_id,
-        image_id, original_image_file, published, seo_title, storyorder, landscape, allow_comment, keyword, blog
+        image_id, original_image_file, published, review_requested_at, seo_title,
+        storyorder, landscape, allow_comment, keyword, blog
     ) VALUES (
         :website, :title, :summary, :content, :menu_id, :member_id, :family_id,
-        :image_id, :original_image_file, :published, :seo_title, :storyorder, :landscape, :allow_comment, :keyword, :blog
+        :image_id, :original_image_file, :published, :review_requested_at, :seo_title,
+        :storyorder, :landscape, :allow_comment, :keyword, :blog
     );";
 
         $params = [
@@ -678,7 +685,9 @@ AND (:published1 IS NULL OR a.published = :published)
             'original_image_file' => !empty($story['original_image_file'])
                 ? trim((string) $story['original_image_file'])
                 : null,
-            'published' => (int) ($story['published'] ?? 0),
+            'review_requested_at' => !empty($story['review_requested_at'])
+                ? (string) $story['review_requested_at']
+                : null,
             'seo_title' => $story['seo_title'] ?? '',
             'storyorder' => (int) ($story['storyorder'] ?? 10),
             'landscape' => (int) ($story['landscape'] ?? 0),
@@ -719,6 +728,7 @@ AND (:published1 IS NULL OR a.published = :published)
        image_id = :image_id,
        original_image_file = :original_image_file,
        published = :published,
+       review_requested_at = :review_requested_at,
        seo_title = :seo_title,
        storyorder = :storyorder,
        landscape = :landscape,
@@ -741,6 +751,9 @@ AND (:published1 IS NULL OR a.published = :published)
                 ? trim((string) $story['original_image_file'])
                 : null,
             'published' => (int) ($story['published'] ?? 0),
+            'review_requested_at' => !empty($story['review_requested_at'])
+                ? (string) $story['review_requested_at']
+                : null,
             'seo_title' => $story['seo_title'] ?? '',
             'storyorder' => (int) ($story['storyorder'] ?? 0),
             'landscape' => (int) ($story['landscape'] ?? 0),
