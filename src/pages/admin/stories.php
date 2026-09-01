@@ -34,7 +34,17 @@ if ((int) $_SESSION['id'] === 1) {
     // Uber Admin: retrieve stories across all active websites.
     $data['stories'] = $cms
         ->getStory()
-        ->getAll3((int) $website['id'], $published, null, null, 300, null, true, $reviewRequested);
+        ->getAll3(
+            (int) $website['id'],
+            $published,
+            null,
+            null,
+            300,
+            null,
+            true,
+            $reviewRequested,
+            true,
+        );
 } else {
     // Other administrators: remain restricted to their website and authorship.
     $data['stories'] = $cms
@@ -48,6 +58,7 @@ if ((int) $_SESSION['id'] === 1) {
             null,
             false,
             $reviewRequested,
+            true,
         );
 }
 $data['website'] = $website;

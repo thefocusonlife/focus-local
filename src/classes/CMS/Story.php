@@ -347,6 +347,7 @@ class Story
         $sorttypeId = null,
         $crossWebsite = false,
         $reviewRequested = false,
+        $filterPublished = false,
     ): array {
         $arguments['menu'] = $arguments['menu1'] = $menu; // Menu id
         $arguments['member'] = $arguments['member1'] = $member; // Author id
@@ -355,6 +356,7 @@ class Story
         $arguments['published'] = $published;
         $arguments['published1'] = $published;
         $arguments['reviewRequested'] = $reviewRequested ? 1 : 0;
+        $arguments['filterPublished'] = $filterPublished ? 1 : 0;
         //$arguments = array($website);
         // Setup file
         $path = mb_strtolower(parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH) ?? '/');
@@ -409,7 +411,11 @@ WHERE w.is_active = 1
 AND (a.menu_id = :menu OR :menu1 is null)
 AND (a.member_id = :member OR :member1 IS NULL)
 AND (:crossWebsite = 1 OR a.website = :website)
-AND (:published1 IS NULL OR a.published = :published)
+AND (
+    :filterPublished = 0
+    OR :published1 IS NULL
+    OR a.published = :published
+)
 AND (:reviewRequested = 0 OR a.review_requested_at IS NOT NULL)
 ";
         $sessionRole = (string) ($_SESSION['role'] ?? 'guest');
