@@ -89,7 +89,9 @@
 							{% endif %}
 						</td>
 						<td>
-							<a href="{{ doc_root }}admin/story-delete/{{ story.id }}" class="btn btn-danger">delete</a>
+							{% if session.id == story.member_id or session.id == 1 %}
+								<a href="{{ doc_root }}admin/story-delete/{{ story.id }}" class="btn btn-danger">delete</a>
+							{% endif %}
 						</td>
 					</tr>
 				{% endif %}

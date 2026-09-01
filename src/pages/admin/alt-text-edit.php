@@ -1,45 +1,73 @@
 <?php
-use PhpBook\Validate\Validate; // Import Validate namespace
-is_admin($session->role); // Check if admin
-include APP_ROOT . '/src/pages/menu-path.php'; // get path for website and menus
+
+declare(strict_types=1);
+
+use PhpBook\Validate\Validate;
+
 require_once APP_ROOT . '/src/security/guard.php';
+require_once APP_ROOT . '/src/security/csrf.php';
+require_once APP_ROOT . '/src/security/redirects.php';
+
+include APP_ROOT . '/src/pages/menu-path.php';
+
 guardMember();
 
-$story = []; // Initialize story array
-$errors = []; // Initialize error message
+$errors = [];
+$storyId = (int) ($parts[2] ?? 0);
+$sessionId = (int) ($_SESSION['id'] ?? 0);
+$isUberAdmin = !empty($_SESSION['isUberAdmin']) || $sessionId === 1;
 
-if (!empty($parts[2])) {
-    $id = intval($parts[2]); // If valid id
-    $story = $cms->getStory()->get($id, false); // Get story data
-    if (!$story) {
-        // If story empty
-        redirect('admin/stories/', ['failure' => 'Story not found']); // Redirect
-    }
+if ($storyId <= 0) {
+    redirect('admin/stories/', ['failure' => 'Story not found']);
+    exit();
 }
 
-$story = $cms->getStory()->get($id, false); // Get story
-if (!$story) {
-    // If no story
-    redirect('/admin/stories/', ['failure' => 'Story not found']); // Redirect
+$story = $cms->getStory()->get($storyId, false);
+
+if (!$story || !isset($story['id'])) {
+    redirect('admin/stories/', ['failure' => 'Story not found']);
+    exit();
 }
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-    // If form was submitted
-    $story['image_alt'] = $_POST['image_alt']; // Get alt text
+$ownerId = (int) ($story['member_id'] ?? 0);
 
-    $invalid = Validate::isText($story['image_alt'], 1, 254)
-        ? ''
-        : 'Alt text for image should be 1 - 254 characters.'; // Validate alt text
+if (!$isUberAdmin && $ownerId !== $sessionId) {
+    redirect('admin/stories/', ['failure' => 'Not allowed']);
+    exit();
+}
 
-    if ($invalid) {
-        // If not valid
-        $warning = 'Please correct error below'; // Create warning message
+if (empty($story['image_id'])) {
+    redirect('work/' . $storyId, ['failure' => 'This story does not have an image.']);
+    exit();
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $token = (string) ($_POST['csrf'] ?? '');
+
+    if ($token === '' || !verify_csrf($token)) {
+        $errors['warning'] = 'Invalid request. Please reload the page and try again.';
     } else {
-        $cms->getStory()->altUpdate($story['image_id'], $story['image_alt']); // Update alt text
-        redirect('admin/story/' . $id); // Send back to story page
+        $story['image_alt'] = trim((string) ($_POST['image_alt'] ?? ''));
+
+        $errors['alt'] = Validate::isText($story['image_alt'], 1, 254)
+            ? ''
+            : 'Alt text for the image should be 1–254 characters.';
+
+        if (empty($errors['alt'])) {
+            $updated = $cms->getStory()->altUpdate((int) $story['image_id'], $story['image_alt']);
+
+            if ($updated) {
+                redirect('work/' . $storyId, ['success' => 'Alt text updated.']);
+                exit();
+            }
+
+            $errors['warning'] = 'Alt text could not be updated.';
+        }
     }
 }
-$data['story'] = $story; // Story data for template
-$data['errors'] = $errors; // Error data for template
 
-echo $twig->render('admin/alt-text-edit.html', $data); // Render Twig template
+$data['story'] = $story;
+$data['errors'] = $errors;
+$data['csrf_token'] = generate_csrf_token();
+
+echo $twig->render('admin/alt-text-edit.html', $data);

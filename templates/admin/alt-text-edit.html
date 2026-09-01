@@ -3,24 +3,41 @@
 {% block content %}
 	<main class="container admin" id="content">
 		<form action="{{ doc_root }}admin/alt-text-edit/{{ story.id }}" method="POST" class="form">
+
+			<input type="hidden" name="csrf" value="{{ csrf_token }}">
+
 			<h1>Update Alt Text</h1>
 
-			{% if errors.message %}
-				<div class="alert alert-danger">{{ errors.message }}</div>
+			{% if errors.warning %}
+				<div class="alert alert-danger">
+					{{ errors.warning }}
+				</div>
 			{% endif %}
 
 			<div class="admin-form">
 				<div class="form-group">
 					<label for="image_alt">Alt text:</label>
-					<input type="text" name="image_alt" id="image_alt" value="{{ story.image_alt }}" class="form-control">
-					<span class="errors">{{ errors.alt }}</span>
+
+					<input type="text" name="image_alt" id="image_alt" value="{{ story.image_alt|e('html_attr') }}" maxlength="254" class="form-control">
+
+					{% if errors.alt %}
+						<span class="errors">{{ errors.alt }}</span>
+					{% endif %}
 				</div>
+
+				<p>
+					<img src="{{ doc_root }}uploads/{{ story.image_file }}" alt="{{ story.image_alt|e('html_attr') }}">
+				</p>
 
 				<div class="form-group">
-					<input type="submit" name="delete" value="Update" class="btn btn-primary btn-save">
-				</div>
+					<button type="submit" class="btn btn-primary">
+						Update Alt Text
+					</button>
 
-				<img src="{{ doc_root }}uploads/{{ story.image_file }}" alt="{{ story.image_alt }}">
+					<a href="{{ doc_root }}work/{{ story.id }}" class="btn btn-secondary">
+						Cancel
+					</a>
+				</div>
 			</div>
 		</form>
 	</main>
