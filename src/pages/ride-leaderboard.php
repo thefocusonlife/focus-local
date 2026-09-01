@@ -2,15 +2,53 @@
 declare(strict_types=1);
 
 $websiteId = 44;
-$month = $_GET['month'] ?? date('Y-m');
+$viewerId = (int) ($_SESSION['id'] ?? 0);
+$role = strtolower((string) ($_SESSION['role'] ?? 'guest'));
 
-if (!preg_match('/^\d{4}-\d{2}$/', $month)) {
-    $_SESSION['flash_failure'] = 'Invalid month format.';
-    redirect('index/44');
+$isLoggedIn = $viewerId > 0 && $role !== 'guest';
+
+/*
+ * Step 1: Send guests through the Member Required gateway.
+ */
+if (!$isLoggedIn) {
+    $_SESSION['member_required'] = true;
+    $_SESSION['return_website'] = 44;
+    $_SESSION['return_to'] = DOC_ROOT . 'ride-leaderboard';
+    $_SESSION['member_required_reason'] =
+        'Viewing the ride leaderboard requires membership in the Central Oregon Bicycle Community.';
+
+    header('Location: ' . DOC_ROOT . 'login/44');
     exit();
 }
 
-$start = DateTime::createFromFormat('Y-m-d', $month . '-01');
+/*
+ * Step 2: Require Website 44 membership.
+ */
+if (!$cms->getMember()->isMemberOfWebsite($viewerId, 44)) {
+    $_SESSION['flash_failure'] =
+        'This feature requires Central Oregon Bicycle Community membership. ' .
+        'Please Log Out, then click Register for a FREE COBC account.';
+
+    header('Location: ' . DOC_ROOT . 'index/44');
+    exit();
+}
+
+$month = trim((string) ($_GET['month'] ?? date('Y-m')));
+
+$start = DateTime::createFromFormat('!Y-m-d', $month . '-01');
+
+if (
+    !preg_match('/^\d{4}-\d{2}$/', $month) ||
+    $start === false ||
+    $start->format('Y-m') !== $month
+) {
+    $_SESSION['flash_failure'] = 'Please select a valid leaderboard month.';
+    redirect('ride-leaderboard');
+    exit();
+}
+
+$monthLabel = $start->format('F Y');
+
 $end = clone $start;
 $end->modify('+1 month');
 
@@ -56,5 +94,6 @@ $leaderboard = $cms
 echo $twig->render('ride-leaderboard.html', [
     'websiteId' => $websiteId,
     'month' => $month,
+    'monthLabel' => $monthLabel,
     'leaderboard' => $leaderboard,
 ]);

@@ -6,14 +6,25 @@
 	</head>
 	<body>
 		<main class="container">
-			<input type="hidden" name="location" value="{{ location }}">
+
 			<p>
-				<a href="{{ doc_root }}index/44?location={{ location }}">Back to COBC</a>
+				<a href="{{ doc_root }}index/44">Back to COBC</a>
 			</p>
 
 			<section class="ride-leaderboard">
 				<h1>Monthly Bicycle Club Leaderboard</h1>
-				<p>{{ month }}
+
+				<form action="{{ doc_root }}ride-leaderboard" method="get" class="mb-3">
+					<label for="leaderboard-month">Leaderboard month:</label>
+
+					<input type="month" name="month" id="leaderboard-month" value="{{ month }}" required>
+
+					<button type="submit" class="btn btn-primary">
+						View Month
+					</button>
+				</form>
+
+				<p>{{ monthLabel }}
 					· rides 2+ miles</p>
 
 				{% if leaderboard %}
