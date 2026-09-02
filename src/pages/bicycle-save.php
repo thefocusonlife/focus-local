@@ -1081,6 +1081,8 @@ $startLocation = trim((string) ($startLocation ?? ''));
 $gpxFileValue = $gpxFileValue ?? null;
 $gpxUploadedValue = $gpxUploadedValue ?? 0;
 
+$rideStatus = isset($_POST['share_authorized']) ? 'published' : 'private';
+
 error_log(
     '[RIDE INSERT VALUES] ' .
         print_r(
@@ -1122,7 +1124,7 @@ $cms->getDb()->runSql($sql, [
     'start_lng' => $startLngValue,
     'end_lat' => $endLatValue,
     'end_lng' => $endLngValue,
-    'status' => 'published',
+    'status' => $rideStatus,
     'location' => $location,
 ]);
 

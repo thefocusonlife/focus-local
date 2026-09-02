@@ -230,6 +230,11 @@ if ($data['isBicycleClub']) {
     }
     unset($note);
 
+    $rideViewerId =
+        strtolower((string) ($_SESSION['role'] ?? 'guest')) !== 'guest'
+            ? (int) ($_SESSION['id'] ?? 0)
+            : 0;
+
     // Recent rides
     $rideSql = "
         SELECT
@@ -261,15 +266,19 @@ if ($data['isBicycleClub']) {
         FROM ride r
         LEFT JOIN member m ON m.id = r.member_id
         WHERE r.website_id = :website_id
-          AND r.status = 'published'
+          AND (
+                r.status = 'published'
+                OR r.member_id = :ride_viewer_id
+              )
           AND r.location = :location
-        ORDER BY r.ride_date DESC, r.id DESC
-        LIMIT 20
+              ORDER BY r.ride_date DESC, r.id DESC
+              LIMIT 20
     ";
 
     $rideStmt = $cms->getDb()->runSql($rideSql, [
         'website_id' => $websiteId,
         'location' => $location,
+        'ride_viewer_id' => $rideViewerId,
     ]);
     $data['rides'] = $rideStmt->fetchAll(PDO::FETCH_ASSOC);
 

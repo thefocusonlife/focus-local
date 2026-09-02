@@ -46,4 +46,10 @@ $data = [
     'activities' => $activities,
 ];
 
+$data['errors'] = $_SESSION['ride_activity_errors'] ?? [];
+unset($_SESSION['ride_activity_errors']);
+
+$data['form'] = $_SESSION['ride_activity_form'] ?? [];
+unset($_SESSION['ride_activity_form']);
+
 echo $twig->render('ride-activities.html', $data);

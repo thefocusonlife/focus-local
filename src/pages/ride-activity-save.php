@@ -49,6 +49,10 @@ $notes = trim($_POST['notes'] ?? '');
 
 $errors = [];
 
+if (!isset($_POST['share_authorized'])) {
+    $errors['share_authorized'] = 'You must authorize sharing this activity with COBC members.';
+}
+
 $allowedServices = ['strava', 'rwgps', 'garmin'];
 
 if (!in_array($service, $allowedServices, true)) {

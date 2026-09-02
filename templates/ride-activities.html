@@ -26,6 +26,34 @@
 		.button {
 			margin-top: 0.5rem;
 		}
+
+		.form-check {
+			display: flex;
+			align-items: flex-start;
+			gap: 0.5rem;
+			margin: 1rem 0;
+			text-align: left;
+		}
+
+		.form-check input {
+			width: auto;
+			margin-top: 0.25rem;
+		}
+
+		.form-check label {
+			font-weight: 600;
+		}
+
+		#activity_url {
+			display: block;
+			width: 100%;
+			min-height: 2.75rem;
+			box-sizing: border-box;
+			padding: 0.6rem;
+			border: 1px solid #cccccc;
+			border-radius: 6px;
+			font-size: 1rem;
+		}
 	</style>
 	<head>
 		<meta charset="UTF-8">
@@ -44,8 +72,8 @@
 
 				<p class="ride-activities-intro">
 					Many cyclists already track their rides with Strava, Ride with GPS, or Garmin Connect.
-																																																																																										This page helps Community members find those services and share a ride
-																																																																																										activity links with the club.
+																																																																																																																																							This page helps Community members find those services and share a ride
+																																																																																																																																							activity links with the club.
 				</p>
 
 				<div class="ride-activity-card">
@@ -75,7 +103,6 @@
 				<form method="post" action="{{ doc_root }}ride-activity-save">
 
 					<input type="hidden" name="location" value="{{ location }}">
-					<input type="hidden" name="member_id" value="{{ session.id }}">
 
 					<div class="ride-activity-card">
 						<h2>Share a Recent Ride</h2>
@@ -90,26 +117,38 @@
 							<label for="service">Service</label>
 							<select id="service" name="service" required>
 								<option value="">Select Service</option>
-								<option value="strava">Strava</option>
-								<option value="rwgps">Ride with GPS</option>
-								<option value="garmin">Garmin Connect</option>
+								<option value="strava" {% if form.service == 'strava' %} selected {% endif %}>Strava</option>
+								<option value="rwgps" {% if form.service == 'rwgps' %} selected {% endif %}>Ride with GPS</option>
+								<option value="garmin" {% if form.service == 'garmin' %} selected {% endif %}>Garmin Connect</option>
 							</select>
 						</div>
 
 						<div class="form-group">
 							<label for="activity_url">Ride URL</label>
-							<input type="url" id="activity_url" name="activity_url" maxlength="500" required placeholder="Paste the ride or route URL here">
+							<input type="url" id="activity_url" name="activity_url" maxlength="500" required value="{{ form.activity_url|default('') }}" placeholder="Paste the ride or route URL here">
 						</div>
 
 						<div class="form-group">
 							<label for="title">Ride Title</label>
-							<input type="text" id="title" name="title" maxlength="120" placeholder="Example: Saturday Ride to Sisters">
+							<input type="text" id="title" name="title" maxlength="120" value="{{ form.title|default('') }}" placeholder="Example: Saturday Ride to Sisters">
 						</div>
 
 						<div class="form-group">
 							<label for="notes">Notes</label>
-							<textarea id="notes" name="notes" rows="4" maxlength="1000" placeholder="Optional comments about the ride, route, weather, group size, etc."></textarea>
+							<textarea id="notes" name="notes" rows="4" maxlength="1000" placeholder="Optional comments about the ride, route, weather, group size, etc.">{{ form.notes|default('') }}</textarea>
 						</div>
+
+						<div class="form-check">
+							<input type="checkbox" name="share_authorized" value="1" id="share_authorized" required>
+
+							<label for="share_authorized">
+								I authorize this activity and its external link to be displayed to COBC members.
+							</label>
+						</div>
+
+						{% if errors.share_authorized %}
+							<p class="errors">{{ errors.share_authorized }}</p>
+						{% endif %}
 
 						<button type="submit" class="button">
 							Save Ride Activity
