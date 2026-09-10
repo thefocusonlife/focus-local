@@ -287,8 +287,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     if (!empty($_SESSION['guest_story_draft'])) {
-        $_SESSION['guest_story_email'] = $emailBase;
-        $_SESSION['guest_story_register_email'] = $emailBase;
+        $_SESSION['guest_story_email'] = $emailForLogin;
+        $_SESSION['guest_story_register_email'] = $emailForLogin;
     }
 
     // photolimit from plan
@@ -520,13 +520,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         sendVerificationEmail($email_config, $emailBase, $params['forename'], $verifyUrl);
 
-        // temp log
-        error_log(
-            sprintf('[REGISTER] sendVerificationEmail() returned successfully for %s', $emailBase),
-        );
+        $_SESSION['guest_story_email'] = $emailForLogin;
+        $_SESSION['guest_story_register_email'] = $emailForLogin;
 
-        $_SESSION['guest_story_email'] = $emailBase;
-        $_SESSION['guest_story_register_email'] = $emailBase;
         if (!empty($_SESSION['guest_story_draft'])) {
             header('Location: ' . DOC_ROOT . 'guest-story-check-email');
             exit();
