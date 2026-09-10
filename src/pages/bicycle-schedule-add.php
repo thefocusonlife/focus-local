@@ -50,9 +50,9 @@ if (!$cms->getMember()->isMemberOfWebsite($viewerId, 44)) {
 /*
  * Step 3: Retain the existing manager-only authorization.
  */
-$groupRideManagerId = 339;
+$groupRideManagerIds = [339, 500];
 
-if ($viewerId !== 1 && $viewerId !== $groupRideManagerId) {
+if ($viewerId !== 1 && !in_array($viewerId, $groupRideManagerIds, true)) {
     $_SESSION['flash_failure'] =
         'You do not have permission to manage group rides. Please use Contact_us to volunteer as a Group Leader.';
 

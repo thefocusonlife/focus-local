@@ -25,7 +25,7 @@ if ($viewerId <= 0 || $viewerId === 2 || $role === 'guest') {
 }
 
 $allowedMemberAdmins = [
-    44 => [1, 3, 339],
+    44 => [1, 3, 339, 500],
     51 => [1],
 ];
 

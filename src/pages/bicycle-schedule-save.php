@@ -48,9 +48,9 @@ if (!$cms->getMember()->isMemberOfWebsite($viewerId, 44)) {
     exit();
 }
 
-$groupRideManagerId = 339;
+$groupRideManagerIds = [339, 500];
 
-if ($viewerId !== 1 && $viewerId !== $groupRideManagerId) {
+if ($viewerId !== 1 && !in_array($viewerId, $groupRideManagerIds, true)) {
     $_SESSION['flash_failure'] = 'You do not have permission to manage group rides.';
 
     header('Location: ' . DOC_ROOT . 'index/44?location=' . urlencode($location));
