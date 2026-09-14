@@ -131,8 +131,20 @@
 
 				<input type="hidden" name="id" value="{{ note.id }}">
 				<input type="hidden" name="website_id" value="{{ websiteId }}">
-				<input type="hidden" name="location" value="{{ location }}">
 				<section class="note-fields">
+
+          <div class="form-row">
+	      <label for="location">Area</label>
+
+	      <select id="location" name="location" required>
+		      {% for value, label in locations %}
+			      <option value="{{ value }}"
+				      {% if location == value %} selected{% endif %}>
+				      {{ label }}
+			      </option>
+		      {% endfor %}
+	      </select>
+      </div>
 
 					<div class="form-row">
 						<label for="title">Title</label>

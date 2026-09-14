@@ -117,13 +117,11 @@
 
 	<main class="container" id="content">
 
-		<h1>Edit
-			{{ locationName }}
-			Ride</h1>
+		<h1>Edit Completed Ride</h1>
 
-		<p>
-			Update this ride for the Central Oregon Bicycle Community.
-		</p>
+    <p>
+	    Update this completed ride, its statistics, and its sharing preference.
+    </p>
 
 		<main class="container bicycle-edit-page" id="content">
 
@@ -143,9 +141,20 @@
 
 				<input type="hidden" name="ride_id" value="{{ ride.id }}">
 
-				<input type="hidden" name="location" value="{{ location }}">
-
 				<section class="ride-fields">
+
+        <div class="form-row">
+	        <label for="location">Ride Area</label>
+
+	        <select id="location" name="location" required>
+		      {% for value, label in locations %}
+			      <option value="{{ value }}"
+				  {% if location == value %} selected{% endif %}>
+				    {{ label }}
+			        </option>
+		        {% endfor %}
+	        </select>
+        </div>
 
 					<div class="form-row">
 						<label for="title">Ride Title</label>

@@ -11,10 +11,10 @@ $allowedLocations = [
     'centraloregon',
 ];
 
-$location = strtolower((string) ($_GET['location'] ?? 'redmond'));
+$location = strtolower((string) ($_GET['location'] ?? 'centraloregon'));
 
 if (!in_array($location, $allowedLocations, true)) {
-    $location = 'redmond';
+    $location = 'centraloregon';
 }
 
 $viewerId = (int) ($_SESSION['id'] ?? 0);
@@ -49,11 +49,23 @@ if (!$cms->getMember()->isMemberOfWebsite($viewerId, 44)) {
 
 require_once APP_ROOT . '/src/security/guard.php';
 include APP_ROOT . '/src/pages/menu-path.php';
+
+$locations = [
+    'centraloregon' => 'Central Oregon',
+    'bend' => 'Bend',
+    'redmond' => 'Redmond',
+    'sisters' => 'Sisters',
+    'madras' => 'Madras',
+    'prineville' => 'Prineville',
+    'lapine' => 'La Pine',
+];
+
 $data = [
     'mode' => 'add',
     'websiteId' => 44,
     'location' => $location,
-    'locationName' => ucfirst($location),
+    'locationName' => $locations[$location],
+    'locations' => $locations,
     'note' => [
         'id' => null,
         'title' => '',

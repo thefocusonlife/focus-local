@@ -1,12 +1,11 @@
 {% block content %}
 
 	<style>
-		<input type="hidden" name="location" value="{{ location }}">
 		.ride-form {
 																					display: block;
 																					width: 100%;
 																				}
-		
+
 																				.ride-fields {
 																					display: grid;
 																					grid-template-columns: 1fr 1fr;
@@ -14,7 +13,7 @@
 																					align-items: start;
 																					max-width: 1000px;
 																				}
-		
+
 																				.ride-fields > .form-row {
 																					display: flex;
 																					flex-direction: column;
@@ -23,50 +22,50 @@
 																					float: none;
 																					width: auto;
 																				}
-		
+
 																				.ride-fields > .form-row label {
 																					display: block;
 																					margin-bottom: 0.35rem;
 																					font-weight: 600;
 																				}
-		
+
 																				.ride-fields input,
 																				.ride-fields select {
 																					height: 40px;
 																					padding: 8px 10px;
 																					font-size: 15px;
 																				}
-		
+
 																				.ride-fields textarea {
 																					min-height: 140px;
 																					padding: 10px;
 																					font-size: 15px;
 																				}
-		
+
 																				.ride-fields > .form-row.form-row-wide {
 																					grid-column: 1 / -1;
 																				}
-		
+
 																				.form-actions {
 																					margin-top: 1rem;
 																				}
-		
+
 																				.form-actions .btn {
 																					display: inline-block;
 																					margin-right: 0.5rem;
 																					margin-bottom: 0.5rem;
 																					vertical-align: middle;
 																				}
-		
+
 						                            .ride-card-actions {
 						                              margin-top: 1rem;
 						                            }
-		
+
 																				@media(max-width: 800px) {
 																					.ride-fields {
 																						grid-template-columns: 1fr;
 																					}
-		
+
 																					.ride-fields > .form-row.form-row-wide {
 																						grid-column: auto;
 																					}
@@ -77,35 +76,52 @@
 																					gap: 12px;
 																					margin: 12px 0;
 																				}
-		
+
 																				.metrics-grid label {
 																					display: block;
 																					font-weight: 600;
 																					margin-bottom: 4px;
 																				}
-		
+
 																				.metrics-grid input {
 																					width: 100%;
 																				}
-		
+
 																				@media(max-width: 800px) {
 																					.metrics-grid {
 																						grid-template-columns: repeat(2, 1fr);
 																					}
 																				}
-		
+
 																				@media(max-width: 500px) {
 																					.metrics-grid {
 																						grid-template-columns: 1fr;
 																					}
 																				}
+
+    .completed-ride-notice {
+      max-width: 1000px;
+      margin: 1rem 0 1.5rem;
+      padding: 1rem;
+      background: #f5f5f5;
+      border-left: 4px solid #295073;
+      box-sizing: border-box;
+      line-height: 1.5;
+    }
 	</style>
-	<h1>Submit
-		{{ locationName }}
-		Ride</h1>
-	<p>Add a
-		{{ locationName }}
-		ride for the Central Oregon Bicycle Community.</p>
+  <h1>Log a Completed Ride</h1>
+
+ <p>
+	Record a completed ride for your personal statistics and, when you
+	authorize public sharing, COBC Ride Reports.
+</p>
+
+  <div class="completed-ride-notice">
+    <strong>This form records a ride that has already occurred.</strong>
+    It does not schedule or announce a future ride, organize a group ride,
+    or invite anyone to participate.
+  </div>
+
 	<main class="container" id="content">
 
 
@@ -120,9 +136,22 @@
 
 
 		<form method="post" action="{{ doc_root }}bicycle-save" enctype="multipart/form-data" class="ride-form">
-			<input type="hidden" name="location" value="{{ location }}">
 
 			<section class="ride-fields">
+
+        <div class="form-row">
+	      <label for="location">Ride Area</label>
+
+	      <select id="location" name="location" required>
+		      {% for value, label in locations %}
+			      <option value="{{ value }}"
+				      {% if location == value %} selected{% endif %}>
+				      {{ label }}
+			      </option>
+		      {% endfor %}
+	        </select>
+        </div>
+
 				<div class="form-row">
 					<label for="title">Ride Title</label>
 					<input type="text" id="title" name="title" maxlength="255" placeholder="[Enter route title]">

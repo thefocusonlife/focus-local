@@ -131,68 +131,9 @@ if ($websiteId === 44 && !empty($data['stories'])) {
 }
 $data['isBicycleClub'] = $websiteId === 44;
 $data['rides'] = [];
-$data['rideSchedules'] = [];
 $data['rideNotes'] = [];
 
 if ($data['isBicycleClub']) {
-    $allowedLocations = [
-        'bend',
-        'redmond',
-        'sisters',
-        'madras',
-        'prineville',
-        'lapine',
-        'centraloregon',
-    ];
-
-    $location = strtolower((string) ($_GET['location'] ?? 'redmond'));
-
-    if (!in_array($location, $allowedLocations, true)) {
-        $location = 'redmond';
-    }
-
-    $data['location'] = $location;
-    $data['locationName'] = ucfirst($location);
-    $data['locations'] = [
-        'bend' => 'Bend',
-        'redmond' => 'Redmond',
-        'sisters' => 'Sisters',
-        'madras' => 'Madras',
-        'prineville' => 'Prineville',
-        'lapine' => 'La Pine',
-        'centraloregon' => 'Central Oregon',
-    ];
-
-    // Group ride schedule
-    $scheduleSql = "
-        SELECT
-            rs.id,
-            rs.website_id,
-            rs.member_id,
-            rs.title,
-            rs.ride_type,
-            rs.day_of_week,
-            rs.start_time,
-            rs.start_location,
-            rs.description,
-            rs.is_active,
-            rs.sort_order,
-            rs.created,
-            m.forename,
-            m.surname
-        FROM ride_schedule rs
-        LEFT JOIN member m ON m.id = rs.member_id
-        WHERE rs.website_id = :website_id
-        AND rs.is_active = 1
-        AND rs.location = :location
-        ORDER BY rs.sort_order ASC, rs.day_of_week ASC, rs.start_time ASC, rs.id ASC
-    ";
-
-    $scheduleStmt = $cms->getDb()->runSql($scheduleSql, [
-        'website_id' => $websiteId,
-        'location' => $location,
-    ]);
-    $data['rideSchedules'] = $scheduleStmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Community Notes
     $noteSql = "
@@ -200,6 +141,7 @@ if ($data['isBicycleClub']) {
             rn.id,
             rn.website_id,
             rn.member_id,
+            rn.location,
             rn.title,
             rn.note_text,
             rn.note_date,
@@ -211,7 +153,6 @@ if ($data['isBicycleClub']) {
         LEFT JOIN member m ON m.id = rn.member_id
         WHERE rn.website_id = :website_id
           AND rn.is_active = 1
-          AND rn.location = :location
         ORDER BY
             CASE WHEN rn.note_date IS NULL THEN 1 ELSE 0 END,
             rn.note_date DESC,
@@ -221,7 +162,6 @@ if ($data['isBicycleClub']) {
 
     $noteStmt = $cms->getDb()->runSql($noteSql, [
         'website_id' => $websiteId,
-        'location' => $location,
     ]);
     $data['rideNotes'] = $noteStmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -241,6 +181,7 @@ if ($data['isBicycleClub']) {
             r.id,
             r.website_id,
             r.member_id,
+            r.location,
             r.ride_date,
             r.start_time,
             r.title,
@@ -270,14 +211,12 @@ if ($data['isBicycleClub']) {
                 r.status = 'published'
                 OR r.member_id = :ride_viewer_id
               )
-          AND r.location = :location
               ORDER BY r.ride_date DESC, r.id DESC
               LIMIT 20
     ";
 
     $rideStmt = $cms->getDb()->runSql($rideSql, [
         'website_id' => $websiteId,
-        'location' => $location,
         'ride_viewer_id' => $rideViewerId,
     ]);
     $data['rides'] = $rideStmt->fetchAll(PDO::FETCH_ASSOC);
@@ -498,15 +437,6 @@ if ((int) $websiteId === 44) {
 $data['cobc_view'] = $cobcView;
 //$data['show_cobc_cards'] = (int) $websiteId === 44 && $cobcView === 'community';
 
-$data['locations'] = [
-    'bend' => 'Bend',
-    'redmond' => 'Redmond',
-    'sisters' => 'Sisters',
-    'madras' => 'Madras',
-    'prineville' => 'Prineville',
-    'lapine' => 'La Pine',
-    'centraloregon' => 'Central Oregon',
-];
 
 echo $twig->render('index.html', $data);
 return;

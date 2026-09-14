@@ -12,11 +12,12 @@ $allowedLocations = [
     'centraloregon',
 ];
 
-$location = strtolower((string) ($_POST['location'] ?? 'redmond'));
+$location = strtolower((string) ($_POST['location'] ?? 'centraloregon'));
 
 if (!in_array($location, $allowedLocations, true)) {
-    $location = 'redmond';
+    $location = 'centraloregon';
 }
+
 error_log('NOTE SAVE resolved location=' . $location);
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

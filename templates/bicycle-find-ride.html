@@ -1,0 +1,275 @@
+<style>
+	.find-ride-introduction {
+		margin-bottom: 2rem;
+	}
+
+	.find-ride-introduction h1 {
+		margin-bottom: 0.75rem;
+	}
+
+	.find-ride-introduction p {
+		max-width: 900px;
+		margin-bottom: 0.75rem;
+		line-height: 1.5;
+	}
+
+	.find-ride-section {
+		display: block;
+		width: 100%;
+		margin-bottom: 2.5rem;
+	}
+
+	.find-ride-section h2 {
+		margin-bottom: 1rem;
+		padding-bottom: 0.4rem;
+		border-bottom: 1px solid #ccc;
+	}
+
+	.find-ride-grid {
+		display: grid !important;
+		grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+		gap: 1.25rem;
+		width: 100%;
+	}
+
+	.find-ride-card {
+		display: flex;
+		flex-direction: column;
+		min-width: 0;
+		padding: 1.25rem;
+		background: #f7f8f8;
+		border: 1px solid #d5d8da;
+		border-radius: 7px;
+		box-sizing: border-box;
+	}
+
+	.find-ride-card h3 {
+		margin: 0 0 0.65rem;
+	}
+
+	.find-ride-card p {
+		margin: 0 0 1rem;
+		line-height: 1.45;
+	}
+
+	.find-ride-area {
+		margin-bottom: 0.75rem;
+		font-size: 0.9rem;
+		font-weight: 600;
+	}
+
+	.find-ride-actions {
+		margin-top: auto;
+	}
+
+	.find-ride-actions a {
+		margin-right: 0.5rem;
+		margin-bottom: 0.35rem;
+	}
+
+	.find-ride-notice {
+		display: block;
+		width: 100%;
+		margin: 1.5rem 0 2rem;
+		padding: 1rem;
+		background: #f5f5f5;
+		border-left: 4px solid #295073;
+		box-sizing: border-box;
+		line-height: 1.5;
+	}
+
+	.find-ride-back {
+		display: block;
+		width: 100%;
+		margin-top: 1.5rem;
+	}
+
+	main#content.find-ride-layout {
+		display: block !important;
+		grid-template-columns: none !important;
+		grid-auto-columns: auto !important;
+		grid-auto-flow: initial !important;
+		width: 100% !important;
+		max-width: 1100px;
+		margin: 0 auto;
+		box-sizing: border-box;
+	}
+
+	main#content.find-ride-layout > * {
+		width: 100%;
+		max-width: none;
+		grid-column: 1 / -1 !important;
+	}
+
+	@media (max-width: 760px) {
+		.find-ride-grid {
+			grid-template-columns: 1fr !important;
+		}
+	}
+</style>
+
+<main class="container find-ride-layout" id="content">
+
+	<header class="find-ride-introduction">
+		<h1>Find a Ride</h1>
+
+		<p>
+			Find cycling opportunities offered by independent clubs, bike shops,
+			and event organizers in Central Oregon and nearby areas.
+		</p>
+
+		<p>
+			COBC provides links to these organizations as a community information
+			resource. COBC does not organize, sponsor, supervise, endorse, or insure
+			the rides listed here.
+		</p>
+	</header>
+
+	<div class="find-ride-notice">
+		<strong>Check with the organizer before you ride.</strong>
+		Ride information can change. Verify the current schedule, meeting
+		location, registration, waiver and insurance requirements, pace,
+		distance, terrain, equipment, and cancellation policy directly with
+		the responsible organization.
+	</div>
+
+	<section class="find-ride-section">
+		<h2>Cycling Clubs</h2>
+
+		<div class="find-ride-grid">
+			<article class="find-ride-card">
+				<h3>Central Oregon Wheelers</h3>
+
+				<div class="find-ride-area">
+					Central Oregon
+				</div>
+
+				<p>
+					A member-supported recreational cycling club offering road,
+					gravel, mountain-bike, and social activities at a variety of
+					paces.
+				</p>
+
+				<div class="find-ride-actions">
+					<a
+						class="btn btn-primary"
+						href="https://cowheelers.wildapricot.org/Rides-Events"
+						target="_blank"
+						rel="noopener noreferrer"
+					>
+						View Official Calendar
+					</a>
+
+					<a
+						class="btn btn-secondary"
+						href="{{ doc_root }}story/1581/central-oregon-wheelers-cows"
+					>
+						Learn More
+					</a>
+				</div>
+			</article>
+		</div>
+	</section>
+
+	<section class="find-ride-section">
+		<h2>Bike-Shop and Recurring Public Rides</h2>
+
+		<div class="find-ride-grid">
+			<article class="find-ride-card">
+				<h3>Eurosports Rides and Routes</h3>
+
+				<div class="find-ride-area">
+					Sisters
+				</div>
+
+				<p>
+					Eurosports provides information about cycling opportunities
+					and routes in the Sisters area. Check its official page for
+					current ride information.
+				</p>
+
+				<div class="find-ride-actions">
+					<a
+						class="btn btn-primary"
+						href="https://eurosports.us/rides-and-routes/"
+						target="_blank"
+						rel="noopener noreferrer"
+					>
+						Visit Official Ride Page
+					</a>
+
+					<a
+						class="btn btn-secondary"
+						href="{{ doc_root }}story/1652"
+					>
+						Learn More
+					</a>
+				</div>
+			</article>
+		</div>
+	</section>
+
+	<section class="find-ride-section">
+		<h2>Organized Tours and Events</h2>
+
+		<div class="find-ride-grid">
+			<article class="find-ride-card">
+				<h3>Cycle Oregon</h3>
+
+				<div class="find-ride-area">
+					Oregon
+				</div>
+
+				<p>
+					Supported cycling events held in different parts of Oregon.
+					Event locations, dates, registration, routes, and rider
+					requirements vary.
+				</p>
+
+				<div class="find-ride-actions">
+					<a
+						class="btn btn-primary"
+						href="https://cycleoregon.com/"
+						target="_blank"
+						rel="noopener noreferrer"
+					>
+						Visit Official Website
+					</a>
+				</div>
+			</article>
+		</div>
+	</section>
+
+	<section class="find-ride-section">
+		<h2>Choosing an Appropriate Ride</h2>
+
+		<div class="find-ride-grid">
+			<article class="find-ride-card">
+				<h3>Questions to Ask Before Joining</h3>
+
+				<p>
+					Compare the advertised pace and distance with your current
+					ability. Ask whether the ride is no-drop, how often the group
+					regroups, what terrain and equipment are expected, and
+					whether membership or advance registration is required.
+				</p>
+
+				<p>
+					If you are uncertain, contact the organizer before arriving.
+					Start with a shorter or slower ride until you understand the
+					group’s riding practices.
+				</p>
+			</article>
+		</div>
+	</section>
+
+	<p class="find-ride-back">
+		<a
+			class="btn btn-secondary"
+			href="{{ doc_root }}index/44?location={{ location|url_encode }}"
+		>
+			Back to COBC
+		</a>
+	</p>
+
+</main>

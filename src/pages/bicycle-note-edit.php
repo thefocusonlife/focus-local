@@ -80,12 +80,34 @@ if (!$note) {
     exit();
 }
 
+$locations = [
+    'centraloregon' => 'Central Oregon',
+    'bend' => 'Bend',
+    'redmond' => 'Redmond',
+    'sisters' => 'Sisters',
+    'madras' => 'Madras',
+    'prineville' => 'Prineville',
+    'lapine' => 'La Pine',
+];
+
+/*
+ * Use the location saved with the note rather than trusting the URL.
+ */
+$savedLocation = strtolower((string) ($note['location'] ?? ''));
+
+if (array_key_exists($savedLocation, $locations)) {
+    $location = $savedLocation;
+} else {
+    $location = 'centraloregon';
+}
+
 $data = [
     'mode' => 'edit',
     'websiteId' => 44,
     'note' => $note,
     'location' => $location,
-    'locationName' => ucfirst($location),
+    'locationName' => $locations[$location],
+    'locations' => $locations,
 ];
 
 if (!empty($_SESSION['flash_failure'])) {

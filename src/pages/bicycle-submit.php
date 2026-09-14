@@ -11,10 +11,10 @@ $allowedLocations = [
     'centraloregon',
 ];
 
-$location = strtolower((string) ($_GET['location'] ?? 'redmond'));
+$location = strtolower((string) ($_GET['location'] ?? 'centraloregon'));
 
 if (!in_array($location, $allowedLocations, true)) {
-    $location = 'redmond';
+    $location = 'centraloregon';
 }
 
 $viewerId = (int) ($_SESSION['id'] ?? 0);
@@ -29,7 +29,7 @@ if (!$isLoggedIn) {
     $_SESSION['return_website'] = 44;
     $_SESSION['return_to'] = DOC_ROOT . 'bicycle-submit?location=' . urlencode($location);
     $_SESSION['member_required_reason'] =
-        'Adding a group ride requires membership in the Central Oregon Bicycle Community.';
+        'Logging a completed ride requires membership in the Central Oregon Bicycle Community.';
 
     header('Location: ' . DOC_ROOT . 'login/44');
     exit();
@@ -62,15 +62,24 @@ $allowedLocations = [
     'centraloregon',
 ];
 
-$location = strtolower((string) ($_GET['location'] ?? 'bend'));
+$location = strtolower((string) ($_GET['location'] ?? 'centraloregon'));
 
 if (!in_array($location, $allowedLocations, true)) {
-    $location = 'bend';
+    $location = 'centraloregon';
 }
 
-$data['location'] = $location;
-$data['locationName'] = ucfirst($location);
+$data['locations'] = [
+    'centraloregon' => 'Central Oregon',
+    'bend' => 'Bend',
+    'redmond' => 'Redmond',
+    'sisters' => 'Sisters',
+    'madras' => 'Madras',
+    'prineville' => 'Prineville',
+    'lapine' => 'La Pine',
+];
 
+$data['location'] = $location;
+$data['locationName'] = $data['locations'][$location];
 // Keep Phase 1 limited to Bicycle Club site
 if ($websiteId !== 44) {
     $websiteId = 44;

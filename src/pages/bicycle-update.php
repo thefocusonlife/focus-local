@@ -19,10 +19,10 @@ $allowedLocations = [
 
 $rideId = (int) ($_POST['ride_id'] ?? 0);
 
-$location = strtolower(trim((string) ($_POST['location'] ?? 'redmond')));
+$location = strtolower(trim((string) ($_POST['location'] ?? 'centraloregon')));
 
 if (!in_array($location, $allowedLocations, true)) {
-    $location = 'redmond';
+    $location = 'centraloregon';
 }
 
 if ($rideId <= 0) {

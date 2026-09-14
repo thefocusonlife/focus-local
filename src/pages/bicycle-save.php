@@ -10,11 +10,12 @@ $allowedLocations = [
     'centraloregon',
 ];
 
-$location = strtolower((string) ($_POST['location'] ?? ($_GET['location'] ?? 'redmond')));
+$location = strtolower((string) ($_POST['location'] ?? ($_GET['location'] ?? 'centraloregon')));
 
 if (!in_array($location, $allowedLocations, true)) {
-    $location = 'redmond';
+    $location = 'centraloregon';
 }
+
 require_once APP_ROOT . '/vendor/autoload.php';
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {

@@ -336,89 +336,31 @@
 
 		{% if isBicycleClub %}
 
-			<section class="bicycle-club-module">
+	<section class="bicycle-club-module">
 
-				<div class="location-selector">
-					<strong>Choose Ride Area:</strong>
+		<article class="find-ride-summary-card">
+			<h2>Find a Ride</h2>
 
-					{% for key, name in locations %}
+			<p>
+				Discover rides offered by independent cycling clubs, bike shops,
+				groups, and event organizers. Visit the responsible organization’s
+				official website or calendar for current information.
+			</p>
 
-						{% if key == 'centraloregon' %}
-							<br>
-							<span class="location-divider">| Regional |</span>
-							<br>
-						{% endif %}
+			<p class="find-ride-summary-notice">
+				COBC provides ride information as a community resource. COBC does
+				not organize, sponsor, supervise, endorse, or insure the rides listed.
+			</p>
 
-						<a href="{{ doc_root }}index/44?location={{ key }}" class="{% if location == key %}active{% endif %}">
-							{{ name }}
-						</a>
+			<div class="bicycle-club-actions">
+				<a href="{{ doc_root }}bicycle-find-ride?website=44"
+        class="btn btn-primary">
+	        FIND A RIDE
+        </a>
+			</div>
+		</article>
 
-					{% endfor %}
-				</div>
-				<div class="bicycle-club-header">
-					<h2>{{ locationName }}
-						Group Ride Schedule</h2>
-
-					<div class="bicycle-club-actions">
-						<a href="{{ doc_root }}bicycle-schedule-add?location={{ location }}" class="btn btn-primary">
-							Add Group Ride
-						</a>
-					</div>
-
-				</div>
-
-
-				{% if rideSchedules is empty %}
-					<div class="bicycle-empty-state">
-						<p>No group rides are scheduled yet.</p>
-					</div>
-				{% else %}
-					<div class="ride-schedule-list">
-						{% for schedule in rideSchedules %}
-							<article class="ride-schedule-card">
-								<header class="ride-schedule-header">
-									<h3>{{ schedule.title }}</h3>
-									<div class="ride-schedule-day">
-										{{ schedule.day_of_week }}
-										·
-										{{ schedule.start_time|date('g:i A') }}
-									</div>
-								</header>
-
-								<div class="ride-meta">
-									{% if schedule.ride_type %}
-										<span>{{ schedule.ride_type }}</span>
-									{% endif %}
-									{% if schedule.start_location %}
-										<span>·
-											{{ schedule.start_location }}</span>
-									{% endif %}
-								</div>
-
-								{% if schedule.description %}
-									<div class="ride-notes">
-										<p>{{ schedule.description }}</p>
-									</div>
-								{% endif %}
-
-								{% if session.id %}
-									<div class="bicycle-club-actions">
-
-										{% set can_manage_schedule = viewer_id > 0
-                      and (viewer_id == schedule.member_id or viewer_id == 1) %}
-
-										{% if can_manage_schedule %}
-											<a href="{{ doc_root }}bicycle-schedule-edit/{{ schedule.id }}?location={{ location|url_encode }}" class="btn btn-secondary">
-												Edit Group Ride
-											</a>
-										{% endif %}
-									</div>
-								{% endif %}
-							</article>
-						{% endfor %}
-					</div>
-				{% endif %}
-			</section>
+	</section>
 
 			<section class="bicycle-club-module">
 				<div class="bicycle-club-header">
@@ -426,9 +368,10 @@
 					<p>Current member notes and ride updates.</p>
 				</div>
 				<div class="bicycle-club-actions">
-					<a href="{{ doc_root }}bicycle-note-add/{{ note.id }}?location={{ location }}" class="btn btn-primary">
-						ADD COMMUNITY NOTE
-					</a>
+					<a href="{{ doc_root }}bicycle-note-add?location=centraloregon"
+            class="btn btn-primary">
+	            ADD COMMUNITY NOTE
+          </a>
 				</div>
 				{% if rideNotes is empty %}
 					<div class="bicycle-empty-state">
@@ -471,9 +414,10 @@
                       and (viewer_id == note.member_id or viewer_id == 1) %}
 
 										{% if can_manage_note %}
-											<a href="{{ doc_root }}bicycle-note-edit/{{ note.id }}?location={{ location|url_encode }}" class="btn btn-secondary">
-												Edit Community Note
-											</a>
+											<a href="{{ doc_root }}bicycle-note-edit/{{ note.id }}?location={{ note.location|default('centraloregon')|url_encode }}"
+                        class="btn btn-secondary">
+	                        Edit Community Note
+                      </a>
 										{% endif %}
 									</div>
 								{% endif %}
@@ -486,18 +430,19 @@
 			<section class="bicycle-club-module">
 				<div class="bicycle-club-header">
 					<h2>Ride Reports</h2>
-					<p>Recent ride reports from community members.</p>
+          <p>Completed rides logged by community members.</p>
 
 					<div class="bicycle-club-actions">
-						<a href="{{ doc_root }}bicycle-submit?website=44&location={{ location }}" class="btn btn-primary">
-							SHARE A RIDE
-						</a>
+						<a href="{{ doc_root }}bicycle-submit?website=44&location=centraloregon"
+              class="btn btn-primary">
+	              LOG A COMPLETED RIDE
+            </a>
 					</div>
 				</div>
 
 				{% if rides is empty %}
 					<div class="bicycle-empty-state">
-						<p>No rides have been submitted yet.</p>
+            <p>No completed rides have been logged yet.</p>
 					</div>
 				{% else %}
 					<div class="ride-feed">
@@ -591,9 +536,10 @@
 %}
 
 								{% if can_manage_ride %}
-									<a href="{{ doc_root }}bicycle-edit/{{ ride.id }}?location={{ location|url_encode }}" class="btn btn-secondary">
-										Edit Ride
-									</a>
+									<a href="{{ doc_root }}bicycle-edit/{{ ride.id }}?location={{ ride.location|default('centraloregon')|url_encode }}"
+                    class="btn btn-secondary">
+	                    Edit Ride
+                  </a>
 								{% endif %}
 
 							</div>
@@ -688,24 +634,30 @@
 			{% endif %}
 
 			<style>
-				.location-selector {
-					margin-bottom: 18px;
-					padding: 10px 0;
-				}
+           .find-ride-summary-card {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            padding: 1.25rem;
+            background: #f7f8f8;
+            border: 1px solid #d5d8da;
+            border-radius: 7px;
+            box-sizing: border-box;
+          }
 
-				.location-selector a {
-					display: inline-block;
-					margin: 4px 6px 4px 0;
-					padding: 5px 10px;
-					background: #e8e8e8;
-					border-radius: 4px;
-					text-decoration: none;
-				}
+          .find-ride-summary-card h2 {
+            margin-top: 0;
+            margin-bottom: 0.65rem;
+          }
 
-				.location-selector a.active {
-					background: #295073;
-					color: #fff;
-				}
+          .find-ride-summary-card p {
+            line-height: 1.45;
+          }
+
+          .find-ride-summary-notice {
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+          }
 
 				.bicycle-club-module,
 				.community-card {

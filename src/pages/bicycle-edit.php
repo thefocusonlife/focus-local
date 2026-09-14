@@ -106,14 +106,25 @@ if (!$website) {
     exit();
 }
 
+$locations = [
+    'centraloregon' => 'Central Oregon',
+    'bend' => 'Bend',
+    'redmond' => 'Redmond',
+    'sisters' => 'Sisters',
+    'madras' => 'Madras',
+    'prineville' => 'Prineville',
+    'lapine' => 'La Pine',
+];
+
 $data = [
     'website' => $website,
     'websiteId' => $websiteId,
-    'title' => 'Edit Shared Ride',
+    'title' => 'Edit Completed Ride',
     'ride' => $ride,
     'rideId' => $rideId,
     'location' => $location,
-    'locationName' => $location === 'centraloregon' ? 'Central Oregon' : ucfirst($location),
+    'locationName' => $locations[$location],
+    'locations' => $locations,
 ];
 
 if (!empty($_SESSION['flash_failure'])) {
