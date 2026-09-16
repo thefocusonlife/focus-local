@@ -22,28 +22,31 @@ $role = strtolower((string) ($_SESSION['role'] ?? 'guest'));
 
 $isLoggedIn = $viewerId > 0 && $role !== 'guest';
 /*
- * Step 1: Send guests through the Member Required gateway.
+ * Require a signed-in TFOL account.
  */
 if (!$isLoggedIn) {
     $_SESSION['member_required'] = true;
     $_SESSION['return_website'] = 44;
     $_SESSION['return_to'] = DOC_ROOT . 'ride-activities?location=' . urlencode($location);
-    $_SESSION['member_required_reason'] =
-        'Deleting an activity requires membership in the Central Oregon Bicycle Community.';
+    $_SESSION['member_required_reason'] = 'Deleting a completed ride requires a free TFOL account.';
 
     header('Location: ' . DOC_ROOT . 'login/44');
     exit();
 }
 
 /*
- * Step 2: Require Website 44 membership.
+ * Require a Website 44 TFOL account.
  */
-if (!$cms->getMember()->isMemberOfWebsite($viewerId, 44)) {
-    $_SESSION['flash_failure'] =
-        'This feature requires Central Oregon Bicycle Community membership. ' .
-        'Please Log Out, then click Register for a FREE COBC account.';
+if ($viewerId !== 1 && !$cms->getMember()->isMemberOfWebsite($viewerId, 44)) {
+    $cms->getSession()->resetToGuest(44, true);
 
-    header('Location: ' . DOC_ROOT . 'index/44?location=' . urlencode($location));
+    $_SESSION['member_required'] = true;
+    $_SESSION['return_website'] = 44;
+    $_SESSION['return_to'] = DOC_ROOT . 'index/44';
+    $_SESSION['member_required_reason'] =
+        'Deleting a completed ride requires a Website 44 TFOL account.';
+
+    header('Location: ' . DOC_ROOT . 'member-required/44');
     exit();
 }
 

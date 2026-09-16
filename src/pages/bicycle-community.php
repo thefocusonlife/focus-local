@@ -27,6 +27,24 @@ if ($viewerId <= 0 || $role === 'guest') {
     exit();
 }
 
+/*
+ * Require a Website 44 TFOL account.
+ */
+if ($viewerId !== 1 && !$cms->getMember()->isMemberOfWebsite($viewerId, 44)) {
+    $returnTo = $_SERVER['REQUEST_URI'] ?? DOC_ROOT . 'bicycle-community?website=44';
+
+    $cms->getSession()->resetToGuest(44, true);
+
+    $_SESSION['member_required'] = true;
+    $_SESSION['return_website'] = 44;
+    $_SESSION['return_to'] = $returnTo;
+    $_SESSION['member_required_reason'] =
+        'Suggesting or editing a Community Item requires a Website 44 TFOL account.';
+
+    header('Location: ' . DOC_ROOT . 'member-required/44');
+    exit();
+}
+
 $data = [];
 
 $websiteId = (int) ($_GET['website'] ?? ($_SESSION['website'] ?? 44));

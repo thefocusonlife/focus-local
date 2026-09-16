@@ -14,7 +14,7 @@ if (!$isLoggedIn) {
     $_SESSION['return_website'] = 44;
     $_SESSION['return_to'] = DOC_ROOT . 'ride-activities?website=44';
     $_SESSION['member_required_reason'] =
-        'Sharing a ride activity requires membership in the Central Oregon Bicycle Community.';
+        'Viewing and sharing Ride Activities requires a free TFOL account.';
 
     header('Location: ' . DOC_ROOT . 'login/44');
     exit();
@@ -22,13 +22,22 @@ if (!$isLoggedIn) {
 
 $memberId = (int) ($_SESSION['id'] ?? 0);
 
-if ($memberId < 1 || !$cms->getMember()->isMemberOfWebsite($memberId, 44)) {
-    $_SESSION['flash_failure'] =
-        'This feature requires Central Oregon Bicycle Community membership. Please Log Out then click Register for a FREE COBC account.';
+/*
+ * Require a Website 44 TFOL account.
+ */
+if ($memberId !== 1 && !$cms->getMember()->isMemberOfWebsite($memberId, 44)) {
+    $cms->getSession()->resetToGuest(44, true);
 
-    header('Location: ' . DOC_ROOT . 'index/44');
+    $_SESSION['member_required'] = true;
+    $_SESSION['return_website'] = 44;
+    $_SESSION['return_to'] = DOC_ROOT . 'ride-activities?website=44';
+    $_SESSION['member_required_reason'] =
+        'Viewing Ride Activities requires a Website 44 TFOL account.';
+
+    header('Location: ' . DOC_ROOT . 'member-required/44');
     exit();
 }
+
 $sql = "SELECT
     ral.*,
     m.forename,

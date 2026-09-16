@@ -38,36 +38,36 @@ $role = strtolower((string) ($_SESSION['role'] ?? 'guest'));
 $isLoggedIn = $viewerId > 0 && $role !== 'guest';
 
 /*
- * Step 1: Send guests through Member Required.
+ * Require a signed-in TFOL account.
  */
 if (!$isLoggedIn) {
     $_SESSION['member_required'] = true;
     $_SESSION['return_website'] = 44;
-
     $_SESSION['return_to'] = DOC_ROOT . 'index/44?location=' . urlencode($location);
-
-    $_SESSION['member_required_reason'] =
-        'Deleting a Community Item requires membership in the ' .
-        'Central Oregon Bicycle Community.';
+    $_SESSION['member_required_reason'] = 'Deleting a Community Item requires a free TFOL account.';
 
     header('Location: ' . DOC_ROOT . 'login/44');
     exit();
 }
 
 /*
- * Step 2: Require Website 44 membership.
+ * Require a Website 44 TFOL account.
  */
-if (!$cms->getMember()->isMemberOfWebsite($viewerId, 44)) {
-    $_SESSION['flash_failure'] =
-        'This feature requires Central Oregon Bicycle Community membership. ' .
-        'Please Log Out, then click Register for a FREE COBC account.';
+if ($viewerId !== 1 && !$cms->getMember()->isMemberOfWebsite($viewerId, 44)) {
+    $cms->getSession()->resetToGuest(44, true);
 
-    redirect('index/44?location=' . urlencode($location));
+    $_SESSION['member_required'] = true;
+    $_SESSION['return_website'] = 44;
+    $_SESSION['return_to'] = DOC_ROOT . 'index/44';
+    $_SESSION['member_required_reason'] =
+        'Deleting a Community Item requires a Website 44 TFOL account.';
+
+    header('Location: ' . DOC_ROOT . 'member-required/44');
     exit();
 }
 
 /*
- * Step 3: Load the existing item so ownership comes from the database.
+ * Step 2: Load the existing item so ownership comes from the database.
  */
 $statement = $cms->getDb()->runSql(
     'SELECT id, member_id
@@ -90,7 +90,7 @@ if (!$item) {
 }
 
 /*
- * Step 4: Only the owner or member 1 may delete.
+ * Step 3: Only the owner or member 1 may delete.
  */
 $isOwner = (int) $item['member_id'] === $viewerId;
 $isUberMember = $viewerId === 1;
@@ -103,7 +103,7 @@ if (!$isOwner && !$isUberMember) {
 }
 
 /*
- * Step 5: Delete.
+ * Step 4: Delete.
  */
 $cms->getDb()->runSql(
     'DELETE FROM bicycle_community

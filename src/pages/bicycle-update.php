@@ -43,18 +43,26 @@ if (!$isLoggedIn) {
     $_SESSION['return_to'] =
         DOC_ROOT . 'bicycle-edit/' . $rideId . '?location=' . urlencode($location);
 
-    $_SESSION['member_required_reason'] =
-        'Editing a shared ride requires membership in the ' . 'Central Oregon Bicycle Community.';
+    $_SESSION['member_required_reason'] = 'Updating a completed ride requires a free TFOL account.';
 
     header('Location: ' . DOC_ROOT . 'login/44');
     exit();
 }
 
-if (!$cms->getMember()->isMemberOfWebsite($viewerId, 44)) {
-    $_SESSION['flash_failure'] =
-        'This feature requires Central Oregon Bicycle Community membership.';
+/*
+ * Require a Website 44 TFOL account.
+ */
+if ($viewerId !== 1 && !$cms->getMember()->isMemberOfWebsite($viewerId, 44)) {
+    $cms->getSession()->resetToGuest(44, true);
 
-    redirect('index/44?location=' . urlencode($location));
+    $_SESSION['member_required'] = true;
+    $_SESSION['return_website'] = 44;
+    $_SESSION['return_to'] =
+        DOC_ROOT . 'bicycle-edit/' . $rideId . '?location=' . urlencode($location);
+    $_SESSION['member_required_reason'] =
+        'Updating a completed ride requires a Website 44 TFOL account.';
+
+    header('Location: ' . DOC_ROOT . 'member-required/44');
     exit();
 }
 
@@ -66,10 +74,10 @@ if (!$ride) {
     exit();
 }
 
-//$isAdmin = in_array($role, ['admin', 'uber'], true);
 $isOwner = (int) $ride['member_id'] === $viewerId;
+$isUberMember = $viewerId === 1;
 
-if (!$isOwner) {
+if (!$isOwner && !$isUberMember) {
     $_SESSION['flash_failure'] = 'You do not have permission to update this ride.';
 
     redirect('index/44?location=' . urlencode($location));

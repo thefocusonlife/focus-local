@@ -8,7 +8,18 @@ if (!$websiteId || $websiteId < 1) {
     redirect('websites');
     exit();
 }
+/*
+ * COBC club-membership applications are currently inactive.
+ * Preserve the form and records for possible future use.
+ */
+if ($websiteId === 44) {
+    $_SESSION['flash_failure'] =
+        'COBC club-membership applications are not currently active. ' .
+        'A Website 44 TFOL account is sufficient for COBC access.';
 
+    redirect('index/44');
+    exit();
+}
 $websiteIdHtml = htmlspecialchars((string) $websiteId, ENT_QUOTES, 'UTF-8');
 
 $viewerId = (int) ($_SESSION['id'] ?? 0);

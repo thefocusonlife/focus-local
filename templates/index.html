@@ -411,7 +411,7 @@
 										{% set viewer_id = session.id|default(0) %}
 
 										{% set can_manage_note = viewer_id > 0
-                      and (viewer_id == note.member_id or viewer_id == 1) %}
+										and (viewer_id == note.member_id or viewer_id == 1) %}
 
 										{% if can_manage_note %}
 											<a href="{{ doc_root }}bicycle-note-edit/{{ note.id }}?location={{ note.location|default('centraloregon')|url_encode }}"
@@ -613,7 +613,11 @@
 										</a>
 									{% endif %}
 
-									{% if member %}
+									{% set viewer_id = session.id|default(0) %}
+									{% set can_manage_item = viewer_id > 0
+										and (viewer_id == item.member_id or viewer_id == 1) %}
+
+									{% if can_manage_item %}
 										<small>
 											<a href="{{ doc_root }}bicycle-community?website=44&id={{ item.id }}">Edit</a>
 										</small>

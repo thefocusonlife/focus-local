@@ -17,6 +17,18 @@ if (!$websiteId || $websiteId < 1) {
     exit();
 }
 
+/*
+ * Reject direct submissions while COBC club membership is inactive.
+ */
+if ($websiteId === 44) {
+    $_SESSION['flash_failure'] =
+        'COBC club-membership applications are not currently active. ' .
+        'A Website 44 TFOL account is sufficient for COBC access.';
+
+    redirect('index/44');
+    exit();
+}
+
 $membershipUrl = 'membership?website=' . $websiteId;
 $viewerId = (int) ($_SESSION['id'] ?? 0);
 $role = strtolower((string) ($_SESSION['role'] ?? 'guest'));

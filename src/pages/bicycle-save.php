@@ -46,6 +46,23 @@ if ($viewerId <= 0 || $role === 'guest') {
     redirect('login');
     exit();
 }
+
+/*
+ * Require a Website 44 TFOL account.
+ */
+if ($viewerId !== 1 && !$cms->getMember()->isMemberOfWebsite($viewerId, 44)) {
+    $cms->getSession()->resetToGuest(44, true);
+
+    $_SESSION['member_required'] = true;
+    $_SESSION['return_website'] = 44;
+    $_SESSION['return_to'] = DOC_ROOT . 'index/44';
+    $_SESSION['member_required_reason'] =
+        'Saving a completed ride requires a Website 44 TFOL account.';
+
+    header('Location: ' . DOC_ROOT . 'member-required/44');
+    exit();
+}
+
 require_once APP_ROOT . '/src/security/guard.php';
 include APP_ROOT . '/src/pages/menu-path.php';
 

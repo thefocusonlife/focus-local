@@ -29,9 +29,28 @@ $viewerId = (int) ($_SESSION['id'] ?? 0);
 $role = strtolower((string) ($_SESSION['role'] ?? ''));
 
 if ($viewerId <= 0 || $role === 'guest') {
-    $_SESSION['return_to'] = '/index/44';
-    //$_SESSION['flash_failure'] = 'You must be logged in to manage Community Notes.';
-    redirect('login');
+    $_SESSION['member_required'] = true;
+    $_SESSION['return_website'] = 44;
+    $_SESSION['return_to'] = DOC_ROOT . 'index/44';
+    $_SESSION['member_required_reason'] = 'Saving a Community Note requires a free TFOL account.';
+
+    header('Location: ' . DOC_ROOT . 'login/44');
+    exit();
+}
+
+/*
+ * Require a Website 44 TFOL account.
+ */
+if ($viewerId !== 1 && !$cms->getMember()->isMemberOfWebsite($viewerId, 44)) {
+    $cms->getSession()->resetToGuest(44, true);
+
+    $_SESSION['member_required'] = true;
+    $_SESSION['return_website'] = 44;
+    $_SESSION['return_to'] = DOC_ROOT . 'index/44';
+    $_SESSION['member_required_reason'] =
+        'Saving a Community Note requires a Website 44 TFOL account.';
+
+    header('Location: ' . DOC_ROOT . 'member-required/44');
     exit();
 }
 
@@ -50,6 +69,39 @@ if ($title === '' || $noteText === '') {
 }
 
 if ($id > 0) {
+    /*
+     * Load the existing record so ownership comes from the database.
+     */
+    $statement = $cms->getDb()->runSql(
+        'SELECT id, member_id
+           FROM ride_note
+          WHERE id = :id
+            AND website_id = :website_id
+          LIMIT 1',
+        [
+            'id' => $id,
+            'website_id' => $websiteId,
+        ],
+    );
+
+    $existingNote = $statement->fetch(PDO::FETCH_ASSOC);
+
+    if (!$existingNote) {
+        $_SESSION['flash_failure'] = 'Community Note not found.';
+        redirect('index/44');
+        exit();
+    }
+
+    $isOwner = (int) $existingNote['member_id'] === $viewerId;
+    $isUberMember = $viewerId === 1;
+
+    if (!$isOwner && !$isUberMember) {
+        $_SESSION['flash_failure'] = 'You do not have permission to update this Community Note.';
+
+        redirect('index/44');
+        exit();
+    }
+
     $sql = "
         UPDATE ride_note
         SET
@@ -57,7 +109,6 @@ if ($id > 0) {
             note_text = :note_text,
             note_date = :note_date,
             is_active = :is_active,
-            member_id = :member_id,
             location = :location
         WHERE id = :id
           AND website_id = :website_id
@@ -68,7 +119,6 @@ if ($id > 0) {
         'note_text' => $noteText,
         'note_date' => $noteDate !== '' ? $noteDate : null,
         'is_active' => $isActive,
-        'member_id' => $viewerId,
         'id' => $id,
         'website_id' => $websiteId,
         'location' => $location,

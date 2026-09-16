@@ -30,6 +30,22 @@ if ($viewerId <= 0 || $role === 'guest') {
     exit();
 }
 
+/*
+ * Require a Website 44 TFOL account.
+ */
+if ($viewerId !== 1 && !$cms->getMember()->isMemberOfWebsite($viewerId, 44)) {
+    $cms->getSession()->resetToGuest(44, true);
+
+    $_SESSION['member_required'] = true;
+    $_SESSION['return_website'] = 44;
+    $_SESSION['return_to'] = DOC_ROOT . 'index/44';
+    $_SESSION['member_required_reason'] =
+        'Saving a Community Item requires a Website 44 TFOL account.';
+
+    header('Location: ' . DOC_ROOT . 'member-required/44');
+    exit();
+}
+
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     redirect('bicycle-community?website=44');
     exit();
@@ -79,6 +95,40 @@ if ($url !== '' && !filter_var($url, FILTER_VALIDATE_URL)) {
 
 try {
     if ($id > 0) {
+        /*
+         * Load the existing item so ownership comes from the database.
+         */
+        $statement = $cms->getDb()->runSql(
+            'SELECT id, member_id
+               FROM bicycle_community
+              WHERE id = :id
+                AND website_id = :website_id
+              LIMIT 1',
+            [
+                'id' => $id,
+                'website_id' => $websiteId,
+            ],
+        );
+
+        $existingItem = $statement->fetch(PDO::FETCH_ASSOC);
+
+        if (!$existingItem) {
+            $_SESSION['flash_failure'] = 'Community Item not found.';
+            redirect('index/44');
+            exit();
+        }
+
+        $isOwner = (int) $existingItem['member_id'] === $viewerId;
+        $isUberMember = $viewerId === 1;
+
+        if (!$isOwner && !$isUberMember) {
+            $_SESSION['flash_failure'] =
+                'You do not have permission to update this Community Item.';
+
+            redirect('index/44');
+            exit();
+        }
+
         $sql = "
             UPDATE bicycle_community
             SET

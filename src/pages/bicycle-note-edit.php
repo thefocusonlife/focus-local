@@ -34,7 +34,7 @@ $role = strtolower((string) ($_SESSION['role'] ?? 'guest'));
 $isLoggedIn = $viewerId > 0 && $role !== 'guest';
 
 /*
- * Step 1: Send guests through Member Required.
+ * Require a signed-in TFOL account.
  */
 if (!$isLoggedIn) {
     $_SESSION['member_required'] = true;
@@ -43,24 +43,29 @@ if (!$isLoggedIn) {
     $_SESSION['return_to'] =
         DOC_ROOT . 'bicycle-note-edit/' . $scheduleId . '?location=' . urlencode($location);
 
-    $_SESSION['member_required_reason'] =
-        'Editing a Community Note requires membership in the Central Oregon Bicycle Community.';
+    $_SESSION['member_required_reason'] = 'Editing a Community Note requires a free TFOL account.';
 
     header('Location: ' . DOC_ROOT . 'login/44');
     exit();
 }
 
 /*
- * Step 2: Require Website 44 membership.
+ * Require a Website 44 TFOL account.
  */
-if (!$cms->getMember()->isMemberOfWebsite($viewerId, 44)) {
-    $_SESSION['flash_failure'] =
-        'This feature requires Central Oregon Bicycle Community membership. ' .
-        'Please Log Out, then click Register for a FREE COBC account.';
+if ($viewerId !== 1 && !$cms->getMember()->isMemberOfWebsite($viewerId, 44)) {
+    $cms->getSession()->resetToGuest(44, true);
 
-    redirect('index/44?location=' . urlencode($location));
+    $_SESSION['member_required'] = true;
+    $_SESSION['return_website'] = 44;
+    $_SESSION['return_to'] =
+        DOC_ROOT . 'bicycle-note-edit/' . $scheduleId . '?location=' . urlencode($location);
+    $_SESSION['member_required_reason'] =
+        'Editing a Community Note requires a Website 44 TFOL account.';
+
+    header('Location: ' . DOC_ROOT . 'member-required/44');
     exit();
 }
+
 include APP_ROOT . '/src/pages/menu-path.php';
 $id = (int) ($id ?? ($_GET['id'] ?? 0));
 if ($id <= 0) {
@@ -76,6 +81,19 @@ $note = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$note) {
     $_SESSION['flash_failure'] = 'Note not found.';
+    redirect('index/44');
+    exit();
+}
+
+/*
+ * Only the note owner or Uber Admin may edit it.
+ */
+$isOwner = (int) $note['member_id'] === $viewerId;
+$isUberMember = $viewerId === 1;
+
+if (!$isOwner && !$isUberMember) {
+    $_SESSION['flash_failure'] = 'You do not have permission to edit this Community Note.';
+
     redirect('index/44');
     exit();
 }

@@ -36,7 +36,7 @@ $role = strtolower((string) ($_SESSION['role'] ?? 'guest'));
 $isLoggedIn = $viewerId > 0 && $role !== 'guest';
 
 /*
- * Step 1: Member Required gateway.
+ * Require a signed-in TFOL account.
  */
 if (!$isLoggedIn) {
     $_SESSION['member_required'] = true;
@@ -45,27 +45,30 @@ if (!$isLoggedIn) {
     $_SESSION['return_to'] =
         DOC_ROOT . 'bicycle-edit/' . $rideId . '?location=' . urlencode($location);
 
-    $_SESSION['member_required_reason'] =
-        'Editing a shared ride requires membership in the ' . 'Central Oregon Bicycle Community.';
-
+    $_SESSION['member_required_reason'] = 'Editing a completed ride requires a free TFOL account.';
     header('Location: ' . DOC_ROOT . 'login/44');
     exit();
 }
 
 /*
- * Step 2: Website 44 membership.
+ * Require a Website 44 TFOL account.
  */
-if (!$cms->getMember()->isMemberOfWebsite($viewerId, 44)) {
-    $_SESSION['flash_failure'] =
-        'This feature requires Central Oregon Bicycle Community membership. ' .
-        'Please Log Out, then click Register for a FREE COBC account.';
+if ($viewerId !== 1 && !$cms->getMember()->isMemberOfWebsite($viewerId, 44)) {
+    $cms->getSession()->resetToGuest(44, true);
 
-    redirect('index/44?location=' . urlencode($location));
+    $_SESSION['member_required'] = true;
+    $_SESSION['return_website'] = 44;
+    $_SESSION['return_to'] =
+        DOC_ROOT . 'bicycle-edit/' . $rideId . '?location=' . urlencode($location);
+    $_SESSION['member_required_reason'] =
+        'Editing a completed ride requires a Website 44 TFOL account.';
+
+    header('Location: ' . DOC_ROOT . 'member-required/44');
     exit();
 }
 
 /*
- * Step 3: Retrieve the ride.
+ * Step 2: Retrieve the ride.
  */
 $ride = $cms->getRide()->getOne($rideId, 44);
 
@@ -76,12 +79,12 @@ if (!$ride) {
 }
 
 /*
- * Step 4: Owner or administrator only.
+ * Step 3: Owner or administrator only.
  */
-//$isAdmin = in_array($role, ['admin', 'uber'], true);
 $isOwner = (int) $ride['member_id'] === $viewerId;
+$isUberMember = $viewerId === 1;
 
-if (!$isOwner) {
+if (!$isOwner && !$isUberMember) {
     $_SESSION['flash_failure'] = 'You do not have permission to edit this ride.';
 
     redirect('index/44?location=' . urlencode($location));

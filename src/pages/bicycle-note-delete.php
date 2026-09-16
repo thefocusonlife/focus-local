@@ -38,10 +38,10 @@ $role = strtolower((string) ($_SESSION['role'] ?? 'guest'));
 $isLoggedIn = $viewerId > 0 && $role !== 'guest';
 
 /*
- * Step 1: Send guests through Member Required.
+ * Require a signed-in TFOL account.
  *
- * The original POST cannot be resumed after login, so return the
- * member to the note's edit page.
+ * The original POST cannot be resumed after login, so return to the
+ * note's edit page.
  */
 if (!$isLoggedIn) {
     $_SESSION['member_required'] = true;
@@ -50,28 +50,31 @@ if (!$isLoggedIn) {
     $_SESSION['return_to'] =
         DOC_ROOT . 'bicycle-note-edit/' . $noteId . '?location=' . urlencode($location);
 
-    $_SESSION['member_required_reason'] =
-        'Deleting a Community Note requires membership in the ' .
-        'Central Oregon Bicycle Community.';
+    $_SESSION['member_required_reason'] = 'Deleting a Community Note requires a free TFOL account.';
 
     header('Location: ' . DOC_ROOT . 'login/44');
     exit();
 }
 
 /*
- * Step 2: Require Website 44 membership.
+ * Require a Website 44 TFOL account.
  */
-if (!$cms->getMember()->isMemberOfWebsite($viewerId, 44)) {
-    $_SESSION['flash_failure'] =
-        'This feature requires Central Oregon Bicycle Community membership. ' .
-        'Please Log Out, then click Register for a FREE COBC account.';
+if ($viewerId !== 1 && !$cms->getMember()->isMemberOfWebsite($viewerId, 44)) {
+    $cms->getSession()->resetToGuest(44, true);
 
-    redirect('index/44?location=' . urlencode($location));
+    $_SESSION['member_required'] = true;
+    $_SESSION['return_website'] = 44;
+    $_SESSION['return_to'] =
+        DOC_ROOT . 'bicycle-note-edit/' . $noteId . '?location=' . urlencode($location);
+    $_SESSION['member_required_reason'] =
+        'Deleting a Community Note requires a Website 44 TFOL account.';
+
+    header('Location: ' . DOC_ROOT . 'member-required/44');
     exit();
 }
 
 /*
- * Step 3: Load the existing record.
+ * Step 2: Load the existing record.
  * Ownership must come from the database, not from POST data.
  */
 $statement = $cms->getDb()->runSql(
@@ -95,7 +98,7 @@ if (!$note) {
 }
 
 /*
- * Step 4: Only the owner or member 1 may delete.
+ * Step 3: Only the owner or member 1 may delete.
  */
 $isOwner = (int) $note['member_id'] === $viewerId;
 $isUberMember = $viewerId === 1;
@@ -108,7 +111,7 @@ if (!$isOwner && !$isUberMember) {
 }
 
 /*
- * Step 5: Delete the note.
+ * Step 4: Delete the note.
  */
 $cms->getDb()->runSql(
     'DELETE FROM ride_note

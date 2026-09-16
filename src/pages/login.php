@@ -164,18 +164,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $emailWebsiteId = extractWebsiteIdFromWebsiteEmail($email);
 
         if ($emailWebsiteId !== null && $emailWebsiteId !== (int) $websiteId) {
-            $targetWebsite = $cms->getWebsite()->getById($emailWebsiteId);
+            $requiredWebsiteId = (int) ($_SESSION['return_website'] ?? 0);
 
-            if (empty($targetWebsite) || empty($targetWebsite['id'])) {
-                $errors['message'] = 'Website not found for that login email.';
+            $isMemberRequiredFlow = !empty($_SESSION['member_required']) && $requiredWebsiteId > 0;
+
+            if ($isMemberRequiredFlow && $emailWebsiteId !== $requiredWebsiteId) {
+                $errors['message'] =
+                    'This login belongs to a different TFOL website. ' .
+                    'Sign in with your Website ' .
+                    $requiredWebsiteId .
+                    ' login, or return and click Register to create one.';
             } else {
-                $websiteId = (int) $targetWebsite['id'];
-                $website = $targetWebsite;
+                $targetWebsite = $cms->getWebsite()->getById($emailWebsiteId);
 
-                $_SESSION['website'] = $websiteId;
-                $_SESSION['websiteid'] = $websiteId;
-                $_SESSION['menu_website'] = $websiteId;
-                setWebsiteCookie('tfol_tid', $websiteId);
+                if (empty($targetWebsite) || empty($targetWebsite['id'])) {
+                    $errors['message'] = 'Website not found for that login email.';
+                } else {
+                    $websiteId = (int) $targetWebsite['id'];
+                    $website = $targetWebsite;
+
+                    $_SESSION['website'] = $websiteId;
+                    $_SESSION['websiteid'] = $websiteId;
+                    $_SESSION['menu_website'] = $websiteId;
+                    setWebsiteCookie('tfol_tid', $websiteId);
+                }
             }
         }
     }
