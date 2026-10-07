@@ -1,6 +1,29 @@
 {% extends 'layout.html' %}
 {% block content %}
 
+<style>
+	.chess-mission {
+		grid-column: 1 / -1 !important;
+		width: 100% !important;
+		margin-top: 1.5rem;
+		padding: 1.25rem;
+		background: #f7f8f8;
+		border: 1px solid #d5d8da;
+		border-radius: 7px;
+		box-sizing: border-box;
+	}
+
+	.chess-mission h2 {
+		margin: 0 0 0.65rem;
+	}
+
+	.chess-mission p {
+		max-width: 900px;
+		margin: 0;
+		line-height: 1.5;
+	}
+</style>
+
 	<main class="container grid" id="content">
 		{% if failure %}
 			<div class="alert alert-danger">{{ failure }}</div>
@@ -292,11 +315,6 @@
 					</li>
 
 					<li>
-						📘 Mission
-						<em>— Coming Soon</em>
-					</li>
-
-					<li>
 						🌐
 						<a href="{{ doc_root }}chess-resources?website=51">
 							Resources
@@ -331,8 +349,18 @@
 					</ul>
 				{% endif %}
 			</section>
+      <section class="chess-mission">
+	      <h2>Our Mission</h2>
 
-		{% endif %}
+	      <p>
+		      Central Oregon Chess connects chess players throughout the region by
+		      creating welcoming opportunities to play, learn, meet other players,
+		      and participate in local events and tournaments. We support players
+		      of every skill level and encourage a respectful, inclusive chess
+		      community built around enjoyment of the game.
+	      </p>
+      </section>
+      {% endif %}
 
 		{% if isBicycleClub %}
 
@@ -686,6 +714,7 @@
 					margin-left: 0.4rem;
 					font-size: 0.85rem;
 				}
+
 			</style>
 		</section>
 	{% endif %}
