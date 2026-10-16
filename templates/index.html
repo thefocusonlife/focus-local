@@ -54,7 +54,7 @@
 
 					{% set viewer_id = session.id|default(0) %}
 
-					{% if viewer_id == 1 %}
+					{% if viewer_id in [1, 489, 503] %}
 						<div class="chess-club-actions">
 							<a href="{{ doc_root }}chess-schedule-add" class="btn btn-primary">
 								Add Chess Night
@@ -106,7 +106,7 @@
 									</div>
 								{% endif %}
 
-								{% if viewer_id == 1 %}
+								{% if viewer_id in [ 1, 489, 503] %}
 									<div class="chess-club-actions">
 										<a href="{{ doc_root }}chess-schedule-edit/{{ schedule.id }}" class="btn btn-secondary">
 											Edit Chess Night
@@ -126,7 +126,7 @@
 						<p>Schedule changes, activities, events, and club announcements.</p>
 					</div>
 
-					{% if viewer_id == 1 %}
+					{% if viewer_id in [ 1, 489, 503] %}
 						<div class="chess-club-actions">
 							<a href="{{ doc_root }}chess-note-add" class="btn btn-primary">
 								Add Club Note
@@ -162,7 +162,7 @@
 									{{ note.note_text|e|nl2br }}
 								</div>
 
-								{% if viewer_id == 1 %}
+								{% if viewer_id in [ 1, 489, 503] %}
 									<div class="chess-club-actions">
 										<a href="{{ doc_root }}chess-note-edit/{{ note.id }}" class="btn btn-secondary">
 											Edit Club Note
@@ -289,7 +289,7 @@
 					</li>
 
 					<li>
-						{% if viewer_id == 1 %}
+						{% if viewer_id in [ 1, 489, 503] %}
 							<a href="{{ doc_root }}club-members-admin?website=51">
 								👥 Membership Administration
 							</a>

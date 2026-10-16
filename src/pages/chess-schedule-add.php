@@ -23,7 +23,7 @@ if (!$isLoggedIn) {
 /*
  * Step 2: Uber Admin is the only Chess schedule manager for now.
  */
-if ($viewerId !== 1) {
+if ($viewerId !== 1 && $viewerId !== 489 && $viewerId !== 503) {
     $_SESSION['flash_failure'] = 'You do not have permission to manage scheduled Chess Nights.';
 
     redirect('index/51');

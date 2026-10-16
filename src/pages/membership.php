@@ -187,6 +187,7 @@ $membershipStatusLabel = $statusLabels[$membershipStatus] ?? ucfirst($membership
 </style>
 
 <div class="membership-form-wrap">
+<a href="<?= DOC_ROOT ?>index/51">Back to Central Oregon Chess</a>
     <h1>
     <?= $isEdit ? 'Your Club Membership' : 'Club Membership Application' ?>
 </h1>

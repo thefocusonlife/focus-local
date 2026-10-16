@@ -25,7 +25,7 @@ if (!$isLoggedIn) {
     exit();
 }
 
-if ($viewerId !== 1) {
+if ($viewerId !== 1 && $viewerId !== 489 && $viewerId !== 503) {
     $_SESSION['flash_failure'] = 'You do not have permission to manage Chess Club Notes.';
 
     redirect('index/51');

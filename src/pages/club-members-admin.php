@@ -27,7 +27,7 @@ if ($viewerId <= 0 || $viewerId === 2 || $role === 'guest') {
 
 $allowedMemberAdmins = [
     44 => [1, 3, 339, 500],
-    51 => [1],
+    51 => [1, 489, 503],
 ];
 
 if (!in_array($viewerId, $allowedMemberAdmins[$websiteId], true)) {
@@ -158,7 +158,9 @@ function h($value): string
     <?php unset($_SESSION['flash_failure']); ?>
 <?php endif; ?>
 
+
     <div class="admin-actions">
+      <a href="<?= DOC_ROOT ?>index/51">Back to Central Oregon Chess</a>
         <a href="<?= DOC_ROOT ?>membership?website=<?= $websiteId ?>">
             Open Membership Form
         </a>
