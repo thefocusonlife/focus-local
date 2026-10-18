@@ -1,7 +1,11 @@
-{% if page != 'stories-worth-saving' %}
-	<div class="splash-screen hidden" id="splashScreen">
-		<a href="{{ doc_root }}stories-worth-saving">
-			<img src="{{ doc_root }}img/adjustfocus.jpg" alt="Splash Screen Image">
-		</a>
-	</div>
-{% endif %}
+{#
+    TFOL splash screen.
+    Clicking enters Website 1 Guest homepage.
+#}
+
+<div class="splash-screen hidden" id="splashScreen">
+    <a href="{{ doc_root }}index/1?enter=1">
+        <img src="{{ doc_root }}img/adjustfocus.jpg"
+             alt="Adjust Your Focus - Enter The Focus on Life">
+    </a>
+</div>

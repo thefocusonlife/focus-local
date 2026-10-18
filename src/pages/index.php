@@ -6,6 +6,22 @@ $guidetext = '';
 
 $routePage = (string) ($page ?? 'index');
 $routeId = (int) ($id ?? 0);
+
+/**
+ * TFOL Splash Screen Entry
+ *
+ * Clicking the splash screen:
+ * - Marks splash as seen for this session.
+ * - Redirects to Website 1 Guest homepage.
+ * - Prevents splash from appearing again this session.
+ */
+if (($_GET['enter'] ?? '') === '1' && $routePage === 'index' && $routeId === 1) {
+    $_SESSION['nosplash'] = true;
+
+    header('Location: ' . DOC_ROOT . 'index/1');
+    exit();
+}
+
 /**
  * Resolve canonical website for this request.
  * Route wins. Then session. Then default 1.
@@ -38,16 +54,14 @@ $_SESSION['website'] = $websiteId;
 $_SESSION['websiteid'] = $websiteId;
 $_SESSION['menu_website'] = $websiteId;
 
-$isGuest = empty($_SESSION['id']);
-$isStoriesLandingCandidate = $routePage === 'index' && ($routeId === 0 || $routeId === 1);
-$fromSws = !empty($_GET['from_sws']);
-
-$hasFlashMessage = !empty($_SESSION['flash_success']) || !empty($_SESSION['flash_failure']);
-
-if ($isGuest && $isStoriesLandingCandidate && !$fromSws && !$hasFlashMessage) {
-    header('Location: ' . DOC_ROOT . 'stories-worth-saving');
-    exit();
-}
+/**
+ * Guest landing behavior.
+ *
+ * Guests accessing index/1 remain on the TFOL Guest homepage grid.
+ * Stories Worth Saving is accessed through the Stories navigation link.
+ *
+ * Do not redirect guests automatically to Stories Worth Saving.
+ */
 
 /**
  * Logged-in member is optional context only.
@@ -134,7 +148,6 @@ $data['rides'] = [];
 $data['rideNotes'] = [];
 
 if ($data['isBicycleClub']) {
-
     // Community Notes
     $noteSql = "
         SELECT
@@ -436,7 +449,6 @@ if ((int) $websiteId === 44) {
 }
 $data['cobc_view'] = $cobcView;
 //$data['show_cobc_cards'] = (int) $websiteId === 44 && $cobcView === 'community';
-
 
 echo $twig->render('index.html', $data);
 return;

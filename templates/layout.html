@@ -66,30 +66,24 @@ toolbar: 'undo redo | bold italic underline link | image table | spellcheckdialo
 			{% set rel = '/' %}
 		{% endif %}
 
-		{% set noSplashPrefixes = [
-        '/login','/logout','/register',
-        '/verify-email','/resend-verification',
-        '/admin','/work','/member',
-        '/password-lost','/password-reset',
-        '/change-email',
-        '/confirm-email-change',
-        '/menu','/story',
-        '/index','/sort','/guide',
-        '/select-website','/bicycle','/chess',
-        '/terms','/privacy'
-        ] %}
+{#
+    TFOL Splash Screen
 
-		{% set disableSplash = session.nosplash|default(false) %}
-		{% for p in noSplashPrefixes %}
-			{% if rel starts with p %}
-				{% set disableSplash = true %}
-			{% endif %}
-		{% endfor %}
+    - Show only on the root URL.
+    - Show only once per session.
+    - Bypass during normal navigation.
+#}
 
+{% set isRootRequest = rel in ['', '/'] %}
 
-		{% if not disableSplash %}
-			{% include 'partials/screen0.html' %}
-		{% endif %}
+{% set disableSplash =
+    session.nosplash|default(false)
+    or not isRootRequest
+%}
+
+{% if not disableSplash %}
+    {% include 'partials/screen0.html' %}
+{% endif %}
 
 		<header>
 			<a class="skip-link" href="#content">Skip to content</a>
