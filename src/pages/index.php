@@ -130,10 +130,11 @@ $preferredSorttypeId = (int) ($_SESSION['sort_override_global'][$websiteId] ?? 1
 $sorttypeId = $preferredSorttypeId > 0 ? $preferredSorttypeId : null;
 
 $crossWebsite = (int) $websiteId === 1;
+$storyLimit = $crossWebsite ? 56 : 100;
 
 $data['stories'] = $cms
     ->getStory()
-    ->getAll3($websiteId, true, null, null, 100, $sorttypeId, $crossWebsite);
+    ->getAll3($websiteId, true, null, null, $storyLimit, $sorttypeId, $crossWebsite);
 
 /**
  * Bicycle Club module for website 44.

@@ -384,6 +384,10 @@ class Story
             $arguments['limit'] = $_SESSION['pagelimit'];
         }
 
+        // Cap the main home page even when a session requests more stories.
+        if ($page === 'index' && (int) $website === 1) {
+            $arguments['limit'] = max(1, min(56, (int) $arguments['limit']));
+        }
         $sql = "SELECT a.id, a.website, a.title, a.summary, a.created, a.family_id, a.menu_id, a.member_id, a.family_id, a.published, a.review_requested_at,
 a.seo_title, a.storyorder,a.landscape, a.allow_comment, keyword, a.blog,
 c.name AS menu,
