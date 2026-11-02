@@ -86,7 +86,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $data['member'] = $member;
-$data['members'] = $cms->getMember()->getMessageRecipients();
+
+/**
+ * Message recipients are selected from the
+ * website currently being viewed.
+ */
+$websiteId = (int) ($_SESSION['website'] ?? 1);
+
+$data['members'] = $cms->getMember()->getMessageRecipients($websiteId);
 $data['message'] = $message;
 $data['cancel_href'] = 'inbox';
 if ($replyToId > 0) {

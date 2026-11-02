@@ -1137,17 +1137,33 @@ class Member
         ]);
     }
 
-    public function getMessageRecipients(): array
+    /**
+     * Get eligible message recipients.
+     *
+     * If a website ID is provided, return members
+     * belonging to that website.
+     *
+     * If null, return eligible members from all websites.
+     */
+    public function getMessageRecipients(?int $websiteId = null): array
     {
         $sql = "SELECT id, forename, surname, website
               FROM member
              WHERE forename <> 'Uber'
-             and role<>'Guest'
-             and member.id<>3
-             and member.status = 'active'
-             ORDER BY surname, forename";
+               AND role <> 'Guest'
+               AND id <> 3
+               AND status = 'active'";
 
-        return $this->db->runSql($sql)->fetchAll();
+        $params = [];
+
+        if ($websiteId !== null) {
+            $sql .= ' AND website = :website_id';
+            $params['website_id'] = $websiteId;
+        }
+
+        $sql .= ' ORDER BY surname ASC, forename ASC, website ASC';
+
+        return $this->db->runSql($sql, $params)->fetchAll();
     }
 
     /**
