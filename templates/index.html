@@ -23,11 +23,16 @@
 		line-height: 1.5;
 	}
 
-  #content > .alert {
-    grid-column: 1 / -1;
-    width: 100%;
-    box-sizing: border-box;
-}
+  {% if website.id in [44, 51] %}
+    #content > .alert {
+        grid-column: 1 / -1;
+        width: 100%;
+        min-width: 0;
+        box-sizing: border-box;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
+{% endif %}
 </style>
 
 	<main class="container grid" id="content">
@@ -47,7 +52,9 @@
 			</div>
 		{% endif %}
 
-		{{ include('story-summaries.html') }}
+		{% if website.id != 51 %}
+      {{ include('story-summaries.html') }}
+    {% endif %}
 
 
 		{% if isChessClub %}

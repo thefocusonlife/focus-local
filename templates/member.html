@@ -54,7 +54,9 @@
 						{% if member.role != "family" %}
 							{% if session.id ==1 or session.id> 2%}
 								{% if member.id == session.id %}
-									<a href="{{ doc_root }}work/" class="btn  btn-primary">Add Story</a>
+									{% if website.id != 51 %}
+                    <a href="{{ doc_root }}work/" class="btn btn-primary">Add Story</a>
+                  {% endif %}
 									<a href="{{ doc_root }}member-edit-profile/{{ member.id }}" class="btn btn-primary">Edit profile
 									</a>
 									<a href="{{ doc_root }}member-edit-picture/" class="btn btn-primary">Profile picture</a>

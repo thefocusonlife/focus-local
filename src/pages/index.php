@@ -140,9 +140,14 @@ $data['stories'] = $cms
  * Bicycle Club module for website 44.
  * Keep normal website/story flow, then append ride feed data.
  */
-//limit stories to 3 on bicycle website=44
+// COBC homepage: four stories for guests; retain three for members.
 if ($websiteId === 44 && !empty($data['stories'])) {
-    $data['stories'] = array_slice($data['stories'], 0, 3);
+    $cobcViewerId = (int) ($_SESSION['id'] ?? 0);
+    $cobcViewerRole = strtolower((string) ($_SESSION['role'] ?? 'guest'));
+
+    $cobcIsGuest = $cobcViewerId < 1 || $cobcViewerId === 2 || $cobcViewerRole === 'guest';
+
+    $data['stories'] = array_slice($data['stories'], 0, $cobcIsGuest ? 4 : 3);
 }
 $data['isBicycleClub'] = $websiteId === 44;
 $data['rides'] = [];
