@@ -46,27 +46,22 @@ $isActive = isset($_POST['is_active']) ? 1 : 0;
 $formUrl = $id > 0 ? 'chess-schedule-edit/' . $id : 'chess-schedule-add';
 
 if ($title === '' || $eventDate === '' || $startTime === '' || $location === '') {
-    $_SESSION['flash_failure'] = 'Title, event date, start time, and location are required.';
+    $_SESSION['flash_failure'] = 'Title, schedule, start time, and location are required.';
 
     redirect($formUrl);
     exit();
 }
 
-$dateObject = DateTimeImmutable::createFromFormat('!Y-m-d', $eventDate);
-$dateErrors = DateTimeImmutable::getLastErrors();
+$scheduleLength = function_exists('mb_strlen')
+    ? mb_strlen($eventDate, 'UTF-8')
+    : preg_match_all('/./us', $eventDate);
 
-$dateIsValid =
-    $dateObject !== false &&
-    ($dateErrors === false ||
-        ($dateErrors['warning_count'] === 0 && $dateErrors['error_count'] === 0)) &&
-    $dateObject->format('Y-m-d') === $eventDate;
+if ($scheduleLength === false || $scheduleLength > 150) {
+    $_SESSION['flash_failure'] = 'Please enter a schedule of 150 characters or fewer.';
 
-if (!$dateIsValid) {
-    $_SESSION['flash_failure'] = 'Please enter a valid event date.';
     redirect($formUrl);
     exit();
 }
-
 $timePattern = '/^(?:[01]\d|2[0-3]):[0-5]\d$/';
 
 if (!preg_match($timePattern, $startTime)) {

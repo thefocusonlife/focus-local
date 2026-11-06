@@ -21,7 +21,7 @@ if (!$isLoggedIn) {
 }
 
 /*
- * Step 2: Uber Admin is the only Chess schedule manager for now.
+ * Step 2: Only designated Chess administrators may manage schedules.
  */
 if ($viewerId !== 1 && $viewerId !== 489 && $viewerId !== 503) {
     $_SESSION['flash_failure'] = 'You do not have permission to manage scheduled Chess Nights.';
@@ -44,7 +44,7 @@ $data = [
         'id' => null,
         'title' => '',
         'area' => 'Central Oregon',
-        'event_date' => date('Y-m-d'),
+        'event_date' => '',
         'start_time' => '',
         'end_time' => '',
         'location' => '',

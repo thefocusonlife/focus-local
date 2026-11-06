@@ -140,14 +140,9 @@ $data['stories'] = $cms
  * Bicycle Club module for website 44.
  * Keep normal website/story flow, then append ride feed data.
  */
-// COBC homepage: four stories for guests; retain three for members.
+// COBC community homepage: four stories for guests and signed-in members.
 if ($websiteId === 44 && !empty($data['stories'])) {
-    $cobcViewerId = (int) ($_SESSION['id'] ?? 0);
-    $cobcViewerRole = strtolower((string) ($_SESSION['role'] ?? 'guest'));
-
-    $cobcIsGuest = $cobcViewerId < 1 || $cobcViewerId === 2 || $cobcViewerRole === 'guest';
-
-    $data['stories'] = array_slice($data['stories'], 0, $cobcIsGuest ? 4 : 3);
+    $data['stories'] = array_slice($data['stories'], 0, 4);
 }
 $data['isBicycleClub'] = $websiteId === 44;
 $data['rides'] = [];
@@ -293,12 +288,11 @@ if ($data['isChessClub']) {
         LEFT JOIN member m ON m.id = cs.member_id
         WHERE cs.website_id = :website_id
           AND cs.is_active = 1
-          AND cs.event_date >= CURRENT_DATE
-        ORDER BY
-            cs.event_date ASC,
+          ORDER BY
+            cs.title ASC,
             cs.start_time ASC,
             cs.id ASC
-    ";
+      ";
 
     $chessScheduleStmt = $cms->getDb()->runSql($chessScheduleSql, ['website_id' => $websiteId]);
 

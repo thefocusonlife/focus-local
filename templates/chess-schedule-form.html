@@ -158,9 +158,16 @@
 				</div>
 
 				<div class="form-row">
-					<label for="event_date">Event Date</label>
-					<input type="date" id="event_date" name="event_date" value="{{ schedule.event_date }}" required>
-				</div>
+          <label for="event_date">Schedule</label>
+          <input
+            type="text"
+            id="event_date"
+            name="event_date"
+            value="{{ schedule.event_date }}"
+            maxlength="150"
+            required
+          >
+        </div>
 
 				<div class="form-row">
 					<label for="start_time">Start Time</label>
@@ -186,7 +193,7 @@
 					<input type="checkbox" name="is_active" value="1" {% if schedule.is_active %} checked {% endif %}>
 					<span>Active</span>
 				</label>
-			</div>
+
 		</section>
 
 		<p class="form-actions">
