@@ -12,7 +12,7 @@ if ($meetupId <= 0) {
 
 $viewerId = (int) ($_SESSION['id'] ?? 0);
 $role = strtolower((string) ($_SESSION['role'] ?? 'guest'));
-$isLoggedIn = $viewerId > 0 && $role !== 'guest';
+$isLoggedIn = $viewerId > 0 && $viewerId !== 2 && $role !== 'guest';
 
 if (!$isLoggedIn) {
     $_SESSION['member_required'] = true;
@@ -25,8 +25,17 @@ if (!$isLoggedIn) {
     exit();
 }
 
-$isChessMember = $viewerId === 1 || $cms->getMember()->isMemberOfWebsite($viewerId, 51);
+$isChessAdmin = in_array($viewerId, [1, 489, 503], true);
 
+$chessMembership = $cms->getClubMembers()->getByMemberId($viewerId, 51);
+
+$isChessAdmin = in_array($viewerId, [1, 489, 503], true);
+
+$chessMembership = $cms->getClubMembers()->getByMemberId($viewerId, 51);
+
+$isChessMember =
+    $isChessAdmin ||
+    strtolower((string) ($chessMembership['membership_status'] ?? '')) === 'active';
 if (!$isChessMember) {
     $_SESSION['flash_failure'] = 'Editing a Meetup requires Central Oregon Chess membership.';
 
@@ -55,7 +64,8 @@ if (!$meetup) {
 }
 
 $isOwner = (int) $meetup['member_id'] === $viewerId;
-$isUberAdmin = $viewerId === 1;
+// Local Chess management permission; does not grant global Uber Admin access.
+$isUberAdmin = in_array($viewerId, [1, 489, 503], true);
 
 if (!$isOwner && !$isUberAdmin) {
     $_SESSION['flash_failure'] = 'You do not have permission to edit this Meetup.';

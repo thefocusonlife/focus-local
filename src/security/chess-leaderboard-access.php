@@ -10,7 +10,7 @@ declare(strict_types=1);
  */
 function chessLeaderboardAdminIds(): array
 {
-    return [1];
+    return [1, 489, 503];
 }
 
 /**

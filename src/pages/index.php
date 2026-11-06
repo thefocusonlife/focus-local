@@ -250,10 +250,22 @@ $data['canAddChessMeetup'] = false;
 
 if ($data['isChessClub']) {
     $chessViewerId = (int) ($_SESSION['id'] ?? 0);
+    $chessViewerRole = strtolower((string) ($_SESSION['role'] ?? 'guest'));
+
+    $chessViewerIsLoggedIn =
+        $chessViewerId > 0 && $chessViewerId !== 2 && $chessViewerRole !== 'guest';
+
+    $chessViewerIsAdmin = in_array($chessViewerId, [1, 489, 503], true);
+
+    $chessViewerMembership = $chessViewerIsLoggedIn
+        ? $cms->getClubMembers()->getByMemberId($chessViewerId, 51)
+        : null;
+
+    $chessViewerIsActiveMember =
+        strtolower((string) ($chessViewerMembership['membership_status'] ?? '')) === 'active';
 
     $data['canAddChessMeetup'] =
-        $chessViewerId === 1 ||
-        ($chessViewerId > 0 && $cms->getMember()->isMemberOfWebsite($chessViewerId, 51));
+        $chessViewerIsLoggedIn && ($chessViewerIsAdmin || $chessViewerIsActiveMember);
 
     $chessScheduleSql = "
         SELECT

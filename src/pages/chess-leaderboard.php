@@ -21,7 +21,7 @@ if (!$isLoggedIn) {
     exit();
 }
 
-$isUberAdmin = $viewerId === 1;
+$isUberAdmin = in_array($viewerId, [1, 489, 503], true);
 
 if (!$isUberAdmin) {
     $belongsToChessWebsite = $cms->getMember()->isMemberOfWebsite($viewerId, $websiteId);

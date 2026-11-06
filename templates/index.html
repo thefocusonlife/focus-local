@@ -22,6 +22,12 @@
 		margin: 0;
 		line-height: 1.5;
 	}
+
+  #content > .alert {
+    grid-column: 1 / -1;
+    width: 100%;
+    box-sizing: border-box;
+}
 </style>
 
 	<main class="container grid" id="content">
@@ -250,9 +256,9 @@
 								{% endif %}
 
 								{% set can_manage_meetup =
-									viewer_id == 1 or
-									viewer_id == meetup.member_id
-								%}
+                  viewer_id in [1, 489, 503] or
+                  viewer_id == meetup.member_id
+                %}
 
 								{% if can_manage_meetup %}
 									<div class="chess-club-actions">
@@ -313,7 +319,13 @@
 							<em>— Login Required</em>
 						{% endif %}
 					</li>
-
+          {% if viewer_id in [1, 489, 503] %}
+                <li>
+                  <a href="{{ doc_root }}chess-tournament-add">
+            ♟️          Add Tournament
+                  </a>
+              </li>
+          {% endif %}
 					<li>
 						🌐
 						<a href="{{ doc_root }}chess-resources?website=51">
