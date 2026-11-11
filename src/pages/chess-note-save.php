@@ -32,7 +32,7 @@ if ($viewerId !== 1 && $viewerId !== 489 && $viewerId !== 503) {
 $id = (int) ($_POST['id'] ?? 0);
 $websiteId = 51;
 
-$allowedAreas = ['Bend', 'Redmond', 'Prineville', 'Central Oregon', 'Online'];
+$allowedAreas = ['Bend', 'Redmond', 'Prineville', 'Madras', 'Central Oregon', 'Online'];
 
 $title = trim((string) ($_POST['title'] ?? ''));
 $area = trim((string) ($_POST['area'] ?? ''));

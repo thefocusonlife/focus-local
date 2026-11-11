@@ -29,7 +29,7 @@ if ($viewerId !== 1 && $viewerId !== 489 && $viewerId !== 503) {
     exit();
 }
 
-$allowedAreas = ['Bend', 'Redmond', 'Prineville', 'Central Oregon', 'Online'];
+$allowedAreas = ['Bend', 'Redmond', 'Prineville', 'Madras', 'Central Oregon', 'Online'];
 
 $id = (int) ($_POST['id'] ?? 0);
 $websiteId = 51;

@@ -44,7 +44,7 @@ if (!$isChessMember) {
 $id = (int) ($_POST['id'] ?? 0);
 $websiteId = 51;
 
-$allowedAreas = ['Bend', 'Redmond', 'Prineville', 'Central Oregon', 'Online'];
+$allowedAreas = ['Bend', 'Redmond', 'Prineville', 'Madras', 'Central Oregon', 'Online'];
 
 $allowedTypes = ['In Person', 'Chess.com', 'Lichess', 'Other Online'];
 
