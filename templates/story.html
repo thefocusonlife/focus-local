@@ -34,6 +34,45 @@
 				</section>
 				<section class="text">
 					<h2>{{ story.title }}</h2>
+          {% if story.published == 1 %}
+          <div class="story-share-controls">
+              <button
+                  type="button"
+                  id="story-share-button"
+                  class="btn btn-outline-secondary btn-sm"
+                  data-title="{{ story.title|e('html_attr') }}"
+                  hidden
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                  focusable="false"
+                  style="vertical-align: middle; margin-right: 0.3rem;"
+              >
+                  <circle cx="18" cy="5" r="3"></circle>
+                  <circle cx="6" cy="12" r="3"></circle>
+                  <circle cx="18" cy="19" r="3"></circle>
+                  <path d="M8.6 10.5 15.4 6.5"></path>
+                  <path d="M8.6 13.5 15.4 17.5"></path>
+              </svg>
+              <span>Share</span>
+              </button>
+
+              <span
+                  id="story-share-status"
+                  role="status"
+                  aria-live="polite"
+              ></span>
+          </div>
+{% endif %}
+
 					<div class="social">
 						<div class="like-count">
 							{% if session.id <= 2 %}
@@ -101,7 +140,93 @@
 					{% endif %}
 				{% endif %}
 			</section>
+    <script>
+(() => {
+    function initializeStoryShare() {
+        const button = document.getElementById('story-share-button');
+        const status = document.getElementById('story-share-status');
 
+        if (!button || !status) {
+            return;
+        }
+
+        // Share this story's address without query parameters or fragments.
+        const url = new URL(window.location.href);
+        url.search = '';
+        url.hash = '';
+
+        const shareData = {
+            title: button.dataset.title || document.title,
+            url: url.href
+        };
+
+        const nativeShareAvailable =
+            window.isSecureContext &&
+            typeof navigator.share === 'function' &&
+            (
+                typeof navigator.canShare !== 'function' ||
+                navigator.canShare(shareData)
+            );
+
+        if (!nativeShareAvailable) {
+            button.querySelector('span').textContent = 'Copy Link';
+        }
+
+        button.hidden = false;
+
+        async function copyLink() {
+            try {
+                if (!navigator.clipboard ||
+                    typeof navigator.clipboard.writeText !== 'function') {
+                    throw new Error('Clipboard unavailable');
+                }
+
+                await navigator.clipboard.writeText(shareData.url);
+                status.textContent = ' Link copied.';
+            } catch (error) {
+                window.prompt(
+                    'Copy this story link, then paste it into a message or email:',
+                    shareData.url
+                );
+            }
+        }
+
+        button.addEventListener('click', async () => {
+            status.textContent = '';
+            button.disabled = true;
+
+            try {
+                if (nativeShareAvailable) {
+                    try {
+                        await navigator.share(shareData);
+                    } catch (error) {
+                        // Closing the share menu requires no further action.
+                        if (error.name === 'AbortError') {
+                            return;
+                        }
+
+                        await copyLink();
+                    }
+                } else {
+                    await copyLink();
+                }
+            } finally {
+                button.disabled = false;
+            }
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener(
+            'DOMContentLoaded',
+            initializeStoryShare,
+            { once: true }
+        );
+    } else {
+        initializeStoryShare();
+    }
+})();
+</script>
 		</main>
 
 	{% endblock %}
