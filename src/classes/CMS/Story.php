@@ -31,18 +31,38 @@ class Story
 
     private static function visibilityCondition(string $alias = 'a'): string
     {
-        $role = strtolower((string) ($_SESSION['role'] ?? 'guest'));
-        $viewerId = (int) ($_SESSION['id'] ?? 0);
+        if (!preg_match('/^[A-Za-z_][A-Za-z0-9_]*$/D', $alias)) {
+            throw new \InvalidArgumentException('Invalid story table alias.');
+        }
 
-        if ($role === 'admin') {
+        $viewerId = (int) ($_SESSION['id'] ?? 0);
+        $role = strtolower((string) ($_SESSION['role'] ?? 'guest'));
+
+        $isSignedIn = $viewerId > 0 && $viewerId !== 2 && $role !== 'guest';
+
+        // Only Uber Admin has unrestricted visibility.
+        if ($isSignedIn && $viewerId === 1) {
             return '1=1';
         }
 
-        if ($viewerId > 0) {
-            return "({$alias}.published = 1 OR {$alias}.member_id = {$viewerId})";
+        $publicCondition = "(
+        {$alias}.published = 1
+        AND EXISTS (
+            SELECT 1
+              FROM member AS visibility_member
+             WHERE visibility_member.id = {$alias}.member_id
+               AND visibility_member.publik = 1
+        )
+    )";
+
+        if ($isSignedIn) {
+            return "(
+            {$alias}.member_id = {$viewerId}
+            OR {$publicCondition}
+        )";
         }
 
-        return "{$alias}.published = 1";
+        return $publicCondition;
     }
 
     private function orderByForSorttype(?int $sorttypeId): string
@@ -435,18 +455,7 @@ AND (:reviewRequested = 0 OR a.review_requested_at IS NOT NULL)
         $sessionRole = strtolower((string) ($_SESSION['role'] ?? 'guest'));
         $sessionMemberId = (int) ($_SESSION['id'] ?? 0);
 
-        if ($sessionRole === 'admin') {
-            // Admin sees everything: no published or publik restriction
-        } elseif ($sessionMemberId > 0) {
-            $sql .= ' AND (
-        (a.published = 1 AND m.publik = 1)
-        OR a.member_id = :viewer_id
-    )';
-
-            $arguments['viewer_id'] = $sessionMemberId;
-        } else {
-            $sql .= ' AND a.published = 1 AND m.publik = 1';
-        }
+        $sql .= ' AND ' . self::visibilityCondition('a') . ' ';
         $effectiveSorttype =
             (int) ($sorttypeId ?? ($_SESSION['sorttype'] ?? TFOL_DEFAULT_SORTTYPE_ID));
         $orderBy = $reviewRequested
@@ -534,10 +543,17 @@ AND (:reviewRequested = 0 OR a.review_requested_at IS NOT NULL)
         ";
         }
 
+        $visibilitySql = self::visibilityCondition('a');
+
         $sql = "SELECT COUNT(a.id)
-              FROM story AS a
-             WHERE a.published = 1
-               AND ($operatorSql);";
+          FROM story AS a
+          JOIN member AS m ON a.member_id = m.id
+          LEFT JOIN menu AS c
+                 ON a.menu_id = c.id
+                AND c.website = a.website
+         WHERE a.published = 1
+           AND ($visibilitySql)
+           AND ($operatorSql);";
 
         return (int) $this->db->runSql($sql, $arguments)->fetchColumn();
     }
@@ -582,6 +598,8 @@ AND (:reviewRequested = 0 OR a.review_requested_at IS NOT NULL)
         ";
         }
 
+        $visibilitySql = self::visibilityCondition('a');
+
         $sql = "SELECT a.id, a.website, a.title, a.summary, a.created, a.menu_id,
                    a.member_id, a.family_id, a.published, a.seo_title,
                    a.storyorder, a.landscape, a.allow_comment, a.keyword, a.blog,
@@ -598,11 +616,14 @@ AND (:reviewRequested = 0 OR a.review_requested_at IS NOT NULL)
                       FROM comment
                      WHERE comment.story_id = a.id) AS comments
               FROM story AS a
-              JOIN menu AS c ON a.menu_id = c.id
+              LEFT JOIN menu AS c
+                ON a.menu_id = c.id
+                AND c.website = a.website
               JOIN member AS m ON a.member_id = m.id
               LEFT JOIN image AS i ON a.image_id = i.id
-             WHERE a.published = 1
-               AND ($operatorSql)
+              WHERE a.published = 1
+                AND ($visibilitySql)
+                AND ($operatorSql)
              ORDER BY a.id DESC
              LIMIT :show
             OFFSET :from;";

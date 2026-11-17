@@ -29,6 +29,39 @@ if (!$story || !is_array($story)) {
     return;
 }
 
+/*
+ * Story visibility:
+ * - Owner and Uber Admin may view private stories.
+ * - Everyone else requires a public account AND a published story.
+ * - Following does not grant additional access here.
+ */
+$viewerId = (int) ($_SESSION['id'] ?? 0);
+$authorId = (int) ($story['member_id'] ?? 0);
+
+$member = $cms->getMember()->get($authorId);
+
+$isSignedIn =
+    $viewerId > 0 &&
+    $viewerId !== 2 &&
+    strtolower((string) ($_SESSION['role'] ?? 'guest')) !== 'guest';
+
+// ID 1 is the existing Uber Admin identity used in your templates.
+$isUberAdmin = $isSignedIn && $viewerId === 1;
+
+$isOwner = $isSignedIn && $authorId > 0 && $viewerId === $authorId;
+
+$isPublicStory =
+    is_array($member) &&
+    (int) ($member['publik'] ?? 0) === 1 &&
+    (int) ($story['published'] ?? 0) === 1;
+
+if (!$isOwner && !$isUberAdmin && !$isPublicStory) {
+    http_response_code(404);
+    $failure = 'Sorry! We cannot find that page.';
+    include __DIR__ . '/page-not-found.php';
+    return;
+}
+
 // Safe website id for later calls
 $websiteId = (int) ($_SESSION['website'] ?? 1);
 if ($websiteId <= 0) {
@@ -122,10 +155,6 @@ Click the "Register" link on top of this page to see pricing.',
 $member = $cms->getMember()->get(intval($story['member_id']));
 
 $mem = intval($member['account_id']);
-
-if (empty($_SESSION)) {
-    $cms->getSession()->create($member['id'], $website['id']);
-}
 
 $data['navigation'] = $cms->getMenu()->getAll2($member['id'], $mem); // Get menus
 $data['story'] = $story;
