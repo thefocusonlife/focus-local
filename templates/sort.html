@@ -17,7 +17,7 @@
 					<label for="pagelimit">Max Stories Displayed:</label>
 					<select name="pagelimit" id="pagelimit">
 						{% for limit in pagelimit %}
-							<option value="{{ limit.amount }}" {% if limit.amount == member.pagelimit %} selected {% endif %}>
+							<option value="{{ limit.amount }}" {% if limit.amount == current_pagelimit %} selected {% endif %}>
 								{{ limit.amount }}
 							</option>
 						{% endfor %}

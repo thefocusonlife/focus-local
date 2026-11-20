@@ -96,6 +96,15 @@ $return = ltrim($return, '/');
 
 /* ---------- POST: save + redirect ---------- */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Apply the selected display limit to the current session.
+    if (isset($_POST['pagelimit'])) {
+        $selectedLimit = (int) $_POST['pagelimit'];
+        $allowedLimits = [25, 50, 100, 200, 500, 1000];
+
+        if (in_array($selectedLimit, $allowedLimits, true)) {
+            $_SESSION['pagelimit'] = $selectedLimit;
+        }
+    }
     $postedMenuId = (int) ($_POST['menu_id'] ?? ($_GET['menu_id'] ?? $menuId));
     if ($postedMenuId <= 0) {
         $postedMenuId = $menuId;
@@ -217,7 +226,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             (int) ($_SESSION['websiteid'] ?? 0),
     );
 
-        redirect($returnUrl);
+    redirect($returnUrl);
     exit();
 }
 
@@ -228,6 +237,7 @@ $sorttype = $cms->getSorttype()->getByMenu($menuId);
 $activeSorttypeId = (int) $cms->getSorttype()->resolveForMenu($menuId, 0);
 
 $data['member'] = $member;
+$data['current_pagelimit'] = (int) ($_SESSION['pagelimit'] ?? ($member['pagelimit'] ?? 200));
 $data['pagelimit'] = $pagelimit;
 $data['sorttype'] = $sorttype;
 $data['active_sorttype_id'] = $activeSorttypeId;

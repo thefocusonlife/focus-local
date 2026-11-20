@@ -96,7 +96,7 @@
 					</div>
 				</div>
 				<div class="date">{{ story.created|date('F d, Y') }}</div>
-				<div class="content">{{ story.content|raw}}</div>
+				<div class="content">{{ story.content|replace({'{TFOL_ROOT}': doc_root})|raw }}</div>
 				<p class="credit">
 					Posted in
 					<a href="{{ doc_root }}menu/{{ story.menu_id }}/{{ story.seo_menu }}">{{ story.seo_menu }}</a>

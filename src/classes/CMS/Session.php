@@ -199,7 +199,7 @@ class Session // Define Session class
         // Other defaults your app expects
         $_SESSION['landscape'] = $_SESSION['landscape'] ?? true;
         $_SESSION['follow_id'] = 0;
-        $_SESSION['pagelimit'] = $_SESSION['pagelimit'] ?? 200;
+        $_SESSION['pagelimit'] = 200; // Restore the guest default on logout
         $_SESSION['sorttype'] = (int) ($_SESSION['sorttype'] ?? 1); // Guest default: Random
 
         // Website context
