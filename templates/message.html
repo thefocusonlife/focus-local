@@ -1,41 +1,66 @@
 {% extends 'layout.html' %}
 
 {% block content %}
+    <main class="messaging-page" id="content">
+        <h1>Message</h1>
 
-	<main class="messaging-page" id="content">
+        <section class="message-card">
+            <p>
+                <strong>From:</strong>
+                {{ message.from_name|e }}
+            </p>
+            <p>
+                <strong>To:</strong>
+                {{ message.to_name|e }}
+            </p>
+            <p>
+                <strong>Date:</strong>
+                {{ message.request_date|date('F j, Y') }}
+            </p>
 
-		<h1>Message</h1>
+            <hr>
 
-		<section class="message-card">
-			<p>
-				<strong>From:</strong>
-				{{ message.from_name }}</p>
-			<p>
-				<strong>To:</strong>
-				{{ message.to_name }}</p>
-			<p>
-				<strong>Date:</strong>
-				{{ message.request_date|date('F j, Y') }}</p>
+            <div class="message-body">
+                {{ message.request|e|nl2br }}
+            </div>
+        </section>
 
-			<hr>
+        <div class="messaging-nav">
+            <a href="{{ doc_root }}compose?reply_to={{ message.id }}"
+               class="btn btn-primary">
+                Reply
+            </a>
 
-			<div class="message-body">
-				{{ message.request|nl2br }}
-			</div>
-		</section>
+            {% if message.to_id == member.id %}
+                <form action="{{ doc_root }}message-delete/{{ message.id }}"
+                      method="POST"
+                      style="display: inline;"
+                      onsubmit="return confirm('Delete this message from your Inbox?');">
+                    <input type="hidden"
+                           name="csrf_token"
+                           value="{{ delete_csrf_token|e('html_attr') }}">
+                    <button type="submit" class="btn btn-danger">
+                        Delete
+                    </button>
+                </form>
+            {% elseif message.from_id == member.id %}
+                <form action="{{ doc_root }}message-delete-sent/{{ message.id }}"
+                      method="POST"
+                      style="display: inline;"
+                      onsubmit="return confirm('Delete this message from Sent?');">
+                    <input type="hidden"
+                           name="csrf_token"
+                           value="{{ delete_csrf_token|e('html_attr') }}">
+                    <button type="submit" class="btn btn-danger">
+                        Delete
+                    </button>
+                </form>
+            {% endif %}
 
-		<p class="messaging-nav">
-			<a href="{{ doc_root }}compose?reply_to={{ message.id }}" class="btn btn-primary">Reply</a>
-			{% if message.to_id == session.id %}
-				<a href="{{ doc_root }}message-delete/{{ message.id }}" class="btn btn-danger">
-					Delete
-				</a>
-			{% elseif message.from_id == session.id %}
-				<a href="{{ doc_root }}message-delete-sent/{{ message.id }}" class="btn btn-danger">
-					Delete
-				</a>
-			{% endif %}
-			<a href="{{ doc_root }}inbox" class="btn btn-primary">Back to Inbox</a>
-		</p>
-	</p>
-</main>{% endblock %}
+            <a href="{{ doc_root }}{{ back_href }}"
+               class="btn btn-primary">
+                {{ back_label }}
+            </a>
+        </div>
+    </main>
+{% endblock %}

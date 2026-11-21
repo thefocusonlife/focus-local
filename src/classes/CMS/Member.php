@@ -1137,35 +1137,29 @@ class Member
         ]);
     }
 
-    /**
-     * Get eligible message recipients.
-     *
-     * If a website ID is provided, return members
-     * belonging to that website.
-     *
-     * If null, return eligible members from all websites.
-     */
     public function getMessageRecipients(?int $websiteId = null): array
     {
-        $sql = "SELECT id, forename, surname, website
-              FROM member
-             WHERE forename <> 'Uber'
-               AND role <> 'Guest'
-               AND id <> 3
-               AND status = 'active'";
+        $sql = "SELECT m.id, m.forename, m.surname, m.website,
+                   m.email_master,
+                   w.name AS website_name
+              FROM member AS m
+              JOIN website AS w ON w.id = m.website
+             WHERE m.forename <> 'Uber'
+               AND LOWER(m.role) NOT IN ('guest', 'pending')
+               AND m.status = 'active'
+               AND w.is_active = 1";
 
         $params = [];
 
         if ($websiteId !== null) {
-            $sql .= ' AND website = :website_id';
+            $sql .= ' AND m.website = :website_id';
             $params['website_id'] = $websiteId;
         }
 
-        $sql .= ' ORDER BY surname ASC, forename ASC, website ASC';
+        $sql .= ' ORDER BY m.surname ASC, m.forename ASC, m.id ASC';
 
         return $this->db->runSql($sql, $params)->fetchAll();
     }
-
     /**
      * Determine whether a member belongs to a website.
      */

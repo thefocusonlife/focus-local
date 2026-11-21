@@ -1,48 +1,157 @@
 {% extends 'layout.html' %}
+
+{% block title %}Compose Message{% endblock %}
+
 {% block content %}
-	<main class="messaging-page" id="content">
+  <main class="messaging-page" id="content">
+    <h1>Compose Message</h1>
 
-		<h1>Compose Message</h1>
+    {% if errors.warning %}
+      <p class="alert alert-danger">{{ errors.warning }}</p>
+    {% endif %}
 
-		{% if errors.warning %}
-			<p class="alert alert-danger">{{ errors.warning }}</p>
-		{% endif %}
+    <form action="{{ doc_root }}compose"
+          method="POST"
+          class="compose-form">
 
-		<form action="{{ doc_root }}compose" method="POST" class="compose-form">
+      <div class="form-group">
+        <label for="person_id">1. Choose a person</label>
 
-			<div class="form-group">
-				<label for="to_id">To</label>
-				<select id="to_id" name="to_id" required>
-					<option value="">Choose member</option>
-					{% for person in members %}
-						{% if person.id != member.id %}
-							<option value="{{ person.id }}" {% if message.to_id == person.id %} selected {% endif %}>
-								{{ person.forename }}
-								{{ person.surname }}
-								— Website
-								{{ person.website }}
-							</option>
-						{% endif %}
-					{% endfor %}
-				</select>
-				{% if errors.to_id %}
-					<p class="error">{{ errors.to_id }}</p>
-				{% endif %}
-			</div>
+        <select id="person_id" name="person_id" required>
+          <option value="">Choose person</option>
 
-			<div class="form-group">
-				<label for="request">Message</label>
-				<textarea id="request" name="request" rows="8" required>{{ message.request }}</textarea>
-				{% if errors.request %}
-					<p class="error">{{ errors.request }}</p>
-				{% endif %}
-			</div>
+          {% for person in recipient_people %}
+            <option value="{{ person.id }}"
+              {% if message.person_id == person.id %}selected{% endif %}>
+              {{ person.name }}
+            </option>
+          {% endfor %}
+        </select>
 
-			<button type="submit" class="btn btn-primary">Send Message</button>
-			<a href="{{ doc_root }}{{ cancel_href }}" class="btn btn-danger">Cancel</a>
+        {% if errors.person_id %}
+          <p class="error">{{ errors.person_id }}</p>
+        {% endif %}
+      </div>
 
-		</form>
+      <div class="form-group">
+        <label for="to_id">2. Choose their website account</label>
 
-	</main>
+        <select id="to_id" name="to_id" required disabled>
+          <option value="">Choose a person first</option>
+        </select>
 
+        {% if errors.to_id %}
+          <p class="error">{{ errors.to_id }}</p>
+        {% endif %}
+      </div>
+
+      <p id="recipient-confirmation"
+         aria-live="polite"
+         hidden></p>
+
+      <div class="form-group">
+        <label for="request">Message</label>
+
+        <textarea id="request"
+                  name="request"
+                  rows="8"
+                  maxlength="1000"
+                  required>{{ message.request }}</textarea>
+
+        {% if errors.request %}
+          <p class="error">{{ errors.request }}</p>
+        {% endif %}
+      </div>
+
+      <noscript>
+        <p>This recipient picker requires JavaScript.</p>
+      </noscript>
+
+      <button type="submit" class="btn btn-primary">
+        Send Message
+      </button>
+
+      <a href="{{ doc_root }}{{ cancel_href }}"
+         class="btn btn-danger">
+        Cancel
+      </a>
+    </form>
+
+    <script type="application/json" id="recipient-data">
+      {{ recipient_people|json_encode(15)|raw }}
+    </script>
+
+    <script>
+      (() => {
+        'use strict';
+
+        const people = JSON.parse(
+          document.getElementById('recipient-data').textContent
+        );
+
+        const personSelect = document.getElementById('person_id');
+        const accountSelect = document.getElementById('to_id');
+        const confirmation =
+          document.getElementById('recipient-confirmation');
+
+        const initialRecipientId = '{{ message.to_id|e('js') }}';
+
+        function updateConfirmation() {
+          const option = accountSelect.selectedOptions[0];
+          const selected = accountSelect.value !== '';
+
+          confirmation.hidden = !selected;
+          confirmation.textContent = selected
+            ? 'To: ' + option.textContent
+            : '';
+        }
+
+        function loadAccounts(selectedRecipientId = '') {
+          accountSelect.replaceChildren();
+
+          const person = people.find(
+            item => String(item.id) === personSelect.value
+          );
+
+          accountSelect.add(new Option(
+            person ? 'Choose website account' : 'Choose a person first',
+            ''
+          ));
+
+          accountSelect.disabled = !person;
+
+          if (person) {
+            person.accounts.forEach(account => {
+              const label =
+                account.name + ' — ' + account.website_name;
+
+              accountSelect.add(new Option(
+                label,
+                String(account.id)
+              ));
+            });
+
+            accountSelect.value = String(selectedRecipientId);
+          }
+
+          if (accountSelect.selectedIndex < 0) {
+            accountSelect.selectedIndex = 0;
+          }
+
+          updateConfirmation();
+        }
+
+        personSelect.addEventListener('change', () => {
+          loadAccounts();
+        });
+
+        accountSelect.addEventListener(
+          'change',
+          updateConfirmation
+        );
+
+        loadAccounts(initialRecipientId);
+      })();
+    </script>
+  </main>
 {% endblock %}

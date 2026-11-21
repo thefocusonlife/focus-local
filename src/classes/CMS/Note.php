@@ -53,18 +53,31 @@ class Note
 
     public function getMessageForMember(int $messageId, int $memberId): array|false
     {
-        $sql = "SELECT id, website, note_type, from_id, from_name, to_id, to_name,
-                   family_id, to_family_id, request, allow, request_date, reply_date
+        $sql = "SELECT id, website, note_type,
+                   from_id, from_name, to_id, to_name,
+                   family_id, to_family_id,
+                   request, allow, request_date, reply_date,
+                   deleted_by_sender, deleted_by_recipient
               FROM note
              WHERE id = :id
                AND note_type = 2
-               AND (to_id = :to_id OR from_id = :from_id)";
+               AND (
+                   (
+                       to_id = :recipient_id
+                       AND deleted_by_recipient = 0
+                   )
+                   OR
+                   (
+                       from_id = :sender_id
+                       AND deleted_by_sender = 0
+                   )
+               )";
 
         return $this->db
             ->runSql($sql, [
                 'id' => $messageId,
-                'to_id' => $memberId,
-                'from_id' => $memberId,
+                'recipient_id' => $memberId,
+                'sender_id' => $memberId,
             ])
             ->fetch();
     }
@@ -337,57 +350,65 @@ class Note
     }
 
     /**
-     * Mark a message as read.
+     * Remove only the recipient's copy.
      */
-    public function markRead(int $id): bool
+    public function deleteFromInbox(int $id, int $memberId): bool
+    {
+        $sql = "UPDATE note
+               SET deleted_by_recipient = 1
+             WHERE id = :id
+               AND to_id = :member_id
+               AND note_type = 2
+               AND deleted_by_recipient = 0";
+
+        return $this->db
+            ->runSql($sql, [
+                'id' => $id,
+                'member_id' => $memberId,
+            ])
+            ->rowCount() > 0;
+    }
+
+    /**
+     * Remove only the sender's copy.
+     */
+    public function deleteFromSent(int $id, int $memberId): bool
+    {
+        $sql = "UPDATE note
+               SET deleted_by_sender = 1
+             WHERE id = :id
+               AND from_id = :member_id
+               AND note_type = 2
+               AND deleted_by_sender = 0";
+
+        return $this->db
+            ->runSql($sql, [
+                'id' => $id,
+                'member_id' => $memberId,
+            ])
+            ->rowCount() > 0;
+    }
+
+    /**
+     * Only the recipient can mark a message as read.
+     */
+    public function markRead(int $id, int $memberId): bool
     {
         $sql = "UPDATE note
                SET allow = 1,
                    reply_date = CURDATE()
              WHERE id = :id
-               AND note_type = 2";
+               AND to_id = :member_id
+               AND note_type = 2
+               AND deleted_by_recipient = 0
+               AND allow = 0";
 
-        $this->db->runSql($sql, [
-            'id' => $id,
-        ]);
-
-        return true;
-    }
-
-    /**
-     * Remove a message from the recipient's Inbox.
-     * (Soft delete)
-     */
-    public function deleteFromInbox(int $id): bool
-    {
-        $sql = "UPDATE note
-               SET deleted_by_recipient = 1
-             WHERE id = :id
-               AND note_type = 2";
-
-        $this->db->runSql($sql, [
-            'id' => $id,
-        ]);
-
-        return true;
-    }
-
-    /**
-     * Remove a message from the sender's Sent folder.
-     * (Soft delete)
-     */
-    public function deleteFromSent(int $id): bool
-    {
-        $sql = "UPDATE note
-               SET deleted_by_sender = 1
-             WHERE id = :id
-               AND note_type = 2";
-
-        $this->db->runSql($sql, [
-            'id' => $id,
-        ]);
-
-        return true;
+        return $this->db
+            ->runSql($sql, [
+                'id' => $id,
+                'member_id' => $memberId,
+            ])
+            ->rowCount() > 0;
     }
 
     /**
