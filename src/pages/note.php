@@ -1,29 +1,15 @@
 <?php
 declare(strict_types=1);
 
-//user's id from session                              // Use strict types
+require_once APP_ROOT . '/src/security/guard.php';
+guardMember();
 
-if (!$id) {
-    // If no valid id
-    include APP_ROOT . '/src/pages/page-not-found.php'; // Page not found
-}
+require_once APP_ROOT . '/src/security/redirects.php';
 
-$member = $cms->getMember()->get($id); // Get member data
-if (!$member) {
-    // If array is empty
-    include APP_ROOT . '/src/pages/page-not-found.php'; // Page not found
-}
-$members = $cms->getMember()->getAll();
-$notes = $cms->getNote()->getAll($member, $member);
-$notetype = $cms->getNotetype()->get(1);
-$website = $cms->getWebsite()->getById($member['website']);
-$mem = intval($members[id]) ?? 1;
-$w = intval($website['id']);
-$data['navigation'] = $cms->getMenu()->getAll2($w, $mem); // Get menus
-$data['member'] = $member;
-$data['members'] = $members;
-$data['notetype'] = $notetype;
-$data['notes'] = $notes; // Member data
-$data['success'] = $_GET['Request Sent'] ?? ''; // Success message if present
-$data['website'] = $cms->getWebsite()->getById($member['website']);
-echo $twig->render('note.html', $data); // Render Twig template
+/*
+ * Legacy notification URL.
+ * The active Notifications controller uses the logged-in member,
+ * rather than a member ID supplied in the URL.
+ */
+header('Location: ' . DOC_ROOT . 'admin/notes/', true, 303);
+exit();

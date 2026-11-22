@@ -13,7 +13,10 @@
 		</section>
 
 		<form method="post" action="{{ doc_root }}admin/note/{{ to_member }}" class="form-membership">
-			{% if errors %}
+			<input type="hidden"
+       name="csrf_token"
+       value="{{ request_csrf_token|e('html_attr') }}">
+      {% if errors %}
 				<div class="alert alert-danger">Please correct errors</div>
 			{% endif %}
 

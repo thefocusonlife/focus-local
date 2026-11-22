@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
-
+/** @var array $config */
+/** @var array $email_config */
 use PhpBook\Validate\Validate;
 
 require_once __DIR__ . '/../../config/recaptcha.php';
@@ -151,9 +152,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 'password-reset?token=' .
                                 urlencode($rawToken);
 
-                            error_log(
-                                '[PASSWORD LOST] sending to=' . $email . ' resetUrl=' . $resetUrl,
-                            );
+                            error_log('[PASSWORD LOST] sending reset email');
 
                             sendPasswordResetEmail($email_config, $email, $forename, $resetUrl);
                         }

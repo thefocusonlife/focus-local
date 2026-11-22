@@ -1,13 +1,38 @@
-{% extends 'admin/layout.html' %}
+{% extends 'layout.html' %}
+
+{% block title %}Delete Follow Request{% endblock %}
+
 {% block content %}
+    <main class="container" id="content">
+        <h1>Delete Follow Request</h1>
 
-  <main> <!-- class="container admin" id="content">-->
-    <form action="{{ doc_root }}admin/note-delete/{{ note.id }}" method="POST" class="narrow">
-      <h1>Delete Note</h1>
-      <p>Click confirm to delete the note: <em>{{note.from_name}} {{note.request}} {{ note.to_name }} {{note.request_date}}</em></p>
-      <input type="submit" name="delete" value="confirm" class="btn btn-primary" />
-      <a href="{{ doc_root }}admin/menus/" class="btn btn-danger">cancel</a>
-    </form>
-  </main>
+        <p>
+            Delete the Follow Request from
+            <strong>{{ note.from_name|e }}</strong>
+            to
+            <strong>{{ note.to_name|e }}</strong>?
+        </p>
 
+        <p>
+            This removes the request for both participants.
+            It does not delete personal messages.
+        </p>
+
+        <form method="post"
+              action="{{ doc_root }}admin/note-delete/{{ note.id }}/">
+
+            <input type="hidden"
+                   name="csrf_token"
+                   value="{{ delete_csrf_token|e('html_attr') }}">
+
+            <button type="submit" class="btn btn-danger">
+                Confirm Delete
+            </button>
+
+            <a href="{{ doc_root }}admin/notes/"
+               class="btn btn-primary">
+                Cancel
+            </a>
+        </form>
+    </main>
 {% endblock %}

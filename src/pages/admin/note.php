@@ -1,117 +1,106 @@
 <?php
-
 declare(strict_types=1);
+
 use PhpBook\Validate\Validate;
 
 require_once APP_ROOT . '/src/security/guard.php';
 guardMember();
 
-/*$note = [
+require_once APP_ROOT . '/src/security/csrf.php';
 
-    'note_type'   => 1,
-    'to_id'       => 0,
-    'to_name'     => '',
-    'from_id'     => 0,
-    'from_name'   => '',
-    // 'family_id'   => 0,
-    'request'     => 'Request to follow.',
-    'allow'       => 0
-];                                                       // Story data
-*/
-$errors = [
-    'warning' => '',
-    'note_type' => '',
-    'to_id' => '',
-    'to_name' => '',
-    'from_id' => '',
-    'from_name' => '',
-    'family_id' => '',
-    'request' => '',
-    'allow' => '',
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    header('Allow: POST');
+    exit('Please use the Follow Request form.');
+}
+
+$viewerId = (int) ($_SESSION['id'] ?? 0);
+$targetId = (int) ($parts[2] ?? 0);
+
+if ($viewerId <= 0 || $viewerId === 2 || $targetId <= 0 || $targetId === $viewerId) {
+    http_response_code(403);
+    exit('This Follow Request is not available.');
+}
+
+$formKey = 'follow-request-' . $targetId;
+$submittedToken = $_POST['csrf_token'] ?? null;
+
+if (!csrf_validate($formKey, is_string($submittedToken) ? $submittedToken : null)) {
+    redirect('admin/notes/', [
+        'failure' => 'Your form session expired. Please try again.',
+    ]);
+    exit();
+}
+
+$viewer = $cms->getMember()->get($viewerId);
+$target = $cms->getMember()->get($targetId);
+
+if (
+    !$viewer ||
+    !$target ||
+    ($viewer['status'] ?? '') !== 'active' ||
+    ($target['status'] ?? '') !== 'active' ||
+    in_array(strtolower((string) ($target['role'] ?? '')), ['guest', 'pending'], true)
+) {
+    http_response_code(404);
+    exit('Member not available.');
+}
+
+/*
+ * Avoid creating another request for the same member.
+ */
+foreach ($cms->getNote()->getForMember($viewerId) as $existing) {
+    if ((int) $existing['note_type'] === 1 || false) {
+        if ((int) $existing['from_id'] === $viewerId && (int) $existing['to_id'] === $targetId) {
+            redirect('admin/notes/', [
+                'failure' => 'A Follow Request for this member already exists.',
+            ]);
+            exit();
+        }
+    }
+}
+
+$request = $_POST['request'] ?? '';
+$request = is_string($request) ? trim($request) : '';
+
+if ($request === '') {
+    $request = 'Request to follow.';
+}
+
+if (!Validate::isText($request, 1, 1000)) {
+    redirect('admin/notes/', [
+        'failure' => 'Your request must be between 1 and 1000 characters.',
+    ]);
+    exit();
+}
+
+/*
+ * Derive identity and approval fields on the server.
+ * Never trust hidden form fields for these values.
+ */
+$note = [
+    'website' => (int) $target['website'],
+    'note_type' => 1,
+    'from_id' => $viewerId,
+    'from_name' => trim((string) $viewer['forename'] . ' ' . (string) $viewer['surname']),
+    'to_id' => $targetId,
+    'to_name' => trim((string) $target['forename'] . ' ' . (string) $target['surname']),
+    'family_id' => $viewerId,
+    'to_family_id' => $targetId,
+    'allow' => 0,
+    'request' => $request,
 ];
 
-$memberid = $_SESSION['id'];
-if ($_SERVER['REQUEST_METHOD'] != 'POST') {
-    $note = $cms->getNote()->getById($id);
-    $member = $cms->getMember()->get($memberid);
-    //var_dump_pre($member);
-    //var_dump_pre($note);
-    //echo "admin/note.php -38";
-
-    if ($member['account_id'] == $note['family_id']) {
-        $member['account_id'] = $note['to_family_id'];
-        //  var_dump_pre($member);
-        //  echo "admin/note.php -43";
-    } else {
-        $member['account_id'] = $note['family_id'];
-        //var_dump_pre($member);
-
-        echo 'Request to follow posted';
-        //echo "admin/note =49";
-    }
-    $cms->getMember()->update($member);
-    redirect('admin/members/$member.id/', ['success' => 'FOLLOW ID UPDATED.']);
-}
-//user's id from session                              // Use strict types
-if (!$memberid) {
-    // If no valid id
-    include APP_ROOT . '/src/pages/page-not-found.php'; // Page not found
+if (!$cms->getNote()->create($note)) {
+    redirect('admin/notes/', [
+        'failure' => 'Unable to create the Follow Request.',
+    ]);
+    exit();
 }
 
-$member = $cms->getMember()->get($memberid); // Get member data
+csrf_rotate($formKey);
 
-//if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-$note['website'] = intval($_POST['website']);
-$note['to_id'] = intval($_POST['to_member']); // Get from member id
-$note['to_name'] = $_POST['to_membername']; // Get to name
-$note['from_id'] = intval($_POST['from_member']); // Get to name
-$note['from_name'] = $_POST['from_membername']; // Get from name
-$note['note_type'] = intval($_POST['noteid']); // Get notetype
-$note['request'] = $_POST['request']; // Get request
-$note['family_id'] = intval($_POST['family_id']); // Get family id
-$note['to_family_id'] = intval($_POST['to_family_id']);
-$note['allow'] = intval($_POST['allow']); // Get allow
-
-if ($note['request'] == null) {
-    $note['request'] = 'Request to follow';
-}
-
-$errors['request'] = Validate::isText($note['request'], 1, 1000)
-    ? ''
-    : 'request should be between 0 and 1000 characters';
-
-$invalid = implode($errors); // Join any error messages
-if ($invalid) {
-    // If validation failed
-    $errors['warning'] = 'Please correct form errors'; // Store a warning
-} else {
-    $result = $cms->getNote()->create($note); // Create a new request notfication
-    if ($result === false) {
-        // If result is false
-        $errors['warning'] = 'Please correct form errors'; // Store a warning
-    } else {
-    }
-    // Otherwise;
-    redirect('/member/intval(note.from_id)/', ['success' => 'Request updated']); // Redirect with message
-}
-
-if (!$member) {
-    // If array is empty
-    include APP_ROOT . '/src/pages/page-not-found.php'; // Page not found
-}
-
-$members = $cms->getMember()->getAll();
-$notes = $cms->getNote()->get($id);
-
-$data['navigation'] = $cms->getMenu()->getAll(); // Get menus
-$data['member'] = $member;
-$data['members'] = $members;
-$data['notes'] = $notes; // Member data
-$data['success'] = $_GET['Request Sent'] ?? ''; // Success message if present
-$data['website'] = $cms->getWebsite()->getById($member['website']);
-//var_dump_pre($data);
-//echo "admin/note.php =111";
-
-if ($_SERVER['REQUEST_METHOD'] != 'POST') {
-    echo $twig->render('note.html', $data);
-} // Render Twig template
+redirect('admin/notes/', [
+    'success' => 'Follow Request sent.',
+]);
+exit();

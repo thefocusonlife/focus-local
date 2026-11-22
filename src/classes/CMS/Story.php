@@ -310,16 +310,8 @@ class Story
                AND (:member1 IS NULL OR a.member_id = :member)
                AND a.website = :website ";
 
-        $role = (string) ($_SESSION['role'] ?? 'guest');
-        $viewerId = (int) ($_SESSION['id'] ?? 0);
-
-        if ($role === 'admin') {
-            $sql .= ' AND (a.published IN (0,1))';
-        } elseif ($viewerId > 0 && $member !== null && $viewerId === (int) $member) {
-            $sql .= ' AND (a.published IN (0,1))';
-        } else {
-            $sql .= 'AND ' . self::visibilityCondition('a') . ' ';
-        }
+        // Apply the same privacy rules used by individual story pages.
+        $sql .= ' AND ' . self::visibilityCondition('a') . ' ';
 
         $orderBy = $this->orderByForSorttype($sorttypeId);
         $role = strtolower((string) ($_SESSION['role'] ?? 'guest'));
