@@ -5,8 +5,37 @@ declare(strict_types=1);
 require_once APP_ROOT . '/src/security/guard.php';
 require_once APP_ROOT . '/src/security/ownership.php';
 require_once APP_ROOT . '/src/security/redirects.php';
-
+require_once APP_ROOT . '/src/security/csrf.php';
 guardMember();
+$viewerId = (int) ($_SESSION['id'] ?? 0);
+$viewer = $cms->getMember()->get($viewerId);
+
+if ($viewerId <= 0 || $viewerId === 2 || !$viewer) {
+    http_response_code(403);
+    exit('Please log in with a member account.');
+}
+
+$selectedAccountId = (int) ($viewer['account_id'] ?? 0);
+
+if ($selectedAccountId > 0 && $selectedAccountId !== $viewerId) {
+    redirect('admin/notes/', [
+        'failure' => 'Return to My Account before adding or editing stories.',
+    ]);
+    exit();
+}
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    header('Allow: POST');
+    exit('Please use the photo upload form.');
+}
+
+$submittedToken = $_POST['csrf_token'] ?? null;
+
+if (!csrf_validate('mobile-story-image', is_string($submittedToken) ? $submittedToken : null)) {
+    http_response_code(403);
+    exit('Your form session expired. Reload the photo editor and try again.');
+}
 
 $sessionMemberId = (int) ($_SESSION['id'] ?? 0);
 $isUberAdmin = !empty($_SESSION['isUberAdmin']);
@@ -15,6 +44,7 @@ $storyId = (int) ($_POST['story_id'] ?? 0);
 
 if ($storyId < 1) {
     redirect(DOC_ROOT);
+    exit();
 }
 
 $story = $cms->getStory()->get($storyId, false);
@@ -24,7 +54,10 @@ if (!$story) {
     exit();
 }
 
-assertStoryOwnership($cms, $storyId, $sessionMemberId, $isUberAdmin);
+if ((int) $story['member_id'] !== $viewerId) {
+    http_response_code(403);
+    exit('You cannot change this story’s photograph.');
+}
 
 $hasUpload =
     isset($_FILES['image']) &&
@@ -36,6 +69,7 @@ if (!$hasUpload) {
         'id' => $storyId,
         'error' => 'no-image',
     ]);
+    exit();
 }
 
 $alt = trim((string) ($_POST['alt'] ?? ''));
@@ -95,6 +129,10 @@ try {
         'id' => $storyId,
         'error' => 'upload-failed',
     ]);
+    exit();
 }
 
-redirect('member/' . $sessionMemberId);
+csrf_rotate('mobile-story-image');
+
+redirect('member/' . $viewerId);
+exit();

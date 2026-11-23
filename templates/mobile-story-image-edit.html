@@ -19,7 +19,9 @@
 		{% endif %}
 
 		<form method="post" action="{{ doc_root }}mobile-story-image-save" enctype="multipart/form-data">
-
+      <input type="hidden"
+       name="csrf_token"
+       value="{{ image_csrf_token|e('html_attr') }}">
 			<input type="hidden" name="story_id" value="{{ story.id }}">
 
 			<div class="form-group">

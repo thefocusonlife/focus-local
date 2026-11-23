@@ -6,148 +6,143 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 }
 
 require_once APP_ROOT . '/src/security/guard.php';
-include APP_ROOT . '/src/pages/menu-path.php';
-guardMember();
-$errors = [];
-$data = [];
+require_once APP_ROOT . '/src/security/redirects.php';
+require_once APP_ROOT . '/src/security/csrf.php';
 
-// ------------------------------------------------------------
-// Guard: require login (member page is not for guests)
-// ------------------------------------------------------------
+guardMember();
+
 $viewerId = (int) ($_SESSION['id'] ?? 0);
-if ($viewerId <= 0) {
+
+if ($viewerId <= 0 || $viewerId === 2) {
     redirect('login');
     exit();
 }
 
 $viewer = $cms->getMember()->get($viewerId);
+
 if (!$viewer || empty($viewer['id'])) {
-    redirect('page-not-found/');
-    exit();
+    http_response_code(404);
+    include APP_ROOT . '/src/pages/page-not-found.php';
+    return;
 }
 
-// ------------------------------------------------------------
-// Follow logic: ownerId = viewer.account_id (family context)
-// BUT: do NOT change tenant/website based on owner.
-// Tenant is session-selected (or resolved elsewhere), not follow-selected.
-// ------------------------------------------------------------
-
-// Tenant context (single source of truth)
-$websiteId = (int) ($_SESSION['website'] ?? 0);
-if ($websiteId <= 0) {
-    $websiteId = (int) ($viewer['website'] ?? 0);
-}
-if ($websiteId <= 0) {
-    $websiteId = 1;
-}
-
-// Follow/owner context (used for content), default to self
 $ownerId = (int) ($viewer['account_id'] ?? 0);
+
 if ($ownerId <= 0) {
     $ownerId = $viewerId;
 }
 
-$ownerMember = $cms->getMember()->get($ownerId);
-if (!$ownerMember || empty($ownerMember['id'])) {
-    $ownerId = $viewerId;
-    $ownerMember = $viewer;
-}
+$isFollowing = $ownerId !== $viewerId;
+$ownerMember = $viewer;
 
-// HARD TENANT GUARD: never allow follow to switch websites here
-if ((int) ($ownerMember['website'] ?? 0) !== $websiteId) {
-    // If the follow points cross-tenant, ignore it for this page
-    $ownerId = $viewerId;
-    $ownerMember = $viewer;
-}
+if ($isFollowing) {
+    $approved = false;
 
-// Load website from tenant context
-$website = $cms->getWebsite()->getById($websiteId);
-if (!$website || !isset($website['id'])) {
-    $websiteId = 1;
-    $_SESSION['website'] = 1;
-    $website = $cms->getWebsite()->getById(1);
-} else {
-    $_SESSION['website'] = $websiteId; // keep consistent
-}
-
-// ------------------------------------------------------------
-// Page data for template
-// ------------------------------------------------------------
-$data['failure'] = $_GET['failure'] ?? null;
-$data['member'] = $viewer; // viewer identity (who is logged in)
-$data['website'] = $website; // resolved website (owner’s website)
-$data['follow_owner'] = $ownerMember; // optional: lets template show “Following X”
-$data['current_path'] = "member/$viewerId"; // or viewerId if that’s your route
-$data['current_menu_id'] = null;
-$data['follow_owner'] = $ownerMember;
-
-// ------------------------------------------------------------
-// Sort preference (member page = "no menu selected" => global override)
-// Precedence: session global override -> viewer preference -> website default -> fallback
-// ------------------------------------------------------------
-$preferredSorttypeId = (int) ($_SESSION['sort_override_global'][$websiteId] ?? 0);
-
-if ($preferredSorttypeId > 0) {
-    $resolvedSorttypeId = $preferredSorttypeId;
-} else {
-    $resolvedSorttypeId = (int) ($viewer['sorttype'] ?? 0);
-    if ($resolvedSorttypeId <= 0) {
-        $resolvedSorttypeId = (int) ($website['sorttype'] ?? 0);
-    }
-    if ($resolvedSorttypeId <= 0) {
-        $resolvedSorttypeId = 1; // final fallback (Newest if that's your id=1)
-    }
-}
-
-$data['sorttype'] = $cms->getSorttype()->get($resolvedSorttypeId);
-
-// Navigation (menus) based on owner + owner website
-$data['navigation'] = $cms->getMenu()->getAll2($websiteId, $ownerId);
-
-// ------------------------------------------------------------
-// Stories
-// Keep your original branching:
-//  - viewerId === 1 => uber gets all stories
-//  - parts[2] == 1 => website-wide stories
-//  - else => ownerId stories (follow)
-// ------------------------------------------------------------
-if ($viewerId === 1) {
-    $websiteId = (int) ($_SESSION['website'] ?? 0);
-    $data['stories'] = $cms->getStory()->getAll($websiteId, null, null);
-} elseif (!empty($parts[2]) && (int) $parts[2] === 1) {
-    $data['stories'] = $cms->getStory()->getAll3($websiteId, true, null, null);
-} else {
-    $sorttypeId = (int) ($_SESSION['sort_override_global'][$websiteId] ?? 0);
-
-    $data['stories'] = $cms
-        ->getStory()
-        ->getAll2($websiteId, 0, null, $ownerId, 150, $sorttypeId > 0 ? $sorttypeId : null);
-}
-
-/// Default sort menu id (Focus menu id=2)
-if (empty($data['sort_menu_id'])) {
-    $currentWebsiteId =
-        (int) ($data['website']['id'] ??
-            ($websiteId ?? ($_SESSION['website'] ?? ($_SESSION['websiteid'] ?? 1))));
-
-    $sortMenuId = 0;
-
-    $menus = $cms->getMenu()->getAll2($currentWebsiteId, 1);
-    foreach ($menus as $menu) {
-        $name = strtolower(trim((string) ($menu['name'] ?? '')));
-        if ($name === 'focus' || $name === 'sort') {
-            $sortMenuId = (int) ($menu['id'] ?? 0);
+    foreach ($cms->getNote()->getApprovedFollowsFromMember($viewerId) as $request) {
+        if ((int) $request['to_id'] === $ownerId) {
+            $approved = true;
             break;
         }
     }
 
-    if ($sortMenuId <= 0 && $currentWebsiteId === 1) {
-        $sortMenuId = 2;
-    }
+    $ownerMember = $cms->getMember()->get($ownerId);
 
-    $data['sort_menu_id'] = $sortMenuId;
+    if (!$approved || !$ownerMember || ($ownerMember['status'] ?? '') !== 'active') {
+        redirect('admin/notes/', [
+            'failure' => 'This Follow connection is unavailable. Return to your account.',
+        ]);
+        exit();
+    }
 }
 
+/*
+ * Display context is separate from authenticated session context.
+ * Following does not change session.id or session.website.
+ */
+$websiteId = $isFollowing
+    ? (int) $ownerMember['website']
+    : (int) ($_SESSION['website'] ?? $viewer['website']);
 
+if ($websiteId <= 0) {
+    $websiteId = (int) $viewer['website'];
+}
+
+$website = $cms->getWebsite()->getById($websiteId);
+
+if (!$website) {
+    http_response_code(404);
+    include APP_ROOT . '/src/pages/page-not-found.php';
+    return;
+}
+
+$sorttypeId = (int) ($_SESSION['sort_override_global'][$websiteId] ?? 0);
+
+if ($sorttypeId <= 0) {
+    $sorttypeId = (int) ($viewer['sorttype'] ?? 0);
+}
+
+if ($sorttypeId <= 0) {
+    $sorttypeId = (int) ($website['sorttype'] ?? 1);
+}
+
+$sorttypeId = max(1, $sorttypeId);
+
+$data = [];
+$data['session'] = $_SESSION;
+
+/*
+ * Keep member as the authenticated viewer for layout compatibility.
+ * profile_member identifies the person whose grid is displayed.
+ */
+$data['member'] = $viewer;
+$data['viewer'] = $viewer;
+$data['profile_member'] = $ownerMember;
+$data['follow_owner'] = $ownerMember;
+$data['is_following'] = $isFollowing;
+$data['read_only_grid'] = $isFollowing;
+
+$data['website'] = $website;
+$data['sorttype'] = $cms->getSorttype()->get($sorttypeId);
+$data['current_path'] = 'member/' . $viewerId;
+$data['current_menu_id'] = null;
+$data['follow_csrf_token'] = csrf_token('follow-account');
+
+foreach (['success', 'failure'] as $key) {
+    $value = $_GET[$key] ?? '';
+    $data[$key] = is_string($value) ? $value : '';
+}
+
+$data['navigation'] = $cms->getMenu()->getAll2($websiteId, $ownerId);
+
+/*
+ * A followed grid always stays scoped to the followed member.
+ * Story visibility remains enforced by getAll2().
+ */
+if ($isFollowing) {
+    $data['stories'] = $cms->getStory()->getAll2($websiteId, 0, null, $ownerId, 150, $sorttypeId);
+} elseif ($viewerId === 1) {
+    $data['stories'] = $cms->getStory()->getAll($websiteId, null, null);
+} elseif ((int) ($parts[2] ?? 0) === 1) {
+    $data['stories'] = $cms->getStory()->getAll3($websiteId, true, null, null);
+} else {
+    $data['stories'] = $cms->getStory()->getAll2($websiteId, 0, null, $viewerId, 150, $sorttypeId);
+}
+
+$sortMenuId = 0;
+
+foreach ($cms->getMenu()->getAll2($websiteId, 1) as $menu) {
+    $name = strtolower(trim((string) ($menu['name'] ?? '')));
+
+    if ($name === 'focus' || $name === 'sort') {
+        $sortMenuId = (int) $menu['id'];
+        break;
+    }
+}
+
+if ($sortMenuId <= 0 && $websiteId === 1) {
+    $sortMenuId = 2;
+}
+
+$data['sort_menu_id'] = $sortMenuId;
 
 echo $twig->render('member.html', $data);

@@ -7,6 +7,25 @@ require_once APP_ROOT . '/src/security/guard.php';
 require_once APP_ROOT . '/src/security/ownership.php';
 require_once APP_ROOT . '/src/security/redirects.php';
 guardMember();
+/*
+ * Follow mode is read-only, including direct editor URLs and POSTs.
+ */
+$authenticatedMemberId = (int) ($_SESSION['id'] ?? 0);
+$authenticatedMember = $cms->getMember()->get($authenticatedMemberId);
+
+if (!$authenticatedMember || $authenticatedMemberId === 2) {
+    http_response_code(403);
+    exit('Please log in with a member account.');
+}
+
+$selectedAccountId = (int) ($authenticatedMember['account_id'] ?? 0);
+
+if ($selectedAccountId > 0 && $selectedAccountId !== $authenticatedMemberId) {
+    redirect('admin/notes/', [
+        'failure' => 'Return to My Account before adding or editing stories.',
+    ]);
+    exit();
+}
 
 $member = [];
 $temp = $_FILES['image']['tmp_name'] ?? ''; // Temporary image
@@ -78,16 +97,8 @@ $errors = [
     'image_alt' => '',
 ];
 
-// Resolve logged-in member id (prefer session service; fallback to $_SESSION)
-$sessionMemberId = 0;
-
-if (isset($cms) && method_exists($cms, 'getSession') && isset($cms->getSession()->id)) {
-    $sessionMemberId = (int) $cms->getSession()->id;
-}
-
-if ($sessionMemberId <= 0) {
-    $sessionMemberId = (int) ($_SESSION['id'] ?? 0);
-}
+// Authenticated identity must not come from the followed account.
+$sessionMemberId = $authenticatedMemberId;
 
 $isUberAdmin = !empty($_SESSION['isUberAdmin']);
 
@@ -284,11 +295,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // -----------------------------
             // A) Build $story from POST
             // -----------------------------
-            $story['id'] =
-                isset($_POST['id']) && $_POST['id'] !== ''
-                    ? (int) $_POST['id']
-                    : $story['id'] ?? null;
-
+            // Save only the story authorized from the route.
+            // Never replace its ID with a submitted hidden-field value.
+            $story['id'] = $id > 0 ? $id : null;
             $story['image_id'] =
                 isset($_POST['image_id']) && $_POST['image_id'] !== ''
                     ? (int) $_POST['image_id']

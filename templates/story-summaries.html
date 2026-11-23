@@ -34,7 +34,8 @@
 				{{story.id}}
 			</p>
 
-			{% if session.role != "family" %}
+			{% if not (read_only_grid|default(false))
+        and session.role != "family" %}
 				{% if (session.id == story.member_id or session.id == 1) %}
 
 					<a href="{{ doc_root }}work/{{ story.id }}" class="btn btn-primary desktop-edit-story">
