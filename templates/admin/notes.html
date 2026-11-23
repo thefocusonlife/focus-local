@@ -77,6 +77,34 @@
     .notifications-page > form {
         margin-bottom: 20px;
     }
+        .notifications-page .follow-request-message {
+        min-width: 180px;
+        max-width: 320px;
+    }
+
+    .notifications-page .follow-request-message summary {
+        display: list-item;
+        cursor: pointer;
+        color: #28577d;
+        font-weight: bold;
+    }
+
+    .notifications-page .follow-request-message[open] summary {
+        margin-bottom: 12px;
+    }
+
+    .notifications-page .follow-request-message p {
+        margin: 0 0 12px;
+    }
+
+    .notifications-page .follow-request-text {
+        padding: 12px;
+        background: #eef4fa;
+        border: 1px solid #d8e0e8;
+        border-radius: 4px;
+        white-space: normal;
+        overflow-wrap: anywhere;
+    }
 </style>
     <main class="notifications-page" id="content">
         <h1>Notifications</h1>
@@ -123,6 +151,7 @@
                         <th>Request Date</th>
                         <th>Approved Date</th>
                         <th>Status</th>
+                        <th>Request Message</th>
                         <th>Action</th>
                         <th>Delete</th>
                     </tr>
@@ -161,7 +190,26 @@
                                         Awaiting your approval
                                     {% endif %}
                                 </td>
+                                                                <td>
+                                    <details class="follow-request-message">
+                                        <summary>View Request</summary>
 
+                                        <p>
+                                            <strong>From:</strong>
+                                            {{ note.from_name|e }}<br>
+                                            <strong>To:</strong>
+                                            {{ note.to_name|e }}
+                                        </p>
+
+                                        <div class="follow-request-text">
+                                            {% if note.request|default('')|trim != '' %}
+                                                {{ note.request|e|nl2br }}
+                                            {% else %}
+                                                No message was included with this request.
+                                            {% endif %}
+                                        </div>
+                                    </details>
+                                </td>
                                 <td>
                                     {% if note.allow == 0 %}
                                         {% if note.to_id == member.id %}
@@ -226,7 +274,7 @@
 
                     {% if not hasFollowRequests %}
                         <tr>
-                            <td colspan="7">
+                            <td colspan="8">
                                 You have no Follow Requests.
                             </td>
                         </tr>

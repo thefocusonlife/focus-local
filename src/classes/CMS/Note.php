@@ -149,14 +149,37 @@ class Note
             ->fetchAll();
     }
 
+    /**
+     * Count incoming Follow Requests awaiting approval.
+     */
+    public function countPendingFollowRequests(int $memberId): int
+    {
+        if ($memberId <= 0 || $memberId === 2) {
+            return 0;
+        }
+
+        $sql = "SELECT COUNT(*)
+              FROM note
+             WHERE to_id = :member_id
+               AND from_id <> :sender_id
+               AND note_type = :note_type
+               AND allow = 0";
+
+        return (int) $this->db
+            ->runSql($sql, [
+                'member_id' => $memberId,
+                'sender_id' => $memberId,
+                'note_type' => self::NOTE_TYPE_FOLLOW,
+            ])
+            ->fetchColumn();
+    }
+
+    /**
+     * Keep existing notification-count callers working.
+     */
     public function countForMember(int $memberId): int
     {
-        $sql = "SELECT COUNT(id)
-                  FROM note
-                 WHERE to_id = :member_id
-                   AND allow = 0";
-
-        return (int) $this->db->runSql($sql, ['member_id' => $memberId])->fetchColumn();
+        return $this->countPendingFollowRequests($memberId);
     }
 
     public function create(array $note): bool

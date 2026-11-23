@@ -59,12 +59,17 @@ $session = $cms->getSession();
 $twig->addGlobal('session', $session);
 
 $unreadMessages = 0;
+$pendingFollowRequests = 0;
+$notificationMemberId = (int) ($_SESSION['id'] ?? 0);
 
-if (!empty($session->id)) {
-    $unreadMessages = $cms->getNote()->countUnreadMessages((int) $session->id);
+if ($notificationMemberId > 0 && $notificationMemberId !== 2) {
+    $unreadMessages = $cms->getNote()->countUnreadMessages($notificationMemberId);
+
+    $pendingFollowRequests = $cms->getNote()->countPendingFollowRequests($notificationMemberId);
 }
 
 $twig->addGlobal('unread_messages', $unreadMessages);
+$twig->addGlobal('pending_follow_requests', $pendingFollowRequests);
 
 $twig->addGlobal('id', $id ?? null);
 $twig->addGlobal('websiteId', $id ?? null);

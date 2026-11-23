@@ -1,141 +1,132 @@
-<nav class="member-menu">{# ------------------------------------
-																																													       NAV STATE (single source of truth)
-																																														 ------------------------------------ #}
-	{# Logged in if we have any real account identity #}{% set role = (session.role|default('guest')|lower) %}{% set is_logged_in = (role != 'guest') %}{% set is_admin = (role in ['admin','uber']) %}
-	{# DEBUG nav-utility disabled while testing main nav #}
+<nav class="member-menu">
+    {% set role = session.role|default('guest')|lower %}
+    {% set member_id = session.id|default(0) %}
+    {% set is_logged_in =
+        role != 'guest' and member_id > 0 and member_id != 2 %}
+    {% set is_admin = role in ['admin', 'uber'] %}
 
+    {# Identity #}
+    <span class="icon-user"></span>
 
-	{# -------------------------------
-																																														     Identity (always visible)
-																																														 ------------------------------- #}<span class="icon-user"> </span>
-	{% if is_logged_in %}
-		<a href="{{ doc_root }}member/{{ session.id }}">
-			{{ session.forename|default('Member') }}
-		</a>
-	{% else %}
-		<a href="{{ doc_root }}index/{{ website.id|default(1) }}?from_sws=1&sorttype_id=1">
-			Guest
-		</a>
-	{% endif %}
-	/
+    {% if is_logged_in %}
+        <a href="{{ doc_root }}member/{{ member_id }}">
+            {{ session.forename|default('Member') }}
+        </a>
+    {% else %}
+        <a href="{{ doc_root }}index/{{ website.id|default(1) }}?from_sws=1&amp;sorttype_id=1">
+            Guest
+        </a>
+    {% endif %}
+    /
 
-	{# -------------------------------
-																																														        Guest-only link
-																																													  -------------------------------- #}
-	{% if not is_logged_in %}
-		<span class="icon-user"></span>
-		<a href="{{ doc_root }}login/{{ website.id|default(1) }}?direct=1">
-			Log in
-		</a>
-		/
-		<span class="icon-user"></span>
-		{% set communityWebsites = [47,49,50,52] %}
-		{% if website.id not in communityWebsites %}
+    {# Guest links #}
+    {% if not is_logged_in %}
+        <span class="icon-user"></span>
+        <a href="{{ doc_root }}login/{{ website.id|default(1) }}?direct=1">
+            Log in
+        </a>
+        /
 
-			<a href="{{ doc_root }}register/{{ website.id|default(1) }}">Register</a>
-			|
-		{% endif %}
+        {% set communityWebsites = [47, 49, 50, 52] %}
 
-	{% endif %}
+        {% if website.id|default(1) not in communityWebsites %}
+            <span class="icon-user"></span>
+            <a href="{{ doc_root }}register/{{ website.id|default(1) }}">
+                Register
+            </a>
+            |
+        {% endif %}
+    {% endif %}
 
+    {# Logged-in links #}
+    {% if is_logged_in %}
 
-	{# -------------------------------
-																																																								       Member/Admin links
-																																																								       ------------------------------- #}
-	{% if is_logged_in %}
-		{% if is_admin %}
-			{# COBC Website 44 view toggle #}
-			{% set current_website_id = website.id|default(session.website|default(1)) %}
+        {% if is_admin %}
+            {% set current_website_id =
+                website.id|default(session.website|default(1)) %}
 
-			{% if current_website_id == 44 %}
-				<span class="icon-user"></span>
+            {% if current_website_id == 44 %}
+                <span class="icon-user"></span>
+                <a href="{{ doc_root }}index/44?view=community{% if location is defined and location %}&amp;location={{ location|url_encode }}{% endif %}">
+                    COBC Community
+                </a>
+                /
+            {% endif %}
 
+            <span class="icon-user"></span>
+            <a href="{{ doc_root }}admin/index/">Admin</a>
+            /
+        {% endif %}
 
-				<a href="{{ doc_root }}index/44?view=community{% if location is defined and location %}&location={{ location }}{% endif %}">
-					COBC Community
-				</a>
+        <span class="icon-user"></span>
+        <a href="{{ doc_root }}admin/notes/">
+            Notifications{% if pending_follow_requests|default(0) > 0 %}
+                ({{ pending_follow_requests }})
+            {% endif %}
+        </a>
+        /
 
-				/
-			{% endif %}
-			<span class="icon-user"></span>
-			<a href="{{ doc_root }}admin/index/">Admin</a>
-			/
-			<span class="icon-user"></span>
-			<a href="{{ doc_root }}admin/notes/">Notifications</a>
-			/
-			<span class="icon-user"></span>
-			<a href="{{ doc_root }}inbox">
-				Messages
-				{% if unread_messages > 0 %}
-					({{ unread_messages }})
-				{% endif %}
-			</a>
-			|
-		{% endif %}
+        <span class="icon-user"></span>
+        <a href="{{ doc_root }}inbox">
+            Messages{% if unread_messages|default(0) > 0 %}
+                ({{ unread_messages }})
+            {% endif %}
+        </a>
+        |
 
-		<span class="icon-user"></span>
-		<a href="{{ doc_root }}logout">Logout</a>
-		/
+        <span class="icon-user"></span>
+        <a href="{{ doc_root }}logout">Logout</a>
+        /
+    {% endif %}
 
-
-	{% endif %}
-
-	{% set resolved_sort_menu_id =
-    sort_menu_id|default(
-        menu_id|default(
-            menuId|default(
-                active_menu_id|default(
-                    activeMenuId|default(
-                        section|default(
-                            menu.id|default(
-                                attribute(menu, 'id')|default(0)
+    {# Resolve the sort menu #}
+    {% set resolved_sort_menu_id =
+        sort_menu_id|default(
+            menu_id|default(
+                menuId|default(
+                    active_menu_id|default(
+                        activeMenuId|default(
+                            section|default(
+                                menu.id|default(
+                                    attribute(menu, 'id')|default(0)
+                                )
                             )
                         )
                     )
                 )
             )
         )
-    )
-%}
+    %}
 
-	{# -------------------------------
-																																																								   SORT (guest + member)
-																																																								   ------------------------------- #}
+    {% set sort_menu_id = resolved_sort_menu_id|default(0) %}
+    {% set return_path = current_path|default('') %}
 
-	<span class="icon-user"></span>
-	{# -------------------------------
-																																		   SORT (guest + member)
-																																		   ------------------------------- #}
+    {% if sort_menu_id %}
+        <span class="icon-user"></span>
+        <a href="{{ doc_root }}sort/{{ sort_menu_id }}{% if return_path %}?return={{ return_path|url_encode }}{% endif %}">
+            Sort
+        </a>
+        |
+    {% endif %}
 
-	{% set sort_menu_id = resolved_sort_menu_id|default(0) %}
-	{% set return_path = current_path|default('') %}
+    {# Utility links #}
+    <span class="icon-user"></span>
+    <a class="nav-link" href="{{ refresh_href }}">Refresh</a>
+    /
 
-	{% if sort_menu_id %}
-		<a href="{{ doc_root }}sort/{{ sort_menu_id }}{% if return_path %}?return={{ return_path|url_encode }}{% endif %}">Sort</a>
-		|
-	{% endif %}
+    <span class="icon-user"></span>
+    <a href="javascript:history.back()">Back</a>
+    /
 
+    <span class="icon-user"></span>
+    <a href="{{ doc_root }}stories-worth-saving/">Stories</a>
+    /
 
-	{# -------------------------------
-																																																											       Utility links (always available)
-																																																											       ------------------------------- #}
-	<span class="icon-user"></span>
-	{# nav-utility.html #}
-	<a class="nav-link" href="{{ refresh_href }}">Refresh</a>
-	/
+    <span class="icon-user"></span>
+    <a href="{{ doc_root }}select-website/">Websites</a>
+    /
 
-	<span class="icon-user"></span>
-	<a href="javascript:history.back()">Back</a>
-	/
-
-	<span class="icon-user"></span>
-	<a href="{{ doc_root }}stories-worth-saving/">Stories</a>
-	/
-
-	<span class="icon-user"></span>
-	<a href="{{ doc_root }}select-website/">Websites</a>
-	/
-	<span class="icon-user"></span>
-	<a href="{{ doc_root }}guide/">Guide</a>
-	|
+    <span class="icon-user"></span>
+    <a href="{{ doc_root }}guide/">Guide</a>
+    |
 </nav>
