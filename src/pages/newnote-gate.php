@@ -28,7 +28,7 @@ if ($targetId <= 0) {
 // Logged-in viewer ONLY
 $viewerId = (int) ($_SESSION['id'] ?? 0);
 if ($viewerId <= 0) {
-    header('Location: ' . DOC_ROOT . '/login');
+    header('Location: ' . rtrim(DOC_ROOT, '/') . '/login');
     exit();
 }
 
@@ -54,7 +54,7 @@ if ($targetWebsiteId <= 0) {
 
 // Prevent request-to-self
 if ($targetId === $viewerId) {
-    header('Location: ' . DOC_ROOT . '/member/' . $viewerId);
+    header('Location: ' . rtrim(DOC_ROOT, '/') . '/member/' . $viewerId);
     exit();
 }
 
@@ -81,5 +81,5 @@ $_SESSION['newnote_intents'][$k] = [
 ];
 
 // ✅ Redirect into newnote WITH token
-header('Location: ' . DOC_ROOT . '/newnote/' . $targetId . '?k=' . $k);
+header('Location: ' . rtrim(DOC_ROOT, '/') . '/newnote/' . $targetId . '?k=' . urlencode($k));
 exit();
